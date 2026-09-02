@@ -296,7 +296,7 @@ function MemberRow({
           ) : null}
         </div>
         <p className="mt-0.5 truncate text-[13px] text-ink-muted">
-          {affiliation || entry.bio || "정보를 기다리는 중이에요"}
+          {affiliation || entry.bio || "아직 정보가 입력 안 됐어요"}
         </p>
       </button>
 
