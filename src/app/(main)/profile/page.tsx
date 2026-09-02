@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import { ChevronRightIcon } from "@/components/icons";
 import ProfileForm from "@/components/ProfileForm";
 import { useAuth } from "@/lib/auth-context";
 import { COHORT } from "@/lib/constants";
@@ -48,6 +50,19 @@ export default function ProfilePage() {
             <dd className="truncate text-ink-soft">{profile?.email}</dd>
           </dl>
         </div>
+
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          >
+            <span className="text-[15px] font-bold text-ink">운영진 화면</span>
+            <span className="flex items-center gap-1 text-[13px] text-ink-faint">
+              가입 승인 · 명단 관리
+              <ChevronRightIcon className="h-4 w-4" />
+            </span>
+          </Link>
+        ) : null}
 
         <button
           type="button"

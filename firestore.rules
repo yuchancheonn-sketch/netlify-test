@@ -88,6 +88,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- 원우 명단 (운영진이 미리 등록하는 이름들) ----------
+    match /roster/{rosterId} {
+      allow read: if isApproved();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ---------- 모임 일정 ----------
     match /events/{eventId} {
       allow read: if isApproved();

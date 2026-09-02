@@ -6,7 +6,7 @@ import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import { SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton, inputClassName } from "@/components/ui";
 import { formatBirthday } from "@/lib/format";
-import { useApprovedMembers } from "@/lib/hooks";
+import { useApprovedMembers, useRoster } from "@/lib/hooks";
 import type { MemberType, UserDoc } from "@/lib/types";
 
 type Filter = "all" | MemberType;
@@ -24,6 +24,7 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
 
 export default function MembersPage() {
   const { data: members, loading, error } = useApprovedMembers();
+  const roster = useRoster();
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<UserDoc | null>(null);
@@ -39,6 +40,20 @@ export default function MembersPage() {
       );
     });
   }, [members, keyword, filter]);
+
+  /**
+   * 운영진이 명단에 올려뒀지만 아직 가입하지 않은 원우들.
+   * 이름만 흐리게 보여주어 "우리 기수 전체"가 한눈에 들어오게 합니다.
+   */
+  const notJoinedYet = useMemo(() => {
+    const needle = keyword.trim().toLowerCase();
+    return roster.data.filter((entry) => {
+      if (entry.linkedUid) return false;
+      if (filter !== "all" && entry.memberType !== filter) return false;
+      if (!needle) return true;
+      return entry.name.toLowerCase().includes(needle);
+    });
+  }, [roster.data, keyword, filter]);
 
   return (
     <>
@@ -91,7 +106,7 @@ export default function MembersPage() {
             </ul>
           ) : error ? (
             <ErrorState message={error} />
-          ) : visible.length === 0 ? (
+          ) : visible.length === 0 && notJoinedYet.length === 0 ? (
             <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<UsersIcon className="h-10 w-10" />}
@@ -143,6 +158,38 @@ export default function MembersPage() {
               ))}
             </ul>
           )}
+
+          {/* 명단에는 있지만 아직 가입하지 않은 원우 */}
+          {!loading && notJoinedYet.length > 0 ? (
+            <section className="mt-8">
+              <p className="mb-3 text-[13px] font-bold text-ink-faint">
+                아직 가입 전 {notJoinedYet.length}명
+              </p>
+              <ul className="flex flex-col gap-2.5">
+                {notJoinedYet.map((entry) => (
+                  <li
+                    key={entry.id}
+                    className="flex items-center gap-4 rounded-3xl bg-white/70 p-4"
+                  >
+                    <Avatar
+                      name={entry.name}
+                      seed={entry.id}
+                      size={44}
+                      className="opacity-40 grayscale"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-bold text-ink-muted">
+                        {entry.name}
+                      </p>
+                      <p className="text-[12px] text-ink-faint">
+                        {MEMBER_TYPE_LABEL[entry.memberType]} · 초대 코드로 가입하면 이어집니다
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
       </div>
 

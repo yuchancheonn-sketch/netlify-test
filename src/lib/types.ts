@@ -39,6 +39,26 @@ export interface UserDoc {
   createdAt: Timestamp | null;
 }
 
+/**
+ * roster/{rosterId} — 운영진이 미리 등록해 두는 원우 명단.
+ *
+ * 앱은 Google 계정으로만 가입할 수 있어서 운영진이 남의 계정을 대신 만들 수는 없습니다.
+ * 그래서 "이름만 먼저 올려두고", 그 사람이 직접 가입해 승인되는 순간
+ * linkedUid로 실제 계정과 이어 붙이는 방식을 씁니다.
+ * 아직 가입하지 않은 사람도 원우 소개에서 이름만은 볼 수 있습니다.
+ */
+export interface RosterDoc {
+  id: string;
+  name: string;
+  memberType: MemberType;
+  /** 연결된 실제 계정의 uid. 아직 가입 전이면 null */
+  linkedUid: string | null;
+  /** 운영진 메모 (예: 소속, 연락처 힌트) */
+  note: string;
+  createdBy: string;
+  createdAt: Timestamp | null;
+}
+
 /** events/{eventId} */
 export interface EventDoc {
   id: string;

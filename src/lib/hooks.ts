@@ -13,7 +13,7 @@ import {
 import { db } from "@/lib/firebase";
 import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
 import { todayString } from "@/lib/format";
-import type { EventDoc, MessageDoc, RsvpDoc, UserDoc } from "@/lib/types";
+import type { EventDoc, MessageDoc, RosterDoc, RsvpDoc, UserDoc } from "@/lib/types";
 
 /** 목록형 화면이 공통으로 쓰는 상태 */
 export interface ListState<T> {
@@ -45,6 +45,49 @@ export function useApprovedMembers(): ListState<UserDoc> {
         setState({ data: members, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/**
+ * 가입 상태와 관계없는 전체 사용자 목록 (운영진 화면 전용).
+ * 승인 대기 중인 사람까지 보여야 해서 필터 없이 구독합니다.
+ */
+export function useAllUsers(): ListState<UserDoc> {
+  const [state, setState] = useState<ListState<UserDoc>>(EMPTY);
+
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const users = snapshot.docs
+          .map((document) => document.data() as UserDoc)
+          .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, "ko"));
+        setState({ data: users, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/** 운영진이 미리 등록해 둔 원우 명단 */
+export function useRoster(): ListState<RosterDoc> {
+  const [state, setState] = useState<ListState<RosterDoc>>(EMPTY);
+
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, "roster"),
+      (snapshot) => {
+        const entries = snapshot.docs
+          .map((document) => ({ id: document.id, ...document.data() }) as RosterDoc)
+          .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+        setState({ data: entries, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "명단을 불러오지 못했어요." }),
     );
   }, []);
 
