@@ -74,11 +74,16 @@ service cloud.firestore {
       // 승인된 원우는 전체 명단을 볼 수 있고, 승인 전이라도 자기 문서는 읽을 수 있습니다.
       allow read: if isApproved() || (isSignedIn() && request.auth.uid == uid);
 
-      // 가입 신청: 자기 문서만, 올바른 초대 코드로, 반드시 pending/member 상태로만 만들 수 있습니다.
+      /*
+       * 가입: 올바른 초대 코드를 넣으면 기다림 없이 바로 approved로 들어옵니다.
+       * 비공개성은 초대 코드가 지킵니다. 코드 검증은 아래 isValidInviteCode()가
+       * 규칙 안에서 처리하므로, 앱이 코드를 마음대로 통과시킬 수는 없습니다.
+       * role은 반드시 member여야 해서 스스로 운영진이 될 수는 없습니다.
+       */
       allow create: if isSignedIn()
         && request.auth.uid == uid
         && request.resource.data.uid == uid
-        && request.resource.data.status == 'pending'
+        && request.resource.data.status == 'approved'
         && request.resource.data.role == 'member'
         && request.resource.data.profileCompleted == false
         && isValidInviteCode(request.resource.data.inviteCode);

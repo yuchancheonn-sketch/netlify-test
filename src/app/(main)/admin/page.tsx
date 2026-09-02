@@ -33,22 +33,28 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   youth: "청년원우",
 };
 
-const TABS = [
-  { value: "pending", label: "승인 대기" },
-  { value: "roster", label: "원우 명단" },
-  { value: "members", label: "권한 관리" },
-] as const;
-
-type Tab = (typeof TABS)[number]["value"];
+type Tab = "pending" | "roster" | "members";
 
 export default function AdminPage() {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<Tab>("pending");
+  const [tab, setTab] = useState<Tab>("roster");
   const users = useAllUsers();
   const roster = useRoster();
 
   const pending = users.data.filter((user) => user.status === "pending");
   const approved = users.data.filter((user) => user.status === "approved");
+
+  /*
+   * 초대 코드가 맞으면 기다림 없이 바로 입장하므로 보통 승인 대기는 비어 있습니다.
+   * 운영진이 누군가를 다시 막았을 때만 이 탭이 나타납니다.
+   */
+  const tabs: { value: Tab; label: string }[] = [
+    ...(pending.length > 0
+      ? [{ value: "pending" as Tab, label: `확인 대기 ${pending.length}` }]
+      : []),
+    { value: "roster", label: "원우 명단" },
+    { value: "members", label: "권한 관리" },
+  ];
 
   if (!isAdmin) {
     return (
@@ -65,7 +71,7 @@ export default function AdminPage() {
 
       <div className="px-5 pb-8">
         <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
-          {TABS.map(({ value, label }) => (
+          {tabs.map(({ value, label }) => (
             <button
               key={value}
               type="button"
@@ -76,7 +82,6 @@ export default function AdminPage() {
               }`}
             >
               {label}
-              {value === "pending" && pending.length > 0 ? ` ${pending.length}` : ""}
             </button>
           ))}
         </div>
@@ -89,12 +94,13 @@ export default function AdminPage() {
               <Skeleton className="h-20 rounded-3xl" />
               <Skeleton className="h-20 rounded-3xl" />
             </div>
-          ) : tab === "pending" ? (
+          ) : tab === "pending" && pending.length > 0 ? (
+            // 마지막 한 명을 확인해주면 이 탭이 사라지므로 명단 탭으로 자연스럽게 넘어갑니다.
             <PendingSection pending={pending} roster={roster.data} />
-          ) : tab === "roster" ? (
-            <RosterSection roster={roster} approved={approved} />
-          ) : (
+          ) : tab === "members" ? (
             <MembersSection approved={approved} />
+          ) : (
+            <RosterSection roster={roster} approved={approved} />
           )}
         </div>
       </div>
@@ -143,7 +149,7 @@ function PendingSection({
   async function reject(user: UserDoc) {
     if (
       !window.confirm(
-        `${user.name || user.email} 님의 가입 신청을 거절할까요?\n계정 문서가 삭제되고, 본인은 초대 코드부터 다시 시작하게 됩니다.`,
+        `${user.name || user.email} 님의 계정을 완전히 지울까요?\n본인은 초대 코드부터 다시 시작하게 됩니다.`,
       )
     ) {
       return;
@@ -155,7 +161,7 @@ function PendingSection({
     } catch {
       // 규칙에서 users 삭제를 막아두었으므로 안내만 합니다.
       setError(
-        "거절(삭제)은 보안 규칙에서 막혀 있어요. Firebase 콘솔에서 해당 문서를 지워 주세요.",
+        "계정 삭제는 보안 규칙에서 막혀 있어요. 그냥 두면 앱에 들어올 수 없고, 완전히 지우려면 Firebase 콘솔에서 해당 문서를 삭제해 주세요.",
       );
     } finally {
       setBusyUid(null);
@@ -167,8 +173,8 @@ function PendingSection({
       <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<CheckIcon className="h-10 w-10" />}
-          title="승인을 기다리는 신청이 없어요"
-          description="새로 가입 신청이 들어오면 여기에 바로 표시됩니다."
+          title="확인을 기다리는 계정이 없어요"
+          description="초대 코드가 맞으면 바로 입장하기 때문에, 운영진이 막아둔 계정만 여기에 표시됩니다."
         />
       </div>
     );
@@ -488,7 +494,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
   async function toggleAdmin(member: UserDoc) {
     const makingAdmin = member.role !== "admin";
     const question = makingAdmin
-      ? `${member.name} 님에게 운영진 권한을 줄까요?\n일정 등록과 가입 승인을 할 수 있게 됩니다.`
+      ? `${member.name} 님에게 운영진 권한을 줄까요?\n일정·앨범 등록과 명단 관리를 할 수 있게 됩니다.`
       : `${member.name} 님의 운영진 권한을 뺄까요?`;
     if (!window.confirm(question)) return;
 
@@ -499,6 +505,29 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
       });
     } catch {
       setError("권한을 바꾸지 못했어요.");
+    }
+  }
+
+  /**
+   * 계정 접근을 다시 막습니다.
+   * 초대 코드만 맞으면 바로 입장하는 구조라, 잘못 들어온 사람을 정리하는
+   * 마지막 안전장치입니다. status를 pending으로 되돌리면 그 순간부터
+   * 원우 명단·채팅·사진 등 모든 데이터가 보이지 않습니다.
+   */
+  async function blockMember(member: UserDoc) {
+    if (
+      !window.confirm(
+        `${member.name || member.email} 님의 접근을 막을까요?\n앱을 열면 "운영진 확인을 기다리고 있어요" 화면만 보이게 됩니다.\n나중에 다시 풀 수 있어요.`,
+      )
+    ) {
+      return;
+    }
+
+    setError(null);
+    try {
+      await updateDoc(doc(db, "users", member.uid), { status: "pending" });
+    } catch {
+      setError("접근을 막지 못했어요.");
     }
   }
 
@@ -539,19 +568,31 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                 </p>
                 <p className="truncate text-[12px] text-ink-faint">{member.email}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => toggleAdmin(member)}
-                // 스스로 운영진 권한을 빼면 아무도 승인할 수 없게 될 수 있어 막아둡니다.
-                disabled={isMe}
-                className={`shrink-0 rounded-full px-3.5 py-2 text-[13px] font-bold transition disabled:opacity-45 ${
-                  member.role === "admin"
-                    ? "bg-brand-50 text-brand-700"
-                    : "bg-stone-100 text-ink-muted"
-                }`}
-              >
-                {member.role === "admin" ? "운영진" : "원우"}
-              </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleAdmin(member)}
+                  // 스스로 운영진 권한을 빼면 아무도 관리할 수 없게 될 수 있어 막아둡니다.
+                  disabled={isMe}
+                  className={`rounded-full px-3.5 py-2 text-[13px] font-bold transition disabled:opacity-45 ${
+                    member.role === "admin"
+                      ? "bg-brand-50 text-brand-700"
+                      : "bg-stone-100 text-ink-muted"
+                  }`}
+                >
+                  {member.role === "admin" ? "운영진" : "원우"}
+                </button>
+                {!isMe ? (
+                  <button
+                    type="button"
+                    onClick={() => blockMember(member)}
+                    aria-label={`${member.nickname || member.name} 접근 막기`}
+                    className="rounded-full px-2.5 py-2 text-[13px] font-bold text-ink-faint transition active:bg-stone-100"
+                  >
+                    차단
+                  </button>
+                ) : null}
+              </div>
             </li>
           );
         })}

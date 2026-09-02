@@ -39,6 +39,10 @@ function JoinScreen() {
        * (규칙이 inviteCodes/{코드} 문서가 있고 active인지 확인합니다.)
        * 그래서 앱은 초대 코드 목록을 읽을 권한이 아예 없고,
        * 코드가 틀리면 아래 쓰기가 권한 오류로 거절됩니다.
+       *
+       * 코드가 맞으면 바로 approved로 만들어 기다림 없이 입장합니다.
+       * 비공개성은 초대 코드가 지킵니다. 문제가 생긴 계정은 운영진 화면에서
+       * 다시 막을 수 있습니다.
        */
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
@@ -52,7 +56,7 @@ function JoinScreen() {
         memberType: "general",
         bio: "",
         role: "member",
-        status: "pending",
+        status: "approved",
         cohort: COHORT,
         inviteCode: normalizedCode,
         profileCompleted: false,
@@ -82,7 +86,7 @@ function JoinScreen() {
       <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
         {APP_NAME}는 {COHORT} 원우들만 쓰는 비공개 공간이에요.
         <br />
-        운영진이 단체 대화방에 공유한 코드를 넣어 주세요.
+        운영진이 단체 대화방에 공유한 코드를 넣으면 바로 시작할 수 있어요.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8">
@@ -104,7 +108,7 @@ function JoinScreen() {
 
         <div className="mt-6">
           <PrimaryButton type="submit" disabled={!canSubmit} loading={submitting}>
-            가입 신청하기
+            시작하기
           </PrimaryButton>
         </div>
       </form>
