@@ -1,0 +1,63 @@
+rules_version = '2';
+
+/*
+ * 애기애타 10기 앱 Storage 보안 규칙
+ * ------------------------------------------------------------------
+ * 배포:  firebase deploy --only storage
+ *
+ * 참고: getDownloadURL()로 받은 주소에는 토큰이 붙어 있어서, 그 주소를 아는
+ * 사람은 규칙과 상관없이 파일을 볼 수 있습니다. 앱 밖으로 주소가 새지 않도록
+ * 주의해 주세요. (사진을 완전히 비공개로 묶어야 한다면 Phase 3에서
+ * 서명된 URL 방식으로 바꾸는 것을 검토할 수 있습니다.)
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isApproved() {
+      return isSignedIn()
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    /** 이미지 파일이면서 용량이 maxMb 이하인지 */
+    function isImageUnder(maxMb) {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < maxMb * 1024 * 1024;
+    }
+
+    // 프로필 사진 — 본인만 올릴 수 있습니다.
+    // (가입 승인 전에도 온보딩에서 사진을 올릴 수 있어야 하므로 승인 여부는 보지 않습니다.)
+    match /users/{uid}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && isImageUnder(5);
+    }
+
+    // 채팅 이미지 첨부 (Phase 2)
+    match /chat/{roomId}/{fileName} {
+      allow read: if isApproved();
+      allow write: if isApproved() && isImageUnder(10);
+    }
+
+    // 행사 사진 (Phase 2)
+    match /albums/{albumId}/{fileName} {
+      allow read: if isApproved();
+      allow write: if isApproved() && isImageUnder(10);
+    }
+
+    // 소감 첨부 사진 (Phase 2)
+    match /reflections/{fileName} {
+      allow read: if isApproved();
+      allow write: if isApproved() && isImageUnder(10);
+    }
+
+    // 그 밖의 경로는 모두 차단
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,114 @@
+"use client";
+
+import Link from "next/link";
+import { ChevronRightIcon, ClockIcon, PeopleCountIcon, PinIcon } from "@/components/icons";
+import {
+  ddayLabel,
+  formatDotDate,
+  formatMonthDay,
+  formatTime,
+  parseDateString,
+  WEEKDAYS,
+} from "@/lib/format";
+import type { EventDoc } from "@/lib/types";
+
+/**
+ * 홈 화면 맨 위에 뜨는 다가오는 일정 카드.
+ * 포스터의 주황 리본에서 색을 가져온 그라데이션을 씁니다.
+ */
+export function EventDdayCard({ event }: { event: EventDoc }) {
+  return (
+    <Link
+      href={`/events/${event.id}`}
+      className="block rounded-3xl bg-linear-135 from-brand-500 to-brand-700 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="rounded-full bg-white/25 px-3 py-1 text-[13px] font-bold">
+          {ddayLabel(event.date)}
+        </span>
+        <span className="text-[14px] font-medium text-white/90">
+          {formatMonthDay(event.date)}
+        </span>
+      </div>
+
+      <p className="mt-4 text-[22px] font-bold leading-tight">{event.title}</p>
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] text-white/90">
+        {event.startTime ? (
+          <span className="flex items-center gap-1.5">
+            <ClockIcon className="h-[18px] w-[18px]" />
+            {formatTime(event.startTime)}
+          </span>
+        ) : null}
+        {event.location ? (
+          <span className="flex min-w-0 items-center gap-1.5">
+            <PinIcon className="h-[18px] w-[18px] shrink-0" />
+            <span className="truncate">{event.location}</span>
+          </span>
+        ) : null}
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * 일정 목록에 쓰는 한 줄 카드.
+ * 왼쪽에 요일/일/월을 담은 날짜 블록을 두는 참고 디자인 형태입니다.
+ */
+export function EventListItem({
+  event,
+  attendingCount,
+}: {
+  event: EventDoc;
+  /** 참석하겠다고 응답한 인원 수 */
+  attendingCount?: number;
+}) {
+  const date = parseDateString(event.date);
+
+  return (
+    <Link
+      href={`/events/${event.id}`}
+      className="flex items-center gap-4 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+    >
+      <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-50">
+        <span className="text-[12px] font-bold text-brand-600">
+          {date ? WEEKDAYS[date.getDay()] : ""}
+        </span>
+        <span className="text-[24px] font-bold leading-tight text-brand-700">
+          {date ? date.getDate() : "-"}
+        </span>
+        <span className="text-[11px] font-medium text-brand-600">
+          {date ? `${date.getMonth() + 1}월` : ""}
+        </span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[17px] font-bold text-ink">{event.title}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-muted">
+          {event.startTime ? (
+            <span className="flex items-center gap-1">
+              <ClockIcon className="h-4 w-4" />
+              {formatTime(event.startTime)}
+            </span>
+          ) : null}
+          {event.location ? (
+            <span className="flex min-w-0 items-center gap-1">
+              <PinIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{event.location}</span>
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 flex items-center gap-1 text-[13px] text-ink-faint">
+          <PeopleCountIcon className="h-4 w-4" />
+          {attendingCount === undefined
+            ? formatDotDate(event.date)
+            : attendingCount > 0
+              ? `${attendingCount}명 참석 예정`
+              : "아직 응답한 사람이 없어요"}
+        </p>
+      </div>
+
+      <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+    </Link>
+  );
+}

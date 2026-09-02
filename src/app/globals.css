@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/*
+ * 애기애타 10기 디자인 토큰
+ * ---------------------------------------------------------------
+ * 공식 포스터("2026 도산 애기애타 리더십 과정")의 주황색을 기준으로 삼았습니다.
+ * - brand-500(#F5821F)이 포스터 제목에 쓰인 대표 주황색입니다. 배지·강조에 씁니다.
+ * - 흰 글씨를 얹는 버튼/말풍선처럼 "글자가 올라가는 면"은 brand-700(#AD4E0E)을 씁니다.
+ *   #F5821F 위의 흰 글씨는 명도 대비가 3:1에 못 미쳐 접근성 기준(4.5:1)에 미달하지만,
+ *   #AD4E0E 위의 흰 글씨는 약 5.4:1로 기준을 넉넉히 통과합니다.
+ * - navy는 도산아카데미 심볼 색으로, 기관 표기에만 아주 제한적으로 씁니다.
+ */
+@theme {
+  --color-brand-50: #fff8f0;
+  --color-brand-100: #feebd6;
+  --color-brand-200: #fcd5ac;
+  --color-brand-300: #fabb7c;
+  --color-brand-400: #f89e4b;
+  --color-brand-500: #f5821f;
+  --color-brand-600: #de6c10;
+  --color-brand-700: #ad4e0e;
+  --color-brand-800: #8b3f0d;
+  --color-brand-900: #71340d;
+
+  /* 도산아카데미 심볼 네이비 */
+  --color-navy: #1b3a6b;
+
+  /* 따뜻한 뉴트럴 — 완전한 검정 대신 살짝 붉은 기가 도는 차콜을 씁니다. */
+  --color-ink: #1c1917;
+  --color-ink-soft: #57534e;
+  --color-ink-muted: #78716c;
+  --color-ink-faint: #a8a29e;
+  --color-line: #f2e9e1;
+
+  /* 배경: 포스터처럼 거의 흰색에 가까운, 아주 옅은 주황 기운의 오프화이트 */
+  --color-canvas: #fffaf5;
+
+  --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
+
+  /* 카드에 쓰는 은은한 그림자 */
+  --shadow-card: 0 1px 2px rgba(28, 25, 23, 0.04), 0 6px 16px rgba(124, 45, 18, 0.06);
+  --shadow-float: 0 4px 12px rgba(124, 45, 18, 0.12), 0 12px 28px rgba(124, 45, 18, 0.14);
+}
+
+html {
+  /* iOS에서 가로 방향 전환 시 글자 크기가 멋대로 커지는 것을 막습니다. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  /* 하단 탭바가 홈 인디케이터에 가리지 않도록 안전 영역을 확보합니다. */
+  overscroll-behavior-y: none;
+}
+
+/* 모바일에서 입력창을 눌렀을 때 iOS가 화면을 확대하지 않도록 최소 16px을 유지합니다. */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: 16px;
+}
+
+/* 스크롤바는 숨기되 스크롤은 되도록 (가로 서브탭 등에서 사용) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 로딩 스켈레톤용 은은한 물결 애니메이션 */
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(231, 219, 210, 0.55) 25%,
+    rgba(245, 238, 232, 0.9) 37%,
+    rgba(231, 219, 210, 0.55) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-wave 1.4s ease infinite;
+}
+
+@keyframes skeleton-wave {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-sheet-up {
+  animation: sheet-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

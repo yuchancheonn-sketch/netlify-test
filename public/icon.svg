@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F79A3C"/>
+      <stop offset="45%" stop-color="#EF7A16"/>
+      <stop offset="100%" stop-color="#B0490B"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="ribbon2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <rect x="0" y="0" width="1024" height="1024" rx="225.28"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="225.28" fill="url(#bg)"/>
+
+  <g clip-path="url(#clip)">
+    <!-- 포스터의 실크 리본처럼 화면을 가로지르는 부드러운 곡선들 -->
+    <path d="M-60 700 C 240 640, 320 300, 620 250 S 1000 190, 1120 120 L 1120 -40 L -60 -40 Z"
+          fill="url(#ribbon2)"/>
+    <path d="M-60 820 C 260 780, 380 470, 700 420 C 900 388, 1020 330, 1120 250"
+          fill="none" stroke="url(#ribbon)" stroke-width="86" stroke-linecap="round"/>
+    <path d="M-60 960 C 300 930, 460 640, 780 590 C 950 562, 1050 500, 1120 430"
+          fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="44" stroke-linecap="round"/>
+    <path d="M-60 1090 C 340 1060, 540 790, 880 740 C 1010 720, 1080 680, 1120 640"
+          fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="26" stroke-linecap="round"/>
+  </g>
+
+  <!--
+    애기애타 서예 로고와 같은 2x2 배치.
+    한문은 오른쪽 세로줄부터 읽으므로 오른쪽 위 愛 → 오른쪽 아래 己,
+    왼쪽 위 愛 → 왼쪽 아래 他 순서입니다.
+  -->
+  <g fill="#FFFFFF" stroke="#FFFFFF" stroke-width="11.264" stroke-linejoin="round"
+     font-family="Batang, BatangChe, SimSun, serif" font-weight="bold" text-anchor="middle">
+    <text x="358.4" y="496.64" font-size="317.44">愛</text>
+    <text x="665.6" y="496.64" font-size="317.44">愛</text>
+    <text x="358.4" y="803.84" font-size="317.44">他</text>
+    <text x="665.6" y="803.84" font-size="317.44">己</text>
+  </g>
+</svg>

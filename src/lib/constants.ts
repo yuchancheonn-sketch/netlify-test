@@ -1,0 +1,51 @@
+/**
+ * 앱 전역에서 쓰는 상수 모음.
+ * 앱 이름·기수처럼 나중에 바뀔 수 있는 값은 전부 여기 모아두었으니
+ * 이름이 확정되면 이 파일만 고치면 됩니다.
+ */
+
+/** 앱 이름 (홈 화면 아이콘·로그인 화면·PWA manifest에 함께 쓰입니다) */
+export const APP_NAME = "애기애타 10기";
+
+/** 홈 화면에 추가했을 때 아이콘 아래 표시될 짧은 이름 (12자 이내 권장) */
+export const APP_SHORT_NAME = "애기애타10";
+
+/** 과정 공식 명칭 (포스터 기준) */
+export const COURSE_FULL_NAME = "2026 도산 애기애타 리더십 과정";
+
+/** 로그인 화면 부제 */
+export const APP_TAGLINE = "우리 10기가 함께한 시간이 남는 곳";
+
+/** 애기애타의 뜻. 로그인 화면 안내 문구에 씁니다. */
+export const APP_MEANING =
+  "애기애타(愛己愛他)란 도산 안창호 선생께서 말씀하신, 나를 사랑하듯 타인을 사랑한다는 의미입니다.";
+
+/** 이 앱이 담당하는 기수. 가입하는 모든 사용자 문서에 기록됩니다. */
+export const COHORT = "10기";
+
+/** 10기 수업 기간 (포스터 기준: 2026년 8월 25일 ~ 11월 24일, 10주) */
+export const COURSE_START_DATE = "2026-08-25";
+export const COURSE_END_DATE = "2026-11-24";
+export const COURSE_TOTAL_SESSIONS = 10;
+
+/** 단체 채팅방 ID. Phase 2에서 채널을 여러 개로 늘릴 때 이 값을 목록으로 바꾸면 됩니다. */
+export const MAIN_CHAT_ROOM_ID = "main";
+
+/** 채팅 한 번에 불러올 메시지 개수 */
+export const CHAT_PAGE_SIZE = 50;
+
+/** 프로필 사진 업로드 시 저장할 정사각형 한 변의 길이(px) */
+export const PROFILE_IMAGE_SIZE = 512;
+
+/** 한줄 소개 최대 글자 수 */
+export const BIO_MAX_LENGTH = 50;
+
+/** 별칭 길이 제한 */
+export const NICKNAME_MIN_LENGTH = 1;
+export const NICKNAME_MAX_LENGTH = 15;
+
+/** 브랜드 색 (PWA theme_color 등 CSS 밖에서 필요할 때 사용) */
+export const BRAND_COLOR = "#F5821F";
+/** 흰 글씨를 얹어도 대비가 충분한 진한 주황 */
+export const BRAND_COLOR_STRONG = "#AD4E0E";
+export const BRAND_BACKGROUND = "#FFFAF5";

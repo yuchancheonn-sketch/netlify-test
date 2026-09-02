@@ -1,0 +1,158 @@
+rules_version = '2';
+
+/*
+ * 애기애타 10기 앱 Firestore 보안 규칙
+ * ------------------------------------------------------------------
+ * 이 파일이 앱의 "비공개성"을 실제로 지키는 곳입니다.
+ * 화면 단의 접근 제어는 길 안내일 뿐이고, 브라우저에서 코드를 고쳐
+ * 화면을 억지로 열더라도 여기서 막히면 데이터는 내려가지 않습니다.
+ *
+ * 배포:  firebase deploy --only firestore:rules
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- 도우미 함수 ----------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** 로그인한 사용자의 users 문서 */
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    /** 운영진 승인을 받은 원우만 콘텐츠를 볼 수 있습니다. */
+    function isApproved() {
+      return hasProfile() && me().status == 'approved';
+    }
+
+    function isAdmin() {
+      return isApproved() && me().role == 'admin';
+    }
+
+    /**
+     * 가입 신청에 쓴 초대 코드가 실제로 존재하고 활성 상태인지 확인합니다.
+     * 규칙 안의 get()은 클라이언트 권한과 무관하게 읽을 수 있으므로,
+     * 앱에는 inviteCodes 읽기 권한을 전혀 주지 않아도 검증이 됩니다.
+     */
+    function isValidInviteCode(code) {
+      return exists(/databases/$(database)/documents/inviteCodes/$(code))
+        && get(/databases/$(database)/documents/inviteCodes/$(code)).data.active == true;
+    }
+
+    /** 수정 요청에서 특정 필드가 그대로인지 (본인이 못 바꾸게 막을 때 사용) */
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ---------- 초대 코드 ----------
+    // 앱에서는 절대 읽거나 쓸 수 없습니다. Firebase 콘솔에서만 관리하세요.
+    match /inviteCodes/{code} {
+      allow read, write: if false;
+    }
+
+    // ---------- 원우 ----------
+    match /users/{uid} {
+      // 승인된 원우는 전체 명단을 볼 수 있고, 승인 전이라도 자기 문서는 읽을 수 있습니다.
+      allow read: if isApproved() || (isSignedIn() && request.auth.uid == uid);
+
+      // 가입 신청: 자기 문서만, 올바른 초대 코드로, 반드시 pending/member 상태로만 만들 수 있습니다.
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.role == 'member'
+        && request.resource.data.profileCompleted == false
+        && isValidInviteCode(request.resource.data.inviteCode);
+
+      // 본인 수정: 프로필 항목만 바꿀 수 있고 권한·승인 상태는 손댈 수 없습니다.
+      allow update: if isSignedIn()
+        && request.auth.uid == uid
+        && unchanged('role')
+        && unchanged('status')
+        && unchanged('cohort')
+        && unchanged('inviteCode')
+        && unchanged('uid');
+
+      // 운영진 승인/권한 부여는 운영진만 가능합니다.
+      allow update: if isAdmin();
+
+      // 문서 삭제는 콘솔에서만 (실수로 명단이 사라지지 않도록)
+      allow delete: if false;
+    }
+
+    // ---------- 모임 일정 ----------
+    match /events/{eventId} {
+      allow read: if isApproved();
+      allow create, update, delete: if isAdmin();
+
+      // 참석 여부는 본인 것만 쓸 수 있고, 현황은 승인된 원우 모두가 봅니다.
+      match /rsvps/{uid} {
+        allow read: if isApproved();
+        allow write: if isApproved() && request.auth.uid == uid;
+      }
+    }
+
+    // ---------- 단체 채팅 ----------
+    match /chatRooms/{roomId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isApproved();
+        // 보내는 사람을 자기 자신으로만 적을 수 있습니다.
+        allow create: if isApproved()
+          && request.resource.data.senderId == request.auth.uid;
+        // 수정·삭제는 본인이 쓴 메시지만 (운영진은 정리 목적으로 삭제 가능)
+        allow update: if isApproved() && resource.data.senderId == request.auth.uid;
+        allow delete: if isApproved()
+          && (resource.data.senderId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // ---------- 복습 영상 (Phase 2) ----------
+    match /videos/{videoId} {
+      allow read: if isApproved();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- 행사 사진 (Phase 2) ----------
+    match /photoAlbums/{albumId} {
+      allow read: if isApproved();
+      // 앨범(행사) 자체를 만드는 건 운영진만
+      allow create, update, delete: if isAdmin();
+
+      match /photos/{photoId} {
+        allow read: if isApproved();
+        allow create: if isApproved()
+          && request.resource.data.uploadedBy == request.auth.uid;
+        allow update: if isApproved()
+          && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+        allow delete: if isApproved()
+          && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      }
+    }
+
+    // ---------- 소감 나눔 (Phase 2) ----------
+    match /reflections/{reflectionId} {
+      allow read: if isApproved();
+      allow create: if isApproved()
+        && request.resource.data.authorId == request.auth.uid;
+      allow update: if isApproved() && resource.data.authorId == request.auth.uid;
+      allow delete: if isApproved()
+        && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // 위에서 명시하지 않은 모든 경로는 기본적으로 막습니다.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
