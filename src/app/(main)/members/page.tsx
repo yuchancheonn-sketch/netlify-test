@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Avatar from "@/components/Avatar";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import { SearchIcon, UsersIcon } from "@/components/icons";
-import { Badge, EmptyState, ErrorState, Skeleton, inputClassName } from "@/components/ui";
+import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatBirthday } from "@/lib/format";
 import { useApprovedMembers, useRoster } from "@/lib/hooks";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
@@ -61,15 +61,18 @@ export default function MembersPage() {
       <PageHeader title="원우 소개" right={<ProfileAvatarButton />} />
 
       <div className="px-5">
-        {/* 검색 */}
+        {/*
+          검색창. 글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
+          16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
+        */}
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-ink-faint" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 h-[18px] w-[18px] -translate-y-1/2 text-ink-faint" />
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="이름이나 별칭으로 찾기"
             aria-label="원우 검색"
-            className={`${inputClassName} pl-12`}
+            className="w-full rounded-xl border border-transparent bg-white py-2.5 pr-4 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none transition placeholder:text-ink-faint focus:border-brand-300 focus:ring-4 focus:ring-brand-100"
           />
         </div>
 
