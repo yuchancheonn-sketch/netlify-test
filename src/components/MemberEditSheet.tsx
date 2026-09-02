@@ -25,6 +25,7 @@ import {
 } from "@/lib/constants";
 import type { DirectoryEntry } from "@/lib/directory";
 import { formatPhone } from "@/lib/format";
+import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
 const MEMBER_TYPES: { value: MemberType; label: string }[] = [
@@ -62,9 +63,17 @@ export default function MemberEditSheet({
   const [phone, setPhone] = useState(entry?.phone ?? "");
   const [councilRole, setCouncilRole] = useState(entry?.councilRole ?? "");
   const [bio, setBio] = useState(entry?.bio ?? "");
+  const [introVideoUrl, setIntroVideoUrl] = useState(entry?.introVideoUrl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  /** 붙여넣은 주소를 알아봤는지 바로 보여주는 미리보기 */
+  const videoThumb = (() => {
+    const link = parseVideoLink(introVideoUrl);
+    return link?.id ? videoThumbnail(link) : null;
+  })();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -78,6 +87,12 @@ export default function MemberEditSheet({
     const digits = phone.replace(/\D/g, "");
     if (phone.trim() && (digits.length < 9 || digits.length > 11)) {
       setError("휴대폰 번호를 다시 확인해 주세요.");
+      return;
+    }
+
+    // 비워두는 건 괜찮지만, 넣었다면 알아볼 수 있는 주소여야 합니다.
+    if (introVideoUrl.trim() && !isSupportedVideoUrl(introVideoUrl)) {
+      setVideoError("유튜브나 비메오 영상 주소를 넣어 주세요.");
       return;
     }
 
@@ -98,6 +113,7 @@ export default function MemberEditSheet({
       phone: phone.trim() ? formatPhone(phone) : "",
       councilRole,
       bio: bio.trim(),
+      introVideoUrl: introVideoUrl.trim(),
     };
 
     try {
@@ -142,7 +158,7 @@ export default function MemberEditSheet({
           {!entry
             ? "아직 가입하지 않은 원우도 수첩에 올려둘 수 있어요. 본인이 가입하면 자동으로 이어집니다."
             : isMine
-              ? "내 항목이에요. 사진·자기소개·소개 영상은 내 프로필에서 바꿀 수 있어요."
+              ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
               : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
         </p>
 
@@ -247,7 +263,7 @@ export default function MemberEditSheet({
           </select>
         </div>
 
-        <div className="mb-7">
+        <div className="mb-5">
           <FieldLabel htmlFor="edit-bio" hint="선택">
             한 줄 소개
           </FieldLabel>
@@ -258,6 +274,49 @@ export default function MemberEditSheet({
             placeholder="예: 마케팅 일을 해요 / 서울 거주"
             className={inputClassName}
           />
+        </div>
+
+        {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}
+        <div className="mb-7">
+          <FieldLabel htmlFor="edit-video" hint="선택">
+            소개 영상 링크
+          </FieldLabel>
+          <input
+            id="edit-video"
+            value={introVideoUrl}
+            onChange={(event) => {
+              setIntroVideoUrl(event.target.value);
+              setVideoError(null);
+            }}
+            inputMode="url"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="https://youtu.be/..."
+            className={inputClassName}
+          />
+          {videoError ? (
+            <FieldError>{videoError}</FieldError>
+          ) : videoThumb ? (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={videoThumb}
+                alt=""
+                className="h-14 w-24 shrink-0 rounded-xl object-cover"
+              />
+              <p className="text-[13px] font-bold text-ink-soft">
+                영상을 찾았어요
+                <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
+                  수첩 카드에 이 장면이 보입니다
+                </span>
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
+              입학식 자기소개 영상 주소를 붙여넣으면 카드 사진이 영상 썸네일로 바뀝니다.
+            </p>
+          )}
         </div>
 
         {error ? (

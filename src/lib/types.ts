@@ -88,6 +88,8 @@ export interface RosterDoc {
   phone?: string;
   councilRole?: string;
   bio?: string;
+  /** 입학식 자기소개 영상처럼, 계정이 없어도 걸어둘 수 있는 소개 영상 */
+  introVideoUrl?: string;
   updatedBy?: string;
   updatedByName?: string;
   updatedAt?: Timestamp | null;

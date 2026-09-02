@@ -126,7 +126,9 @@ service cloud.firestore {
         && (!(request.resource.data.bio is string)
           || request.resource.data.bio.size() <= 200)
         && (!(request.resource.data.note is string)
-          || request.resource.data.note.size() <= 200);
+          || request.resource.data.note.size() <= 200)
+        && (!(request.resource.data.introVideoUrl is string)
+          || request.resource.data.introVideoUrl.size() <= 500);
     }
 
     // ---------- 초대 코드 ----------
@@ -202,7 +204,7 @@ service cloud.firestore {
       allow update: if isApproved()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
              'name', 'memberType', 'company', 'position', 'phone',
-             'councilRole', 'bio', 'note',
+             'councilRole', 'bio', 'note', 'introVideoUrl',
              'updatedBy', 'updatedByName', 'updatedAt'
            ])
         && stampsEditor()

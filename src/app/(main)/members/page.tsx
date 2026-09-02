@@ -111,7 +111,7 @@ export default function MembersPage() {
                   type="button"
                   onClick={() => setFilter(value)}
                   aria-pressed={active}
-                  className={`rounded-full px-4 py-2 text-[14px] font-bold transition ${
+                  className={`rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
                     active
                       ? "bg-brand-500 text-white"
                       : "bg-white text-ink-muted shadow-[var(--shadow-card)]"
@@ -446,6 +446,21 @@ function MemberDetailSheet({
               </button>
             )}
           </div>
+        ) : null}
+
+        {/*
+          영상에 따라 앱 안에서 재생이 막혀 있을 수 있어(퍼가기 금지 설정),
+          유튜브 앱·웹으로 바로 넘어가는 길을 함께 둡니다.
+        */}
+        {videoLink?.id ? (
+          <a
+            href={videoLink.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 block text-center text-[13px] font-bold text-brand-700"
+          >
+            {videoLink.kind === "vimeo" ? "비메오에서 보기" : "유튜브에서 보기"} ↗
+          </a>
         ) : null}
 
         <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">

@@ -59,7 +59,7 @@ function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry 
     bio: member.bio || matched?.bio || "",
     photoURL: member.photoURL ?? null,
     introduction: member.introduction ?? "",
-    introVideoUrl: member.introVideoUrl ?? "",
+    introVideoUrl: member.introVideoUrl || matched?.introVideoUrl || "",
     updatedBy: member.updatedBy ?? "",
     updatedByName: member.updatedByName ?? "",
   };
@@ -82,7 +82,7 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
     bio: entry.bio ?? "",
     photoURL: null,
     introduction: "",
-    introVideoUrl: "",
+    introVideoUrl: entry.introVideoUrl ?? "",
     updatedBy: entry.updatedBy ?? "",
     updatedByName: entry.updatedByName ?? "",
   };
