@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { APP_NAME, APP_TAGLINE, BRAND_BACKGROUND, BRAND_COLOR } from "@/lib/constants";
@@ -13,6 +13,17 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-noto-sans-kr",
   subsets: ["latin"],
   weight: ["400", "500", "700", "900"],
+  display: "swap",
+});
+
+/**
+ * 명조체(세리프). 애기애타의 뜻처럼 붓글씨 느낌이 어울리는 문구에 씁니다.
+ * 서예 로고와 결이 맞아 격식 있는 인상을 줍니다.
+ */
+const notoSerifKr = Noto_Serif_KR({
+  variable: "--font-noto-serif-kr",
+  subsets: ["latin"],
+  weight: ["400", "600"],
   display: "swap",
 });
 
@@ -49,7 +60,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${notoSansKr.variable} h-full antialiased`}>
+    <html
+      lang="ko"
+      className={`${notoSansKr.variable} ${notoSerifKr.variable} h-full antialiased`}
+    >
       <body
         className="min-h-full font-sans"
         style={{ backgroundColor: BRAND_BACKGROUND }}

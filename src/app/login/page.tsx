@@ -6,7 +6,13 @@ import StageGate from "@/components/StageGate";
 import { GoogleIcon, LockIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { APP_MEANING, APP_NAME, COURSE_FULL_NAME } from "@/lib/constants";
+import {
+  APP_DEFINITION_BODY,
+  APP_DEFINITION_HANJA,
+  APP_DEFINITION_TITLE,
+  APP_NAME,
+  COURSE_FULL_NAME,
+} from "@/lib/constants";
 
 export default function LoginPage() {
   return (
@@ -41,12 +47,18 @@ function LoginScreen() {
         위쪽(밝은 하늘)은 얇게 덮어 사진이 보이게 하고,
         아래쪽(어두운 양복)은 짙게 덮어 버튼 글씨가 또렷하게 보이도록 했습니다.
       */}
+      {/*
+        사진 높이를 화면보다 크게(122%) 잡아 위아래로 여유를 만든 뒤,
+        위쪽(4%)에 붙여서 인물이 화면 아래로 내려오게 했습니다.
+        높이를 딱 맞추면(cover) 남는 공간이 없어 위치를 옮길 수 없습니다.
+      */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cover bg-no-repeat"
+        className="pointer-events-none absolute inset-0 bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
-          backgroundPosition: "50% 12%",
+          backgroundSize: "auto 122%",
+          backgroundPosition: "50% 4%",
         }}
       />
       <div
@@ -61,13 +73,14 @@ function LoginScreen() {
       <div className="relative flex min-h-dvh w-full flex-col px-7 pt-14 pb-10">
         {/* 앱 아이콘 + 이름 */}
         <div className="flex flex-col items-center text-center">
-          <div className="rounded-[28px] bg-white p-3 shadow-[var(--shadow-card)]">
+          {/* 흰 테두리는 아이콘이 배경 사진에서 살짝 떠 보일 만큼만 얇게 둡니다. */}
+          <div className="rounded-[22px] bg-white p-[3px] shadow-[var(--shadow-card)]">
             <Image
               src="/icon-192.png"
               alt={`${APP_NAME} 아이콘`}
-              width={78}
-              height={78}
-              className="rounded-[20px]"
+              width={80}
+              height={80}
+              className="rounded-[19px]"
               priority
             />
           </div>
@@ -78,10 +91,18 @@ function LoginScreen() {
         {/* 사진이 보이는 여백 */}
         <div className="flex-1" />
 
-        {/* 애기애타의 뜻 */}
-        <p className="rounded-2xl bg-white/70 px-5 py-4 text-center text-[13px] leading-relaxed font-medium text-brand-900 backdrop-blur-sm">
-          {APP_MEANING}
-        </p>
+        {/* 애기애타의 정의 — 서예 로고와 결을 맞춰 명조체로 씁니다. */}
+        <div className="rounded-2xl bg-white/70 px-5 py-5 text-center backdrop-blur-sm">
+          <p className="font-serif text-[15px] tracking-[0.3em] text-brand-700">
+            {APP_DEFINITION_HANJA}
+          </p>
+          <p className="mt-1 font-serif text-[19px] font-semibold text-ink">
+            {APP_DEFINITION_TITLE}
+          </p>
+          <p className="mt-2 font-serif text-[15px] leading-relaxed text-ink-soft">
+            {APP_DEFINITION_BODY}
+          </p>
+        </div>
 
         <div className="mt-5">
           <PrimaryButton onClick={handleSignIn} loading={submitting}>

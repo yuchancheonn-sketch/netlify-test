@@ -16,9 +16,13 @@ export const COURSE_FULL_NAME = "2026 도산 애기애타 리더십 과정";
 /** 로그인 화면 부제 */
 export const APP_TAGLINE = "우리 10기가 함께한 시간이 남는 곳";
 
-/** 애기애타의 뜻. 로그인 화면 안내 문구에 씁니다. */
-export const APP_MEANING =
-  "애기애타(愛己愛他)란 도산 안창호 선생께서 말씀하신, 나를 사랑하듯 타인을 사랑한다는 의미입니다.";
+/**
+ * 애기애타의 정의. 로그인 화면에 명조체로 표시합니다.
+ * 배경에 도산 선생 사진이 들어가므로 설명을 덜어내고 뜻만 남겼습니다.
+ */
+export const APP_DEFINITION_HANJA = "愛己愛他";
+export const APP_DEFINITION_TITLE = "애기애타";
+export const APP_DEFINITION_BODY = "나를 사랑하고 남을 사랑한다";
 
 /** 이 앱이 담당하는 기수. 가입하는 모든 사용자 문서에 기록됩니다. */
 export const COHORT = "10기";
