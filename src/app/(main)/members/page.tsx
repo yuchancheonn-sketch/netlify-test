@@ -355,14 +355,14 @@ function MemberDetailSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center overflow-y-auto bg-ink/40 px-0 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
       aria-label={`${entry.name} 상세 정보`}
       onClick={onClose}
     >
       <div
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[16px] bg-white px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-white px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col items-center text-center">

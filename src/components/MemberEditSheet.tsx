@@ -140,16 +140,21 @@ export default function MemberEditSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 px-0 sm:items-center sm:px-5"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
       aria-label={entry ? `${entry.name} 정보 수정` : "원우 추가하기"}
       onClick={onClose}
     >
+      {/*
+        입력칸이 많아 화면보다 길어지므로 시트 안에서 스크롤합니다.
+        바깥(회색 배경)에 스크롤을 걸면 시트 윗부분이 화면 위로 밀려
+        이름·구분 칸에 손이 닿지 않습니다.
+      */}
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
         <h2 className="text-[19px] font-bold text-ink">
           {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
