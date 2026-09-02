@@ -52,6 +52,8 @@ function SignUpScreen() {
           birthdayYearPublic: false,
           memberType: "general",
           bio: "",
+          introduction: "",
+          introVideoUrl: "",
           role: "member",
           status: "approved",
           cohort: COHORT,

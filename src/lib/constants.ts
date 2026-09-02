@@ -65,6 +65,13 @@ export const PHOTO_MAX_DIMENSION = 2560;
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;
 
+/**
+ * 긴 자기소개 최대 글자 수.
+ * 원우 소개 목록을 열 때 모든 원우의 문서를 함께 받아오므로,
+ * 너무 길면 목록이 무거워집니다. 40명 기준 500자면 약 40KB입니다.
+ */
+export const INTRODUCTION_MAX_LENGTH = 500;
+
 /** 별칭 길이 제한 */
 export const NICKNAME_MIN_LENGTH = 1;
 export const NICKNAME_MAX_LENGTH = 15;

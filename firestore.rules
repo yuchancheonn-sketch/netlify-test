@@ -68,6 +68,21 @@ service cloud.firestore {
         || request.resource.data.photoURL.size() <= 60000;
     }
 
+    /*
+     * 자기소개와 소개 영상 주소도 길이를 제한합니다.
+     * 원우 소개 목록은 모든 원우의 문서를 함께 받아오기 때문에,
+     * 한 사람이 아주 긴 글을 넣으면 모두의 목록이 무거워집니다.
+     * 앱은 500자로 자르고, 규칙에서는 여유를 두어 2000자까지 허용합니다.
+     */
+    function textFieldsWithinLimit() {
+      return (!(request.resource.data.introduction is string)
+          || request.resource.data.introduction.size() <= 2000)
+        && (!(request.resource.data.introVideoUrl is string)
+          || request.resource.data.introVideoUrl.size() <= 500)
+        && (!(request.resource.data.bio is string)
+          || request.resource.data.bio.size() <= 200);
+    }
+
     // ---------- 초대 코드 ----------
     // 앱에서는 절대 읽거나 쓸 수 없습니다. Firebase 콘솔에서만 관리하세요.
     match /inviteCodes/{code} {
@@ -103,7 +118,8 @@ service cloud.firestore {
         && unchanged('cohort')
         && unchanged('inviteCode')
         && unchanged('uid')
-        && photoWithinLimit();
+        && photoWithinLimit()
+        && textFieldsWithinLimit();
 
       // 운영진 승인/권한 부여는 운영진만 가능합니다.
       allow update: if isAdmin();

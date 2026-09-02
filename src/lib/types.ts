@@ -28,7 +28,12 @@ export interface UserDoc {
   /** 연도를 다른 원우에게 공개할지 여부 */
   birthdayYearPublic: boolean;
   memberType: MemberType;
+  /** 카드에 미리보기로 뜨는 한 줄 소개 */
   bio: string;
+  /** 상세에서 보이는 긴 자기소개 (본인이 직접 씁니다) */
+  introduction: string;
+  /** 본인 소개 영상 주소 (유튜브·비메오). 없으면 빈 문자열 */
+  introVideoUrl: string;
   role: UserRole;
   status: UserStatus;
   cohort: string;

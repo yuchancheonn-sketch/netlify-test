@@ -7,6 +7,7 @@ import { SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton, inputClassName } from "@/components/ui";
 import { formatBirthday } from "@/lib/format";
 import { useApprovedMembers, useRoster } from "@/lib/hooks";
+import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import type { MemberType, UserDoc } from "@/lib/types";
 
 type Filter = "all" | MemberType;
@@ -14,12 +15,12 @@ type Filter = "all" | MemberType;
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "전체" },
   { value: "general", label: "일반원우" },
-  { value: "youth", label: "청년원우" },
+  { value: "youth", label: "대학생 원우" },
 ];
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   general: "일반원우",
-  youth: "청년원우",
+  youth: "대학생 원우",
 };
 
 export default function MembersPage() {
@@ -152,6 +153,13 @@ export default function MembersPage() {
                           {member.bio}
                         </p>
                       ) : null}
+                      {/* 소개 영상을 올린 원우는 목록에서도 알아볼 수 있게 */}
+                      {member.introVideoUrl ? (
+                        <p className="mt-1 flex items-center gap-1 text-[12px] font-bold text-brand-700">
+                          <span aria-hidden="true">🎬</span>
+                          소개 영상
+                        </p>
+                      ) : null}
                     </div>
                   </button>
                 </li>
@@ -208,6 +216,11 @@ function MemberDetailSheet({
   member: UserDoc;
   onClose: () => void;
 }) {
+  // 재생 버튼을 누르기 전에는 유튜브를 불러오지 않습니다.
+  const [playing, setPlaying] = useState(false);
+  const videoLink = parseVideoLink(member.introVideoUrl ?? "");
+  const thumbnail = videoLink ? videoThumbnail(videoLink) : null;
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
@@ -238,6 +251,38 @@ function MemberDetailSheet({
           </div>
         </div>
 
+        {/* 본인이 올린 소개 영상 */}
+        {videoLink?.id ? (
+          <div className="mt-6 overflow-hidden rounded-2xl bg-black">
+            {playing ? (
+              <iframe
+                src={videoEmbedUrl(videoLink) ?? ""}
+                title={`${member.nickname || member.name} 소개 영상`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="aspect-video w-full"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPlaying(true)}
+                aria-label="소개 영상 재생"
+                className="relative block aspect-video w-full"
+              >
+                {thumbnail ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                ) : null}
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-[22px] text-white">
+                    ▶
+                  </span>
+                </span>
+              </button>
+            )}
+          </div>
+        ) : null}
+
         <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
           <div className="flex items-center justify-between gap-4">
             <dt className="text-[14px] text-ink-faint">생일</dt>
@@ -256,6 +301,16 @@ function MemberDetailSheet({
             </dd>
           </div>
         </dl>
+
+        {/* 본인이 쓴 자기소개 전문 */}
+        {member.introduction ? (
+          <div className="mt-4 rounded-2xl bg-canvas p-5">
+            <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
+              {member.introduction}
+            </p>
+          </div>
+        ) : null}
 
         <button
           type="button"

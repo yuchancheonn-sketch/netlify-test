@@ -16,16 +16,18 @@ import { db } from "@/lib/firebase";
 import { cropToSquareDataUrl } from "@/lib/image";
 import {
   BIO_MAX_LENGTH,
+  INTRODUCTION_MAX_LENGTH,
   MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
+import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
 const MEMBER_TYPES: { value: MemberType; emoji: string; label: string }[] = [
   { value: "general", emoji: "🌿", label: "일반원우" },
-  { value: "youth", emoji: "🌱", label: "청년원우" },
+  { value: "youth", emoji: "🌱", label: "대학생 원우" },
 ];
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -47,6 +49,8 @@ interface FormState {
   birthdayYearPublic: boolean;
   memberType: MemberType | "";
   bio: string;
+  introduction: string;
+  introVideoUrl: string;
 }
 
 export default function ProfileForm({
@@ -72,6 +76,8 @@ export default function ProfileForm({
       // 최초 설정에서는 일부러 비워 두어 원우가 직접 고르게 합니다.
       memberType: profile?.profileCompleted ? profile.memberType : "",
       bio: profile?.bio ?? "",
+      introduction: profile?.introduction ?? "",
+      introVideoUrl: profile?.introVideoUrl ?? "",
     };
   }, [profile, user]);
 
@@ -156,6 +162,14 @@ export default function ProfileForm({
     if (form.bio.length > BIO_MAX_LENGTH)
       next.bio = `한 줄 소개는 ${BIO_MAX_LENGTH}자까지 쓸 수 있어요.`;
 
+    if (form.introduction.length > INTRODUCTION_MAX_LENGTH)
+      next.introduction = `자기소개는 ${INTRODUCTION_MAX_LENGTH}자까지 쓸 수 있어요.`;
+
+    // 비워두는 건 괜찮지만, 넣었다면 알아볼 수 있는 주소여야 합니다.
+    if (form.introVideoUrl.trim() && !isSupportedVideoUrl(form.introVideoUrl)) {
+      next.introVideoUrl = "유튜브나 비메오 영상 주소를 넣어 주세요.";
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -177,6 +191,8 @@ export default function ProfileForm({
         birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
         memberType: form.memberType,
         bio: form.bio.trim(),
+        introduction: form.introduction.trim(),
+        introVideoUrl: form.introVideoUrl.trim(),
         profileCompleted: true,
       });
       onSaved?.();
@@ -186,6 +202,13 @@ export default function ProfileForm({
       setSaving(false);
     }
   }
+
+  /** 입력한 영상 주소를 바로 알아봤는지 보여주기 위한 미리보기 */
+  const videoPreview = useMemo(() => {
+    const link = parseVideoLink(form.introVideoUrl);
+    if (!link || !link.id) return null;
+    return { thumbnail: videoThumbnail(link) };
+  }, [form.introVideoUrl]);
 
   const displayName = form.nickname.trim() || form.name.trim() || "나";
   const submitDisabled = mode === "edit" ? !dirty : false;
@@ -371,6 +394,77 @@ export default function ProfileForm({
           className={inputClassName}
         />
         {errors.bio ? <FieldError>{errors.bio}</FieldError> : null}
+      </div>
+
+      {/* 자기소개 — 원우 소개 상세에서 전문이 보입니다. */}
+      <div className="mb-6">
+        <FieldLabel
+          htmlFor="introduction"
+          hint={`${form.introduction.length}/${INTRODUCTION_MAX_LENGTH}`}
+        >
+          자기소개
+        </FieldLabel>
+        <textarea
+          id="introduction"
+          value={form.introduction}
+          onChange={(event) =>
+            update("introduction", event.target.value.slice(0, INTRODUCTION_MAX_LENGTH))
+          }
+          rows={5}
+          placeholder="하는 일, 관심사, 원우들에게 하고 싶은 말을 자유롭게 적어 주세요."
+          className={`${inputClassName} resize-none leading-relaxed`}
+        />
+        {errors.introduction ? <FieldError>{errors.introduction}</FieldError> : null}
+      </div>
+
+      {/* 소개 영상 */}
+      <div className="mb-8">
+        <FieldLabel htmlFor="introVideoUrl" hint="선택">
+          소개 영상 링크
+        </FieldLabel>
+        <input
+          id="introVideoUrl"
+          value={form.introVideoUrl}
+          onChange={(event) => update("introVideoUrl", event.target.value)}
+          inputMode="url"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="https://youtu.be/..."
+          className={inputClassName}
+        />
+        {errors.introVideoUrl ? <FieldError>{errors.introVideoUrl}</FieldError> : null}
+
+        {videoPreview ? (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
+            {videoPreview.thumbnail ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={videoPreview.thumbnail}
+                alt=""
+                className="h-14 w-24 shrink-0 rounded-xl object-cover"
+              />
+            ) : (
+              <span
+                className="flex h-14 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-[22px]"
+                aria-hidden="true"
+              >
+                🎬
+              </span>
+            )}
+            <p className="text-[13px] font-bold text-ink-soft">
+              영상을 찾았어요
+              <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
+                원우 소개에서 눌러 볼 수 있어요
+              </span>
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
+            유튜브에 올릴 때는 &lsquo;일부 공개(목록에 없음)&rsquo;로 올리시면
+            링크를 아는 원우만 볼 수 있어요.
+          </p>
+        )}
       </div>
 
       {saveError ? (
