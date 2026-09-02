@@ -27,7 +27,8 @@
 2. **Sign-in method** 탭 → **Google** 선택 → **사용 설정** → 지원 이메일 지정 → 저장
 3. **Settings → 승인된 도메인**에 배포 주소를 추가합니다.
    - `localhost`는 기본으로 들어 있습니다.
-   - Vercel에 올리면 `내프로젝트.vercel.app` 을 추가하세요.
+   - 배포 주소인 **`aegiaeta10.netlify.app`** 을 꼭 추가하세요.
+     이게 빠지면 배포본에서 Google 로그인이 실패합니다.
 
 > Google OAuth 클라이언트는 Firebase가 자동으로 만들어 주므로 따로 등록할 필요가 없습니다.
 
@@ -122,16 +123,35 @@ npm run dev      # http://localhost:3000
 ### 휴대폰에서 테스트하기
 
 같은 와이파이에 연결한 뒤 컴퓨터의 내부 IP로 접속하면 됩니다.
-Google 로그인까지 확인하려면 배포본(아래 Vercel)에서 테스트하는 편이 확실합니다.
+Google 로그인까지 확인하려면 배포본(아래 Netlify)에서 테스트하는 편이 확실합니다.
 
 ---
 
-## 배포하기 (Vercel 권장)
+## 배포하기 (Netlify)
 
-1. 이 폴더를 GitHub 저장소로 올립니다.
-2. [Vercel](https://vercel.com/)에서 **Add New → Project** → 저장소 선택
-3. **Environment Variables** 에 `.env.local` 의 6개 값을 그대로 넣습니다.
-4. 배포가 끝나면 나온 주소를 Firebase **Authentication → Settings → 승인된 도메인**에 추가합니다.
+배포 주소는 **https://aegiaeta10.netlify.app** 입니다.
+
+### 처음 한 번
+
+1. [Netlify](https://app.netlify.com/) 로그인 → **Add new site → Import an existing project**
+2. **GitHub** 선택 → 이 저장소 선택
+3. 빌드 설정은 `netlify.toml` 에 적혀 있으니 **그대로 두고** 넘어갑니다.
+   (Build command `npm run build`, Publish directory `.next`)
+4. **Environment variables** 에 `.env.local` 의 6개 값을 그대로 넣습니다.
+   `NEXT_PUBLIC_` 값들은 빌드할 때 코드에 박히므로, **먼저 넣고 배포**해야 합니다.
+5. 배포가 끝나면 **Site configuration → Site details → Change site name** 에서
+   사이트 이름을 `aegiaeta10` 으로 바꿉니다.
+6. **Firebase 콘솔 → Authentication → Settings → 승인된 도메인** 에
+   `aegiaeta10.netlify.app` 을 추가합니다.
+   **이걸 빠뜨리면 Google 로그인이 실패합니다.**
+
+### 그다음부터
+
+`main` 브랜치에 push하면 Netlify가 알아서 다시 배포합니다.
+
+> **환경변수를 바꿨을 때는 반드시 재배포하세요.**
+> `NEXT_PUBLIC_` 값은 빌드 시점에 박히기 때문에, 값만 바꾸고 재배포하지 않으면
+> 예전 값이 그대로 남아 있습니다. (Deploys → Trigger deploy → Clear cache and deploy site)
 
 원우들에게는 이렇게 안내하면 됩니다.
 
