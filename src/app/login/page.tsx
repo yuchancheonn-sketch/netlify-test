@@ -56,7 +56,7 @@ function LoginScreen() {
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[24%] bottom-0 bg-cover bg-no-repeat"
+        className="pointer-events-none absolute inset-x-0 top-[33%] bottom-0 bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
@@ -75,12 +75,12 @@ function LoginScreen() {
       />
 
       {/*
-        아래 여백을 두 배로 늘려 정의 문구와 로그인 버튼을 위로 올렸습니다.
-        사파리 하단 주소창에 버튼이 가려지지 않게 하는 역할도 합니다.
+        아래 여백은 버튼이 사파리 하단 주소창이나 홈 인디케이터에 가리지 않을
+        만큼만 남깁니다. 여백이 작을수록 문구와 버튼이 아래로 내려갑니다.
       */}
       <div
         className="relative flex min-h-dvh w-full flex-col px-7 pt-14"
-        style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "calc(36px + env(safe-area-inset-bottom))" }}
       >
         {/* 앱 아이콘 + 이름 */}
         <div className="flex flex-col items-center text-center">
