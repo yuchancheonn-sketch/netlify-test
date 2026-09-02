@@ -28,6 +28,14 @@ export interface UserDoc {
   /** 연도를 다른 원우에게 공개할지 여부 */
   birthdayYearPublic: boolean;
   memberType: MemberType;
+  /** 소속 회사·기관. 원우수첩 카드에 이름 아래로 보입니다. */
+  company: string;
+  /** 직책. 예: 대표, 본부장 */
+  position: string;
+  /** 휴대폰 번호. 상세에서만 보이고 눌러서 바로 걸 수 있습니다. */
+  phone: string;
+  /** 원우회 직위. 고르지 않았으면 빈 문자열 */
+  councilRole: string;
   /** 카드에 미리보기로 뜨는 한 줄 소개 */
   bio: string;
   /** 상세에서 보이는 긴 자기소개 (본인이 직접 씁니다) */

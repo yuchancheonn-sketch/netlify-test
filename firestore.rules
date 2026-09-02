@@ -80,7 +80,15 @@ service cloud.firestore {
         && (!(request.resource.data.introVideoUrl is string)
           || request.resource.data.introVideoUrl.size() <= 500)
         && (!(request.resource.data.bio is string)
-          || request.resource.data.bio.size() <= 200);
+          || request.resource.data.bio.size() <= 200)
+        && (!(request.resource.data.company is string)
+          || request.resource.data.company.size() <= 100)
+        && (!(request.resource.data.position is string)
+          || request.resource.data.position.size() <= 50)
+        && (!(request.resource.data.phone is string)
+          || request.resource.data.phone.size() <= 30)
+        && (!(request.resource.data.councilRole is string)
+          || request.resource.data.councilRole.size() <= 20);
     }
 
     // ---------- 초대 코드 ----------

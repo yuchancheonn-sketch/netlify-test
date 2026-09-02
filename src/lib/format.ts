@@ -88,6 +88,26 @@ export function formatBirthday(
   return year && yearPublic ? `${year}년 ${label}` : label;
 }
 
+/**
+ * 휴대폰 번호를 보기 좋게. 예: "01012345678" → "010-1234-5678"
+ * 숫자가 아닌 글자는 지우고, 알아보지 못하는 형태면 입력한 그대로 둡니다.
+ */
+export function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (/^01\d{8}$/.test(digits)) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+  if (/^01\d{7}$/.test(digits)) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return raw.trim();
+}
+
+/** 전화 걸기·문자 보내기 링크에 쓸 번호 (숫자만) */
+export function phoneHref(raw: string): string {
+  return raw.replace(/[^\d+]/g, "");
+}
+
 /** 채팅 말풍선 옆 시각. 예: "오후 3:21" */
 export function formatClockTime(date: Date): string {
   const hour = date.getHours();

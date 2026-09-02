@@ -76,6 +76,29 @@ export const INTRODUCTION_MAX_LENGTH = 500;
 export const NICKNAME_MIN_LENGTH = 1;
 export const NICKNAME_MAX_LENGTH = 15;
 
+/** 회사·직책 길이 제한 (원우수첩 카드 한 줄에 들어가는 정도) */
+export const COMPANY_MAX_LENGTH = 40;
+export const POSITION_MAX_LENGTH = 20;
+
+/**
+ * 원우회 직위 목록.
+ * 직위를 고르면 원우수첩 이름 옆에 배지로 표시됩니다.
+ * 기수마다 조직이 달라질 수 있으니 여기만 고치면 됩니다.
+ */
+export const COUNCIL_ROLES = [
+  "회장",
+  "수석부회장",
+  "부회장",
+  "총무",
+  "서기",
+  "재무",
+  "홍보",
+  "봉사",
+  "체육",
+  "감사",
+  "고문",
+] as const;
+
 /** 브랜드 기준색 (PWA theme_color, 주소창 색 등 CSS 밖에서 필요할 때 사용) */
 export const BRAND_COLOR = "#FF7210";
 /** 흰 바탕 위의 주황 글씨에 쓰는 진한 주황 (대비 4.7:1) */

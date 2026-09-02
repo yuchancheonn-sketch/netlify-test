@@ -16,12 +16,16 @@ import { db } from "@/lib/firebase";
 import { cropToSquareDataUrl } from "@/lib/image";
 import {
   BIO_MAX_LENGTH,
+  COMPANY_MAX_LENGTH,
+  COUNCIL_ROLES,
   INTRODUCTION_MAX_LENGTH,
   MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
+  POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
+import { formatPhone } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -48,10 +52,20 @@ interface FormState {
   /** 체크박스는 "비공개로 하기"지만 저장은 공개 여부로 하므로 뒤집어 씁니다. */
   birthdayYearPublic: boolean;
   memberType: MemberType | "";
+  company: string;
+  position: string;
+  phone: string;
+  councilRole: string;
   bio: string;
   introduction: string;
   introVideoUrl: string;
 }
+
+/** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
+const SELECT_ARROW_STYLE = {
+  backgroundImage:
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
+};
 
 export default function ProfileForm({
   /** onboarding: 최초 설정, edit: 내 프로필 수정 */
@@ -75,6 +89,10 @@ export default function ProfileForm({
       birthdayYearPublic: profile?.birthdayYearPublic ?? false,
       // 최초 설정에서는 일부러 비워 두어 원우가 직접 고르게 합니다.
       memberType: profile?.profileCompleted ? profile.memberType : "",
+      company: profile?.company ?? "",
+      position: profile?.position ?? "",
+      phone: profile?.phone ?? "",
+      councilRole: profile?.councilRole ?? "",
       bio: profile?.bio ?? "",
       introduction: profile?.introduction ?? "",
       introVideoUrl: profile?.introVideoUrl ?? "",
@@ -159,6 +177,18 @@ export default function ProfileForm({
 
     if (!form.memberType) next.memberType = "구분을 선택해 주세요.";
 
+    if (form.company.length > COMPANY_MAX_LENGTH)
+      next.company = `회사·소속은 ${COMPANY_MAX_LENGTH}자까지 넣을 수 있어요.`;
+
+    if (form.position.length > POSITION_MAX_LENGTH)
+      next.position = `직책은 ${POSITION_MAX_LENGTH}자까지 넣을 수 있어요.`;
+
+    // 비워두는 건 괜찮지만, 넣었다면 전화를 걸 수 있는 번호여야 합니다.
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (form.phone.trim() && (phoneDigits.length < 9 || phoneDigits.length > 11)) {
+      next.phone = "휴대폰 번호를 다시 확인해 주세요.";
+    }
+
     if (form.bio.length > BIO_MAX_LENGTH)
       next.bio = `한 줄 소개는 ${BIO_MAX_LENGTH}자까지 쓸 수 있어요.`;
 
@@ -190,6 +220,10 @@ export default function ProfileForm({
         birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
         birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
         memberType: form.memberType,
+        company: form.company.trim(),
+        position: form.position.trim(),
+        phone: form.phone.trim() ? formatPhone(form.phone) : "",
+        councilRole: form.councilRole,
         bio: form.bio.trim(),
         introduction: form.introduction.trim(),
         introVideoUrl: form.introVideoUrl.trim(),
@@ -283,10 +317,7 @@ export default function ProfileForm({
               if (Number(form.day) > maxDay) update("day", "");
             }}
             className={`${inputClassName} flex-1 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
-            }}
+            style={SELECT_ARROW_STYLE}
           >
             <option value="">월</option>
             {MONTHS.map((month) => (
@@ -301,10 +332,7 @@ export default function ProfileForm({
             onChange={(event) => update("day", event.target.value)}
             disabled={!form.month}
             className={`${inputClassName} flex-1 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11 disabled:text-ink-faint`}
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
-            }}
+            style={SELECT_ARROW_STYLE}
           >
             <option value="">일</option>
             {Array.from({ length: daysInMonth(Number(form.month) || 1) }, (_, i) => i + 1).map(
@@ -379,6 +407,84 @@ export default function ProfileForm({
           })}
         </div>
         {errors.memberType ? <FieldError>{errors.memberType}</FieldError> : null}
+      </div>
+
+      {/* 회사·직책 — 원우수첩 카드에 이름 아래로 보입니다. */}
+      <div className="mb-6">
+        <FieldLabel htmlFor="company" hint="선택">
+          회사·소속
+        </FieldLabel>
+        <input
+          id="company"
+          value={form.company}
+          onChange={(event) =>
+            update("company", event.target.value.slice(0, COMPANY_MAX_LENGTH))
+          }
+          placeholder="예: (주)착한부자"
+          className={inputClassName}
+        />
+        {errors.company ? <FieldError>{errors.company}</FieldError> : null}
+      </div>
+
+      <div className="mb-6">
+        <FieldLabel htmlFor="position" hint="선택">
+          직책
+        </FieldLabel>
+        <input
+          id="position"
+          value={form.position}
+          onChange={(event) =>
+            update("position", event.target.value.slice(0, POSITION_MAX_LENGTH))
+          }
+          placeholder="예: 대표 / 본부장"
+          className={inputClassName}
+        />
+        {errors.position ? <FieldError>{errors.position}</FieldError> : null}
+      </div>
+
+      {/* 휴대폰 — 원우수첩 상세에서 원우들이 눌러 바로 연락합니다. */}
+      <div className="mb-6">
+        <FieldLabel htmlFor="phone" hint="선택">
+          휴대폰
+        </FieldLabel>
+        <input
+          id="phone"
+          value={form.phone}
+          onChange={(event) => update("phone", event.target.value.slice(0, 20))}
+          onBlur={(event) => update("phone", formatPhone(event.target.value))}
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="010-1234-5678"
+          className={inputClassName}
+        />
+        {errors.phone ? (
+          <FieldError>{errors.phone}</FieldError>
+        ) : (
+          <p className="mt-2 text-[12px] text-ink-faint">
+            10기 원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
+          </p>
+        )}
+      </div>
+
+      {/* 원우회 직위 — 고르면 원우수첩 이름 옆에 배지로 붙습니다. */}
+      <div className="mb-6">
+        <FieldLabel htmlFor="councilRole" hint="선택">
+          원우회 직위
+        </FieldLabel>
+        <select
+          id="councilRole"
+          value={form.councilRole}
+          onChange={(event) => update("councilRole", event.target.value)}
+          className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+          style={SELECT_ARROW_STYLE}
+        >
+          <option value="">직위 없음</option>
+          {COUNCIL_ROLES.map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* 한 줄 소개 */}

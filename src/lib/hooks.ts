@@ -34,6 +34,7 @@ const EMPTY: ListState<never> = { data: [], loading: true, error: null };
 
 /**
  * 승인된 원우 목록.
+ * 원우수첩처럼 이름 가나다순으로 정렬합니다.
  * 정렬은 Firestore 색인을 따로 만들지 않아도 되도록 앱에서 처리합니다.
  * (수십 명 규모라 성능 문제가 없습니다.)
  */
@@ -49,7 +50,7 @@ export function useApprovedMembers(): ListState<UserDoc> {
           .map((document) => document.data() as UserDoc)
           // 아직 온보딩을 마치지 않은 사람은 소개에 띄우지 않습니다.
           .filter((member) => member.profileCompleted)
-          .sort((a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name, "ko"));
+          .sort((a, b) => (a.name || a.nickname).localeCompare(b.name || b.nickname, "ko"));
         setState({ data: members, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
