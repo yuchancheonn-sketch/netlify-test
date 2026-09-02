@@ -161,7 +161,7 @@ export default function MemberEditSheet({
         </h2>
         <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
           {!entry
-            ? "아직 가입하지 않은 원우도 수첩에 올려둘 수 있어요. 본인이 가입하면 자동으로 이어집니다."
+            ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
             : isMine
               ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
               : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}

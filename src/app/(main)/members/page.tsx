@@ -134,7 +134,7 @@ export default function MembersPage() {
           사진을 누르면 크게 보이고, 이름을 누르면 회사·직책·휴대폰·자기소개를 볼 수 있어요.
           <span className="font-bold text-ink-muted"> 수정</span> 버튼으로 서로의 정보를
           채워줄 수 있고, 맨 아래 <span className="font-bold text-ink-muted">원우 추가하기</span>로
-          아직 가입하지 않은 원우도 올릴 수 있습니다.
+          수첩에 빠진 원우를 올릴 수 있습니다.
         </p>
 
         {/* 목록 */}
@@ -247,7 +247,6 @@ function MemberRow({
   const videoLink = parseVideoLink(entry.introVideoUrl);
   const thumbnail = videoLink ? videoThumbnail(videoLink) : null;
   const affiliation = affiliationLine(entry);
-  const waiting = entry.kind === "waiting";
 
   return (
     <div className="flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)]">
@@ -277,12 +276,7 @@ function MemberRow({
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center">
-            <Avatar
-              name={entry.name}
-              seed={entry.key}
-              size={46}
-              className={waiting ? "opacity-45 grayscale" : ""}
-            />
+            <Avatar name={entry.name} seed={entry.key} size={46} />
           </span>
         )}
       </button>
@@ -297,11 +291,7 @@ function MemberRow({
           <span className="shrink-0 text-[15px] font-bold text-brand-700 tabular-nums">
             {number}.
           </span>
-          <span
-            className={`truncate text-[17px] font-bold ${waiting ? "text-ink-muted" : "text-ink"}`}
-          >
-            {entry.name}
-          </span>
+          <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
           {entry.councilRole ? (
             <span className="shrink-0">
               <Badge>{entry.councilRole}</Badge>
@@ -309,7 +299,7 @@ function MemberRow({
           ) : null}
         </div>
         <p className="mt-0.5 truncate text-[13px] text-ink-muted">
-          {affiliation || entry.bio || (waiting ? "아직 가입 전이에요" : "정보를 기다리는 중이에요")}
+          {affiliation || entry.bio || "정보를 기다리는 중이에요"}
         </p>
       </button>
 
@@ -377,7 +367,6 @@ function MemberDetailSheet({
               name={entry.name}
               seed={entry.key}
               size={104}
-              className={entry.kind === "waiting" ? "opacity-60 grayscale" : ""}
             />
           </button>
           <div className="mt-4 flex items-center justify-center gap-2">
@@ -390,11 +379,10 @@ function MemberDetailSheet({
           {entry.nickname && entry.nickname !== entry.name ? (
             <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
           ) : null}
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3">
             <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
               {MEMBER_TYPE_LABEL[entry.memberType]}
             </Badge>
-            {entry.kind === "waiting" ? <Badge tone="neutral">아직 가입 전</Badge> : null}
           </div>
         </div>
 
