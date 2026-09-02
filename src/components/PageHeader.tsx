@@ -51,7 +51,7 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        <h1 className="truncate text-[20px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
       </div>
 
       {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
@@ -72,9 +72,9 @@ export function ProfileAvatarButton() {
     <Link
       href="/profile"
       aria-label="내 프로필 열기"
-      className="relative block rounded-full ring-2 ring-white transition before:absolute before:-inset-[7px] before:content-[''] active:scale-95"
+      className="relative block rounded-full ring-2 ring-white transition before:absolute before:-inset-[5px] before:content-[''] active:scale-95"
     >
-      <Avatar src={profile?.photoURL} name={name} seed={profile?.uid} size={34} />
+      <Avatar src={profile?.photoURL} name={name} seed={profile?.uid} size={38} />
     </Link>
   );
 }
