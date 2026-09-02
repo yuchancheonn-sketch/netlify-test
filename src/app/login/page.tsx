@@ -30,31 +30,35 @@ function LoginScreen() {
   }
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-canvas">
+    // 배경 사진을 본문과 같은 폭 안에 가두어, 넓은 화면에서 얼굴만 크게
+    // 확대되지 않고 휴대폰에서 보는 것과 같은 비율로 보이게 합니다.
+    <div className="relative mx-auto min-h-dvh w-full max-w-[480px] overflow-hidden bg-canvas">
       {/*
-        배경: 도산 안창호 선생 사진.
-        파일이 없으면 아무것도 그려지지 않고 아래 그라데이션만 남으므로
-        화면이 깨지지 않습니다. (public/brand/dosan.jpg)
+        배경: 도산 안창호 선생 사진 (public/brand/dosan.jpg).
+        파일이 없으면 아무것도 그려지지 않고 아래 막만 남으므로 화면이 깨지지 않습니다.
 
-        사진 위에 글자를 얹기 때문에 위아래로 옅은 막을 덮습니다.
-        위쪽(하늘 부분)은 얇게 덮어 사진이 보이게 하고,
-        아래쪽(어두운 양복 부분)은 짙게 덮어 버튼 글씨가 또렷하게 보이도록 했습니다.
+        사진 위에 글자를 얹기 때문에 위아래로 농도가 다른 막을 덮습니다.
+        위쪽(밝은 하늘)은 얇게 덮어 사진이 보이게 하고,
+        아래쪽(어두운 양복)은 짙게 덮어 버튼 글씨가 또렷하게 보이도록 했습니다.
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cover bg-[center_top_20%] bg-no-repeat"
-        style={{ backgroundImage: "url(/brand/dosan.jpg)" }}
+        className="pointer-events-none absolute inset-0 bg-cover bg-no-repeat"
+        style={{
+          backgroundImage: "url(/brand/dosan.jpg)",
+          backgroundPosition: "50% 12%",
+        }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(255,250,246,0.62) 0%, rgba(255,250,246,0.45) 26%, rgba(255,250,246,0.78) 52%, rgba(255,250,246,0.96) 72%, rgb(255,250,246) 86%)",
+            "linear-gradient(to bottom, rgba(255,250,246,0.66) 0%, rgba(255,250,246,0.42) 24%, rgba(255,250,246,0.72) 48%, rgba(255,250,246,0.95) 68%, rgb(255,250,246) 82%)",
         }}
       />
 
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-7 pt-14 pb-10">
+      <div className="relative flex min-h-dvh w-full flex-col px-7 pt-14 pb-10">
         {/* 앱 아이콘 + 이름 */}
         <div className="flex flex-col items-center text-center">
           <div className="rounded-[28px] bg-white p-3 shadow-[var(--shadow-card)]">
