@@ -127,7 +127,7 @@ export default function MemberEditSheet({
       className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 px-0 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label={entry ? `${entry.name} 정보 수정` : "명단에 이름 추가"}
+      aria-label={entry ? `${entry.name} 정보 수정` : "원우 추가하기"}
       onClick={onClose}
     >
       <form
@@ -136,7 +136,7 @@ export default function MemberEditSheet({
         className="animate-sheet-up w-full max-w-[480px] rounded-t-[28px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[28px] sm:pb-7"
       >
         <h2 className="text-[19px] font-bold text-ink">
-          {entry ? `${entry.name} 님 정보` : "수첩에 이름 올리기"}
+          {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
         </h2>
         <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
           {!entry
@@ -267,7 +267,7 @@ export default function MemberEditSheet({
         ) : null}
 
         <PrimaryButton type="submit" loading={saving}>
-          {entry ? "저장하기" : "수첩에 올리기"}
+          {entry ? "저장하기" : "수첩에 추가하기"}
         </PrimaryButton>
 
         {isMine ? (

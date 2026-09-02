@@ -133,7 +133,8 @@ export default function MembersPage() {
         <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
           사진을 누르면 크게 보이고, 이름을 누르면 회사·직책·휴대폰·자기소개를 볼 수 있어요.
           <span className="font-bold text-ink-muted"> 수정</span> 버튼으로 서로의 정보를
-          채워줄 수 있고, 맨 아래에서 아직 가입하지 않은 원우도 올릴 수 있습니다.
+          채워줄 수 있고, 맨 아래 <span className="font-bold text-ink-muted">원우 추가하기</span>로
+          아직 가입하지 않은 원우도 올릴 수 있습니다.
         </p>
 
         {/* 목록 */}
@@ -159,7 +160,7 @@ export default function MembersPage() {
                 }
                 description={
                   entries.length === 0
-                    ? "아래 이름 올리기로 우리 기수 원우를 한 명씩 채워보세요."
+                    ? "아래 원우 추가하기로 우리 기수 원우를 한 명씩 채워보세요."
                     : "검색어나 필터를 바꿔보세요."
                 }
               />
@@ -187,19 +188,10 @@ export default function MembersPage() {
             <button
               type="button"
               onClick={() => setEditing({ entry: null })}
-              className="mt-3 flex w-full items-center gap-3 rounded-3xl border-2 border-dashed border-stone-200 p-4 text-left transition active:scale-[0.99]"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-stone-300 py-2.5 text-[14px] font-bold text-ink-muted transition active:scale-[0.99]"
             >
-              <span className="flex h-[62px] w-[86px] shrink-0 items-center justify-center rounded-2xl bg-white text-ink-faint">
-                <PlusIcon className="h-6 w-6" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[16px] font-bold text-ink-soft">
-                  {entries.length + 1}. 이름 올리기
-                </span>
-                <span className="mt-0.5 block text-[13px] text-ink-faint">
-                  아직 가입하지 않은 원우도 수첩에 넣을 수 있어요
-                </span>
-              </span>
+              <PlusIcon className="h-4 w-4" />
+              원우 추가하기
             </button>
           ) : null}
         </div>
