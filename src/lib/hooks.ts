@@ -13,7 +13,15 @@ import {
 import { db } from "@/lib/firebase";
 import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
 import { todayString } from "@/lib/format";
-import type { EventDoc, MessageDoc, RosterDoc, RsvpDoc, UserDoc } from "@/lib/types";
+import type {
+  EventDoc,
+  MessageDoc,
+  PhotoAlbumDoc,
+  PhotoDoc,
+  RosterDoc,
+  RsvpDoc,
+  UserDoc,
+} from "@/lib/types";
 
 /** 목록형 화면이 공통으로 쓰는 상태 */
 export interface ListState<T> {
@@ -167,6 +175,80 @@ export function useRsvps(eventId: string): ListState<RsvpDoc> {
       () => setState({ data: [], loading: false, error: "참석 현황을 불러오지 못했어요." }),
     );
   }, [eventId]);
+
+  return state;
+}
+
+/** 행사 사진 앨범 목록 (최근 행사가 위로) */
+export function useAlbums(): ListState<PhotoAlbumDoc> {
+  const [state, setState] = useState<ListState<PhotoAlbumDoc>>(EMPTY);
+
+  useEffect(() => {
+    const albumsQuery = query(collection(db, "photoAlbums"), orderBy("eventDate", "desc"));
+    return onSnapshot(
+      albumsQuery,
+      (snapshot) => {
+        const albums = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as PhotoAlbumDoc,
+        );
+        setState({ data: albums, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "앨범을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/** 앨범 하나 */
+export function useAlbum(albumId: string) {
+  const [album, setAlbum] = useState<PhotoAlbumDoc | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    return onSnapshot(
+      doc(db, "photoAlbums", albumId),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setAlbum({ id: snapshot.id, ...snapshot.data() } as PhotoAlbumDoc);
+          setNotFound(false);
+        } else {
+          setAlbum(null);
+          setNotFound(true);
+        }
+        setLoading(false);
+      },
+      () => {
+        setLoading(false);
+        setNotFound(true);
+      },
+    );
+  }, [albumId]);
+
+  return { album, loading, notFound };
+}
+
+/** 앨범 안의 사진들 (올린 순서대로) */
+export function useAlbumPhotos(albumId: string): ListState<PhotoDoc> {
+  const [state, setState] = useState<ListState<PhotoDoc>>(EMPTY);
+
+  useEffect(() => {
+    const photosQuery = query(
+      collection(db, "photoAlbums", albumId, "photos"),
+      orderBy("uploadedAt", "desc"),
+    );
+    return onSnapshot(
+      photosQuery,
+      (snapshot) => {
+        const photos = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as PhotoDoc,
+        );
+        setState({ data: photos, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "사진을 불러오지 못했어요." }),
+    );
+  }, [albumId]);
 
   return state;
 }

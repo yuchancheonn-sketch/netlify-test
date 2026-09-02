@@ -82,6 +82,35 @@ export interface RsvpDoc {
   updatedAt: Timestamp | null;
 }
 
+/** photoAlbums/{albumId} — 행사 단위로 사진을 묶는 앨범 */
+export interface PhotoAlbumDoc {
+  id: string;
+  title: string;
+  /** "YYYY-MM-DD" 형식 */
+  eventDate: string;
+  /** 목록에 보여줄 대표 이미지. 첫 사진이 올라오면 자동으로 채워집니다. */
+  coverImageUrl: string | null;
+  photoCount: number;
+  createdBy: string;
+  createdAt: Timestamp | null;
+}
+
+/** photoAlbums/{albumId}/photos/{photoId} */
+export interface PhotoDoc {
+  id: string;
+  /** Cloudinary 원본 주소 */
+  imageUrl: string;
+  /** Cloudinary 식별자. 나중에 보관소를 정리할 때 씁니다. */
+  publicId: string;
+  width: number;
+  height: number;
+  caption: string;
+  uploadedBy: string;
+  uploadedByNickname: string;
+  uploadedAt: Timestamp | null;
+  likes: string[];
+}
+
 /** chatRooms/{roomId}/messages/{messageId} */
 export interface MessageDoc {
   id: string;

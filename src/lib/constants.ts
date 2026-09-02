@@ -52,6 +52,12 @@ export const PROFILE_IMAGE_SIZE = 192;
  */
 export const MAX_PROFILE_PHOTO_BYTES = 40_000;
 
+/**
+ * 행사 사진을 올릴 때 줄이는 긴 변의 길이(px).
+ * "원본 그대로 올리기"를 켜면 이 값을 무시하고 원본을 그대로 보냅니다.
+ */
+export const PHOTO_MAX_DIMENSION = 2560;
+
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;
 

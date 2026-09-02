@@ -141,11 +141,20 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // ---------- 행사 사진 (Phase 2) ----------
+    // ---------- 행사 사진 ----------
     match /photoAlbums/{albumId} {
       allow read: if isApproved();
-      // 앨범(행사) 자체를 만드는 건 운영진만
-      allow create, update, delete: if isAdmin();
+      // 앨범(행사)을 만들고 지우는 건 운영진만
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin();
+
+      /*
+       * 원우가 사진을 올리면 대표 이미지와 사진 수가 따라 바뀌어야 합니다.
+       * 앨범 제목이나 날짜까지 건드리지는 못하도록 이 두 필드만 열어둡니다.
+       */
+      allow update: if isApproved()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['coverImageUrl', 'photoCount']);
 
       match /photos/{photoId} {
         allow read: if isApproved();

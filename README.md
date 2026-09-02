@@ -105,7 +105,38 @@ Firestore 콘솔에서 직접 만듭니다. (앱에서는 초대 코드를 읽�
 이후부터는 콘솔에 들어갈 일 없이, 앱 안의 **운영진 화면**(내 프로필 → 운영진 화면)에서
 가입 승인·명단 관리·권한 부여를 모두 할 수 있습니다.
 
-### 8. 원우 명단 올리기 (선택)
+### 8. 행사 사진 보관소 연결하기 (Cloudinary)
+
+행사 사진은 Firebase가 아니라 **Cloudinary** 에 보관합니다.
+Firebase Storage가 유료 요금제를 요구하는 것과 달리,
+Cloudinary는 **신용카드 없이 25GB** 를 무료로 줍니다.
+
+1. [cloudinary.com](https://cloudinary.com/users/register_free) 무료 가입 (카드 불필요)
+2. **Dashboard** 에서 **Cloud name** 을 확인해 적어둡니다. (예: `dxxxxxxx`)
+3. **Settings(⚙️) → Upload → Upload presets → Add upload preset**
+   - **Signing Mode** 를 반드시 **Unsigned** 로 바꿉니다.
+     이래야 브라우저에서 바로 올릴 수 있고 비밀 키를 앱에 넣지 않아도 됩니다.
+   - **Asset folder** 에 `aegiaeta10` 을 넣습니다. (사진이 한 폴더에 모입니다)
+   - 저장하고 **preset 이름** 을 적어둡니다.
+4. 두 값을 `.env.local` 과 Netlify 환경변수에 넣습니다.
+
+```
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=여기에_Cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=여기에_preset_이름
+```
+
+**알아두실 점**
+
+- 사진 주소는 추측할 수 없는 임의 문자열이라, 앱 밖으로 주소가 새지 않는 한
+  다른 사람이 찾아볼 수 없습니다. (Firebase Storage도 같은 방식입니다)
+- 앱에서 사진을 지우면 **앨범에서는 사라지지만 Cloudinary에는 파일이 남습니다.**
+  서명 없는 업로드 방식이라 브라우저에 원본을 지울 권한이 없기 때문입니다.
+  용량이 신경 쓰이면 Cloudinary **Media Library** 에서 가끔 정리해 주세요.
+- Unsigned preset은 이름을 아는 사람이 사진을 올릴 수 있습니다. 원우들에게만
+  공유되는 앱이라 실질적인 문제는 없지만, 문제가 생기면 preset을 지우고
+  새로 만들면 즉시 차단됩니다.
+
+### 9. 원우 명단 올리기 (선택)
 
 운영진 화면 → **원우 명단** 탭에 이름을 줄바꿈으로 붙여넣으면 한 번에 등록됩니다.
 아직 가입하지 않은 원우도 원우 소개에 흐리게 표시되고,
@@ -201,7 +232,8 @@ src/
       layout.tsx            하단 탭바 + 접근 가드
       home/                 홈 대시보드 (D-day 카드)
       members/              원우 소개
-      library/              자료 (복습 영상 / 행사 사진)
+      library/              자료 (복습 영상 / 행사 사진 앨범 목록)
+      albums/               앨범 상세 (사진 그리드·업로드·전체화면 뷰어)
       chat/                 단체 채팅
       reflections/          소감 나눔
       events/               모임 일정 (목록·캘린더·상세·등록·수정)
@@ -211,11 +243,12 @@ src/
   lib/
     constants.ts            앱 이름·기수 등 바뀔 수 있는 값 모음
     firebase.ts             Firebase 초기화
+    cloudinary.ts           행사 사진 업로드·썸네일 주소 만들기
     auth-context.tsx        로그인 상태와 단계 판단
     hooks.ts                Firestore 실시간 구독
     types.ts / format.ts / image.ts
 firestore.rules             ★ 접근 제어의 실체
-storage.rules               ★ 파일 접근 제어
+storage.rules               (지금은 안 씀 — Blaze로 올릴 때를 위해 남겨둔 파일)
 ```
 
 ---
@@ -267,6 +300,7 @@ Pretendard로 바꾸려면 웹폰트 파일을 `public/fonts/` 에 넣고
 | --- | --- | --- |
 | 프로필·채팅·일정·명단 | Firestore | 무료 (1GB) |
 | **프로필 사진** | **Firestore에 192px 문자열로** | **무료** |
+| **행사 사진** | **Cloudinary** | **무료 (25GB, 카드 불필요)** |
 | 복습 영상 | 저장 안 함 — 유튜브·비메오 **링크만** | 무료 |
 
 프로필 사진은 브라우저에서 192×192로 줄여 8~15KB짜리 문자열로 만든 뒤
@@ -307,8 +341,8 @@ Blaze로 올리게 되면 `storage.rules` 를 배포하고, 프로필 사진도 
 
 **Phase 2 — 다음**
 
+- [x] 행사 사진 앨범 (Cloudinary 업로드·3열 갤러리·전체화면 뷰어)
 - [ ] 복습 영상 모음 (운영진 등록, 회차별 보기)
-- [ ] 행사 사진 앨범 (업로드·갤러리·전체화면 뷰어)
 - [ ] 소감 나눔 게시판
 - [ ] 채팅 이미지 첨부
 
