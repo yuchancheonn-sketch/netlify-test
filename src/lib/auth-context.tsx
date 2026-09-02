@@ -56,6 +56,32 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * 로그인 실패 원인을 원우가 읽고 이해할 수 있는 문장으로 바꿉니다.
+ *
+ * 설정이 덜 된 경우("승인된 도메인" 미등록 등)에는 원우가 아무리 다시 눌러도
+ * 똑같이 실패하므로, 운영진이 무엇을 고쳐야 하는지 알 수 있게 적어줍니다.
+ */
+function signInErrorMessage(code: string): string {
+  switch (code) {
+    case "auth/unauthorized-domain":
+      return "이 주소에서는 아직 로그인할 수 없어요. 운영진에게 알려주세요. (Firebase 승인된 도메인에 이 주소를 추가해야 합니다)";
+    case "auth/operation-not-allowed":
+      return "Google 로그인이 아직 켜져 있지 않아요. 운영진에게 알려주세요.";
+    case "auth/network-request-failed":
+      return "네트워크 연결을 확인하고 다시 시도해 주세요.";
+    case "auth/too-many-requests":
+      return "시도가 너무 잦아요. 잠시 후 다시 시도해 주세요.";
+    case "auth/invalid-api-key":
+    case "auth/api-key-not-valid-please-pass-a-valid-api-key":
+      return "앱 설정이 잘못되어 있어요. 운영진에게 알려주세요.";
+    default:
+      return code
+        ? `로그인에 실패했어요. 다시 시도해도 안 되면 운영진에게 이 내용을 알려주세요. (${code})`
+        : "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.";
+  }
+}
+
 /** 구독해서 받아온 프로필. 어느 계정의 것인지 함께 들고 있어야 계정 전환 시 헷갈리지 않습니다. */
 interface ProfileEntry {
   uid: string;
@@ -129,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
       }
-      setAuthError("로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      setAuthError(signInErrorMessage(code));
     }
   }, []);
 
