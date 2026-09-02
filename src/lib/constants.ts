@@ -103,4 +103,8 @@ export const COUNCIL_ROLES = [
 export const BRAND_COLOR = "#FF7210";
 /** 흰 바탕 위의 주황 글씨에 쓰는 진한 주황 (대비 4.7:1) */
 export const BRAND_COLOR_STRONG = "#C25100";
-export const BRAND_BACKGROUND = "#FFFAF6";
+/**
+ * 앱 배경색 (PWA 스플래시·body 배경).
+ * globals.css의 --color-canvas와 항상 같은 값을 유지해 주세요.
+ */
+export const BRAND_BACKGROUND = "#F7F0E9";

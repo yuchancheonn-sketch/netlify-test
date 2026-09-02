@@ -45,8 +45,13 @@
   --color-ink-faint: #a8a29e;
   --color-line: #f5e8dd;
 
-  /* 배경: 거의 흰색에 가까운, 아주 옅은 주황 기운의 오프화이트 */
-  --color-canvas: #fffaf6;
+  /*
+   * 배경: 주황 기운이 도는 따뜻한 베이지.
+   * 이 앱은 흰 카드를 깔아놓는 구조라, 배경이 흰색에 너무 가까우면
+   * 카드 경계가 그림자에만 기대게 됩니다. 흰색과 12%쯤 밝기 차이를 두어
+   * 카드가 스스로 떠 보이게 하면서, 화면이 어두워 보이지는 않는 선입니다.
+   */
+  --color-canvas: #f7f0e9;
 
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
