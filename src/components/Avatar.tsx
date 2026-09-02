@@ -48,6 +48,26 @@ export default function Avatar({ src, name, size = 40, seed, className = "" }: A
   const dimension = { width: size, height: size };
 
   if (src) {
+    /*
+     * 직접 올린 프로필 사진은 Firestore에 문자열(data:image/jpeg;base64,...)로
+     * 담겨 오고, Google 계정 사진은 https 주소로 옵니다.
+     * next/image는 data URL을 다루지 못하므로 그때는 평범한 img를 씁니다.
+     * 어차피 이미 192px로 줄여둔 사진이라 최적화가 필요 없습니다.
+     */
+    if (src.startsWith("data:")) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={`${name} 프로필 사진`}
+          width={size}
+          height={size}
+          className={`shrink-0 rounded-full object-cover ${className}`}
+          style={dimension}
+        />
+      );
+    }
+
     return (
       <Image
         src={src}

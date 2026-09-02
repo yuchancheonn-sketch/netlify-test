@@ -36,6 +36,12 @@ function toBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
  * 짧은 변에 맞춰 잘라내기 때문에 인물이 가운데 있으면 자연스럽게 담깁니다.
  */
 export async function cropToSquare(file: File, size: number): Promise<Blob> {
+  const canvas = await drawSquare(file, size);
+  return toBlob(canvas, 0.9);
+}
+
+/** 원본을 가운데 정사각형으로 잘라 캔버스에 그립니다. */
+async function drawSquare(file: File, size: number): Promise<HTMLCanvasElement> {
   const image = await loadImage(file);
   const side = Math.min(image.naturalWidth, image.naturalHeight);
   const sourceX = (image.naturalWidth - side) / 2;
@@ -48,8 +54,43 @@ export async function cropToSquare(file: File, size: number): Promise<Blob> {
   if (!context) throw new Error("이미지를 편집할 수 없는 브라우저예요.");
   context.imageSmoothingQuality = "high";
   context.drawImage(image, sourceX, sourceY, side, side, 0, 0, size, size);
+  return canvas;
+}
 
-  return toBlob(canvas, 0.9);
+/**
+ * 프로필 사진을 Firestore에 그대로 담을 수 있는 문자열(data URL)로 만듭니다.
+ *
+ * Firebase Storage는 2024년 9월 이후 만든 프로젝트에서 유료(Blaze) 요금제를
+ * 요구하기 때문에, 비용 없이 운영하려고 사진을 작게 줄여 Firestore에 넣습니다.
+ * 화질을 조금씩 낮춰가며 maxBytes 안에 들어오는 가장 좋은 화질을 고릅니다.
+ */
+export async function cropToSquareDataUrl(
+  file: File,
+  size: number,
+  maxBytes: number,
+): Promise<string> {
+  const canvas = await drawSquare(file, size);
+
+  for (const quality of [0.82, 0.72, 0.62, 0.5, 0.4]) {
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    // data URL은 문자 하나가 1바이트라 길이가 곧 크기입니다.
+    if (dataUrl.length <= maxBytes) return dataUrl;
+  }
+
+  // 그래도 크면 사진 자체를 한 단계 더 줄여서 다시 시도합니다.
+  const smaller = document.createElement("canvas");
+  smaller.width = Math.round(size / 1.5);
+  smaller.height = Math.round(size / 1.5);
+  const context = smaller.getContext("2d");
+  if (!context) throw new Error("이미지를 편집할 수 없는 브라우저예요.");
+  context.imageSmoothingQuality = "high";
+  context.drawImage(canvas, 0, 0, smaller.width, smaller.height);
+
+  const dataUrl = smaller.toDataURL("image/jpeg", 0.6);
+  if (dataUrl.length > maxBytes) {
+    throw new Error("사진 용량이 너무 커요. 다른 사진으로 시도해 주세요.");
+  }
+  return dataUrl;
 }
 
 /**

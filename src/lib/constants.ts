@@ -34,8 +34,23 @@ export const MAIN_CHAT_ROOM_ID = "main";
 /** 채팅 한 번에 불러올 메시지 개수 */
 export const CHAT_PAGE_SIZE = 50;
 
-/** 프로필 사진 업로드 시 저장할 정사각형 한 변의 길이(px) */
-export const PROFILE_IMAGE_SIZE = 512;
+/**
+ * 프로필 사진 한 변의 길이(px).
+ *
+ * 사진을 Firebase Storage에 올리지 않고 Firestore 문서에 문자열로 담기 때문에
+ * 일부러 작게 잡았습니다. 화면에서 가장 크게 보이는 곳이 112px(프로필 화면)이라
+ * 고해상도 화면을 감안해도 192px면 충분합니다.
+ */
+export const PROFILE_IMAGE_SIZE = 192;
+
+/**
+ * 프로필 사진 문자열의 최대 크기(바이트).
+ *
+ * Firestore 문서 하나는 1MiB를 넘을 수 없고, 원우 목록을 불러올 때
+ * 모든 사람의 사진을 함께 받아오므로 넉넉잡아 40KB로 제한합니다.
+ * (보통 192px 사진은 8~15KB 정도로 나옵니다.)
+ */
+export const MAX_PROFILE_PHOTO_BYTES = 40_000;
 
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;

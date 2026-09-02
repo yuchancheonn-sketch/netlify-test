@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Avatar from "@/components/Avatar";
 import { CameraIcon } from "@/components/icons";
 import {
@@ -13,10 +12,11 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { db, storage } from "@/lib/firebase";
-import { cropToSquare } from "@/lib/image";
+import { db } from "@/lib/firebase";
+import { cropToSquareDataUrl } from "@/lib/image";
 import {
   BIO_MAX_LENGTH,
+  MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
   PROFILE_IMAGE_SIZE,
@@ -108,14 +108,23 @@ export default function ProfileForm({
     setUploading(true);
     setSaveError(null);
     try {
-      // 업로드 전에 가운데를 정사각형으로 잘라내고 크기를 줄입니다.
-      const cropped = await cropToSquare(file, PROFILE_IMAGE_SIZE);
-      const storageRef = ref(storage, `users/${user.uid}/profile.jpg`);
-      await uploadBytes(storageRef, cropped, { contentType: "image/jpeg" });
-      const url = await getDownloadURL(storageRef);
-      update("photoURL", url);
-    } catch {
-      setSaveError("사진을 올리지 못했어요. 다른 사진으로 다시 시도해 주세요.");
+      /*
+       * 사진을 파일로 올리지 않고 문자열(data URL)로 만들어 프로필과 함께 저장합니다.
+       * Firebase Storage는 유료 요금제를 요구하는데, 프로필 사진은 아주 작아서
+       * Firestore에 그대로 담아도 무료 한도에 전혀 부담이 없습니다.
+       */
+      const dataUrl = await cropToSquareDataUrl(
+        file,
+        PROFILE_IMAGE_SIZE,
+        MAX_PROFILE_PHOTO_BYTES,
+      );
+      update("photoURL", dataUrl);
+    } catch (caught) {
+      setSaveError(
+        caught instanceof Error && caught.message.includes("용량")
+          ? caught.message
+          : "사진을 불러오지 못했어요. 다른 사진으로 다시 시도해 주세요.",
+      );
     } finally {
       setUploading(false);
     }

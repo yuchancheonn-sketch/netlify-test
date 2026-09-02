@@ -52,6 +52,17 @@ service cloud.firestore {
       return request.resource.data[field] == resource.data[field];
     }
 
+    /*
+     * 프로필 사진은 Storage에 올리지 않고 문자열(data URL)로 문서에 담습니다.
+     * (Storage는 유료 요금제를 요구해서 비용 없이 운영하려고 택한 방식입니다.)
+     * 누군가 큰 사진을 넣어 원우 목록 전체를 무겁게 만들지 못하도록 크기를 제한합니다.
+     * 앱은 40KB로 줄여서 저장하고, 규칙에서는 여유를 두어 60KB까지 허용합니다.
+     */
+    function photoWithinLimit() {
+      return !(request.resource.data.photoURL is string)
+        || request.resource.data.photoURL.size() <= 60000;
+    }
+
     // ---------- 초대 코드 ----------
     // 앱에서는 절대 읽거나 쓸 수 없습니다. Firebase 콘솔에서만 관리하세요.
     match /inviteCodes/{code} {
@@ -79,7 +90,8 @@ service cloud.firestore {
         && unchanged('status')
         && unchanged('cohort')
         && unchanged('inviteCode')
-        && unchanged('uid');
+        && unchanged('uid')
+        && photoWithinLimit();
 
       // 운영진 승인/권한 부여는 운영진만 가능합니다.
       allow update: if isAdmin();
