@@ -24,6 +24,16 @@ const brandDir = path.join(publicDir, "brand");
 /** 아이콘을 그리는 기준 크기 */
 const S = 1024;
 
+/**
+ * 기러기 무늬 조절값. 이 세 개만 만지면 모양이 바뀝니다.
+ * - BOX: 아이콘 한 변에 대한 비율. 1에 가까울수록 크게 들어갑니다.
+ * - ROTATION: 기울기(도). 음수면 왼쪽으로 기웁니다.
+ * - OPACITY: 진하기. 글자를 가리지 않도록 옅게 둡니다.
+ */
+const GOOSE_BOX = 0.92;
+const GOOSE_ROTATION = -15;
+const GOOSE_OPACITY = 0.2;
+
 /** 기러기 사진을 찾을 후보 경로 */
 const GOOSE_CANDIDATES = ["goose.png", "goose.jpg", "goose.jpeg", "goose.webp"].map((name) =>
   path.join(brandDir, name),
@@ -36,17 +46,22 @@ const GOOSE_CANDIDATES = ["goose.png", "goose.jpg", "goose.jpeg", "goose.webp"].
  * @param {number} boxSize 실루엣이 들어갈 정사각형 한 변
  * @param {number} opacity 0~1
  */
-async function buildGooseSilhouette(boxSize, opacity) {
+async function buildGooseSilhouette(boxSize, opacity, rotationDeg) {
   const source = GOOSE_CANDIDATES.find((candidate) => existsSync(candidate));
   if (!source) return null;
 
   const input = await readFile(source);
-  const image = sharp(input).resize(boxSize, boxSize, {
-    fit: "contain",
-    background: { r: 255, g: 255, b: 255, alpha: 0 },
-  });
 
-  const { data, info } = await image
+  /*
+   * 실루엣을 따내는 작업은 원본 해상도에서 합니다.
+   * 기울인 뒤에 최종 크기로 맞추는 편이, 회전하면서 잘려나가는 부분 없이
+   * 날개 끝까지 온전히 담깁니다.
+   */
+  const { data, info } = await sharp(input)
+    .resize(800, 800, {
+      fit: "contain",
+      background: { r: 255, g: 255, b: 255, alpha: 0 },
+    })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -126,10 +141,36 @@ async function buildGooseSilhouette(boxSize, opacity) {
 
   console.log(
     `기러기 실루엣 사용: ${path.basename(source)} ` +
-      `(덮인 비율 ${(coverage * 100).toFixed(1)}%, ${alreadyCutOut ? "투명 배경 그대로" : "밝기 차이로 따냄"})`,
+      `(덮인 비율 ${(coverage * 100).toFixed(1)}%, ${alreadyCutOut ? "투명 배경 그대로" : "밝기 차이로 따냄"}, ` +
+      `기울기 ${rotationDeg}도, 크기 ${Math.round(GOOSE_BOX * 100)}%)`,
   );
 
-  return sharp(out, { raw: { width, height, channels: 4 } }).png().toBuffer();
+  /*
+   * 기울이면 sharp가 캔버스를 알아서 넓혀 주므로 날개 끝이 잘리지 않습니다.
+   *
+   * 다만 넓어진 캔버스를 그대로 줄이면 기러기 둘레의 빈 공간까지 함께 줄어들어
+   * 실제 기러기는 거의 커지지 않습니다. 그래서 회전 뒤 투명한 가장자리를
+   * 잘라내(trim) 기러기가 화면을 꽉 채우도록 맞춥니다.
+   */
+  const rotated = await sharp(out, { raw: { width, height, channels: 4 } })
+    .rotate(rotationDeg, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  let hugged = rotated;
+  try {
+    hugged = await sharp(rotated).trim({ threshold: 1 }).png().toBuffer();
+  } catch {
+    // 잘라낼 여백을 못 찾으면 회전 결과를 그대로 씁니다.
+  }
+
+  return sharp(hugged)
+    .resize(boxSize, boxSize, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
 }
 
 /**
@@ -217,9 +258,9 @@ const targets = [
 async function main() {
   await mkdir(publicDir, { recursive: true });
 
-  // 기러기는 글자를 가리지 않도록 살짝 크게, 아주 옅게 깔아둡니다.
-  const gooseBox = Math.round(S * 0.78);
-  const goose = await buildGooseSilhouette(gooseBox, 0.2);
+  // 기러기는 글자를 가리지 않도록 아주 옅게 깔아둡니다.
+  const gooseBox = Math.round(S * GOOSE_BOX);
+  const goose = await buildGooseSilhouette(gooseBox, GOOSE_OPACITY, GOOSE_ROTATION);
   const useWaves = goose === null;
 
   for (const { file, size, inset, square = false } of targets) {
