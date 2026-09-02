@@ -71,6 +71,6 @@ export const NICKNAME_MAX_LENGTH = 15;
 
 /** 브랜드 기준색 (PWA theme_color, 주소창 색 등 CSS 밖에서 필요할 때 사용) */
 export const BRAND_COLOR = "#FF7210";
-/** 흰 글씨를 얹어도 대비가 충분한 진한 주황 (버튼·말풍선용) */
-export const BRAND_COLOR_STRONG = "#C9490A";
+/** 흰 바탕 위의 주황 글씨에 쓰는 진한 주황 (대비 4.7:1) */
+export const BRAND_COLOR_STRONG = "#C25100";
 export const BRAND_BACKGROUND = "#FFFAF6";

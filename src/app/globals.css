@@ -14,21 +14,26 @@
  *   브랜드 색을 그대로 살리는 쪽을 택했습니다.
  *   나중에 가독성 문제가 생기면 bg-brand-500 을 bg-brand-700 으로 바꾸면 됩니다.
  *
- * - brand-700(#C9490A)은 흰 바탕 위의 주황 글씨에 씁니다.
- *   (흰 배경에 #FF7210 글씨는 대비가 2.7:1이라 읽기 어렵습니다)
+ * - brand-700(#C25100)은 흰 바탕 위의 주황 글씨에 씁니다. 대비 4.7:1로
+ *   기준을 통과합니다. (흰 배경에 #FF7210 글씨는 2.7:1이라 읽기 어렵습니다)
  * - navy는 도산아카데미 심볼 색으로, 기관 표기에만 아주 제한적으로 씁니다.
  */
 @theme {
-  --color-brand-50: #fff4eb;
-  --color-brand-100: #ffe4ce;
-  --color-brand-200: #ffc79e;
-  --color-brand-300: #ffa669;
-  --color-brand-400: #ff8b3d;
+  /*
+   * 색조 25도, 채도 100%로 통일한 순주황 램프입니다.
+   * 어두운 단계에 파란 기가 조금이라도 섞이면 곧바로 갈색으로 보여서,
+   * 파랑을 0으로 두고 밝기만 낮췄습니다.
+   */
+  --color-brand-50: #fff3eb;
+  --color-brand-100: #ffe4d1;
+  --color-brand-200: #ffcaa3;
+  --color-brand-300: #ffac70;
+  --color-brand-400: #ff9142;
   --color-brand-500: #ff7210;
-  --color-brand-600: #e85e06;
-  --color-brand-700: #c9490a;
-  --color-brand-800: #a03a08;
-  --color-brand-900: #7e2e07;
+  --color-brand-600: #e65f00;
+  --color-brand-700: #c25100;
+  --color-brand-800: #994000;
+  --color-brand-900: #7a3300;
 
   /* 도산아카데미 심볼 네이비 */
   --color-navy: #1b3a6b;
