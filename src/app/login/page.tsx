@@ -8,8 +8,6 @@ import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import {
   APP_DEFINITION_BODY,
-  APP_DEFINITION_HANJA,
-  APP_DEFINITION_TITLE,
   APP_NAME,
   COHORT,
   COURSE_FULL_NAME,
@@ -105,20 +103,12 @@ function LoginScreen() {
         <div className="flex-1" />
 
         {/*
-          애기애타의 정의 — 서예 로고와 결을 맞춰 명조체로 씁니다.
-          w-fit으로 글자 폭에만 맞춰, 사진을 가리는 면적을 줄였습니다.
+          애기애타의 뜻. 상자 없이 사진 위에 바로 얹어 화면이 트여 보이게 했습니다.
+          서예 로고와 결을 맞춰 명조체로 씁니다.
         */}
-        <div className="mx-auto w-fit rounded-2xl bg-white/70 px-6 py-3.5 text-center backdrop-blur-sm">
-          <p className="font-serif text-[13px] tracking-[0.28em] text-brand-700">
-            {APP_DEFINITION_HANJA}
-          </p>
-          <p className="mt-0.5 font-serif text-[16px] font-semibold text-ink">
-            {APP_DEFINITION_TITLE}
-          </p>
-          <p className="mt-1.5 font-serif text-[13px] leading-snug text-ink-soft">
-            {APP_DEFINITION_BODY}
-          </p>
-        </div>
+        <p className="text-center font-serif text-[19px] leading-relaxed font-semibold text-ink">
+          {APP_DEFINITION_BODY}
+        </p>
 
         <div className="mt-5">
           <PrimaryButton onClick={handleSignIn} loading={submitting}>
