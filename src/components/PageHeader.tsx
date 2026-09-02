@@ -27,7 +27,15 @@ export default function PageHeader({
   const router = useRouter();
 
   return (
-    <header className="flex items-start gap-3 px-5 pt-5 pb-4">
+    /*
+     * 위 여백은 최소한만 둡니다. 브라우저에서는 6px,
+     * 홈 화면에 추가한 앱에서는 노치·상태바 높이를 더해 제목이 가리지 않게 합니다.
+     * (viewport-fit: cover 라서 안전 영역을 직접 챙겨야 합니다.)
+     */
+    <header
+      className="flex items-start gap-3 px-5 pb-3"
+      style={{ paddingTop: "calc(6px + env(safe-area-inset-top))" }}
+    >
       {back ? (
         <button
           type="button"
