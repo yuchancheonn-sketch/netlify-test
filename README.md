@@ -243,7 +243,7 @@ src/
     onboarding/             최초 프로필 설정
     (main)/                 승인받은 원우만 볼 수 있는 화면들
       layout.tsx            하단 탭바 + 접근 가드
-      home/                 홈 대시보드 (D-day 카드)
+      home/                 홈 대시보드 (D-day 카드 · 오늘의 도산)
       members/              원우수첩 (이름 가나다순 명단)
       library/              자료 (복습 영상 / 행사 사진 앨범 목록)
       albums/               앨범 상세 (사진 그리드·업로드·전체화면 뷰어)

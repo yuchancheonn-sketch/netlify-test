@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import Avatar from "@/components/Avatar";
 import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { greeting } from "@/lib/format";
-import { useApprovedMembers, useUpcomingEvents } from "@/lib/hooks";
-import { COHORT } from "@/lib/constants";
+import { useUpcomingEvents } from "@/lib/hooks";
+import { quoteOfTheDay } from "@/lib/quotes";
 
 export default function HomePage() {
   const { profile } = useAuth();
   const events = useUpcomingEvents();
-  const members = useApprovedMembers();
+  // 화면을 열 때의 날짜로 정합니다. 날짜가 바뀌면 다음에 열 때 새 말씀이 보입니다.
+  const quote = quoteOfTheDay();
 
   const [nextEvent, ...laterEvents] = events.data;
   const displayName = profile?.nickname || profile?.name || "원우";
@@ -82,53 +82,19 @@ export default function HomePage() {
           </Link>
         )}
 
-        {/* 우리 기수 */}
+        {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>
-          <SectionTitle
-            action={
-              <Link
-                href="/members"
-                className="flex items-center gap-0.5 text-[13px] font-bold text-brand-700"
-              >
-                원우 소개
-                <ChevronRightIcon className="h-4 w-4" />
-              </Link>
-            }
-          >
-            함께하는 원우
-          </SectionTitle>
+          <SectionTitle>오늘의 도산</SectionTitle>
 
-          <Link
-            href="/members"
-            className="flex items-center gap-4 rounded-3xl bg-white p-5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-          >
-            {members.loading ? (
-              <Skeleton className="h-10 w-40" />
-            ) : members.data.length === 0 ? (
-              <p className="text-[14px] text-ink-muted">
-                아직 등록된 원우가 없어요
-              </p>
-            ) : (
-              <>
-                <div className="flex -space-x-3">
-                  {members.data.slice(0, 5).map((member) => (
-                    <Avatar
-                      key={member.uid}
-                      src={member.photoURL}
-                      name={member.nickname || member.name}
-                      seed={member.uid}
-                      size={40}
-                      className="ring-2 ring-white"
-                    />
-                  ))}
-                </div>
-                <p className="min-w-0 flex-1 text-[15px] font-bold text-ink">
-                  {COHORT} 원우 {members.data.length}명
-                </p>
-                <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-              </>
-            )}
-          </Link>
+          <div className="rounded-3xl bg-white px-6 py-7 shadow-[var(--shadow-card)]">
+            <p className="font-serif text-[18px] leading-[1.8] text-ink">
+              &ldquo;{quote.text}&rdquo;
+            </p>
+            <p className="mt-5 text-[13px] font-bold text-brand-700">도산 안창호</p>
+            {quote.note ? (
+              <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">{quote.note}</p>
+            ) : null}
+          </div>
         </section>
       </div>
     </>
