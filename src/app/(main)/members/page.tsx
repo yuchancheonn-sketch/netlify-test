@@ -3,14 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
-import { SearchIcon, UsersIcon } from "@/components/icons";
+import { PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import {
+  affiliationLine,
+  buildDirectory,
+  entryMatches,
+  type DirectoryEntry,
+} from "@/lib/directory";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
 import { useApprovedMembers, useRoster } from "@/lib/hooks";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
-import type { MemberType, UserDoc } from "@/lib/types";
+import type { MemberType } from "@/lib/types";
 
 type Filter = "all" | MemberType;
 
@@ -25,10 +32,8 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   youth: "대학생 원우",
 };
 
-/** 카드에 "회사 · 직책" 한 줄로 합칩니다. 둘 다 비었으면 빈 문자열. */
-function affiliationLine(member: UserDoc): string {
-  return [member.company, member.position].filter(Boolean).join(" · ");
-}
+/** 수정 시트가 열려 있는 상태. entry가 null이면 새 이름 추가입니다. */
+type Editing = { entry: DirectoryEntry | null } | null;
 
 export default function MembersPage() {
   const { data: members, loading, error } = useApprovedMembers();
@@ -36,58 +41,43 @@ export default function MembersPage() {
   const { profile } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<UserDoc | null>(null);
-  /** 사진만 크게 보기 (영상이 없는 원우의 사진을 눌렀을 때) */
-  const [enlarged, setEnlarged] = useState<UserDoc | null>(null);
+  const [selected, setSelected] = useState<DirectoryEntry | null>(null);
+  /** 사진만 크게 보기 */
+  const [enlarged, setEnlarged] = useState<DirectoryEntry | null>(null);
   /** 시트를 열자마자 영상을 재생할지 (영상 썸네일을 눌러 들어온 경우) */
   const [autoPlay, setAutoPlay] = useState(false);
+  const [editing, setEditing] = useState<Editing>(null);
+
+  /** 가입한 원우 + 아직 가입 전인 이름을 한 권으로 (이름 가나다순) */
+  const entries = useMemo(
+    () => buildDirectory(members, roster.data),
+    [members, roster.data],
+  );
 
   /**
    * 수첩 번호. 검색이나 필터를 걸어도 번호가 흔들리지 않도록
-   * 전체 명단(이름 가나다순)에서의 자리를 그대로 씁니다.
+   * 전체 명단에서의 자리를 그대로 씁니다.
    */
   const numberOf = useMemo(() => {
     const map = new Map<string, number>();
-    members.forEach((member, index) => map.set(member.uid, index + 1));
+    entries.forEach((entry, index) => map.set(entry.key, index + 1));
     return map;
-  }, [members]);
+  }, [entries]);
 
   const visible = useMemo(() => {
     const needle = keyword.trim().toLowerCase();
-    return members.filter((member) => {
-      if (filter !== "all" && member.memberType !== filter) return false;
-      if (!needle) return true;
-      // 이름·별칭뿐 아니라 회사·직책·직위로도 찾을 수 있게 합니다.
-      return [
-        member.name,
-        member.nickname,
-        member.company,
-        member.position,
-        member.councilRole,
-      ]
-        .filter(Boolean)
-        .some((field) => field.toLowerCase().includes(needle));
-    });
-  }, [members, keyword, filter]);
-
-  /**
-   * 운영진이 명단에 올려뒀지만 아직 가입하지 않은 원우들.
-   * 이름만 흐리게 보여주어 "우리 기수 전체"가 한눈에 들어오게 합니다.
-   */
-  const notJoinedYet = useMemo(() => {
-    const needle = keyword.trim().toLowerCase();
-    return roster.data.filter((entry) => {
-      if (entry.linkedUid) return false;
+    return entries.filter((entry) => {
       if (filter !== "all" && entry.memberType !== filter) return false;
-      if (!needle) return true;
-      return entry.name.toLowerCase().includes(needle);
+      return entryMatches(entry, needle);
     });
-  }, [roster.data, keyword, filter]);
+  }, [entries, keyword, filter]);
 
-  function openMember(member: UserDoc, playVideo = false) {
+  function openEntry(entry: DirectoryEntry, playVideo = false) {
     setAutoPlay(playVideo);
-    setSelected(member);
+    setSelected(entry);
   }
+
+  const busy = loading || roster.loading;
 
   return (
     <>
@@ -132,7 +122,7 @@ export default function MembersPage() {
               );
             })}
           </div>
-          {!loading && !error ? (
+          {!busy && !error ? (
             <p className="shrink-0 text-[13px] text-ink-faint">
               원우 <span className="font-bold text-ink-soft">{visible.length}</span>명
             </p>
@@ -142,13 +132,13 @@ export default function MembersPage() {
         {/* 사용법 안내 */}
         <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
           사진을 누르면 크게 보이고, 이름을 누르면 회사·직책·휴대폰·자기소개를 볼 수 있어요.
-          내 정보는 카드의 <span className="font-bold text-ink-muted">수정</span> 버튼으로
-          채우면 됩니다.
+          <span className="font-bold text-ink-muted"> 수정</span> 버튼으로 서로의 정보를
+          채워줄 수 있고, 맨 아래에서 아직 가입하지 않은 원우도 올릴 수 있습니다.
         </p>
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
-          {loading ? (
+          {busy ? (
             <ul className="flex flex-col gap-3">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key}>
@@ -158,85 +148,83 @@ export default function MembersPage() {
             </ul>
           ) : error ? (
             <ErrorState message={error} />
-          ) : visible.length === 0 && notJoinedYet.length === 0 ? (
+          ) : visible.length === 0 ? (
             <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<UsersIcon className="h-10 w-10" />}
                 title={
-                  members.length === 0
-                    ? "아직 등록된 원우가 없어요"
+                  entries.length === 0
+                    ? "아직 수첩이 비어 있어요"
                     : "조건에 맞는 원우가 없어요"
                 }
                 description={
-                  members.length === 0
-                    ? "원우들이 가입하고 프로필을 채우면 여기에 보입니다."
+                  entries.length === 0
+                    ? "아래 이름 올리기로 우리 기수 원우를 한 명씩 채워보세요."
                     : "검색어나 필터를 바꿔보세요."
                 }
               />
             </div>
           ) : (
             <ul className="flex flex-col gap-3">
-              {visible.map((member) => (
-                <li key={member.uid}>
+              {visible.map((entry) => (
+                <li key={entry.key}>
                   <MemberRow
-                    member={member}
-                    number={numberOf.get(member.uid) ?? 0}
-                    isMe={profile?.uid === member.uid}
-                    onOpen={() => openMember(member)}
-                    onOpenVideo={() => openMember(member, true)}
-                    onEnlargePhoto={() => setEnlarged(member)}
+                    entry={entry}
+                    number={numberOf.get(entry.key) ?? 0}
+                    isMe={!!entry.member && entry.member.uid === profile?.uid}
+                    onOpen={() => openEntry(entry)}
+                    onOpenVideo={() => openEntry(entry, true)}
+                    onEnlargePhoto={() => setEnlarged(entry)}
+                    onEdit={() => setEditing({ entry })}
                   />
                 </li>
               ))}
             </ul>
           )}
 
-          {/* 명단에는 있지만 아직 가입하지 않은 원우 */}
-          {!loading && notJoinedYet.length > 0 ? (
-            <section className="mt-8">
-              <p className="mb-3 text-[13px] font-bold text-ink-faint">
-                아직 가입 전 {notJoinedYet.length}명
-              </p>
-              <ul className="flex flex-col gap-2.5">
-                {notJoinedYet.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="flex items-center gap-4 rounded-3xl bg-white/70 p-4"
-                  >
-                    <Avatar
-                      name={entry.name}
-                      seed={entry.id}
-                      size={44}
-                      className="opacity-40 grayscale"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-bold text-ink-muted">
-                        {entry.name}
-                      </p>
-                      <p className="text-[12px] text-ink-faint">
-                        {MEMBER_TYPE_LABEL[entry.memberType]} · 가입하면 자동으로 이어집니다
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          {/* 아직 가입하지 않은 원우 올리기 */}
+          {!busy && !error ? (
+            <button
+              type="button"
+              onClick={() => setEditing({ entry: null })}
+              className="mt-3 flex w-full items-center gap-3 rounded-3xl border-2 border-dashed border-stone-200 p-4 text-left transition active:scale-[0.99]"
+            >
+              <span className="flex h-[62px] w-[86px] shrink-0 items-center justify-center rounded-2xl bg-white text-ink-faint">
+                <PlusIcon className="h-6 w-6" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[16px] font-bold text-ink-soft">
+                  {entries.length + 1}. 이름 올리기
+                </span>
+                <span className="mt-0.5 block text-[13px] text-ink-faint">
+                  아직 가입하지 않은 원우도 수첩에 넣을 수 있어요
+                </span>
+              </span>
+            </button>
           ) : null}
         </div>
       </div>
 
       {selected ? (
         <MemberDetailSheet
-          member={selected}
+          entry={selected}
           autoPlay={autoPlay}
-          isMe={profile?.uid === selected.uid}
+          isMe={!!selected.member && selected.member.uid === profile?.uid}
           onEnlargePhoto={() => setEnlarged(selected)}
+          onEdit={() => {
+            setEditing({ entry: selected });
+            setSelected(null);
+          }}
           onClose={() => setSelected(null)}
         />
       ) : null}
 
       {enlarged ? (
-        <PhotoLightbox member={enlarged} onClose={() => setEnlarged(null)} />
+        <PhotoLightbox entry={enlarged} onClose={() => setEnlarged(null)} />
+      ) : null}
+
+      {editing ? (
+        <MemberEditSheet entry={editing.entry} onClose={() => setEditing(null)} />
       ) : null}
     </>
   );
@@ -244,28 +232,30 @@ export default function MembersPage() {
 
 /**
  * 수첩 한 줄.
- * 왼쪽 사진(또는 소개 영상 썸네일)과 오른쪽 이름 영역이 서로 다른 곳으로 가기 때문에
- * 버튼을 둘로 나눠 두었습니다. (버튼 안에 버튼을 넣을 수는 없습니다.)
+ * 왼쪽 사진, 가운데 이름, 오른쪽 수정 버튼이 서로 다른 곳으로 가기 때문에
+ * 버튼을 나눠 두었습니다. (버튼 안에 버튼을 넣을 수는 없습니다.)
  */
 function MemberRow({
-  member,
+  entry,
   number,
   isMe,
   onOpen,
   onOpenVideo,
   onEnlargePhoto,
+  onEdit,
 }: {
-  member: UserDoc;
+  entry: DirectoryEntry;
   number: number;
   isMe: boolean;
   onOpen: () => void;
   onOpenVideo: () => void;
   onEnlargePhoto: () => void;
+  onEdit: () => void;
 }) {
-  const videoLink = parseVideoLink(member.introVideoUrl ?? "");
+  const videoLink = parseVideoLink(entry.introVideoUrl);
   const thumbnail = videoLink ? videoThumbnail(videoLink) : null;
-  const affiliation = affiliationLine(member);
-  const displayName = member.name || member.nickname;
+  const affiliation = affiliationLine(entry);
+  const waiting = entry.kind === "waiting";
 
   return (
     <div className="flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)]">
@@ -274,7 +264,7 @@ function MemberRow({
         type="button"
         onClick={videoLink?.id ? onOpenVideo : onEnlargePhoto}
         aria-label={
-          videoLink?.id ? `${displayName} 소개 영상 보기` : `${displayName} 사진 크게 보기`
+          videoLink?.id ? `${entry.name} 소개 영상 보기` : `${entry.name} 사진 크게 보기`
         }
         className="relative h-[62px] w-[86px] shrink-0 overflow-hidden rounded-2xl bg-canvas transition active:scale-95"
       >
@@ -286,16 +276,21 @@ function MemberRow({
               ▶ 영상
             </span>
           </>
-        ) : member.photoURL ? (
+        ) : entry.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={member.photoURL}
-            alt={`${displayName} 프로필 사진`}
+            src={entry.photoURL}
+            alt={`${entry.name} 프로필 사진`}
             className="h-full w-full object-cover"
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center">
-            <Avatar name={displayName} seed={member.uid} size={46} />
+            <Avatar
+              name={entry.name}
+              seed={entry.key}
+              size={46}
+              className={waiting ? "opacity-45 grayscale" : ""}
+            />
           </span>
         )}
       </button>
@@ -310,58 +305,68 @@ function MemberRow({
           <span className="shrink-0 text-[15px] font-bold text-brand-700 tabular-nums">
             {number}.
           </span>
-          <span className="truncate text-[17px] font-bold text-ink">{displayName}</span>
-          {member.councilRole ? (
+          <span
+            className={`truncate text-[17px] font-bold ${waiting ? "text-ink-muted" : "text-ink"}`}
+          >
+            {entry.name}
+          </span>
+          {entry.councilRole ? (
             <span className="shrink-0">
-              <Badge>{member.councilRole}</Badge>
+              <Badge>{entry.councilRole}</Badge>
             </span>
           ) : null}
         </div>
         <p className="mt-0.5 truncate text-[13px] text-ink-muted">
-          {affiliation || member.bio || "정보를 기다리는 중이에요"}
+          {affiliation || entry.bio || (waiting ? "아직 가입 전이에요" : "정보를 기다리는 중이에요")}
         </p>
       </button>
 
-      {/* 본인만 수정할 수 있습니다. */}
-      {isMe ? (
-        <Link
-          href="/profile"
-          className="shrink-0 rounded-xl border border-stone-200 px-3 py-2 text-[13px] font-bold text-ink-muted transition active:scale-95"
-        >
-          ✎ 수정
-        </Link>
-      ) : null}
+      {/* 원우 누구나 서로 채워줄 수 있습니다. */}
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={`${entry.name} 정보 수정`}
+        className={`shrink-0 rounded-xl border px-3 py-2 text-[13px] font-bold transition active:scale-95 ${
+          isMe
+            ? "border-brand-200 bg-brand-50 text-brand-700"
+            : "border-stone-200 text-ink-muted"
+        }`}
+      >
+        ✎ 수정
+      </button>
     </div>
   );
 }
 
 /** 원우 카드를 눌렀을 때 아래에서 올라오는 상세 시트 */
 function MemberDetailSheet({
-  member,
+  entry,
   autoPlay,
   isMe,
   onEnlargePhoto,
+  onEdit,
   onClose,
 }: {
-  member: UserDoc;
+  entry: DirectoryEntry;
   autoPlay: boolean;
   isMe: boolean;
   onEnlargePhoto: () => void;
+  onEdit: () => void;
   onClose: () => void;
 }) {
   // 재생 버튼을 누르기 전에는 유튜브를 불러오지 않습니다.
   const [playing, setPlaying] = useState(autoPlay);
-  const videoLink = parseVideoLink(member.introVideoUrl ?? "");
+  const videoLink = parseVideoLink(entry.introVideoUrl);
   const thumbnail = videoLink ? videoThumbnail(videoLink) : null;
-  const affiliation = affiliationLine(member);
-  const displayName = member.name || member.nickname;
+  const affiliation = affiliationLine(entry);
+  const member = entry.member;
 
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center overflow-y-auto bg-ink/40 px-0 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label={`${displayName} 상세 정보`}
+      aria-label={`${entry.name} 상세 정보`}
       onClick={onClose}
     >
       <div
@@ -372,44 +377,46 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onEnlargePhoto}
-            aria-label={`${displayName} 사진 크게 보기`}
+            aria-label={`${entry.name} 사진 크게 보기`}
             className="rounded-full transition active:scale-95"
           >
             <Avatar
-              src={member.photoURL}
-              name={displayName}
-              seed={member.uid}
+              src={entry.photoURL}
+              name={entry.name}
+              seed={entry.key}
               size={104}
+              className={entry.kind === "waiting" ? "opacity-60 grayscale" : ""}
             />
           </button>
           <div className="mt-4 flex items-center justify-center gap-2">
-            <p className="text-[22px] font-bold text-ink">{displayName}</p>
-            {member.councilRole ? <Badge>{member.councilRole}</Badge> : null}
+            <p className="text-[22px] font-bold text-ink">{entry.name}</p>
+            {entry.councilRole ? <Badge>{entry.councilRole}</Badge> : null}
           </div>
           {affiliation ? (
             <p className="mt-1 text-[15px] text-ink-muted">{affiliation}</p>
           ) : null}
-          {member.nickname && member.nickname !== member.name ? (
-            <p className="mt-1 text-[13px] text-ink-faint">별칭 · {member.nickname}</p>
+          {entry.nickname && entry.nickname !== entry.name ? (
+            <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
           ) : null}
-          <div className="mt-3">
-            <Badge tone={member.memberType === "youth" ? "brand" : "neutral"}>
-              {MEMBER_TYPE_LABEL[member.memberType]}
+          <div className="mt-3 flex items-center gap-2">
+            <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
+              {MEMBER_TYPE_LABEL[entry.memberType]}
             </Badge>
+            {entry.kind === "waiting" ? <Badge tone="neutral">아직 가입 전</Badge> : null}
           </div>
         </div>
 
         {/* 휴대폰 — 눌러서 바로 전화·문자 */}
-        {member.phone ? (
+        {entry.phone ? (
           <div className="mt-6 flex gap-3">
             <a
-              href={`tel:${phoneHref(member.phone)}`}
+              href={`tel:${phoneHref(entry.phone)}`}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
             >
               📞 전화
             </a>
             <a
-              href={`sms:${phoneHref(member.phone)}`}
+              href={`sms:${phoneHref(entry.phone)}`}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-700 transition active:scale-[0.99]"
             >
               ✉️ 문자
@@ -423,7 +430,7 @@ function MemberDetailSheet({
             {playing ? (
               <iframe
                 src={videoEmbedUrl(videoLink) ?? ""}
-                title={`${displayName} 소개 영상`}
+                title={`${entry.name} 소개 영상`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="aspect-video w-full"
@@ -450,58 +457,75 @@ function MemberDetailSheet({
         ) : null}
 
         <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
-          {member.company ? (
+          {entry.company ? (
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
-              <dd className="text-right text-[15px] font-bold text-ink">{member.company}</dd>
+              <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
             </div>
           ) : null}
-          {member.position ? (
+          {entry.position ? (
             <div className="flex items-center justify-between gap-4">
               <dt className="text-[14px] text-ink-faint">직책</dt>
-              <dd className="text-[15px] font-bold text-ink">{member.position}</dd>
+              <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
             </div>
           ) : null}
-          {member.phone ? (
+          {entry.phone ? (
             <div className="flex items-center justify-between gap-4">
               <dt className="text-[14px] text-ink-faint">휴대폰</dt>
-              <dd className="text-[15px] font-bold text-ink">{formatPhone(member.phone)}</dd>
+              <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
             </div>
           ) : null}
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-[14px] text-ink-faint">생일</dt>
-            <dd className="text-[15px] font-bold text-ink">
-              {formatBirthday(
-                member.birthdayMonthDay,
-                member.birthdayYear,
-                member.birthdayYearPublic,
-              )}
-            </dd>
-          </div>
+          {member ? (
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-[14px] text-ink-faint">생일</dt>
+              <dd className="text-[15px] font-bold text-ink">
+                {formatBirthday(
+                  member.birthdayMonthDay,
+                  member.birthdayYear,
+                  member.birthdayYearPublic,
+                )}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex items-start justify-between gap-4">
             <dt className="shrink-0 text-[14px] text-ink-faint">한 줄 소개</dt>
             <dd className="text-right text-[15px] leading-relaxed text-ink">
-              {member.bio || "아직 소개가 없어요"}
+              {entry.bio || "아직 소개가 없어요"}
             </dd>
           </div>
         </dl>
 
         {/* 본인이 쓴 자기소개 전문 */}
-        {member.introduction ? (
+        {entry.introduction ? (
           <div className="mt-4 rounded-2xl bg-canvas p-5">
             <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
             <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
-              {member.introduction}
+              {entry.introduction}
             </p>
           </div>
         ) : null}
 
+        {/* 누가 채워줬는지 (본인이 정리한 경우에는 굳이 보여주지 않습니다) */}
+        {entry.updatedByName && entry.updatedBy !== member?.uid ? (
+          <p className="mt-4 text-center text-[12px] text-ink-faint">
+            {entry.updatedByName} 님이 채워주셨어요
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={onEdit}
+          className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-700"
+        >
+          ✎ {isMe ? "내 정보 수정하기" : "정보 채워주기"}
+        </button>
+
         {isMe ? (
           <Link
             href="/profile"
-            className="mt-4 flex w-full items-center justify-center rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-700"
+            className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
           >
-            ✎ 내 정보 수정하기
+            사진·자기소개까지 고치기
           </Link>
         ) : null}
 
@@ -518,9 +542,13 @@ function MemberDetailSheet({
 }
 
 /** 프로필 사진을 화면 가득 크게 보여주는 화면 */
-function PhotoLightbox({ member, onClose }: { member: UserDoc; onClose: () => void }) {
-  const displayName = member.name || member.nickname;
-
+function PhotoLightbox({
+  entry,
+  onClose,
+}: {
+  entry: DirectoryEntry;
+  onClose: () => void;
+}) {
   // 뒤쪽 목록이 같이 스크롤되지 않게 막고, Esc로도 닫을 수 있게 합니다.
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
@@ -540,7 +568,7 @@ function PhotoLightbox({ member, onClose }: { member: UserDoc; onClose: () => vo
       className="fixed inset-0 z-50 flex flex-col bg-black"
       role="dialog"
       aria-modal="true"
-      aria-label={`${displayName} 사진 크게 보기`}
+      aria-label={`${entry.name} 사진 크게 보기`}
       onClick={onClose}
     >
       <div
@@ -558,15 +586,15 @@ function PhotoLightbox({ member, onClose }: { member: UserDoc; onClose: () => vo
       </div>
 
       <div className="flex flex-1 items-center justify-center px-5">
-        {member.photoURL ? (
+        {entry.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={member.photoURL}
-            alt={`${displayName} 프로필 사진`}
+            src={entry.photoURL}
+            alt={`${entry.name} 프로필 사진`}
             className="max-h-full max-w-full rounded-2xl object-contain"
           />
         ) : (
-          <Avatar name={displayName} seed={member.uid} size={220} />
+          <Avatar name={entry.name} seed={entry.key} size={220} />
         )}
       </div>
 
@@ -574,9 +602,9 @@ function PhotoLightbox({ member, onClose }: { member: UserDoc; onClose: () => vo
         className="px-5 py-5 text-center"
         style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
       >
-        <p className="text-[17px] font-bold text-white">{displayName}</p>
-        {affiliationLine(member) ? (
-          <p className="mt-1 text-[13px] text-white/60">{affiliationLine(member)}</p>
+        <p className="text-[17px] font-bold text-white">{entry.name}</p>
+        {affiliationLine(entry) ? (
+          <p className="mt-1 text-[13px] text-white/60">{affiliationLine(entry)}</p>
         ) : null}
       </div>
     </div>

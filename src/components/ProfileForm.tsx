@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import { CameraIcon } from "@/components/icons";
 import {
@@ -228,6 +228,10 @@ export default function ProfileForm({
         introduction: form.introduction.trim(),
         introVideoUrl: form.introVideoUrl.trim(),
         profileCompleted: true,
+        // 다른 원우가 채워준 뒤 본인이 손보면, 수첩의 "○○ 님이 채워주셨어요"가 사라집니다.
+        updatedBy: user.uid,
+        updatedByName: form.name.trim(),
+        updatedAt: serverTimestamp(),
       });
       onSaved?.();
     } catch {

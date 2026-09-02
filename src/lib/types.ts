@@ -50,6 +50,14 @@ export interface UserDoc {
   /** 온보딩(최초 프로필 설정)을 마쳤는지 */
   profileCompleted: boolean;
   createdAt: Timestamp | null;
+  /**
+   * 이 수첩 항목을 마지막으로 정리한 사람.
+   * 원우끼리 서로 채워줄 수 있어서, 누가 손댔는지 남겨둡니다.
+   * 예전에 만들어진 문서에는 없을 수 있습니다.
+   */
+  updatedBy?: string;
+  updatedByName?: string;
+  updatedAt?: Timestamp | null;
 }
 
 /**
@@ -70,6 +78,19 @@ export interface RosterDoc {
   note: string;
   createdBy: string;
   createdAt: Timestamp | null;
+  /*
+   * 아직 가입하지 않은 원우의 수첩 정보.
+   * 원우들이 서로 채워줄 수 있어서, 계정이 없어도 수첩은 완성됩니다.
+   * 본인이 가입하면 그때부터는 users 문서의 값이 우선합니다.
+   */
+  company?: string;
+  position?: string;
+  phone?: string;
+  councilRole?: string;
+  bio?: string;
+  updatedBy?: string;
+  updatedByName?: string;
+  updatedAt?: Timestamp | null;
 }
 
 /** events/{eventId} */

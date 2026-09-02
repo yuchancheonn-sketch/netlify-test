@@ -91,6 +91,44 @@ service cloud.firestore {
           || request.resource.data.councilRole.size() <= 20);
     }
 
+    /*
+     * 원우수첩은 원우들이 서로 채워주는 방식입니다.
+     * 남의 항목을 고칠 때는 아래 항목만 손댈 수 있고,
+     * 권한·승인 상태·가입 정보는 어느 쪽에서도 건드릴 수 없습니다.
+     */
+    function onlyDirectoryFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'name', 'nickname', 'photoURL', 'memberType',
+        'company', 'position', 'phone', 'councilRole',
+        'bio', 'introduction', 'introVideoUrl',
+        'birthdayMonthDay', 'birthdayYear', 'birthdayYearPublic',
+        'updatedBy', 'updatedByName', 'updatedAt'
+      ]);
+    }
+
+    /** 누가 고쳤는지 반드시 남기도록 (본인 이름으로만 기록할 수 있습니다) */
+    function stampsEditor() {
+      return request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    /** 명단 문서의 글자 수 제한 */
+    function rosterFieldsWithinLimit() {
+      return (!(request.resource.data.name is string)
+          || request.resource.data.name.size() <= 40)
+        && (!(request.resource.data.company is string)
+          || request.resource.data.company.size() <= 100)
+        && (!(request.resource.data.position is string)
+          || request.resource.data.position.size() <= 50)
+        && (!(request.resource.data.phone is string)
+          || request.resource.data.phone.size() <= 30)
+        && (!(request.resource.data.councilRole is string)
+          || request.resource.data.councilRole.size() <= 20)
+        && (!(request.resource.data.bio is string)
+          || request.resource.data.bio.size() <= 200)
+        && (!(request.resource.data.note is string)
+          || request.resource.data.note.size() <= 200);
+    }
+
     // ---------- 초대 코드 ----------
     // 앱에서는 절대 읽거나 쓸 수 없습니다. Firebase 콘솔에서만 관리하세요.
     match /inviteCodes/{code} {
@@ -129,6 +167,18 @@ service cloud.firestore {
         && photoWithinLimit()
         && textFieldsWithinLimit();
 
+      /*
+       * 원우끼리 서로 채워주기.
+       * 아직 프로필을 못 채운 원우의 회사·직책·휴대폰을 다른 원우가 대신 적어줄 수 있습니다.
+       * 대신 수첩 항목만 열려 있고, 고친 사람의 uid가 반드시 함께 남습니다.
+       */
+      allow update: if isApproved()
+        && request.auth.uid != uid
+        && onlyDirectoryFields()
+        && stampsEditor()
+        && photoWithinLimit()
+        && textFieldsWithinLimit();
+
       // 운영진 승인/권한 부여는 운영진만 가능합니다.
       allow update: if isAdmin();
 
@@ -136,10 +186,30 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------- 원우 명단 (운영진이 미리 등록하는 이름들) ----------
+    // ---------- 원우 명단 (아직 가입하지 않은 원우들의 수첩 항목) ----------
     match /roster/{rosterId} {
       allow read: if isApproved();
-      allow create, update, delete: if isAdmin();
+
+      /*
+       * 원우 누구나 수첩에 이름을 올리고 정보를 채울 수 있습니다.
+       * 계정과 이어붙이는 linkedUid만은 운영진 몫으로 남겨둡니다.
+       */
+      allow create: if isApproved()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.linkedUid == null
+        && rosterFieldsWithinLimit();
+
+      allow update: if isApproved()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'name', 'memberType', 'company', 'position', 'phone',
+             'councilRole', 'bio', 'note',
+             'updatedBy', 'updatedByName', 'updatedAt'
+           ])
+        && stampsEditor()
+        && rosterFieldsWithinLimit();
+
+      // 명단에서 지우는 건 운영진만 (실수로 남의 이름이 사라지지 않도록)
+      allow update, delete: if isAdmin();
     }
 
     // ---------- 모임 일정 ----------
