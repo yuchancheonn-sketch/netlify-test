@@ -54,7 +54,7 @@ export default function PageHeader({
         <h1 className="truncate text-[24px] font-bold tracking-tight text-ink">{title}</h1>
       </div>
 
-      {right ? <div className="mt-1 shrink-0">{right}</div> : null}
+      {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
     </header>
   );
 }
@@ -64,13 +64,17 @@ export function ProfileAvatarButton() {
   const { profile, user } = useAuth();
   const name = profile?.nickname || profile?.name || user?.displayName || "나";
 
+  /*
+   * 사진은 제목보다 눈에 먼저 들어오지 않게 작게 두고,
+   * 손가락으로 누르는 범위만 보이지 않는 여백(::before)으로 48px쯤 넓혀둡니다.
+   */
   return (
     <Link
       href="/profile"
       aria-label="내 프로필 열기"
-      className="block rounded-full ring-2 ring-white transition active:scale-95"
+      className="relative block rounded-full ring-2 ring-white transition before:absolute before:-inset-[7px] before:content-[''] active:scale-95"
     >
-      <Avatar src={profile?.photoURL} name={name} seed={profile?.uid} size={44} />
+      <Avatar src={profile?.photoURL} name={name} seed={profile?.uid} size={34} />
     </Link>
   );
 }
