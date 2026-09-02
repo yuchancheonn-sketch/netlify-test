@@ -31,13 +31,91 @@ const S = 1024;
  * - OPACITY: 진하기. 글자를 가리지 않도록 옅게 둡니다.
  */
 const GOOSE_BOX = 0.92;
-const GOOSE_ROTATION = -15;
+const GOOSE_ROTATION = 0;
 const GOOSE_OPACITY = 0.2;
+
+/**
+ * 원본이 로고라면 기러기 주위에 "DOSAN ACADEMY" 같은 글자가 함께 들어 있습니다.
+ * 글자는 작은 조각 여러 개, 기러기는 큰 덩어리 하나이므로
+ * 가장 큰 덩어리의 이 비율보다 작은 조각은 글자로 보고 지웁니다.
+ */
+const GOOSE_MIN_PIECE_RATIO = 0.12;
 
 /** 기러기 사진을 찾을 후보 경로 */
 const GOOSE_CANDIDATES = ["goose.png", "goose.jpg", "goose.jpeg", "goose.webp"].map((name) =>
   path.join(brandDir, name),
 );
+
+/**
+ * 서로 붙어 있는 픽셀끼리 묶어(연결 요소) 큰 덩어리만 남깁니다.
+ * 로고에 들어 있는 "DOSAN ACADEMY" 같은 글자는 작은 조각으로 흩어져 있어
+ * 이 과정에서 걸러지고, 기러기 몸통과 날개만 남습니다.
+ *
+ * @param {Uint8Array} mask 1이면 그림, 0이면 배경
+ * @returns {Uint8Array} 큰 덩어리만 1로 남긴 새 마스크
+ */
+function keepLargestPieces(mask, width, height) {
+  const total = width * height;
+  const label = new Int32Array(total).fill(-1);
+  /** @type {number[]} 덩어리별 픽셀 수 */
+  const sizes = [];
+  // 재귀 대신 직접 만든 대기열을 씁니다. 큰 그림에서 호출 스택이 넘치지 않게요.
+  const queue = new Int32Array(total);
+
+  for (let start = 0; start < total; start += 1) {
+    if (mask[start] !== 1 || label[start] !== -1) continue;
+
+    const id = sizes.length;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    label[start] = id;
+    let size = 0;
+
+    while (head < tail) {
+      const index = queue[head++];
+      size += 1;
+      const x = index % width;
+      const y = (index - x) / width;
+
+      // 위아래좌우 + 대각선까지 이웃으로 봅니다. 얇은 선이 끊기지 않습니다.
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          const next = ny * width + nx;
+          if (mask[next] !== 1 || label[next] !== -1) continue;
+          label[next] = id;
+          queue[tail++] = next;
+        }
+      }
+    }
+
+    sizes.push(size);
+  }
+
+  if (sizes.length === 0) return mask;
+
+  const largest = Math.max(...sizes);
+  const minSize = largest * GOOSE_MIN_PIECE_RATIO;
+  const keep = sizes.map((size) => size >= minSize);
+  const dropped = keep.filter((value) => !value).length;
+
+  if (dropped > 0) {
+    console.log(
+      `  조각 ${sizes.length}개 중 ${dropped}개를 글자로 보고 지웠습니다 ` +
+        `(가장 큰 덩어리의 ${Math.round(GOOSE_MIN_PIECE_RATIO * 100)}% 미만)`,
+    );
+  }
+
+  const out = new Uint8Array(total);
+  for (let i = 0; i < total; i += 1) {
+    if (mask[i] === 1 && keep[label[i]]) out[i] = 1;
+  }
+  return out;
+}
 
 /**
  * 사진에서 기러기 실루엣을 따내어, 흰색 반투명 PNG로 만들어 돌려줍니다.
@@ -116,11 +194,16 @@ async function buildGooseSilhouette(boxSize, opacity, rotationDeg) {
       : (i) => luminance(i) > threshold && data[i * channels + 3] >= 128;
   }
 
-  // 따낸 모양을 흰색 반투명으로 칠합니다.
+  // 따낸 자리를 표시해 두고, 글자 조각을 걸러낸 뒤에 칠합니다.
+  const mask = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i += 1) mask[i] = isSubject(i) ? 1 : 0;
+
+  const kept = keepLargestPieces(mask, width, height);
+
   const out = Buffer.alloc(pixelCount * 4);
   let subjectPixels = 0;
   for (let i = 0; i < pixelCount; i += 1) {
-    const hit = isSubject(i);
+    const hit = kept[i] === 1;
     if (hit) subjectPixels += 1;
     const o = i * 4;
     out[o] = 255;
