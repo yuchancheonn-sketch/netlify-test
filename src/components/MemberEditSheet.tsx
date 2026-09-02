@@ -8,7 +8,6 @@ import {
   doc,
   serverTimestamp,
   updateDoc,
-  writeBatch,
 } from "firebase/firestore";
 import {
   FieldError,
@@ -26,7 +25,6 @@ import {
 } from "@/lib/constants";
 import type { DirectoryEntry } from "@/lib/directory";
 import { formatPhone } from "@/lib/format";
-import { parseRosterText } from "@/lib/roster-import";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -34,13 +32,6 @@ const MEMBER_TYPES: { value: MemberType; label: string }[] = [
   { value: "general", label: "일반원우" },
   { value: "youth", label: "대학생 원우" },
 ];
-
-/** 명단 붙여넣기 칸에 보여줄 예시 (실제 원우 정보가 아닌 형식 안내입니다) */
-const BULK_PLACEHOLDER = [
-  "한 줄에 한 사람씩",
-  "홍길동, 도산주식회사 대표, 010-0000-0000",
-  "김철수, 도산대학교 경영학부, 010-0000-0000",
-].join("\n");
 
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -56,13 +47,10 @@ const SELECT_ARROW_STYLE = {
  */
 export default function MemberEditSheet({
   entry,
-  existingNames,
   onClose,
 }: {
   /** null이면 새 이름 추가 */
   entry: DirectoryEntry | null;
-  /** 이미 수첩에 있는 이름들 (여러 명 붙여넣을 때 중복을 걸러냅니다) */
-  existingNames: string[];
   onClose: () => void;
 }) {
   const { profile } = useAuth();
@@ -80,18 +68,6 @@ export default function MemberEditSheet({
   const [nameError, setNameError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  /** 새로 추가할 때만 쓰는 "여러 명 한 번에" 모드 */
-  const [bulk, setBulk] = useState(false);
-  const [bulkText, setBulkText] = useState("");
-
-  /*
-   * 붙여넣은 명단에서 이름·소속·연락처를 뽑아내고,
-   * 이미 수첩에 있는 이름은 빼둡니다.
-   */
-  const already = new Set(existingNames.map((value) => value.replace(/\s+/g, "")));
-  const parsed = bulk ? parseRosterText(bulkText) : [];
-  const toAdd = parsed.filter((person) => !already.has(person.name.replace(/\s+/g, "")));
-  const skipped = parsed.length - toAdd.length;
 
   /** 붙여넣은 주소를 알아봤는지 바로 보여주는 미리보기 */
   const videoThumb = (() => {
@@ -99,54 +75,9 @@ export default function MemberEditSheet({
     return link?.id ? videoThumbnail(link) : null;
   })();
 
-  /**
-   * 붙여넣은 명단을 한 묶음으로 저장합니다.
-   * 한 번에 보내는 개수에 제한이 있어(500개) 넉넉하게 400개씩 끊습니다.
-   */
-  async function saveBulk() {
-    if (!profile || toAdd.length === 0) return;
-
-    setSaving(true);
-    setError(null);
-    try {
-      for (let start = 0; start < toAdd.length; start += 400) {
-        const batch = writeBatch(db);
-        for (const person of toAdd.slice(start, start + 400)) {
-          batch.set(doc(collection(db, "roster")), {
-            name: person.name,
-            memberType,
-            company: person.company,
-            position: "",
-            phone: person.phone,
-            councilRole: "",
-            bio: "",
-            introVideoUrl: "",
-            linkedUid: null,
-            note: "",
-            createdBy: profile.uid,
-            createdAt: serverTimestamp(),
-            updatedBy: profile.uid,
-            updatedByName: profile.name || profile.nickname,
-            updatedAt: serverTimestamp(),
-          });
-        }
-        await batch.commit();
-      }
-      onClose();
-    } catch {
-      setError("저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
-      setSaving(false);
-    }
-  }
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (saving || !profile) return;
-
-    if (bulk) {
-      await saveBulk();
-      return;
-    }
 
     if (!name.trim()) {
       setNameError("이름을 입력해 주세요.");
@@ -228,115 +159,13 @@ export default function MemberEditSheet({
         <h2 className="text-[19px] font-bold text-ink">
           {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
         </h2>
-        <p className="mt-1 mb-5 text-[13px] leading-relaxed text-ink-faint">
+        <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
           {!entry
             ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
             : isMine
               ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
               : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
         </p>
-
-        {/* 새로 추가할 때만 — 한 명씩 넣을지, 명단을 통째로 붙여넣을지 */}
-        {!entry ? (
-          <div className="mb-6 flex gap-2">
-            {[
-              { value: false, label: "한 명씩" },
-              { value: true, label: "여러 명 한 번에" },
-            ].map((mode) => (
-              <button
-                key={String(mode.value)}
-                type="button"
-                onClick={() => setBulk(mode.value)}
-                aria-pressed={bulk === mode.value}
-                className={`flex-1 rounded-xl py-2.5 text-[14px] font-bold transition ${
-                  bulk === mode.value
-                    ? "bg-brand-500 text-white"
-                    : "bg-white text-ink-muted shadow-[var(--shadow-card)]"
-                }`}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {bulk ? (
-          <>
-            <div className="mb-5">
-              <FieldLabel>구분</FieldLabel>
-              <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
-                {MEMBER_TYPES.map(({ value, label }) => {
-                  const selected = memberType === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => setMemberType(value)}
-                      className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
-                        selected
-                          ? "border-brand-500 bg-brand-50 text-brand-700"
-                          : "border-transparent bg-white text-ink-soft shadow-[var(--shadow-card)]"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-[12px] text-ink-faint">
-                한 번에 붙여넣는 사람들은 모두 이 구분으로 들어갑니다. 일반원우와
-                대학생 원우는 나눠서 두 번 넣어 주세요.
-              </p>
-            </div>
-
-            <div className="mb-6">
-              <FieldLabel htmlFor="bulk-text">명단 붙여넣기</FieldLabel>
-              <textarea
-                id="bulk-text"
-                value={bulkText}
-                onChange={(event) => setBulkText(event.target.value)}
-                rows={8}
-                placeholder={BULK_PLACEHOLDER}
-                className={`${inputClassName} resize-none leading-relaxed`}
-              />
-              <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
-                이름·소속·연락처를 쉼표나 탭으로 나눠 주세요. 줄 앞 번호는 알아서
-                버리고, 연락처는 줄 어디에 있든 찾아냅니다.
-              </p>
-
-              {bulkText.trim() ? (
-                <div className="mt-3 rounded-2xl bg-white p-4 shadow-[var(--shadow-card)]">
-                  <p className="text-[14px] font-bold text-ink">
-                    {toAdd.length}명을 넣을 준비가 됐어요
-                    {skipped > 0 ? (
-                      <span className="font-medium text-ink-faint">
-                        {" "}
-                        (이미 있는 {skipped}명은 건너뜁니다)
-                      </span>
-                    ) : null}
-                  </p>
-                  <ul className="mt-2 flex flex-col gap-1">
-                    {toAdd.slice(0, 4).map((person) => (
-                      <li key={person.name} className="truncate text-[13px] text-ink-muted">
-                        {person.name}
-                        {person.company ? ` · ${person.company}` : ""}
-                        {person.phone ? ` · ${person.phone}` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                  {toAdd.length > 4 ? (
-                    <p className="mt-1 text-[12px] text-ink-faint">
-                      … 그 외 {toAdd.length - 4}명
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </>
-        ) : (
-        <>
 
         <div className="mb-5">
           <FieldLabel htmlFor="edit-name">이름</FieldLabel>
@@ -494,8 +323,6 @@ export default function MemberEditSheet({
             </p>
           )}
         </div>
-        </>
-        )}
 
         {error ? (
           <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
@@ -503,16 +330,8 @@ export default function MemberEditSheet({
           </p>
         ) : null}
 
-        <PrimaryButton
-          type="submit"
-          loading={saving}
-          disabled={bulk && toAdd.length === 0}
-        >
-          {bulk
-            ? `${toAdd.length}명 수첩에 추가하기`
-            : entry
-              ? "저장하기"
-              : "수첩에 추가하기"}
+        <PrimaryButton type="submit" loading={saving}>
+          {entry ? "저장하기" : "수첩에 추가하기"}
         </PrimaryButton>
 
         {isMine ? (

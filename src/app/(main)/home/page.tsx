@@ -91,9 +91,9 @@ export default function HomePage() {
               &ldquo;{quote.text}&rdquo;
             </p>
             <p className="mt-5 text-[13px] font-bold text-brand-700">도산 안창호</p>
-            {quote.note ? (
-              <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">{quote.note}</p>
-            ) : null}
+            <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
+              {quote.source}
+            </p>
           </div>
         </section>
       </div>
