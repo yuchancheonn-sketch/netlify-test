@@ -70,7 +70,14 @@ function LoginScreen() {
         }}
       />
 
-      <div className="relative flex min-h-dvh w-full flex-col px-7 pt-14 pb-10">
+      {/*
+        아래 여백을 두 배로 늘려 정의 문구와 로그인 버튼을 위로 올렸습니다.
+        사파리 하단 주소창에 버튼이 가려지지 않게 하는 역할도 합니다.
+      */}
+      <div
+        className="relative flex min-h-dvh w-full flex-col px-7 pt-14"
+        style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}
+      >
         {/* 앱 아이콘 + 이름 */}
         <div className="flex flex-col items-center text-center">
           {/* 흰 테두리는 아이콘이 배경 사진에서 살짝 떠 보일 만큼만 얇게 둡니다. */}
