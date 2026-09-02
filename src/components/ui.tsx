@@ -109,7 +109,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200 disabled:text-white ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200 disabled:text-white ${className}`}
     >
       {loading ? <Spinner className="h-5 w-5" /> : null}
       {children}

@@ -47,7 +47,7 @@ export default function LibraryPage() {
               onClick={() => setSubtab(value)}
               aria-pressed={subtab === value}
               className={`flex-1 rounded-full py-2.5 text-[14px] font-bold transition ${
-                subtab === value ? "bg-brand-700 text-white" : "text-ink-muted"
+                subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >
               {label}

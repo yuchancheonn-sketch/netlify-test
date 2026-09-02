@@ -135,7 +135,7 @@ export default function ChatPage() {
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label="메시지 보내기"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white transition active:scale-95 disabled:bg-brand-200"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
           >
             {sending ? <Spinner className="h-5 w-5" /> : <ArrowUpIcon className="h-5 w-5" />}
           </button>
@@ -207,7 +207,7 @@ function MessageRow({
         <p
           className={`max-w-[70%] rounded-3xl px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap ${
             isMine
-              ? "rounded-br-lg bg-brand-700 text-white"
+              ? "rounded-br-lg bg-brand-500 text-white"
               : "rounded-bl-lg bg-white text-ink shadow-[var(--shadow-card)]"
           }`}
         >

@@ -45,7 +45,7 @@ export default function EventsPage() {
                 onClick={() => setView(mode)}
                 aria-pressed={view === mode}
                 className={`rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
-                  view === mode ? "bg-brand-700 text-white" : "text-ink-muted"
+                  view === mode ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
                 {label}
@@ -145,7 +145,7 @@ export default function EventsPage() {
       {isAdmin ? (
         <Link
           href="/events/new"
-          className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-700 px-6 py-3.5 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+          className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
         >
           <PlusIcon className="h-5 w-5" />
           일정 등록

@@ -174,7 +174,7 @@ export default function AlbumPage() {
               onChange={(event) => setKeepOriginal(event.target.checked)}
               className="peer sr-only"
             />
-            <span className="block h-8 w-14 rounded-full bg-stone-200 transition peer-checked:bg-brand-700 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100" />
+            <span className="block h-8 w-14 rounded-full bg-stone-200 transition peer-checked:bg-brand-500 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100" />
             <span className="pointer-events-none absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition peer-checked:translate-x-6" />
           </span>
         </label>
@@ -271,7 +271,7 @@ export default function AlbumPage() {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={Boolean(uploading) || !isCloudinaryConfigured}
-        className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-700 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95 disabled:opacity-60"
+        className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95 disabled:opacity-60"
       >
         <PhotoPlusIcon />
         사진 올리기

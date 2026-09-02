@@ -78,7 +78,7 @@ export default function AdminPage() {
               onClick={() => setTab(value)}
               aria-pressed={tab === value}
               className={`flex-1 rounded-full py-2.5 text-[13px] font-bold transition ${
-                tab === value ? "bg-brand-700 text-white" : "text-ink-muted"
+                tab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >
               {label}
@@ -215,7 +215,7 @@ function PendingSection({
                 type="button"
                 onClick={() => approve(user)}
                 disabled={busyUid === user.uid}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-700 py-3 text-[15px] font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
               >
                 {busyUid === user.uid ? (
                   <Spinner className="h-5 w-5" />
@@ -382,7 +382,7 @@ function RosterSection({
           <button
             type="submit"
             disabled={newNames.length === 0 || saving}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-700 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
           >
             {saving ? <Spinner className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
             {newNames.length > 1 ? `${newNames.length}명 한 번에 추가` : "명단에 추가"}

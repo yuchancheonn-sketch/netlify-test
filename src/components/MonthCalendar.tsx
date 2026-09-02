@@ -100,7 +100,7 @@ export default function MonthCalendar({
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-full text-[14px] transition ${
                   isSelected
-                    ? "bg-brand-700 font-bold text-white"
+                    ? "bg-brand-500 font-bold text-white"
                     : isToday
                       ? "bg-brand-50 font-bold text-brand-700"
                       : inMonth

@@ -143,7 +143,7 @@ export default function EventDetailPage() {
                   aria-pressed={selected}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-3.5 text-[15px] font-bold transition active:scale-[0.98] disabled:opacity-60 ${
                     selected
-                      ? "bg-brand-700 text-white"
+                      ? "bg-brand-500 text-white"
                       : "bg-white text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >

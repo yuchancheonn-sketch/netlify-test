@@ -201,7 +201,7 @@ export default function ProfileForm({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             aria-label="프로필 사진 바꾸기"
-            className="absolute -right-1 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-brand-700 text-white shadow-[var(--shadow-float)] ring-4 ring-canvas transition active:scale-95 disabled:opacity-70"
+            className="absolute -right-1 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] ring-4 ring-canvas transition active:scale-95 disabled:opacity-70"
           >
             {uploading ? <Spinner className="h-5 w-5" /> : <CameraIcon className="h-5 w-5" />}
           </button>

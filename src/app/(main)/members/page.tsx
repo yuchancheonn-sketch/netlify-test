@@ -84,7 +84,7 @@ export default function MembersPage() {
                 aria-pressed={active}
                 className={`rounded-full px-4 py-2 text-[14px] font-bold transition ${
                   active
-                    ? "bg-brand-700 text-white"
+                    ? "bg-brand-500 text-white"
                     : "bg-white text-ink-muted shadow-[var(--shadow-card)]"
                 }`}
               >
