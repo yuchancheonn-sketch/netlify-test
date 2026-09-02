@@ -49,25 +49,30 @@ function LoginScreen() {
         아래쪽(어두운 양복)은 짙게 덮어 버튼 글씨가 또렷하게 보이도록 했습니다.
       */}
       {/*
-        사진 높이를 화면보다 크게(122%) 잡아 위아래로 여유를 만든 뒤,
-        위쪽(4%)에 붙여서 인물이 화면 아래로 내려오게 했습니다.
-        높이를 딱 맞추면(cover) 남는 공간이 없어 위치를 옮길 수 없습니다.
+        사진을 화면 위쪽 24% 아래에서 시작하게 해, 얼굴이 제목·아이콘에
+        가리지 않고 그 아래에 놓이도록 했습니다.
+        사진을 키워서 내리는 방법도 있지만 원본이 640px이라 흐려집니다.
+        시작 위치만 내리면 화질을 그대로 두고 배치만 바꿀 수 있습니다.
+
+        위쪽 가장자리가 선처럼 보이지 않도록 마스크로 서서히 나타나게 합니다.
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-no-repeat"
+        className="pointer-events-none absolute inset-x-0 top-[24%] bottom-0 bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
-          backgroundSize: "auto 122%",
-          backgroundPosition: "50% 4%",
+          backgroundPosition: "50% 0%",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 14%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, #000 14%)",
         }}
       />
+      {/* 아래로 갈수록 짙어지는 막 — 얼굴은 드러내고 버튼 쪽은 또렷하게 */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(255,250,246,0.66) 0%, rgba(255,250,246,0.42) 24%, rgba(255,250,246,0.72) 48%, rgba(255,250,246,0.95) 68%, rgb(255,250,246) 82%)",
+            "linear-gradient(to bottom, rgba(255,250,246,0.5) 0%, rgba(255,250,246,0.28) 38%, rgba(255,250,246,0.68) 60%, rgba(255,250,246,0.95) 74%, rgb(255,250,246) 84%)",
         }}
       />
 
@@ -99,15 +104,18 @@ function LoginScreen() {
         {/* 사진이 보이는 여백 */}
         <div className="flex-1" />
 
-        {/* 애기애타의 정의 — 서예 로고와 결을 맞춰 명조체로 씁니다. */}
-        <div className="rounded-2xl bg-white/70 px-5 py-5 text-center backdrop-blur-sm">
-          <p className="font-serif text-[15px] tracking-[0.3em] text-brand-700">
+        {/*
+          애기애타의 정의 — 서예 로고와 결을 맞춰 명조체로 씁니다.
+          w-fit으로 글자 폭에만 맞춰, 사진을 가리는 면적을 줄였습니다.
+        */}
+        <div className="mx-auto w-fit rounded-2xl bg-white/70 px-6 py-3.5 text-center backdrop-blur-sm">
+          <p className="font-serif text-[13px] tracking-[0.28em] text-brand-700">
             {APP_DEFINITION_HANJA}
           </p>
-          <p className="mt-1 font-serif text-[19px] font-semibold text-ink">
+          <p className="mt-0.5 font-serif text-[16px] font-semibold text-ink">
             {APP_DEFINITION_TITLE}
           </p>
-          <p className="mt-2 font-serif text-[15px] leading-relaxed text-ink-soft">
+          <p className="mt-1.5 font-serif text-[13px] leading-snug text-ink-soft">
             {APP_DEFINITION_BODY}
           </p>
         </div>
