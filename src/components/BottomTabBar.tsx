@@ -6,7 +6,7 @@ import {
   ChatIcon,
   HomeIcon,
   LibraryIcon,
-  ReflectionIcon,
+  MegaphoneIcon,
   UsersIcon,
 } from "@/components/icons";
 
@@ -23,7 +23,7 @@ const TABS = [
   { href: "/members", label: "원우", Icon: UsersIcon },
   { href: "/library", label: "자료", Icon: LibraryIcon },
   { href: "/chat", label: "채팅", Icon: ChatIcon },
-  { href: "/reflections", label: "소감", Icon: ReflectionIcon },
+  { href: "/news", label: "소식", Icon: MegaphoneIcon },
 ] as const;
 
 export default function BottomTabBar() {

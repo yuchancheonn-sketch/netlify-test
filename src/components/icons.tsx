@@ -94,6 +94,27 @@ export function ReflectionIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+/** 도산아카데미 소식 탭 — 안내 방송을 뜻하는 확성기 */
+export function MegaphoneIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M19 4.5v15l-9.5-4H6a2.5 2.5 0 0 1 0-5h3.5L19 4.5Z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 15.5v2.8a1.7 1.7 0 0 0 3.4 0v-1.6"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CalendarIcon({ className, strokeWidth = 1.8 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
