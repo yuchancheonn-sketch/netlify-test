@@ -207,7 +207,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[28px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[28px] sm:pb-7"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
         <h2 className="mb-6 text-[20px] font-bold text-ink">새 앨범 만들기</h2>
 

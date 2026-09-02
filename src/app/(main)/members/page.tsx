@@ -362,7 +362,7 @@ function MemberDetailSheet({
       onClick={onClose}
     >
       <div
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[28px] bg-white px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[28px] sm:pb-7"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[16px] bg-white px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col items-center text-center">

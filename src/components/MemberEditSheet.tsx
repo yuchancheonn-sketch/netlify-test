@@ -133,7 +133,7 @@ export default function MemberEditSheet({
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[28px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[28px] sm:pb-7"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
         <h2 className="text-[19px] font-bold text-ink">
           {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
