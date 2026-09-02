@@ -132,11 +132,21 @@ async function buildGooseSilhouette(boxSize, opacity) {
   return sharp(out, { raw: { width, height, channels: 4 } }).png().toBuffer();
 }
 
-/** 바탕 + (물결 무늬) + 글자. 기러기는 이 위에 따로 합성합니다. */
-function iconSvg(inset, { withWaves }) {
+/**
+ * 바탕 + (물결 무늬) + 글자. 기러기는 이 위에 따로 합성합니다.
+ *
+ * @param {number} inset 가장자리 여백 비율
+ * @param {object} options
+ * @param {boolean} options.withWaves 물결 무늬를 그릴지
+ * @param {boolean} [options.square] 모서리를 깎지 않고 꽉 채울지.
+ *   iOS 홈 화면 아이콘은 iOS가 직접 둥근 모양을 씌우기 때문에,
+ *   우리가 미리 깎아서 모서리를 투명하게 두면 그 부분이 검게 채워집니다.
+ *   그래서 애플용 아이콘만 모서리 없이 불투명한 정사각형으로 만듭니다.
+ */
+function iconSvg(inset, { withWaves, square = false }) {
   const pad = S * inset;
   const inner = S - pad * 2;
-  const r = inner * 0.22;
+  const r = square ? 0 : inner * 0.22;
 
   const waves = withWaves
     ? `
@@ -198,8 +208,10 @@ function textSvg(inset) {
 const targets = [
   { file: "icon-192.png", size: 192, inset: 0 },
   { file: "icon-512.png", size: 512, inset: 0 },
-  { file: "icon-maskable-512.png", size: 512, inset: 0.1 },
-  { file: "apple-icon.png", size: 180, inset: 0 },
+  // 안드로이드 마스커블: 바깥이 잘려나가므로 여백을 두고, 모서리도 시스템이 깎습니다.
+  { file: "icon-maskable-512.png", size: 512, inset: 0.1, square: true },
+  // iOS 홈 화면: 모서리를 깎지 않은 불투명 정사각형이어야 합니다.
+  { file: "apple-icon.png", size: 180, inset: 0, square: true },
 ];
 
 async function main() {
@@ -210,7 +222,7 @@ async function main() {
   const goose = await buildGooseSilhouette(gooseBox, 0.2);
   const useWaves = goose === null;
 
-  for (const { file, size, inset } of targets) {
+  for (const { file, size, inset, square = false } of targets) {
     const layers = [];
     if (goose) {
       const offset = Math.round((S - gooseBox) / 2);
@@ -222,15 +234,27 @@ async function main() {
      * sharp는 한 파이프라인 안에서 resize를 composite보다 먼저 적용합니다.
      * 그래서 1024 크기로 다 합쳐서 한 장을 만든 뒤, 따로 줄여야 합니다.
      */
-    const full = await sharp(Buffer.from(iconSvg(inset, { withWaves: useWaves })))
+    const full = await sharp(Buffer.from(iconSvg(inset, { withWaves: useWaves, square })))
       .composite(layers)
       .png()
       .toBuffer();
 
-    const png = await sharp(full).resize(size, size).png().toBuffer();
+    let pipeline = sharp(full).resize(size, size);
+
+    if (square) {
+      /*
+       * 투명한 곳이 조금이라도 남으면 iOS가 그 부분을 검게 칠합니다.
+       * 브랜드 주황으로 배경을 깔고 알파 채널을 아예 없애 완전히 불투명하게 만듭니다.
+       */
+      pipeline = pipeline.flatten({ background: "#FF7210" }).removeAlpha();
+    }
+
+    const png = await pipeline.png().toBuffer();
 
     await writeFile(path.join(publicDir, file), png);
-    console.log(`생성 완료: public/${file} (${size}x${size})`);
+    console.log(
+      `생성 완료: public/${file} (${size}x${size}${square ? ", 모서리 없는 불투명" : ""})`,
+    );
   }
 
   /*
