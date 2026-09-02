@@ -51,7 +51,7 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        <h1 className="truncate text-[24px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1 className="truncate text-[20px] font-bold tracking-tight text-ink">{title}</h1>
       </div>
 
       {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
