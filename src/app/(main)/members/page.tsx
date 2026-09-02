@@ -172,7 +172,6 @@ export default function MembersPage() {
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
-                    isMe={!!entry.member && entry.member.uid === profile?.uid}
                     onOpen={() => openEntry(entry)}
                     onOpenVideo={() => openEntry(entry, true)}
                     onEnlargePhoto={() => setEnlarged(entry)}
@@ -230,7 +229,6 @@ export default function MembersPage() {
 function MemberRow({
   entry,
   number,
-  isMe,
   onOpen,
   onOpenVideo,
   onEnlargePhoto,
@@ -238,7 +236,6 @@ function MemberRow({
 }: {
   entry: DirectoryEntry;
   number: number;
-  isMe: boolean;
   onOpen: () => void;
   onOpenVideo: () => void;
   onEnlargePhoto: () => void;
@@ -303,16 +300,12 @@ function MemberRow({
         </p>
       </button>
 
-      {/* 원우 누구나 서로 채워줄 수 있습니다. */}
+      {/* 원우 누구나 서로 채워줄 수 있어서, 내 칸이라고 달리 보이지 않습니다. */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className={`shrink-0 rounded-xl border px-3 py-2 text-[13px] font-bold transition active:scale-95 ${
-          isMe
-            ? "border-brand-200 bg-brand-50 text-brand-700"
-            : "border-stone-200 text-ink-muted"
-        }`}
+        className="shrink-0 rounded-xl border border-stone-200 px-3 py-2 text-[13px] font-bold text-ink-muted transition active:scale-95"
       >
         ✎ 수정
       </button>
