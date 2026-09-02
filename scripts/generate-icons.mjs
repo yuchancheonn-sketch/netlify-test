@@ -29,9 +29,9 @@ function iconSvg(inset = 0) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#F79A3C"/>
-      <stop offset="45%" stop-color="#EF7A16"/>
-      <stop offset="100%" stop-color="#B0490B"/>
+      <stop offset="0%" stop-color="#FF9440"/>
+      <stop offset="45%" stop-color="#FF7210"/>
+      <stop offset="100%" stop-color="#C9490A"/>
     </linearGradient>
     <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>

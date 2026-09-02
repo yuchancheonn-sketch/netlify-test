@@ -3,24 +3,27 @@
 /*
  * 애기애타 10기 디자인 토큰
  * ---------------------------------------------------------------
- * 공식 포스터("2026 도산 애기애타 리더십 과정")의 주황색을 기준으로 삼았습니다.
- * - brand-500(#F5821F)이 포스터 제목에 쓰인 대표 주황색입니다. 배지·강조에 씁니다.
- * - 흰 글씨를 얹는 버튼/말풍선처럼 "글자가 올라가는 면"은 brand-700(#AD4E0E)을 씁니다.
- *   #F5821F 위의 흰 글씨는 명도 대비가 3:1에 못 미쳐 접근성 기준(4.5:1)에 미달하지만,
- *   #AD4E0E 위의 흰 글씨는 약 5.4:1로 기준을 넉넉히 통과합니다.
+ * 브랜드 기준색은 #FF7210 입니다. (밝고 선명한 주황)
+ *
+ * - brand-500(#FF7210)은 테마색·아이콘·그라데이션·배지처럼
+ *   "글자가 올라가지 않는 면"에 씁니다.
+ * - brand-700(#C9490A)은 흰 글씨를 얹는 버튼·말풍선에 씁니다.
+ *   #FF7210 위의 흰 글씨는 명도 대비가 2.7:1이라 접근성 기준(4.5:1)에
+ *   크게 못 미쳐 밝은 곳에서 글씨가 잘 안 보입니다.
+ *   #C9490A 위의 흰 글씨는 4.7:1로 기준을 통과하면서도 충분히 선명합니다.
  * - navy는 도산아카데미 심볼 색으로, 기관 표기에만 아주 제한적으로 씁니다.
  */
 @theme {
-  --color-brand-50: #fff8f0;
-  --color-brand-100: #feebd6;
-  --color-brand-200: #fcd5ac;
-  --color-brand-300: #fabb7c;
-  --color-brand-400: #f89e4b;
-  --color-brand-500: #f5821f;
-  --color-brand-600: #de6c10;
-  --color-brand-700: #ad4e0e;
-  --color-brand-800: #8b3f0d;
-  --color-brand-900: #71340d;
+  --color-brand-50: #fff4eb;
+  --color-brand-100: #ffe4ce;
+  --color-brand-200: #ffc79e;
+  --color-brand-300: #ffa669;
+  --color-brand-400: #ff8b3d;
+  --color-brand-500: #ff7210;
+  --color-brand-600: #e85e06;
+  --color-brand-700: #c9490a;
+  --color-brand-800: #a03a08;
+  --color-brand-900: #7e2e07;
 
   /* 도산아카데미 심볼 네이비 */
   --color-navy: #1b3a6b;
@@ -30,17 +33,17 @@
   --color-ink-soft: #57534e;
   --color-ink-muted: #78716c;
   --color-ink-faint: #a8a29e;
-  --color-line: #f2e9e1;
+  --color-line: #f5e8dd;
 
-  /* 배경: 포스터처럼 거의 흰색에 가까운, 아주 옅은 주황 기운의 오프화이트 */
-  --color-canvas: #fffaf5;
+  /* 배경: 거의 흰색에 가까운, 아주 옅은 주황 기운의 오프화이트 */
+  --color-canvas: #fffaf6;
 
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
 
   /* 카드에 쓰는 은은한 그림자 */
-  --shadow-card: 0 1px 2px rgba(28, 25, 23, 0.04), 0 6px 16px rgba(124, 45, 18, 0.06);
-  --shadow-float: 0 4px 12px rgba(124, 45, 18, 0.12), 0 12px 28px rgba(124, 45, 18, 0.14);
+  --shadow-card: 0 1px 2px rgba(28, 25, 23, 0.04), 0 6px 16px rgba(180, 70, 10, 0.07);
+  --shadow-float: 0 4px 12px rgba(180, 70, 10, 0.14), 0 12px 28px rgba(180, 70, 10, 0.16);
 }
 
 html {

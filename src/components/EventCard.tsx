@@ -22,18 +22,22 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
       href={`/events/${event.id}`}
       className="block rounded-3xl bg-linear-135 from-brand-500 to-brand-700 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
     >
+      {/*
+        밝은 주황 위의 흰 글씨는 대비가 넉넉하지 않아, 이 카드 안에서는
+        투명도를 주지 않고 굵기를 올려 또렷하게 보이도록 했습니다.
+      */}
       <div className="flex items-center justify-between gap-3">
-        <span className="rounded-full bg-white/25 px-3 py-1 text-[13px] font-bold">
+        <span className="rounded-full bg-black/20 px-3 py-1 text-[13px] font-bold">
           {ddayLabel(event.date)}
         </span>
-        <span className="text-[14px] font-medium text-white/90">
+        <span className="text-[14px] font-bold text-white">
           {formatMonthDay(event.date)}
         </span>
       </div>
 
       <p className="mt-4 text-[22px] font-bold leading-tight">{event.title}</p>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] text-white/90">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] font-medium text-white">
         {event.startTime ? (
           <span className="flex items-center gap-1.5">
             <ClockIcon className="h-[18px] w-[18px]" />

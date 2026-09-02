@@ -94,15 +94,15 @@ export default function EventDetailPage() {
       <div className="flex flex-col gap-6 px-5 pb-8">
         {/* 일정 요약 */}
         <section className="rounded-3xl bg-linear-135 from-brand-500 to-brand-700 p-6 text-white shadow-[var(--shadow-float)]">
-          <span className="inline-block rounded-full bg-white/25 px-3 py-1 text-[13px] font-bold">
+          <span className="inline-block rounded-full bg-black/20 px-3 py-1 text-[13px] font-bold">
             {ddayLabel(event.date)}
           </span>
           <h2 className="mt-4 text-[24px] font-bold leading-tight">{event.title}</h2>
-          <p className="mt-1 text-[15px] text-white/90">
+          <p className="mt-1 text-[15px] font-medium text-white">
             {formatDotDate(event.date)} · {formatMonthDay(event.date)}
           </p>
 
-          <div className="mt-4 flex flex-col gap-2 text-[15px] text-white/95">
+          <div className="mt-4 flex flex-col gap-2 text-[15px] font-medium text-white">
             {event.startTime ? (
               <span className="flex items-center gap-2">
                 <ClockIcon className="h-5 w-5" />
