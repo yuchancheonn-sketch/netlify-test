@@ -30,9 +30,9 @@ export type AuthStage =
   | "loading"
   /** 로그인 안 함 */
   | "signedOut"
-  /** 로그인은 했지만 초대 코드를 아직 입력하지 않음 */
-  | "needsInviteCode"
-  /** 가입 신청은 했지만 운영진 승인 대기 중 */
+  /** 로그인은 했지만 아직 계정 문서가 없음 (첫 방문) */
+  | "needsSignUp"
+  /** 운영진이 막아둔 계정 */
   | "pending"
   /** 승인은 받았지만 최초 프로필 설정을 아직 하지 않음 */
   | "needsOnboarding"
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const stage = useMemo<AuthStage>(() => {
     if (!authResolved || !profileResolved) return "loading";
     if (!user) return "signedOut";
-    if (!profile) return "needsInviteCode";
+    if (!profile) return "needsSignUp";
     if (profile.status !== "approved") return "pending";
     if (!profile.profileCompleted) return "needsOnboarding";
     return "ready";

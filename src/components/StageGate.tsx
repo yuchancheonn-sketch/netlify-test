@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui";
 /** 각 단계에서 사용자가 있어야 할 화면 */
 const STAGE_PATH: Record<Exclude<AuthStage, "loading">, string> = {
   signedOut: "/login",
-  needsInviteCode: "/join",
+  needsSignUp: "/join",
   pending: "/pending",
   needsOnboarding: "/onboarding",
   ready: "/home",

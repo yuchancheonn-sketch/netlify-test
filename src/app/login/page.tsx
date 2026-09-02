@@ -11,6 +11,7 @@ import {
   APP_DEFINITION_HANJA,
   APP_DEFINITION_TITLE,
   APP_NAME,
+  COHORT,
   COURSE_FULL_NAME,
 } from "@/lib/constants";
 
@@ -125,7 +126,7 @@ function LoginScreen() {
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-[12px] font-medium text-ink-muted">
             <LockIcon className="h-4 w-4" />
-            10기 원우만 초대 코드로 들어올 수 있어요
+            {COHORT} 원우들을 위한 공간이에요
           </p>
         </div>
       </div>
