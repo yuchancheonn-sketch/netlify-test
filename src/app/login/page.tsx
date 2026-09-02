@@ -56,7 +56,7 @@ function LoginScreen() {
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[33%] bottom-0 bg-cover bg-no-repeat"
+        className="pointer-events-none absolute inset-x-0 top-[28%] bottom-0 bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
