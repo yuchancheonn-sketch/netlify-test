@@ -285,7 +285,7 @@ function MemberRow({
         className="min-w-0 flex-1 py-1 text-left transition active:opacity-70"
       >
         <div className="flex items-baseline gap-1.5">
-          <span className="shrink-0 text-[15px] font-bold text-brand-700 tabular-nums">
+          <span className="shrink-0 text-[17px] font-bold text-brand-700 tabular-nums">
             {number}.
           </span>
           <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
