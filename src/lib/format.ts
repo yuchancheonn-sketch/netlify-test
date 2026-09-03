@@ -103,6 +103,20 @@ export function formatPhone(raw: string): string {
   return raw.trim();
 }
 
+/**
+ * 입력하는 동안 실시간으로 모양을 잡아줍니다.
+ *
+ * 숫자만 남긴 뒤 자리 수에 맞춰 붙임표를 넣습니다. 네 번째 숫자를 치면
+ * 앞에 붙임표가 따라 들어오고, 지워서 세 자리가 되면 붙임표도 함께 사라집니다.
+ * (붙임표를 따로 지울 필요가 없습니다.)
+ */
+export function formatPhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  if (digits.length < 4) return digits;
+  if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
 /** 전화 걸기·문자 보내기 링크에 쓸 번호 (숫자만) */
 export function phoneHref(raw: string): string {
   return raw.replace(/[^\d+]/g, "");

@@ -90,7 +90,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
           id="event-title"
           value={title}
           onChange={(changed) => setTitle(changed.target.value)}
-          placeholder="예: 10기 3회차 수업"
+          placeholder="예) 10기 3회차 수업"
           className={inputClassName}
         />
         {errors.title ? <FieldError>{errors.title}</FieldError> : null}
@@ -142,7 +142,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
           id="event-location"
           value={location}
           onChange={(changed) => setLocation(changed.target.value)}
-          placeholder="예: 도산아카데미 강의실"
+          placeholder="예) 도산아카데미 강의실"
           className={inputClassName}
         />
       </div>

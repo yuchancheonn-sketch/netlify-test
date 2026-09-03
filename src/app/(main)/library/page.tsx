@@ -375,7 +375,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
               setTitle(changed.target.value);
               setError(null);
             }}
-            placeholder="예: 10기 수료식"
+            placeholder="예) 10기 수료식"
             className={inputClassName}
           />
         </div>

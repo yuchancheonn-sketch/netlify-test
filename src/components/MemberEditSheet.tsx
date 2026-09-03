@@ -24,7 +24,7 @@ import {
   POSITION_MAX_LENGTH,
 } from "@/lib/constants";
 import type { DirectoryEntry } from "@/lib/directory";
-import { formatPhone } from "@/lib/format";
+import { formatPhone, formatPhoneInput } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -176,7 +176,7 @@ export default function MemberEditSheet({
               setName(event.target.value.slice(0, 20));
               setNameError(null);
             }}
-            placeholder="예: 홍길동"
+            placeholder="예) 홍길동"
             className={inputClassName}
           />
           {nameError ? <FieldError>{nameError}</FieldError> : null}
@@ -215,7 +215,7 @@ export default function MemberEditSheet({
             id="edit-company"
             value={company}
             onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
-            placeholder="예: (주)착한부자"
+            placeholder="예) (주)착한부자"
             className={inputClassName}
           />
         </div>
@@ -228,7 +228,7 @@ export default function MemberEditSheet({
             id="edit-position"
             value={position}
             onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
-            placeholder="예: 대표 / 본부장"
+            placeholder="예) 대표 / 본부장"
             className={inputClassName}
           />
         </div>
@@ -240,8 +240,7 @@ export default function MemberEditSheet({
           <input
             id="edit-phone"
             value={phone}
-            onChange={(event) => setPhone(event.target.value.slice(0, 20))}
-            onBlur={(event) => setPhone(formatPhone(event.target.value))}
+            onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
             inputMode="tel"
             placeholder="010-1234-5678"
             className={inputClassName}
@@ -276,7 +275,7 @@ export default function MemberEditSheet({
             id="edit-bio"
             value={bio}
             onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
-            placeholder="예: 마케팅 일을 해요 / 서울 거주"
+            placeholder="예) 마케팅 일을 해요 / 서울 거주"
             className={inputClassName}
           />
         </div>

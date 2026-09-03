@@ -25,7 +25,7 @@ import {
   POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
-import { formatPhone } from "@/lib/format";
+import { formatPhone, formatPhoneInput } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -286,7 +286,7 @@ export default function ProfileForm({
           id="name"
           value={form.name}
           onChange={(event) => update("name", event.target.value)}
-          placeholder="예: 홍길동"
+          placeholder="예) 홍길동"
           className={inputClassName}
         />
         {errors.name ? <FieldError>{errors.name}</FieldError> : null}
@@ -424,7 +424,7 @@ export default function ProfileForm({
           onChange={(event) =>
             update("company", event.target.value.slice(0, COMPANY_MAX_LENGTH))
           }
-          placeholder="예: (주)착한부자"
+          placeholder="예) (주)착한부자"
           className={inputClassName}
         />
         {errors.company ? <FieldError>{errors.company}</FieldError> : null}
@@ -440,7 +440,7 @@ export default function ProfileForm({
           onChange={(event) =>
             update("position", event.target.value.slice(0, POSITION_MAX_LENGTH))
           }
-          placeholder="예: 대표 / 본부장"
+          placeholder="예) 대표 / 본부장"
           className={inputClassName}
         />
         {errors.position ? <FieldError>{errors.position}</FieldError> : null}
@@ -454,8 +454,7 @@ export default function ProfileForm({
         <input
           id="phone"
           value={form.phone}
-          onChange={(event) => update("phone", event.target.value.slice(0, 20))}
-          onBlur={(event) => update("phone", formatPhone(event.target.value))}
+          onChange={(event) => update("phone", formatPhoneInput(event.target.value))}
           inputMode="tel"
           autoComplete="tel"
           placeholder="010-1234-5678"
@@ -500,7 +499,7 @@ export default function ProfileForm({
           id="bio"
           value={form.bio}
           onChange={(event) => update("bio", event.target.value.slice(0, BIO_MAX_LENGTH))}
-          placeholder="예: 마케팅 일을 해요 / 서울 거주"
+          placeholder="예) 마케팅 일을 해요 / 서울 거주"
           className={inputClassName}
         />
         {errors.bio ? <FieldError>{errors.bio}</FieldError> : null}
