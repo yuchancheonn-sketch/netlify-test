@@ -67,8 +67,18 @@ function SignUpScreen() {
           createdAt: serverTimestamp(),
         });
         // 성공하면 프로필 문서 구독이 바뀌면서 StageGate가 다음 화면으로 보냅니다.
-      } catch {
-        setError("계정을 만들지 못했어요. 잠시 후 다시 시도해 주세요.");
+      } catch (caught) {
+        /*
+         * 실패한 진짜 이유를 화면에 함께 남깁니다.
+         * 특히 permission-denied는 "보안 규칙을 아직 올리지 않았다"는 뜻이라,
+         * 원우가 이 화면을 찍어 보내주면 운영진이 바로 알아볼 수 있습니다.
+         */
+        const code = (caught as { code?: string })?.code ?? "";
+        setError(
+          code === "permission-denied"
+            ? "앱 설정이 아직 안 끝났어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)"
+            : `계정을 만들지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`,
+        );
       }
     }
   }, [user]);

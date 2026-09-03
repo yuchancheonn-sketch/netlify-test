@@ -234,8 +234,14 @@ export default function ProfileForm({
         updatedAt: serverTimestamp(),
       });
       onSaved?.();
-    } catch {
-      setSaveError("저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (caught) {
+      // 실패 이유를 함께 남깁니다. permission-denied면 보안 규칙을 아직 올리지 않은 것입니다.
+      const code = (caught as { code?: string })?.code ?? "";
+      setSaveError(
+        code === "permission-denied"
+          ? "저장 권한이 없어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)"
+          : `저장하지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`,
+      );
     } finally {
       setSaving(false);
     }

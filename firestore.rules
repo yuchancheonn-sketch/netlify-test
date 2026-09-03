@@ -1,293 +1,39 @@
 rules_version = '2';
 
 /*
- * 애기애타 10기 앱 Firestore 보안 규칙
+ * 애기애타 10기 앱 Firestore 보안 규칙 — 열어둔 상태
  * ------------------------------------------------------------------
- * 이 파일이 앱의 "비공개성"을 실제로 지키는 곳입니다.
- * 화면 단의 접근 제어는 길 안내일 뿐이고, 브라우저에서 코드를 고쳐
- * 화면을 억지로 열더라도 여기서 막히면 데이터는 내려가지 않습니다.
+ * Google 계정으로 로그인한 사람은 누구나 모든 자료를 읽고 쓸 수 있습니다.
+ * 원우들 사이에 권한 차이가 없고, 운영진 승인도 거치지 않습니다.
  *
- * 배포:  firebase deploy --only firestore:rules
+ * 이렇게 두기로 한 이유:
+ *   원우들이 가입 직후 프로필을 채우지 못하고 로딩 화면만 도는 문제가 있었고,
+ *   기수 안에서 서로 정보를 채워주는 수첩이라 권한을 나눌 실익이 적었습니다.
+ *
+ * 대신 이 점을 알고 계셔야 합니다:
+ *   - 주소를 아는 사람은 Google 계정만 있으면 누구나 들어와 볼 수 있습니다.
+ *     (원우들의 휴대폰 번호를 포함해서요)
+ *   - 들어온 사람은 남의 정보를 고치거나 지울 수도 있습니다.
+ *   - 잘못 들어온 사람을 막는 방법은 지금 없습니다.
+ *
+ * 다시 잠그고 싶어지면 git 이력에서 이 파일의 이전 판을 가져오면 됩니다.
+ * (승인 상태·운영진 권한·본인만 수정 같은 장치가 모두 들어 있습니다.)
+ *
+ * 배포:  Firebase 콘솔 → Firestore → 규칙 탭에 붙여넣고 "게시"
+ *        또는  firebase deploy --only firestore:rules
+ *
+ * ★ 이 파일을 고치는 것만으로는 아무것도 바뀌지 않습니다.
+ *   반드시 콘솔에 올려야(게시해야) 실제로 적용됩니다.
  */
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ---------- 도우미 함수 ----------
 
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** 로그인한 사용자의 users 문서 */
-    function me() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function hasProfile() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    /** 운영진 승인을 받은 원우만 콘텐츠를 볼 수 있습니다. */
-    function isApproved() {
-      return hasProfile() && me().status == 'approved';
-    }
-
-    function isAdmin() {
-      return isApproved() && me().role == 'admin';
-    }
-
-    /**
-     * 가입에 쓴 초대 코드가 실제로 존재하고 활성 상태인지 확인합니다.
-     * 규칙 안의 get()은 클라이언트 권한과 무관하게 읽을 수 있으므로,
-     * 앱에는 inviteCodes 읽기 권한을 전혀 주지 않아도 검증이 됩니다.
-     *
-     * 지금은 Google 로그인만으로 들어올 수 있어서 이 함수를 쓰지 않습니다.
-     * 초대 코드를 다시 쓰고 싶으면 아래 users create 규칙에
-     * `&& isValidInviteCode(request.resource.data.inviteCode)` 한 줄을 되살리고,
-     * 앱의 /join 화면에 코드 입력칸을 두면 됩니다.
-     */
-    function isValidInviteCode(code) {
-      return exists(/databases/$(database)/documents/inviteCodes/$(code))
-        && get(/databases/$(database)/documents/inviteCodes/$(code)).data.active == true;
-    }
-
-    /** 수정 요청에서 특정 필드가 그대로인지 (본인이 못 바꾸게 막을 때 사용) */
-    function unchanged(field) {
-      return request.resource.data[field] == resource.data[field];
-    }
-
-    /*
-     * 프로필 사진은 Storage에 올리지 않고 문자열(data URL)로 문서에 담습니다.
-     * (Storage는 유료 요금제를 요구해서 비용 없이 운영하려고 택한 방식입니다.)
-     * 누군가 큰 사진을 넣어 원우 목록 전체를 무겁게 만들지 못하도록 크기를 제한합니다.
-     * 앱은 40KB로 줄여서 저장하고, 규칙에서는 여유를 두어 60KB까지 허용합니다.
-     */
-    function photoWithinLimit() {
-      return !(request.resource.data.photoURL is string)
-        || request.resource.data.photoURL.size() <= 60000;
-    }
-
-    /*
-     * 자기소개와 소개 영상 주소도 길이를 제한합니다.
-     * 원우 소개 목록은 모든 원우의 문서를 함께 받아오기 때문에,
-     * 한 사람이 아주 긴 글을 넣으면 모두의 목록이 무거워집니다.
-     * 앱은 500자로 자르고, 규칙에서는 여유를 두어 2000자까지 허용합니다.
-     */
-    function textFieldsWithinLimit() {
-      return (!(request.resource.data.introduction is string)
-          || request.resource.data.introduction.size() <= 2000)
-        && (!(request.resource.data.introVideoUrl is string)
-          || request.resource.data.introVideoUrl.size() <= 500)
-        && (!(request.resource.data.bio is string)
-          || request.resource.data.bio.size() <= 200)
-        && (!(request.resource.data.company is string)
-          || request.resource.data.company.size() <= 100)
-        && (!(request.resource.data.position is string)
-          || request.resource.data.position.size() <= 50)
-        && (!(request.resource.data.phone is string)
-          || request.resource.data.phone.size() <= 30)
-        && (!(request.resource.data.councilRole is string)
-          || request.resource.data.councilRole.size() <= 20);
-    }
-
-    /*
-     * 원우수첩은 원우들이 서로 채워주는 방식입니다.
-     * 남의 항목을 고칠 때는 아래 항목만 손댈 수 있고,
-     * 권한·승인 상태·가입 정보는 어느 쪽에서도 건드릴 수 없습니다.
-     */
-    function onlyDirectoryFields() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'name', 'nickname', 'photoURL', 'memberType',
-        'company', 'position', 'phone', 'councilRole',
-        'bio', 'introduction', 'introVideoUrl',
-        'birthdayMonthDay', 'birthdayYear', 'birthdayYearPublic',
-        'updatedBy', 'updatedByName', 'updatedAt'
-      ]);
-    }
-
-    /** 누가 고쳤는지 반드시 남기도록 (본인 이름으로만 기록할 수 있습니다) */
-    function stampsEditor() {
-      return request.resource.data.updatedBy == request.auth.uid;
-    }
-
-    /** 명단 문서의 글자 수 제한 */
-    function rosterFieldsWithinLimit() {
-      return (!(request.resource.data.name is string)
-          || request.resource.data.name.size() <= 40)
-        && (!(request.resource.data.company is string)
-          || request.resource.data.company.size() <= 100)
-        && (!(request.resource.data.position is string)
-          || request.resource.data.position.size() <= 50)
-        && (!(request.resource.data.phone is string)
-          || request.resource.data.phone.size() <= 30)
-        && (!(request.resource.data.councilRole is string)
-          || request.resource.data.councilRole.size() <= 20)
-        && (!(request.resource.data.bio is string)
-          || request.resource.data.bio.size() <= 200)
-        && (!(request.resource.data.note is string)
-          || request.resource.data.note.size() <= 200)
-        && (!(request.resource.data.introVideoUrl is string)
-          || request.resource.data.introVideoUrl.size() <= 500);
-    }
-
-    // ---------- 초대 코드 ----------
-    // 앱에서는 절대 읽거나 쓸 수 없습니다. Firebase 콘솔에서만 관리하세요.
-    match /inviteCodes/{code} {
-      allow read, write: if false;
-    }
-
-    // ---------- 원우 ----------
-    match /users/{uid} {
-      // 승인된 원우는 전체 명단을 볼 수 있고, 승인 전이라도 자기 문서는 읽을 수 있습니다.
-      allow read: if isApproved() || (isSignedIn() && request.auth.uid == uid);
-
-      /*
-       * 가입: Google 로그인만 하면 바로 approved로 들어옵니다.
-       *
-       * 문지기가 없는 구조이므로 주소를 아는 사람은 누구나 들어올 수 있습니다.
-       * 잘못 들어온 계정은 운영진 화면에서 차단(status를 pending으로)하면
-       * 그 즉시 모든 데이터가 보이지 않습니다.
-       *
-       * 남의 문서를 만들 수 없고(uid 일치), 스스로 운영진이 될 수도 없습니다(role 고정).
-       */
-      allow create: if isSignedIn()
-        && request.auth.uid == uid
-        && request.resource.data.uid == uid
-        && request.resource.data.status == 'approved'
-        && request.resource.data.role == 'member'
-        && request.resource.data.profileCompleted == false;
-
-      // 본인 수정: 프로필 항목만 바꿀 수 있고 권한·승인 상태는 손댈 수 없습니다.
-      allow update: if isSignedIn()
-        && request.auth.uid == uid
-        && unchanged('role')
-        && unchanged('status')
-        && unchanged('cohort')
-        && unchanged('inviteCode')
-        && unchanged('uid')
-        && photoWithinLimit()
-        && textFieldsWithinLimit();
-
-      /*
-       * 원우끼리 서로 채워주기.
-       * 아직 프로필을 못 채운 원우의 회사·직책·휴대폰을 다른 원우가 대신 적어줄 수 있습니다.
-       * 대신 수첩 항목만 열려 있고, 고친 사람의 uid가 반드시 함께 남습니다.
-       */
-      allow update: if isApproved()
-        && request.auth.uid != uid
-        && onlyDirectoryFields()
-        && stampsEditor()
-        && photoWithinLimit()
-        && textFieldsWithinLimit();
-
-      // 운영진 승인/권한 부여는 운영진만 가능합니다.
-      allow update: if isAdmin();
-
-      // 문서 삭제는 콘솔에서만 (실수로 명단이 사라지지 않도록)
-      allow delete: if false;
-    }
-
-    // ---------- 원우 명단 (아직 가입하지 않은 원우들의 수첩 항목) ----------
-    match /roster/{rosterId} {
-      allow read: if isApproved();
-
-      /*
-       * 원우 누구나 수첩에 이름을 올리고 정보를 채울 수 있습니다.
-       * 계정과 이어붙이는 linkedUid만은 운영진 몫으로 남겨둡니다.
-       */
-      allow create: if isApproved()
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.linkedUid == null
-        && rosterFieldsWithinLimit();
-
-      allow update: if isApproved()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-             'name', 'memberType', 'company', 'position', 'phone',
-             'councilRole', 'bio', 'note', 'introVideoUrl',
-             'updatedBy', 'updatedByName', 'updatedAt'
-           ])
-        && stampsEditor()
-        && rosterFieldsWithinLimit();
-
-      // 명단에서 지우는 건 운영진만 (실수로 남의 이름이 사라지지 않도록)
-      allow update, delete: if isAdmin();
-    }
-
-    // ---------- 모임 일정 ----------
-    match /events/{eventId} {
-      allow read: if isApproved();
-      allow create, update, delete: if isAdmin();
-
-      // 참석 여부는 본인 것만 쓸 수 있고, 현황은 승인된 원우 모두가 봅니다.
-      match /rsvps/{uid} {
-        allow read: if isApproved();
-        allow write: if isApproved() && request.auth.uid == uid;
-      }
-    }
-
-    // ---------- 단체 채팅 ----------
-    match /chatRooms/{roomId} {
-      allow read: if isApproved();
-      allow write: if isAdmin();
-
-      match /messages/{messageId} {
-        allow read: if isApproved();
-        // 보내는 사람을 자기 자신으로만 적을 수 있습니다.
-        allow create: if isApproved()
-          && request.resource.data.senderId == request.auth.uid;
-        // 수정·삭제는 본인이 쓴 메시지만 (운영진은 정리 목적으로 삭제 가능)
-        allow update: if isApproved() && resource.data.senderId == request.auth.uid;
-        allow delete: if isApproved()
-          && (resource.data.senderId == request.auth.uid || isAdmin());
-      }
-    }
-
-    // ---------- 복습 영상 (Phase 2) ----------
-    match /videos/{videoId} {
-      allow read: if isApproved();
-      allow create, update, delete: if isAdmin();
-    }
-
-    // ---------- 행사 사진 ----------
-    match /photoAlbums/{albumId} {
-      allow read: if isApproved();
-      // 앨범(행사)을 만들고 지우는 건 운영진만
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin();
-
-      /*
-       * 원우가 사진을 올리면 대표 이미지와 사진 수가 따라 바뀌어야 합니다.
-       * 앨범 제목이나 날짜까지 건드리지는 못하도록 이 두 필드만 열어둡니다.
-       */
-      allow update: if isApproved()
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['coverImageUrl', 'photoCount']);
-
-      match /photos/{photoId} {
-        allow read: if isApproved();
-        allow create: if isApproved()
-          && request.resource.data.uploadedBy == request.auth.uid;
-        allow update: if isApproved()
-          && (resource.data.uploadedBy == request.auth.uid || isAdmin());
-        allow delete: if isApproved()
-          && (resource.data.uploadedBy == request.auth.uid || isAdmin());
-      }
-    }
-
-    // ---------- 소감 나눔 (Phase 2) ----------
-    match /reflections/{reflectionId} {
-      allow read: if isApproved();
-      allow create: if isApproved()
-        && request.resource.data.authorId == request.auth.uid;
-      allow update: if isApproved() && resource.data.authorId == request.auth.uid;
-      allow delete: if isApproved()
-        && (resource.data.authorId == request.auth.uid || isAdmin());
-    }
-
-    // 위에서 명시하지 않은 모든 경로는 기본적으로 막습니다.
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isSignedIn();
     }
   }
 }
