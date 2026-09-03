@@ -72,8 +72,10 @@ export const BIO_MAX_LENGTH = 50;
  */
 export const INTRODUCTION_MAX_LENGTH = 500;
 
-/** 별칭 길이 제한 */
-export const NICKNAME_MIN_LENGTH = 1;
+/**
+ * 별칭 길이 제한.
+ * 별칭은 선택 입력이라 최소 길이는 두지 않습니다. 비워두면 이름이 대신 보입니다.
+ */
 export const NICKNAME_MAX_LENGTH = 15;
 
 /** 회사·직책 길이 제한 (원우수첩 카드 한 줄에 들어가는 정도) */

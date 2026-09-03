@@ -22,7 +22,6 @@ import {
   INTRODUCTION_MAX_LENGTH,
   MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
-  NICKNAME_MIN_LENGTH,
   POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
@@ -161,12 +160,17 @@ export default function ProfileForm({
     if (!form.name.trim()) next.name = "이름을 입력해 주세요.";
     else if (form.name.trim().length > 20) next.name = "이름은 20자까지 넣을 수 있어요.";
 
-    const nickname = form.nickname.trim();
-    if (nickname.length < NICKNAME_MIN_LENGTH) next.nickname = "별칭을 입력해 주세요.";
-    else if (nickname.length > NICKNAME_MAX_LENGTH)
+    /*
+     * 이름만 있으면 시작할 수 있습니다.
+     * 별칭·생일·구분·회사 같은 나머지는 나중에 프로필에서 채워도 되고,
+     * 원우수첩에서 다른 원우가 대신 채워줄 수도 있습니다.
+     */
+    if (form.nickname.trim().length > NICKNAME_MAX_LENGTH)
       next.nickname = `별칭은 ${NICKNAME_MAX_LENGTH}자까지 넣을 수 있어요.`;
 
-    if (!form.month || !form.day) next.month = "생일의 월과 일을 골라 주세요.";
+    // 월만 고르고 일을 안 고르면 반쪽짜리 생일이 되므로 그때만 알려줍니다.
+    if (Boolean(form.month) !== Boolean(form.day))
+      next.month = "월과 일을 함께 골라 주세요. (생일은 비워두어도 괜찮아요)";
 
     if (form.birthdayYear) {
       const year = Number(form.birthdayYear);
@@ -176,7 +180,6 @@ export default function ProfileForm({
       }
     }
 
-    if (!form.memberType) next.memberType = "구분을 선택해 주세요.";
 
     if (form.company.length > COMPANY_MAX_LENGTH)
       next.company = `회사·소속은 ${COMPANY_MAX_LENGTH}자까지 넣을 수 있어요.`;
@@ -232,10 +235,15 @@ export default function ProfileForm({
         name,
         nickname: form.nickname.trim(),
         photoURL: form.photoURL,
-        birthdayMonthDay: `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`,
+        // 생일을 안 골랐으면 빈 값으로 둡니다. 수첩에는 "생일 미입력"으로 보입니다.
+        birthdayMonthDay:
+          form.month && form.day
+            ? `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`
+            : "",
         birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
         birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
-        memberType: form.memberType,
+        // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
+        memberType: form.memberType || "general",
         company: form.company.trim() || carried?.company || "",
         position: form.position.trim() || carried?.position || "",
         phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
@@ -316,7 +324,7 @@ export default function ProfileForm({
 
       {/* 별칭 */}
       <div className="mb-6">
-        <FieldLabel htmlFor="nickname" hint={`${form.nickname.length}/${NICKNAME_MAX_LENGTH}`}>
+        <FieldLabel htmlFor="nickname" hint="선택">
           별칭
         </FieldLabel>
         <input
@@ -331,7 +339,7 @@ export default function ProfileForm({
 
       {/* 생일 */}
       <div className="mb-6">
-        <FieldLabel>생일</FieldLabel>
+        <FieldLabel hint="선택">생일</FieldLabel>
         <div className="flex gap-3">
           <select
             aria-label="생일 월"
@@ -401,7 +409,7 @@ export default function ProfileForm({
 
       {/* 구분 */}
       <div className="mb-6">
-        <FieldLabel>구분</FieldLabel>
+        <FieldLabel hint="선택">구분</FieldLabel>
         <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
           {MEMBER_TYPES.map(({ value, emoji, label }) => {
             const selected = form.memberType === value;
@@ -514,7 +522,7 @@ export default function ProfileForm({
 
       {/* 한 줄 소개 */}
       <div className="mb-8">
-        <FieldLabel htmlFor="bio" hint={`${form.bio.length}/${BIO_MAX_LENGTH}`}>
+        <FieldLabel htmlFor="bio" hint="선택">
           한 줄 소개
         </FieldLabel>
         <input
@@ -529,10 +537,7 @@ export default function ProfileForm({
 
       {/* 자기소개 — 원우 소개 상세에서 전문이 보입니다. */}
       <div className="mb-6">
-        <FieldLabel
-          htmlFor="introduction"
-          hint={`${form.introduction.length}/${INTRODUCTION_MAX_LENGTH}`}
-        >
+        <FieldLabel htmlFor="introduction" hint="선택">
           자기소개
         </FieldLabel>
         <textarea

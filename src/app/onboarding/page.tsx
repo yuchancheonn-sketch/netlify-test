@@ -25,7 +25,8 @@ function OnboardingScreen() {
           내 소개를 채워 주세요
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-muted">
-          한 번만 채우면 되고, 나중에 언제든 프로필에서 바꿀 수 있어요.
+          <span className="font-bold text-ink-soft">이름만 넣으면 바로 시작</span>할 수 있어요.
+          나머지는 나중에 프로필에서 채워도 되고, 원우들이 대신 채워주기도 합니다.
         </p>
       </header>
 
