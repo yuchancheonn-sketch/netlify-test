@@ -215,7 +215,11 @@ export default function MembersPage() {
       ) : null}
 
       {editing ? (
-        <MemberEditSheet entry={editing.entry} onClose={() => setEditing(null)} />
+        <MemberEditSheet
+          entry={editing.entry}
+          existingNames={entries.map((item) => item.name)}
+          onClose={() => setEditing(null)}
+        />
       ) : null}
     </>
   );

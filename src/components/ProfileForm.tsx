@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { cropToSquareDataUrl } from "@/lib/image";
+import { linkRosterEntry } from "@/lib/roster-link";
 import {
   BIO_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
@@ -212,25 +213,40 @@ export default function ProfileForm({
     setSaving(true);
     setSaveError(null);
     try {
+      const name = form.name.trim();
+
+      /*
+       * 운영진이 미리 넣어둔 명단에 같은 이름이 있으면 이 계정과 이어붙입니다.
+       * 그래야 수첩에 "명단의 홍길동"과 "가입한 홍길동"이 따로 서지 않습니다.
+       * 명단에 적혀 있던 회사·직책·휴대폰은 본인이 비워둔 칸에만 채워 넣습니다.
+       * 명단을 읽지 못하더라도 프로필 저장은 그대로 진행되어야 합니다.
+       */
+      let carried = null;
+      try {
+        carried = await linkRosterEntry(user.uid, name);
+      } catch {
+        carried = null;
+      }
+
       await updateDoc(doc(db, "users", user.uid), {
-        name: form.name.trim(),
+        name,
         nickname: form.nickname.trim(),
         photoURL: form.photoURL,
         birthdayMonthDay: `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`,
         birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
         birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
         memberType: form.memberType,
-        company: form.company.trim(),
-        position: form.position.trim(),
-        phone: form.phone.trim() ? formatPhone(form.phone) : "",
-        councilRole: form.councilRole,
+        company: form.company.trim() || carried?.company || "",
+        position: form.position.trim() || carried?.position || "",
+        phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
+        councilRole: form.councilRole || carried?.councilRole || "",
         bio: form.bio.trim(),
         introduction: form.introduction.trim(),
-        introVideoUrl: form.introVideoUrl.trim(),
+        introVideoUrl: form.introVideoUrl.trim() || carried?.introVideoUrl || "",
         profileCompleted: true,
         // 다른 원우가 채워준 뒤 본인이 손보면, 수첩의 "○○ 님이 채워주셨어요"가 사라집니다.
         updatedBy: user.uid,
-        updatedByName: form.name.trim(),
+        updatedByName: name,
         updatedAt: serverTimestamp(),
       });
       onSaved?.();

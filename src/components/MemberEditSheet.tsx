@@ -47,10 +47,13 @@ const SELECT_ARROW_STYLE = {
  */
 export default function MemberEditSheet({
   entry,
+  existingNames,
   onClose,
 }: {
   /** null이면 새 이름 추가 */
   entry: DirectoryEntry | null;
+  /** 이미 수첩에 있는 이름들. 같은 사람을 두 번 올리지 않도록 막는 데 씁니다. */
+  existingNames: string[];
   onClose: () => void;
 }) {
   const { profile } = useAuth();
@@ -82,6 +85,19 @@ export default function MemberEditSheet({
     if (!name.trim()) {
       setNameError("이름을 입력해 주세요.");
       return;
+    }
+
+    /*
+     * 새로 올릴 때만 확인합니다.
+     * 운영진이 명단을 미리 넣어두었기 때문에, 같은 이름을 또 올리면
+     * 수첩에 한 사람이 두 칸으로 서게 됩니다.
+     */
+    if (!entry) {
+      const already = new Set(existingNames.map((value) => value.replace(/\s+/g, "")));
+      if (already.has(name.replace(/\s+/g, ""))) {
+        setNameError("이미 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.");
+        return;
+      }
     }
 
     const digits = phone.replace(/\D/g, "");
