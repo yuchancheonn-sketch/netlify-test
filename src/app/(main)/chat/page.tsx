@@ -64,12 +64,7 @@ export default function ChatListPage() {
           <ErrorState message={error} />
         ) : (
           <>
-            {/*
-              칸마다 카드를 띄우지 않고, 카드 하나 안에서 선으로 나눕니다.
-              divide-y가 줄 사이에만 선을 넣어주므로 첫 줄 위에는 선이 없습니다.
-              모서리를 둥글게 깎으려면 넘치는 부분을 잘라내야 합니다(overflow-hidden).
-            */}
-            <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
+            <ul className="flex flex-col gap-2">
               {rooms.map((room) => (
                 <li key={room.id}>
                   <ChatRoomRow
@@ -120,14 +115,9 @@ function ChatRoomRow({
   const isGroup = room.kind === "group";
 
   return (
-    /*
-      한 줄이 카드 안에 들어앉으므로 배경도 그림자도 두지 않습니다.
-      누를 때 줄이 작아지면 옆줄과 어긋나 보여서, 바탕색이 잠깐 어두워지는
-      방식으로 눌린 느낌을 줍니다.
-    */
     <Link
       href={`/chat/${room.id}`}
-      className="flex items-center gap-3.5 px-4 py-3.5 transition active:bg-canvas"
+      className="flex items-center gap-3.5 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
