@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChatIcon,
   HomeIcon,
@@ -53,10 +54,145 @@ function scrollToTop() {
   }
 }
 
+/**
+ * 회색 알약을 끌고 있는 동안의 상태.
+ *
+ * 알약은 평소에 지금 탭 자리에 가만히 있다가, 손가락을 따라 좌우로만 움직입니다.
+ * 끌지 않을 때는 이 값이 null이고, 알약 자리는 주소(activeIndex)에서 바로 나옵니다.
+ */
+type PillDrag = {
+  /** 손가락을 처음 댄 가로 위치 */
+  startX: number;
+  /** 탭 한 칸의 픽셀 폭. 끌기 시작할 때 한 번만 재둡니다. */
+  slot: number;
+  /** 지금 밀려난 거리(px). 탭바 밖으로는 못 나가게 잘라 둡니다. */
+  dx: number;
+  /** 손을 뗀 뒤 제자리를 찾아가는 중인지 (이때만 애니메이션을 켭니다) */
+  settling: boolean;
+  /**
+   * 손을 떼면서 이동하기로 정한 탭.
+   * 주소가 여기까지 따라오면 이 상태를 놓아주고 알약을 주소에 다시 맡깁니다.
+   */
+  target: number | null;
+};
+
+/**
+ * 탭 한 칸의 몇 %까지 어긋나도 "맞아떨어졌다"고 볼지.
+ * 0.2 = 칸 폭의 20%. 이보다 벗어나 있으면 이동하지 않고 원래 자리로 돌아갑니다.
+ */
+const ALIGN_TOLERANCE = 0.2;
+
+/** 알약 바깥 여백(p-1 = 4px). 칸 폭을 계산할 때 양쪽으로 빼줍니다. */
+const BAR_PADDING = 4;
+
+/**
+ * 회색 알약이 한 칸보다 좌우로 더 나오는 길이(px).
+ *
+ * 칸 폭과 똑같으면 아이콘·글씨가 알약 가장자리에 닿아 답답해 보입니다.
+ * 여기서 3px보다 키우면 양 끝 탭에서 알약이 탭바 테두리를 넘어갑니다
+ * (칸 바깥으로 남은 여백이 BAR_PADDING뿐이라서요).
+ */
+const PILL_BLEED = 3;
+
 export default function BottomTabBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const unreadChatCount = useUnreadChatCount(user?.uid);
+
+  const listRef = useRef<HTMLUListElement>(null);
+  const [drag, setDrag] = useState<PillDrag | null>(null);
+  /** 끌고 난 직후의 손뗌이 링크 이동으로 이어지지 않도록 막는 표시 */
+  const draggedRef = useRef(false);
+
+  // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
+  const activeIndex = TABS.findIndex(
+    ({ href }) => pathname === href || pathname.startsWith(`${href}/`),
+  );
+
+  /*
+   * 주소가 목적지까지 따라왔으면 직접 잡고 있던 자리를 놓아줍니다.
+   * 이 시점에 알약의 위치는 양쪽 계산이 똑같아서 화면은 꿈쩍도 하지 않습니다.
+   * (효과가 아니라 렌더 중에 맞추는 이유는, 주소가 바뀌는 순간과 알약이 풀리는
+   *  순간이 한 프레임이라도 어긋나면 알약이 한 칸 튀기 때문입니다.)
+   */
+  if (drag && drag.target !== null && drag.target === activeIndex) {
+    setDrag(null);
+  }
+
+  /** 탭 한 칸의 픽셀 폭 */
+  function slotWidth(): number {
+    const width = listRef.current?.clientWidth ?? 0;
+    if (!width) return 0;
+    return (width - BAR_PADDING * 2) / TABS.length;
+  }
+
+  function handleTouchStart(event: React.TouchEvent) {
+    draggedRef.current = false;
+    if (activeIndex < 0 || event.touches.length !== 1) return;
+
+    const list = listRef.current;
+    const slot = slotWidth();
+    if (!list || !slot) return;
+
+    // 회색 알약을 짚었을 때만 끌기가 시작됩니다. 다른 탭을 누른 건 그냥 이동입니다.
+    const touchX = event.touches[0].clientX - list.getBoundingClientRect().left - BAR_PADDING;
+    const pillStart = activeIndex * slot;
+    if (touchX < pillStart || touchX > pillStart + slot) return;
+
+    setDrag({ startX: event.touches[0].clientX, slot, dx: 0, settling: false, target: null });
+  }
+
+  function handleTouchMove(event: React.TouchEvent) {
+    if (!drag || drag.settling) return;
+
+    // 왼쪽 끝 탭보다 왼쪽으로, 오른쪽 끝 탭보다 오른쪽으로는 나가지 않습니다.
+    const lowest = -activeIndex * drag.slot;
+    const highest = (TABS.length - 1 - activeIndex) * drag.slot;
+    const dx = Math.min(highest, Math.max(lowest, event.touches[0].clientX - drag.startX));
+
+    // 조금이라도 끌었으면 손을 뗄 때 링크가 열리지 않게 막아둡니다.
+    if (Math.abs(dx) > 4) draggedRef.current = true;
+    setDrag({ ...drag, dx });
+  }
+
+  function handleTouchEnd() {
+    if (!drag) return;
+
+    const steps = drag.dx / drag.slot;
+    const nearest = Math.round(steps);
+    const target = activeIndex + nearest;
+    /*
+     * 칸 한가운데에 제대로 맞았을 때만 그 탭으로 갑니다.
+     * 어중간하게 걸쳐 있으면 아무 일도 없이 원래 자리로 돌아갑니다.
+     */
+    const aligned = Math.abs(steps - nearest) <= ALIGN_TOLERANCE;
+
+    if (aligned && target !== activeIndex && TABS[target]) {
+      // 딱 맞는 자리에 세워두고 이동합니다. 주소가 따라오면 위에서 풀어줍니다.
+      setDrag({ ...drag, dx: nearest * drag.slot, settling: true, target });
+      router.push(TABS[target].href);
+    } else {
+      setDrag({ ...drag, dx: 0, settling: true, target: null });
+    }
+  }
+
+  /*
+   * 알약이 덮고 있는 탭 — 이 탭의 아이콘과 글씨가 주황이 됩니다.
+   *
+   * 알약 폭이 한 칸과 같아서, 칸 한가운데(아이콘·글씨가 있는 자리)가 알약 안에
+   * 들어오는 탭은 언제나 하나뿐입니다. 그 하나를 고르는 식이 반올림입니다.
+   */
+  const coveredIndex =
+    drag && drag.slot
+      ? Math.min(
+          TABS.length - 1,
+          Math.max(0, Math.round(activeIndex + drag.dx / drag.slot)),
+        )
+      : activeIndex;
+
+  /** 알약 한 칸의 폭을 CSS로 적은 것 (좌우 여백 4px씩을 뺀 나머지를 나눕니다) */
+  const slotCss = `((100% - ${BAR_PADDING * 2}px) / ${TABS.length})`;
 
   return (
     /*
@@ -86,10 +222,48 @@ export default function BottomTabBar() {
         흰색을 이보다 더 묽게 하면 글씨가 뒷 내용과 겹쳐 읽기 힘들어지고,
         알약 아래쪽 절반에 깔린 흐림 층(MainShell)과의 경계도 드러납니다.
       */}
-      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
-        {TABS.map(({ href, label, Icon }) => {
-          // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+      <ul
+        ref={listRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        /* 세로 스크롤은 브라우저에 맡기고 가로는 알약 끌기에 씁니다. */
+        style={{ touchAction: "pan-y" }}
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
+      >
+        {/*
+          고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
+
+          이것도 탭바와 같은 유리입니다 — 먹색을 7%만 푼 옅은 회색에 뒤를
+          한 번 더 흐리고, 위쪽 테두리에 흰 실선을 얹어 빛을 받은 유리처럼
+          보이게 했습니다. 불투명한 회색을 깔면 그 자리만 유리가 아니게 보입니다.
+
+          자리는 left로 잡고 움직임은 transform으로 줍니다. left는 주소에서
+          바로 나오는 값이라 애니메이션 없이 즉시 자리를 잡아야 하고,
+          transform만 손가락을 따라오거나 부드럽게 제자리로 돌아갑니다.
+        */}
+        {activeIndex >= 0 ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute rounded-full bg-ink/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-md backdrop-saturate-150"
+            style={{
+              top: BAR_PADDING,
+              bottom: BAR_PADDING,
+              left: `calc(${BAR_PADDING - PILL_BLEED}px + ${activeIndex} * ${slotCss})`,
+              width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
+              transform: drag?.dx ? `translateX(${drag.dx}px)` : undefined,
+              transition: drag?.settling
+                ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+                : undefined,
+            }}
+          />
+        ) : null}
+
+        {TABS.map(({ href, label, Icon }, index) => {
+          const active = index === activeIndex;
+          /* 알약이 덮고 있는 탭 — 끌지 않을 때는 지금 탭과 같습니다. */
+          const covered = index === coveredIndex;
           // 탭의 첫 화면에 이미 서 있는지 (하위 화면에 들어와 있는 것과 구분합니다)
           const atTabRoot = pathname === href;
           /*
@@ -99,16 +273,10 @@ export default function BottomTabBar() {
            */
           const badge = href === "/chat" ? unreadChatCount : 0;
           /*
-           * 고른 탭은 아이콘과 글씨가 함께 브랜드 주황이 되고, 아이콘은 속까지
-           * 꽉 차며, 뒤로 옅은 회색 알약이 깔립니다.
-           *
-           * 회색은 고정색이 아니라 먹색을 8%만 푼 반투명입니다. 탭바 자체가
-           * 유리(반투명)라 뒤로 지나가는 사진이 비치는데, 불투명한 회색을 깔면
-           * 그 자리만 유리가 아니게 보입니다.
+           * 회색 알약이 덮은 탭은 아이콘과 글씨가 브랜드 주황이 되고 아이콘 속까지
+           * 꽉 찹니다. 알약을 끌면 색이 알약을 따라 옮겨 다닙니다.
            */
-          const itemClassName = active
-            ? "bg-ink/[0.08] text-brand-500"
-            : "text-ink-muted";
+          const itemClassName = covered ? "text-brand-500" : "text-ink-muted";
           /*
            * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
            * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
@@ -118,11 +286,18 @@ export default function BottomTabBar() {
            *    보입니다. 정확히 가운데로 되돌리려면 두 값을 같게 두면 됩니다.
            */
           return (
-            <li key={href} className="flex-1">
+            /* 회색 알약이 뒤에 깔리도록, 칸을 알약보다 위에 세웁니다. */
+            <li key={href} className="relative flex-1">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
                 onClick={(event) => {
+                  // 알약을 끌다가 손을 뗀 것이면 링크를 열지 않습니다.
+                  if (draggedRef.current) {
+                    draggedRef.current = false;
+                    event.preventDefault();
+                    return;
+                  }
                   // 인스타그램처럼, 지금 보고 있는 탭을 한 번 더 누르면 맨 위로 올라갑니다.
                   // 앨범 상세 같은 하위 화면에서는 그대로 두어, 원래대로 탭의
                   // 첫 화면으로 돌아가게 합니다.
@@ -135,8 +310,8 @@ export default function BottomTabBar() {
                 <span className="relative flex items-center justify-center">
                   <Icon
                     className="h-[27px] w-[27px]"
-                    strokeWidth={active ? 2 : 1.7}
-                    filled={active}
+                    strokeWidth={covered ? 2 : 1.7}
+                    filled={covered}
                   />
 
                   {badge > 0 ? (
@@ -155,7 +330,7 @@ export default function BottomTabBar() {
                 */}
                 <span
                   className={`text-[13px] leading-none ${
-                    active ? "font-bold" : "font-medium"
+                    covered ? "font-bold" : "font-medium"
                   }`}
                 >
                   {label}
