@@ -128,8 +128,14 @@ export default function ChatRoomPage({
         제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
         대화방은 화면을 최대한 대화에 내주는 편이 좋습니다.
       */}
+      {/*
+        구분선도 반투명도 없이 그냥 흰 면입니다. 대화 바탕과 같은 흰색이라
+        경계가 보이지 않아야 이름 위쪽이 한 덩어리로 읽힙니다.
+        대신 불투명해야 합니다 — 살짝 비치면 위로 지나가는 말풍선이
+        제목 글씨에 겹쳐 보입니다.
+      */}
       <header
-        className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-white/95 px-2 pb-2.5 backdrop-blur"
+        className="sticky top-0 z-20 flex items-center gap-1 bg-white px-2 pb-2.5"
         style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
       >
         <button
@@ -188,7 +194,8 @@ export default function ChatRoomPage({
               </div>
             ) : null}
 
-            <ol className="flex flex-col gap-1 pt-2">
+            {/* gap은 같은 사람이 연달아 보낸 말풍선 사이의 간격입니다. */}
+            <ol className="flex flex-col gap-1.5 pt-2">
               {messages.map((message, index) => (
                 <MessageRow
                   key={message.id}
