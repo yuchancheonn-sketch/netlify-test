@@ -59,8 +59,6 @@
    */
   --color-canvas: #f4f5f6;
 
-  /* 하단 탭에서 지금 보고 있는 탭 뒤에 까는 회색. 흰 알약 위에 얹힙니다. */
-  --color-tab-active: #f0f1f3;
 
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;

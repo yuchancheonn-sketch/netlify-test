@@ -56,7 +56,8 @@ export default function BottomTabBar() {
       className="fixed inset-x-0 z-30 px-4"
       style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
-      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1.5 shadow-[var(--shadow-float)]">
+      {/* 알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다. */}
+      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1 shadow-[var(--shadow-float)]">
         {TABS.map(({ href, label, Icon, backToTop }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -69,12 +70,11 @@ export default function BottomTabBar() {
            */
           const badge = href === "/chat" ? unreadChatCount : 0;
           /*
-           * 고른 탭은 연한 회색 알약을 깔고 글씨를 진하게 하며,
-           * 아이콘까지 속을 채워 색이 뒤집힌 것처럼 보이게 합니다.
+           * 고른 탭은 아이콘과 글씨가 함께 브랜드 주황이 되고,
+           * 아이콘은 속까지 꽉 찹니다. 뒤에 깔던 회색 알약은 없앴습니다.
+           * 색 하나로 어디에 있는지 알 수 있으면 그게 가장 조용합니다.
            */
-          const itemClassName = active
-            ? "bg-tab-active text-ink"
-            : "text-ink-muted";
+          const itemClassName = active ? "text-brand-500" : "text-ink-muted";
           return (
             <li key={href} className="flex-1">
               <Link
@@ -88,11 +88,11 @@ export default function BottomTabBar() {
                   event.preventDefault();
                   scrollToTop();
                 }}
-                className={`flex flex-col items-center gap-0.5 rounded-full py-2 transition ${itemClassName}`}
+                className={`flex flex-col items-center gap-[3px] rounded-full py-1 transition ${itemClassName}`}
               >
                 <span className="relative flex items-center justify-center">
                   <Icon
-                    className="h-[23px] w-[23px]"
+                    className="h-[27px] w-[27px]"
                     strokeWidth={active ? 2 : 1.7}
                     filled={active}
                   />
@@ -100,14 +100,14 @@ export default function BottomTabBar() {
                   {badge > 0 ? (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-1 left-[calc(50%+4px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
+                      className="absolute -top-1 left-[calc(50%+6px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
                     >
                       {badge > UNREAD_BADGE_MAX ? `${UNREAD_BADGE_MAX}+` : badge}
                     </span>
                   ) : null}
                 </span>
                 <span
-                  className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}
+                  className={`text-[13px] leading-none ${active ? "font-bold" : "font-medium"}`}
                 >
                   {label}
                   {/* 배지 숫자는 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
