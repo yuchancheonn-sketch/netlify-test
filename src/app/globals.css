@@ -110,6 +110,41 @@ body {
   overflow-x: hidden;
 }
 
+/*
+ * 스크롤바 — 얇고 옅은 회색으로 조용하게 둡니다.
+ *
+ * ★ 아이폰 사파리의 오른쪽 막대에는 적용되지 않습니다.
+ *   그 막대는 페이지가 그리는 것이 아니라 iOS가 화면 위에 얹어 그리는 것이라,
+ *   CSS로 색도 길이도 바꿀 수 없습니다. (길이는 늘 "보이는 높이 ÷ 전체 높이"라
+ *   내용이 짧을수록 길어집니다. 짧게 만들려면 화면을 더 길게 만드는 수밖에 없습니다.)
+ *   아래 규칙이 듣는 곳은 데스크톱 브라우저와, 앱 안에서 따로 스크롤되는
+ *   상자들(바텀시트 등)입니다.
+ *
+ * 색은 먹색을 25%만 풀어 씁니다. 흰 카드 위에서도 회색 배경 위에서도
+ * 같은 밝기로 앉도록, 고정 회색 대신 반투명을 씁니다.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(28, 25, 23, 0.25) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  /* 안쪽 여백 2px을 둬서 막대가 실제로는 4px 굵기로 보이게 합니다. */
+  background-color: rgba(28, 25, 23, 0.25);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+
 /* 모바일에서 입력창을 눌렀을 때 iOS가 화면을 확대하지 않도록 최소 16px을 유지합니다. */
 input,
 textarea,
