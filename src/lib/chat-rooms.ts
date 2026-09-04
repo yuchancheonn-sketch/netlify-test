@@ -144,11 +144,18 @@ export async function sendChatMessage({
 }): Promise<void> {
   const senderName = sender.profile?.name || sender.profile?.nickname || "원우";
 
+  /*
+   * 보낸 사람 사진은 일부러 넣지 않습니다.
+   *
+   * 이 앱은 프로필 사진을 파일로 올리지 않고 문서 안에 글자로 박아 넣습니다
+   * (data URL, 장당 10~15KB). 그걸 메시지마다 복사하면 250바이트면 될
+   * 메시지 하나가 15KB가 되어, 저장 용량과 전송량을 수십 배로 씁니다.
+   * 사진은 화면에서 users 문서를 보고 붙입니다. 이름과 같은 방식입니다.
+   */
   await addDoc(collection(db, "chatRooms", roomId, "messages"), {
     senderId: sender.uid,
     // 채팅에는 별칭이 아니라 본명으로 나옵니다.
     senderName,
-    senderPhotoURL: sender.profile?.photoURL ?? null,
     text,
     imageUrl: null,
     createdAt: serverTimestamp(),

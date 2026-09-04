@@ -162,7 +162,14 @@ export interface MessageDoc {
    * 본명으로 바꾸기 전에 쌓인 메시지에는 이 값밖에 없어서 아직 읽습니다.
    */
   senderNickname?: string;
-  senderPhotoURL: string | null;
+  /**
+   * 보낸 사람 사진을 메시지마다 복사해 두던 예전 자리.
+   *
+   * 프로필 사진이 문서 안에 글자로 박히는 구조(data URL, 10~15KB)라
+   * 메시지 하나가 수십 배로 무거워져서 더는 넣지 않습니다.
+   * 화면에는 users 문서의 사진을 붙이고, 이 값은 예전 메시지에만 남아 있습니다.
+   */
+  senderPhotoURL?: string | null;
   text: string;
   imageUrl: string | null;
   createdAt: Timestamp | null;

@@ -59,6 +59,19 @@ export default function ChatRoomPage({
     return map;
   }, [members]);
 
+  /*
+   * 사진도 이름과 같은 방식으로 붙입니다.
+   * 메시지에는 사진을 담지 않습니다. 프로필 사진이 문서 안에 글자로 박히는
+   * 구조라, 메시지마다 복사하면 저장 용량과 전송량이 수십 배가 됩니다.
+   */
+  const photoByUid = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const member of members) {
+      if (member.photoURL) map.set(member.uid, member.photoURL);
+    }
+    return map;
+  }, [members]);
+
   const isGroup = roomId === MAIN_CHAT_ROOM_ID;
   const otherId = uid ? otherUidOf(roomId, uid) : null;
   const title = isGroup
@@ -177,6 +190,10 @@ export default function ChatRoomPage({
                   previous={messages[index - 1]}
                   isMine={message.senderId === uid}
                   senderName={resolveSenderName(message, nameByUid)}
+                  /* 지금 프로필 사진을 우선 쓰고, 없으면 예전 메시지에 남은 사진. */
+                  senderPhoto={
+                    photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
+                  }
                   /* 1:1 방은 상대가 한 명뿐이라 이름을 반복해 적지 않습니다. */
                   showNames={isGroup}
                 />
@@ -242,12 +259,14 @@ function MessageRow({
   previous,
   isMine,
   senderName,
+  senderPhoto,
   showNames,
 }: {
   message: MessageDoc;
   previous?: MessageDoc;
   isMine: boolean;
   senderName: string;
+  senderPhoto: string | null;
   showNames: boolean;
 }) {
   // 서버 시각이 아직 도착하지 않은 방금 보낸 메시지는 현재 시각으로 보여줍니다.
@@ -277,7 +296,7 @@ function MessageRow({
         {!isMine ? (
           showSender ? (
             <Avatar
-              src={message.senderPhotoURL}
+              src={senderPhoto}
               name={senderName}
               seed={message.senderId}
               size={40}
