@@ -316,7 +316,7 @@ function MessageRow({
 
       {/* 왼쪽 여백은 사진 32px + 사이 간격 8px. 이름이 말풍선과 나란히 서도록. */}
       {showSender && showNames ? (
-        <p className="mt-2 mb-1 pl-[40px] text-[12px] leading-[18px] font-medium text-ink-faint">
+        <p className="mt-2 mb-1 pl-[40px] text-[12px] leading-[18px] font-medium text-ink">
           {senderName}
         </p>
       ) : isBlockStart ? (
