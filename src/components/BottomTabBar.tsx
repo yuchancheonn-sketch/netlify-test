@@ -46,23 +46,35 @@ export default function BottomTabBar() {
   const unreadChatCount = useUnreadChatCount(user?.uid);
 
   return (
+    /*
+     * 당근처럼 화면 아래에 떠 있는 가로로 긴 알약 모양입니다.
+     * 화면 맨 아래에 붙이지 않고 조금 띄워야 알약으로 보이므로,
+     * 아이폰 홈 바(safe-area) 위로 한 뼘 더 올려 둡니다.
+     */
     <nav
       aria-label="주요 메뉴"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed inset-x-0 z-30 px-4"
+      style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
-      <ul className="mx-auto flex w-full max-w-[560px] items-stretch">
+      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1.5 shadow-[var(--shadow-float)]">
         {TABS.map(({ href, label, Icon, backToTop }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);
           // 탭의 첫 화면에 이미 서 있는지 (하위 화면에 들어와 있는 것과 구분합니다)
           const atTabRoot = pathname === href;
           /*
-           * 안 읽은 개수 배지는 채팅에만 답니다.
-           * 채팅 화면을 보고 있는 동안에는 달지 않습니다. 새 메시지가 올 때마다
-           * 배지가 반짝 떴다가 읽음 처리로 사라지는 것이 오히려 어수선합니다.
+           * 안 읽은 개수 배지는 채팅에만 답니다. 모든 방을 통틀어 센 개수입니다.
+           * 대화방 안에서는 탭바 자체가 없으므로(MainShell) 여기서 가릴 일은 없고,
+           * 채팅 목록에서는 어느 방이 안 읽혔는지 줄마다 따로 표시됩니다.
            */
-          const badge = href === "/chat" && pathname !== "/chat" ? unreadChatCount : 0;
+          const badge = href === "/chat" ? unreadChatCount : 0;
+          /*
+           * 고른 탭은 연한 회색 알약을 깔고 글씨를 진하게 하며,
+           * 아이콘까지 속을 채워 색이 뒤집힌 것처럼 보이게 합니다.
+           */
+          const itemClassName = active
+            ? "bg-tab-active text-ink"
+            : "text-ink-muted";
           return (
             <li key={href} className="flex-1">
               <Link
@@ -76,28 +88,26 @@ export default function BottomTabBar() {
                   event.preventDefault();
                   scrollToTop();
                 }}
-                className="flex flex-col items-center gap-1 py-2.5"
+                className={`flex flex-col items-center gap-0.5 rounded-full py-2 transition ${itemClassName}`}
               >
-                <span
-                  className={`relative flex h-8 w-14 items-center justify-center rounded-full transition ${
-                    active ? "bg-brand-50 text-brand-700" : "text-ink-faint"
-                  }`}
-                >
-                  <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.1 : 1.7} />
+                <span className="relative flex items-center justify-center">
+                  <Icon
+                    className="h-[23px] w-[23px]"
+                    strokeWidth={active ? 2 : 1.7}
+                    filled={active}
+                  />
 
                   {badge > 0 ? (
                     <span
                       aria-hidden="true"
-                      className="absolute top-0 left-[calc(50%+6px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
+                      className="absolute -top-1 left-[calc(50%+4px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
                     >
                       {badge > UNREAD_BADGE_MAX ? `${UNREAD_BADGE_MAX}+` : badge}
                     </span>
                   ) : null}
                 </span>
                 <span
-                  className={`text-[11px] ${
-                    active ? "font-bold text-brand-700" : "font-medium text-ink-faint"
-                  }`}
+                  className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}
                 >
                   {label}
                   {/* 배지 숫자는 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}

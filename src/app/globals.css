@@ -53,6 +53,14 @@
    */
   --color-canvas: #f7f0e9;
 
+  /*
+   * 하단 탭에서 지금 보고 있는 탭 뒤에 까는 연한 회색.
+   * 이 앱의 다른 회색(--color-line 등)은 배경 베이지에 맞춰 붉은 기가 도는데,
+   * 탭바는 흰 알약 위에 얹히기 때문에 따뜻한 회색을 쓰면 주황빛으로 보입니다.
+   * 그래서 여기만 색기 없는 중성 회색을 씁니다.
+   */
+  --color-tab-active: #f0f0ef;
+
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
 

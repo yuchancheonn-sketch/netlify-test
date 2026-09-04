@@ -9,17 +9,25 @@ interface IconProps {
   className?: string;
   /** 선 굵기. 하단 탭바에서 선택됐을 때 살짝 굵게 쓰기 위해 열어둡니다. */
   strokeWidth?: number;
+  /**
+   * 속을 꽉 채운 모양으로 그립니다. 하단 탭에서 지금 보고 있는 탭에만 씁니다.
+   * (당근처럼 고른 탭의 아이콘이 통째로 칠해져 또렷하게 보이도록)
+   * 선으로 그린 모양을 그대로 칠하면 어색해지는 아이콘은 채운 모양을 따로 그렸습니다.
+   */
+  filled?: boolean;
 }
 
 function base(className?: string) {
   return className ?? "h-6 w-6";
 }
 
-export function HomeIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function HomeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      {/* 문이 바깥선의 홈으로 이어져 있어, 그대로 칠하면 문만 파인 집이 됩니다. */}
       <path
         d="M3.5 10.4 12 4l8.5 6.4V19a1.5 1.5 0 0 1-1.5 1.5h-3.5V15h-7v5.5H5A1.5 1.5 0 0 1 3.5 19v-8.6Z"
+        fill={filled ? "currentColor" : "none"}
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
@@ -28,7 +36,19 @@ export function HomeIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function UsersIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function UsersIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+  // 몸통이 열린 곡선이라 그대로 칠하면 뭉개집니다. 채운 모양은 따로 그립니다.
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+        <circle cx="9.4" cy="7.9" r="3.7" />
+        <path d="M2.8 19.7c0-3.5 3-5.6 6.6-5.6s6.6 2.1 6.6 5.6a.8.8 0 0 1-.8.8H3.6a.8.8 0 0 1-.8-.8Z" />
+        <circle cx="17.7" cy="8.3" r="2.7" />
+        <path d="M17.9 13.8c2.6.1 4.6 1.8 4.6 4.4a.8.8 0 0 1-.8.8h-3.5c.1-.4.2-.9.2-1.4 0-1.5-.2-2.8-.5-3.8Z" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       <circle cx="9.5" cy="8" r="3.3" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -48,7 +68,25 @@ export function UsersIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function LibraryIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+  /*
+   * 채울 때는 폴더와 재생 삼각형을 한 path로 합치고 evenodd 규칙을 씁니다.
+   * 따로 두면 삼각형까지 같은 색으로 칠해져 보이지 않게 됩니다.
+   * 한 path 안에 넣으면 삼각형이 구멍으로 뚫립니다.
+   */
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M3.5 6.2A1.7 1.7 0 0 1 5.2 4.5h3.3l1.7 2h8.6a1.7 1.7 0 0 1 1.7 1.7v9.6a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V6.2Zm7.1 5.1 3.6 2-3.6 2v-4Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       <path
@@ -67,11 +105,13 @@ export function LibraryIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function ChatIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function ChatIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      {/* 말풍선은 닫힌 모양 하나라 그대로 칠하면 됩니다. */}
       <path
         d="M4 6.4A1.9 1.9 0 0 1 5.9 4.5h12.2A1.9 1.9 0 0 1 20 6.4v7.9a1.9 1.9 0 0 1-1.9 1.9H9.3L5 19.8v-3.6h-.1A.9.9 0 0 1 4 15.3V6.4Z"
+        fill={filled ? "currentColor" : "none"}
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
@@ -95,7 +135,17 @@ export function ReflectionIcon({ className, strokeWidth = 1.8 }: IconProps) {
 }
 
 /** 도산아카데미 소식 탭 — 안내 방송을 뜻하는 확성기 */
-export function MegaphoneIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function MegaphoneIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+  // 손잡이가 열린 곡선이라, 채울 때는 닫힌 모양으로 바꿔 그립니다.
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+        <path d="M19 4.5v15l-9.5-4H6a2.5 2.5 0 0 1 0-5h3.5L19 4.5Z" />
+        <path d="M8 15.6h3.4v2.7a1.7 1.7 0 0 1-3.4 0v-2.7Z" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       <path
