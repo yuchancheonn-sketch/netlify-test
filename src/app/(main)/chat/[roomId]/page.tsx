@@ -286,8 +286,9 @@ function MessageRow({
         </p>
       ) : null}
 
+      {/* 왼쪽 여백은 사진 32px + 사이 간격 8px. 이름이 말풍선과 나란히 서도록. */}
       {showSender && showNames ? (
-        <p className="mt-2 mb-1 pl-[52px] text-[12px] font-medium text-ink-faint">
+        <p className="mt-2 mb-1 pl-[40px] text-[12px] font-medium text-ink-faint">
           {senderName}
         </p>
       ) : null}
@@ -299,10 +300,11 @@ function MessageRow({
               src={senderPhoto}
               name={senderName}
               seed={message.senderId}
-              size={40}
+              size={32}
             />
           ) : (
-            <div className="w-10 shrink-0" aria-hidden="true" />
+            // 같은 사람이 이어 보낼 때, 사진 자리만큼 비워 말풍선을 나란히 세웁니다.
+            <div className="w-8 shrink-0" aria-hidden="true" />
           )
         ) : null}
 
@@ -313,7 +315,7 @@ function MessageRow({
         ) : null}
 
         <p
-          className={`max-w-[70%] rounded-3xl px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap ${
+          className={`max-w-[70%] rounded-3xl px-3.5 py-2 text-[15px] leading-snug whitespace-pre-wrap ${
             isMine
               ? "rounded-br-lg bg-brand-500 text-white"
               : "rounded-bl-lg bg-white text-ink shadow-[var(--shadow-card)]"
