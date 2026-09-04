@@ -7,7 +7,6 @@ import {
   FieldError,
   FieldLabel,
   PrimaryButton,
-  SectionTitle,
   Skeleton,
   inputClassName,
 } from "@/components/ui";
@@ -47,68 +46,60 @@ export default function SessionNotes() {
     [],
   );
 
-  const writtenCount = weeks.filter((week) => (notes[String(week)] ?? "").trim()).length;
-
   return (
     <section>
-      <SectionTitle
-        action={
-          <span className="text-[13px] font-bold text-brand-500 tabular-nums">
-            {writtenCount} / {COURSE_TOTAL_SESSIONS}
-          </span>
-        }
-      >
-        수업 기록
-      </SectionTitle>
-
-      <p className="mb-3 text-[12px] leading-relaxed text-ink-muted">
-        수업을 듣고 느낀점을 남겨보세요. <span className="font-bold">느낀점은 나만 봅니다.</span>{" "}
-        주제와 강사는 원우들이 함께 채우는 칸이라 모두에게 보입니다.
-      </p>
-
       {sessions.loading ? (
-        <Skeleton className="h-[280px] rounded-3xl" />
+        <Skeleton className="h-[320px] rounded-3xl" />
       ) : (
-        // 열한 줄이라 칸마다 카드를 띄우면 화면이 너무 길어집니다. 한 장 안에 줄로 나눕니다.
-        <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
-          {weeks.map((week) => {
-            const session = sessionByWeek.get(week);
-            const note = (notes[String(week)] ?? "").trim();
-            return (
-              <li key={week}>
-                <button
-                  type="button"
-                  onClick={() => setEditingWeek(week)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[14px] font-bold text-brand-500 tabular-nums">
-                    {week}
-                  </span>
+        /*
+          제목과 열한 줄을 카드 한 장에 담습니다.
+          칸마다 카드를 띄우면 화면이 너무 길어지고, 제목을 카드 밖에 두면
+          제목과 목록이 따로 노는 두 덩어리로 보입니다.
+        */
+        <div className="overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <h2 className="px-4 pt-5 pb-2 text-[17px] font-bold text-ink">수업 기록</h2>
 
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-bold text-ink">
-                      {session?.topic || `${week}주차`}
+          {/* 줄 사이 선은 흰색 — 자리는 그대로 두되 눈에는 보이지 않게 합니다. */}
+          <ul className="divide-y divide-white">
+            {weeks.map((week) => {
+              const session = sessionByWeek.get(week);
+              const note = (notes[String(week)] ?? "").trim();
+              return (
+                <li key={week}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingWeek(week)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[14px] font-bold text-brand-500 tabular-nums">
+                      {week}
                     </span>
-                    <span className="mt-0.5 block truncate text-[13px] text-ink-muted">
-                      {[
-                        session?.instructor ? `${session.instructor} 강사님` : null,
-                        note ? note : "아직 느낀점을 안 남겼어요",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </span>
 
-                  {note ? (
-                    <CheckIcon className="h-5 w-5 shrink-0 text-brand-500" />
-                  ) : (
-                    <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-bold text-ink">
+                        {session?.topic || `${week}주차`}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[13px] text-ink-muted">
+                        {[
+                          session?.instructor ? `${session.instructor} 강사님` : null,
+                          note ? note : "아직 느낀점을 안 남겼어요",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </span>
+
+                    {note ? (
+                      <CheckIcon className="h-5 w-5 shrink-0 text-brand-500" />
+                    ) : (
+                      <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       {editingWeek !== null ? (
