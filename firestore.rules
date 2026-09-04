@@ -72,9 +72,33 @@ service cloud.firestore {
     // ── 채팅 — 여기만 잠겨 있습니다 ──
 
     match /chatRooms/{roomId} {
-      // 단체방은 모든 원우가, 1:1 방은 그 둘만 봅니다.
-      allow read: if isSignedIn() && isRoomMember(roomId);
-      // 방을 만들거나 마지막 메시지를 갱신하는 것도 그 방 사람만.
+      /*
+       * 방 하나를 직접 열 때(get) — 방 id로 판단합니다.
+       * 문서가 아직 없는 단체방도 이 길로 들어옵니다.
+       */
+      allow get: if isSignedIn() && isRoomMember(roomId);
+
+      /*
+       * 채팅 목록처럼 여러 방을 한꺼번에 훑을 때(list) — 여기가 까다롭습니다.
+       *
+       * Firestore는 목록 조회를 "문서 id"로는 검증하지 못합니다.
+       * 질의를 보낼 때는 어떤 문서가 나올지 아직 모르니, 문서 id를 보는
+       * 규칙으로는 안전하다고 증명할 수 없어 통째로 거부해 버립니다.
+       * (규칙은 걸러주는 체가 아니라 통과·거부를 정하는 문지기입니다.)
+       *
+       * 그래서 목록만은 문서 안의 memberUids를 봅니다. 앱이 거는 질의가
+       *   where("memberUids", "array-contains", 내 uid)
+       * 라서, 나온 문서는 반드시 내가 낀 방임이 질의 자체로 보장됩니다.
+       * 이 짝이 맞아야 통과하므로 앱의 질의를 바꾸면 여기도 같이 고쳐야 합니다.
+       */
+      allow list: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+
+      /*
+       * 방을 만들거나 마지막 메시지를 갱신하는 것은 방 id로 막습니다.
+       * memberUids로 막으면, 남이 쓸 방 id를 먼저 선점해 자기 이름만 넣어
+       * 만들어두는 장난이 가능해집니다. 방 id는 두 사람의 uid로 이미
+       * 정해져 있으므로 선점 자체가 불가능합니다.
+       */
       allow write: if isSignedIn() && isRoomMember(roomId);
 
       match /messages/{messageId} {
