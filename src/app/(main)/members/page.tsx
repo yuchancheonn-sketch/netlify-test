@@ -311,7 +311,7 @@ function MemberRow({
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-xl border border-stone-200 px-3 py-2 text-[13px] font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-stone-200 px-2.5 py-1.5 text-[12px] font-bold text-ink-muted transition active:scale-95"
       >
         ✎ 수정
       </button>
