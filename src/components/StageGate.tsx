@@ -2,11 +2,13 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import { APP_NAME } from "@/lib/constants";
-import { quoteOfTheDay } from "@/lib/quotes";
+import {
+  APP_DEFINITION_HANJA,
+  APP_NAME,
+  COURSE_FULL_NAME,
+} from "@/lib/constants";
 
 /** 각 단계에서 사용자가 있어야 할 화면 */
 const STAGE_PATH: Record<Exclude<AuthStage, "loading">, string> = {
@@ -54,47 +56,74 @@ export default function StageGate({
  * 로딩 화면에서 본 말씀이 홈에서 다시 보여, 두 화면이 이어집니다.
  */
 export function SplashScreen() {
-  const quote = quoteOfTheDay();
-
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-7 bg-white px-9">
-      <div className="animate-splash-in relative h-[136px] w-[136px] shrink-0 overflow-hidden rounded-full shadow-[var(--shadow-card)]">
-        {/*
-          세로로 긴 사진이라 정사각으로 자르면 위아래가 잘립니다.
-          위쪽을 기준으로 잘라야 얼굴이 원 안에 들어옵니다.
-        */}
-        <Image
-          src="/brand/dosan.jpg"
-          alt="도산 안창호 선생"
-          fill
-          sizes="136px"
-          className="object-cover"
-          style={{ objectPosition: "50% 0%" }}
-          priority
-        />
-      </div>
+    // 사진을 본문과 같은 폭 안에 가두어, 넓은 화면에서 얼굴만 크게 확대되지
+    // 않고 휴대폰에서 보는 것과 같은 비율로 보이게 합니다. (로그인 화면과 같은 방식)
+    <div className="relative mx-auto min-h-dvh w-full max-w-[480px] overflow-hidden bg-white">
+      {/*
+        도산 안창호 선생 사진.
 
-      <div className="animate-splash-in max-w-[26ch] text-center">
-        <p className="font-serif text-[15px] leading-[1.9] text-ink">
-          &ldquo;{quote.text}&rdquo;
-        </p>
-        <p className="mt-3 text-[12px] font-bold text-brand-500">도산 안창호</p>
-      </div>
+        사진을 키워 내리지 않고 시작 위치만 내립니다. 원본이 640px이라
+        키우면 흐려집니다. 위 가장자리는 마스크로 서서히 나타나게 해서
+        사진이 잘린 선처럼 보이지 않게 합니다.
+      */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-[24%] bottom-0 bg-cover bg-no-repeat"
+        style={{
+          backgroundImage: "url(/brand/dosan.jpg)",
+          backgroundPosition: "50% 0%",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 11%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, #000 11%)",
+        }}
+      />
 
       {/*
-        조용한 화면이라 아무것도 움직이지 않으면 멈춘 것처럼 보입니다.
-        점 세 개가 차례로 옅어졌다 밝아지며, 아직 불러오는 중이라고 알려줍니다.
+        흰 막 — 로그인 화면보다 훨씬 옅게 덮습니다.
+
+        로그인 화면은 사진 위에 버튼과 글씨를 얹어야 해서 얼굴 위까지 짙게
+        덮지만, 여기는 얹는 것이 없으니 얼굴을 거의 그대로 드러냅니다.
+        아래쪽만 흰색으로 마무리해서 사진이 화면 바닥에서 잘리지 않고
+        흰 바탕으로 스며들게 합니다.
       */}
-      <div className="flex gap-1.5" aria-hidden="true">
-        {[0, 1, 2].map((index) => (
-          <span
-            key={index}
-            className="animate-splash-dot h-1.5 w-1.5 rounded-full bg-ink-faint"
-            style={{ animationDelay: `${index * 0.18}s` }}
-          />
-        ))}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 60%, rgba(255,255,255,0.72) 84%, rgb(255,255,255) 96%)",
+        }}
+      />
+
+      <div
+        className="relative flex min-h-dvh w-full flex-col items-center px-8 pt-16"
+        style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom))" }}
+      >
+        <p className="animate-splash-in font-serif text-[46px] leading-none font-semibold tracking-[0.1em] text-ink">
+          {APP_DEFINITION_HANJA}
+        </p>
+        <p className="animate-splash-in mt-5 text-[13px] font-bold text-brand-500">
+          {COURSE_FULL_NAME}
+        </p>
+
+        {/* 사진이 보이는 자리 */}
+        <div className="flex-1" />
+
+        {/*
+          조용한 화면이라 아무것도 움직이지 않으면 멈춘 것처럼 보입니다.
+          점 세 개가 차례로 옅어졌다 밝아지며, 아직 불러오는 중이라고 알려줍니다.
+        */}
+        <div className="flex gap-1.5" aria-hidden="true">
+          {[0, 1, 2].map((index) => (
+            <span
+              key={index}
+              className="animate-splash-dot h-1.5 w-1.5 rounded-full bg-ink-faint"
+              style={{ animationDelay: `${index * 0.18}s` }}
+            />
+          ))}
+        </div>
+        <span className="sr-only">불러오는 중이에요</span>
       </div>
-      <span className="sr-only">불러오는 중이에요</span>
     </div>
   );
 }
