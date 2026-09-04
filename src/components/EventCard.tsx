@@ -20,15 +20,19 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block rounded-3xl bg-linear-135 from-brand-400 to-brand-500 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
+      className="block rounded-3xl bg-brand-500 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
     >
       {/*
         밝은 주황 위의 흰 글씨는 대비가 넉넉하지 않아, 이 카드 안에서는
         투명도를 주지 않고 굵기를 올려 또렷하게 보이도록 했습니다.
       */}
       <div className="flex items-center justify-between gap-3">
-        {/* 카드에서 가장 먼저 눈에 들어와야 하는 숫자라 본문보다 키웠습니다. */}
-        <span className="rounded-full bg-black/20 px-3.5 py-1.5 text-[16px] font-bold">
+        {/*
+          카드에서 가장 먼저 눈에 들어와야 하는 숫자입니다.
+          알약이나 배경 없이 글씨만 두고, 크기는 아래 제목과 같게 하되
+          굵기를 한 단계 더 올려(900) 제목보다 앞서게 했습니다.
+        */}
+        <span className="text-[22px] font-black leading-tight">
           {ddayLabel(event.date)}
         </span>
         <span className="text-[14px] font-bold text-white">
