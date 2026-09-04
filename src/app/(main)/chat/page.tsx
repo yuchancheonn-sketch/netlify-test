@@ -74,8 +74,7 @@ export default function ChatListPage() {
           <ErrorState message={error} />
         ) : (
           <>
-            {/* 줄 사이 간격은 각 줄이 위아래로 가진 여백이 만듭니다. */}
-            <ul className="flex flex-col">
+            <ul className="flex flex-col gap-2">
               {rooms.map((room) => (
                 <li key={room.id}>
                   <ChatRoomRow
@@ -96,11 +95,13 @@ export default function ChatListPage() {
 
             {/* 1:1 방이 하나도 없을 때만, 어디서 말을 걸 수 있는지 알려줍니다. */}
             {rooms.length === 1 ? (
-              <EmptyState
-                icon={<ChatIcon className="h-10 w-10" />}
-                title="아직 1:1 대화가 없어요"
-                description="원우 탭에서 원우를 고른 뒤 '채팅'을 누르면 둘만의 대화가 시작됩니다."
-              />
+              <div className="mt-3 rounded-3xl bg-white shadow-[var(--shadow-card)]">
+                <EmptyState
+                  icon={<ChatIcon className="h-10 w-10" />}
+                  title="아직 1:1 대화가 없어요"
+                  description="원우 탭에서 원우를 고른 뒤 '채팅'을 누르면 둘만의 대화가 시작됩니다."
+                />
+              </div>
             ) : null}
           </>
         )}
@@ -112,12 +113,11 @@ export default function ChatListPage() {
 /**
  * 목록 한 줄 — 사진, 이름(+인원), 마지막 메시지, 시각, 안 읽은 개수.
  *
- * 카톡 대화 목록과 같은 짜임새입니다. 줄마다 카드를 두르지 않고 흰 바탕에
- * 바로 얹습니다. 방이 스무 개쯤 되면 카드가 스무 개 떠 있는 것보다 이쪽이
- * 훨씬 조용합니다. 누르는 자리는 눌렀을 때 잠깐 도는 회색으로 알려줍니다.
+ * 방마다 흰 카드를 하나씩 두릅니다. 다른 탭의 카드들과 같은 결입니다.
  *
- * 시각과 안 읽은 개수는 오른쪽에 위아래로 세웁니다. 예전처럼 시각을 이름 옆에
- * 두면 이름이 길 때 시각이 밀려납니다.
+ * 안은 카톡 대화 목록의 짜임새를 따릅니다 — 사진은 모서리 둥근 네모,
+ * 이름 옆에 인원, 시각과 안 읽은 개수는 오른쪽에 위아래로. 시각을 이름 옆에
+ * 두면 이름이 길 때 시각이 밀려나기 때문입니다.
  */
 function ChatRoomRow({
   room,
@@ -140,7 +140,7 @@ function ChatRoomRow({
   return (
     <Link
       href={`/chat/${room.id}`}
-      className="flex items-center gap-3.5 rounded-2xl px-1 py-2.5 transition active:bg-canvas"
+      className="flex items-center gap-3.5 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
