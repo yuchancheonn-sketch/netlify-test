@@ -27,7 +27,8 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         투명도를 주지 않고 굵기를 올려 또렷하게 보이도록 했습니다.
       */}
       <div className="flex items-center justify-between gap-3">
-        <span className="rounded-full bg-black/20 px-3 py-1 text-[13px] font-bold">
+        {/* 카드에서 가장 먼저 눈에 들어와야 하는 숫자라 본문보다 키웠습니다. */}
+        <span className="rounded-full bg-black/20 px-3.5 py-1.5 text-[16px] font-bold">
           {ddayLabel(event.date)}
         </span>
         <span className="text-[14px] font-bold text-white">
