@@ -23,14 +23,14 @@ export default function MainShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex min-h-dvh w-full max-w-[560px] flex-col">
         {/*
           맨 끝까지 내려도 마지막 줄이 알약에 가리지 않도록 여백을 둡니다.
-          알약 윗변이 바닥에서 76px이라(띄운 12px + 높이 64px) 그보다 넉넉히
+          알약 윗변이 바닥에서 68px이라(띄운 4px + 높이 64px) 그보다 넉넉히
           잡았습니다. 탭바를 감추는 대화방에서는 없앱니다.
         */}
         <main
           className={
             fullScreen
               ? "flex flex-1 flex-col"
-              : "flex-1 pb-[calc(94px+env(safe-area-inset-bottom))]"
+              : "flex-1 pb-[calc(86px+env(safe-area-inset-bottom))]"
           }
         >
           {children}
@@ -55,14 +55,14 @@ export default function MainShell({ children }: { children: ReactNode }) {
  * 덮는 구간 안에서도 위 끝은 아무 효과가 없다가 아래로 갈수록 흐려지고
  * 흰 기운이 옅게 얹힙니다. 가리는 게 아니라 잠기게 하는 정도입니다.
  *
- * 기준이 되는 44px = 알약을 바닥에서 띄운 12px + 알약 높이 64px의 절반.
+ * 기준이 되는 36px = 알약을 바닥에서 띄운 4px + 알약 높이 64px의 절반.
  * 알약 높이나 띄운 높이를 바꾸면 이 값도 같이 맞춰야 합니다.
  * 퍼센트 대신 픽셀로 잡은 이유는, 아이폰마다 다른 홈 바 높이
  * (safe-area)까지 더해지면 퍼센트로는 기준점이 흔들리기 때문입니다.
  */
 function BottomTabBarScrim() {
   /** 화면 바닥부터 알약 한가운데까지 — 딱 이 구간만 덮습니다. */
-  const height = "calc(44px + env(safe-area-inset-bottom))";
+  const height = "calc(36px + env(safe-area-inset-bottom))";
   /** 위 끝에서 아무 효과 없이 시작해 아래로 갈수록 짙어지는 정도 */
   const fade = "linear-gradient(to bottom, transparent, black 75%)";
 

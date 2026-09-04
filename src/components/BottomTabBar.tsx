@@ -64,6 +64,9 @@ export default function BottomTabBar() {
      * 화면 맨 아래에 붙이지 않고 조금 띄워야 알약으로 보이므로,
      * 아이폰 홈 바(safe-area) 위로 한 뼘 더 올려 둡니다.
      *
+     * ★ 띄우는 값(아래 4px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
+     *   흐림 층(BottomTabBarScrim)의 높이와 본문 아래 여백이 이 값에서 나옵니다.
+     *
      * 좌우 여백은 px-5 — 화면 안쪽 카드들과 같은 값이라, 알약의 양 끝이
      * 원우수첩 카드의 양 끝과 정확히 맞아떨어집니다.
      * 폭 상한 520px은 본문 최대폭 560px에서 이 여백(20px씩)을 뺀 값입니다.
@@ -71,7 +74,7 @@ export default function BottomTabBar() {
     <nav
       aria-label="주요 메뉴"
       className="fixed inset-x-0 z-30 px-5"
-      style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}
+      style={{ bottom: "calc(4px + env(safe-area-inset-bottom))" }}
     >
       {/* 알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다. */}
       <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1 shadow-[var(--shadow-float)]">
