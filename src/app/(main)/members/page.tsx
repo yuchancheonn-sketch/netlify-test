@@ -291,7 +291,7 @@ function MemberRow({
         className="min-w-0 flex-1 py-1 text-left transition active:opacity-70"
       >
         <div className="flex items-baseline gap-1.5">
-          <span className="shrink-0 text-[17px] font-bold text-brand-500 tabular-nums">
+          <span className="shrink-0 text-[17px] font-bold text-ink tabular-nums">
             {number}.
           </span>
           <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
@@ -301,7 +301,17 @@ function MemberRow({
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 truncate text-[13px] text-ink-muted">
+        {/*
+          회사·직책일 때만 주황으로 띄웁니다.
+          같은 자리에 한 줄 소개나 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는
+          강조할 내용이 아니라 회색 그대로 둡니다.
+          흰 바탕의 주황은 대비가 약해서 굵기를 한 단계 올려 읽기 쉽게 했습니다.
+        */}
+        <p
+          className={`mt-0.5 truncate text-[13px] ${
+            affiliation ? "font-medium text-brand-500" : "text-ink-muted"
+          }`}
+        >
           {affiliation || entry.bio || "아직 정보가 입력 안 됐어요"}
         </p>
       </button>
