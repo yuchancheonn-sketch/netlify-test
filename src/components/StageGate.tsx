@@ -51,9 +51,8 @@ export default function StageGate({
  */
 export function SplashScreen() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-canvas">
+    <div className="flex min-h-dvh items-center justify-center bg-white">
       <GooseLoader />
-      <p className="text-[13px] font-medium text-ink-faint">{APP_NAME}</p>
     </div>
   );
 }
