@@ -28,15 +28,16 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
       */}
       {/*
         윗줄 — 왼쪽에 이 카드가 무엇인지 알려주는 이름표, 오른쪽에 날짜와 D-day.
-        셋 다 18px에 줄 높이도 같고, 밑선(baseline)으로 세워 한 줄에 나란히 앉습니다.
-        크기가 같으니 D-day는 굵기(900)로만 앞서게 두었습니다.
-        글씨 크기는 이 한 곳(text-[18px])에서만 정합니다 — 셋 중 하나만 바꾸면
-        높이가 어긋나므로, 바꿀 때는 여기를 고쳐 셋이 같이 움직이게 하세요.
+        기본은 상자에 걸어둔 18px이고 날짜만 16px입니다. 크기가 달라도
+        밑선(baseline)으로 세워 두어 셋의 글자가 한 줄에 나란히 앉습니다.
+        D-day는 굵기(900)로 나머지(700)보다 앞섭니다.
       */}
       <div className="flex items-baseline justify-between gap-3 text-[18px] leading-tight">
         <span className="font-bold text-white">주요 일정</span>
         <span className="flex shrink-0 items-baseline gap-2.5">
-          <span className="font-bold text-white">{formatMonthDay(event.date)}</span>
+          <span className="text-[16px] font-bold text-white">
+            {formatMonthDay(event.date)}
+          </span>
           <span className="font-black">{ddayLabel(event.date)}</span>
         </span>
       </div>
