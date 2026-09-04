@@ -327,44 +327,45 @@ export default function ChatRoomPage({
           말풍선이 제목 글씨에 겹쳐 보입니다.
         */}
         {/*
-          위쪽 회색 띠 = 상태바(시계·배터리)가 얹히는 자리.
+          ★ 제목 줄만 흰색이 아니라 목록과 같은 회색입니다. 취향이 아니라 이유가 있습니다.
 
-          여기를 목록과 같은 회색으로 둡니다. 아이폰 사파리는 이 자리를
-          페이지가 칠한 색에서 뽑아 와 화면 전체 너비로 덮어 칠합니다.
-          대화방처럼 희게 두면, 옆으로 밀어 목록을 꺼냈을 때도 이 띠만
-          흰색으로 남아 목록 위에 흰 줄이 그어진 것처럼 보입니다.
-          (색을 바꿔 가며 확인했습니다 — 제목 줄을 보라색으로 칠하면
-          이 띠도 화면 전체가 보라색이 됩니다.)
+          아이폰 사파리는 화면 맨 위 자기 영역(시계·배터리가 얹히는 줄)을
+          "페이지 맨 윗부분 색"에서 실시간으로 뽑아 와 화면 전체 너비로 칠합니다.
+          색을 바꿔 가며 확인했습니다 — 이 제목 줄을 보라색으로 칠하면 그 띠도
+          화면 전체가 보라색이 됩니다.
 
-          ★ env()는 반드시 calc() 안에 넣습니다. 맨몸으로 쓰면(height: env(...),
-          padding: env(...)) 사파리가 0으로 버려서 띠가 아예 안 생깁니다.
-          이 파일과 PageHeader에서 잘 듣는 env()는 전부 calc() 안에 있습니다.
+          그래서 제목 줄이 희면, 옆으로 밀어 목록을 꺼내도 그 띠만 흰색으로 남아
+          회색 목록 위에 흰 줄이 그어진 것처럼 보입니다. CSS로는 그 띠를 덮을 수
+          없고(사파리 영역이라), 안전 영역을 회색으로 채우는 방법도 못 씁니다 —
+          사파리로 볼 때 env(safe-area-inset-top)은 0입니다.
+
+          남은 방법은 뽑아 갈 흰색을 아예 두지 않는 것뿐입니다. 제목 줄을 목록과
+          같은 회색으로 두면 그 띠도 회색이 되어 목록과 이어집니다.
+          대화가 놓이는 자리는 그대로 흰색이고, 아래 실선이 둘을 갈라 줍니다.
         */}
-        <div
-          className="sticky top-0 z-20 bg-canvas"
-          style={{ paddingTop: "calc(0px + env(safe-area-inset-top))" }}
+        <header
+          className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-canvas px-2 pb-2.5"
+          style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
         >
-          <header className="flex items-center gap-1 border-b border-line bg-white px-2 pt-2 pb-2.5">
-            <button
-              type="button"
-              onClick={() => router.push("/chat")}
-              aria-label="채팅 목록으로"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
-            >
-              <ChevronLeftIcon className="h-7 w-7" />
-            </button>
+          <button
+            type="button"
+            onClick={() => router.push("/chat")}
+            aria-label="채팅 목록으로"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+          >
+            <ChevronLeftIcon className="h-7 w-7" />
+          </button>
 
-            <div className="min-w-0 flex-1 text-center">
-              <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-              {isGroup ? (
-                <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
-              ) : null}
-            </div>
+          <div className="min-w-0 flex-1 text-center">
+            <p className="truncate text-[17px] font-bold text-ink">{title}</p>
+            {isGroup ? (
+              <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
+            ) : null}
+          </div>
 
-            {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
-            <div className="h-10 w-10 shrink-0" aria-hidden="true" />
-          </header>
-        </div>
+          {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
+          <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+        </header>
 
         <div className="flex-1 px-4 pb-[104px]">
           {loading ? (
