@@ -99,11 +99,16 @@ export default function BottomTabBar() {
            */
           const badge = href === "/chat" ? unreadChatCount : 0;
           /*
-           * 고른 탭은 아이콘과 글씨가 함께 브랜드 주황이 되고,
-           * 아이콘은 속까지 꽉 찹니다. 뒤에 깔던 회색 알약은 없앴습니다.
-           * 색 하나로 어디에 있는지 알 수 있으면 그게 가장 조용합니다.
+           * 고른 탭은 아이콘과 글씨가 함께 브랜드 주황이 되고, 아이콘은 속까지
+           * 꽉 차며, 뒤로 옅은 회색 알약이 깔립니다.
+           *
+           * 회색은 고정색이 아니라 먹색을 8%만 푼 반투명입니다. 탭바 자체가
+           * 유리(반투명)라 뒤로 지나가는 사진이 비치는데, 불투명한 회색을 깔면
+           * 그 자리만 유리가 아니게 보입니다.
            */
-          const itemClassName = active ? "text-brand-500" : "text-ink-muted";
+          const itemClassName = active
+            ? "bg-ink/[0.08] text-brand-500"
+            : "text-ink-muted";
           /*
            * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
            * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
