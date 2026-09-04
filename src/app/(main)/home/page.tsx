@@ -97,7 +97,7 @@ export default function HomePage() {
             (SectionTitle을 쓰지 않고 같은 크기·굵기로 직접 적었습니다.)
           */}
           <div className="rounded-3xl bg-white px-6 py-7 shadow-[var(--shadow-card)]">
-            <h2 className="mb-4 text-[20px] font-bold text-ink">오늘의 도산</h2>
+            <h2 className="mb-4 text-[18px] font-bold text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">
               &ldquo;{quote.text}&rdquo;

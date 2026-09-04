@@ -62,7 +62,7 @@ export default function SessionNotes() {
             그쪽은 카드에 px-6 py-7을 주고 제목에 mb-4를 얹었습니다 —
             여기는 카드에 안쪽 여백이 없으니 제목이 그 값을 그대로 들고 있습니다.
           */}
-          <h2 className="px-6 pt-7 pb-4 text-[20px] font-bold text-ink">수업 기록</h2>
+          <h2 className="px-6 pt-7 pb-4 text-[18px] font-bold text-ink">수업 기록</h2>
 
           {/* 줄 사이 선은 흰색 — 자리는 그대로 두되 눈에는 보이지 않게 합니다. */}
           <ul className="divide-y divide-white">
