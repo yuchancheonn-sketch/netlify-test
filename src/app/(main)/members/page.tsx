@@ -125,19 +125,12 @@ export default function MembersPage() {
             })}
           </div>
           {!busy && !error ? (
-            <p className="shrink-0 text-[14px] font-medium text-ink-soft">
+            /* 글씨 크기는 왼쪽 필터 칩과 같은 13px로 맞춥니다. */
+            <p className="shrink-0 text-[13px] font-medium text-ink-soft">
               원우 <span className="font-bold text-ink">{visible.length}</span>명
             </p>
           ) : null}
         </div>
-
-        {/* 사용법 안내 */}
-        <p className="mt-3 text-[12px] leading-relaxed text-ink">
-          사진을 누르면 크게 보이고, 이름을 누르면 회사·직책·휴대폰·자기소개를 볼 수 있어요.
-          <span className="font-bold"> 수정</span> 버튼으로 서로의 정보를
-          채워줄 수 있고, 맨 아래 <span className="font-bold">원우 추가하기</span>로
-          수첩에 빠진 원우를 올릴 수 있습니다.
-        </p>
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
