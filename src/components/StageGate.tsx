@@ -4,11 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import {
-  APP_DEFINITION_HANJA,
-  APP_NAME,
-  COURSE_FULL_NAME,
-} from "@/lib/constants";
+import { APP_NAME, COURSE_FULL_NAME } from "@/lib/constants";
 
 /** 각 단계에서 사용자가 있어야 할 화면 */
 const STAGE_PATH: Record<Exclude<AuthStage, "loading">, string> = {
@@ -99,29 +95,16 @@ export function SplashScreen() {
         className="relative flex min-h-dvh w-full flex-col items-center px-8 pt-16"
         style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom))" }}
       >
+        {/*
+          제목은 사진이 시작되는 자리(위에서 24%)보다 위에 둡니다.
+          아래 사진과 겹치지 않아야 선생 얼굴이 글씨에 가리지 않습니다.
+        */}
         <p className="animate-splash-in text-[13px] font-bold text-brand-500">
           {COURSE_FULL_NAME}
         </p>
-
-        {/*
-          애기애타(愛己愛他)를 두 글자씩 세로로 세워 얼굴 양옆에 둡니다.
-          세로쓰기는 오른쪽 줄부터 읽으므로 오른쪽이 愛己, 왼쪽이 愛他입니다.
-          앱 아이콘의 글자 배치와 같습니다.
-        */}
-        <div
-          aria-label={APP_DEFINITION_HANJA}
-          role="img"
-          className="animate-splash-in pointer-events-none absolute inset-x-0 top-[12%] flex justify-between px-5 font-serif text-[80px] leading-none font-semibold text-ink"
-        >
-          <span className="flex flex-col items-center gap-4">
-            <span aria-hidden="true">愛</span>
-            <span aria-hidden="true">他</span>
-          </span>
-          <span className="flex flex-col items-center gap-4">
-            <span aria-hidden="true">愛</span>
-            <span aria-hidden="true">己</span>
-          </span>
-        </div>
+        <h1 className="animate-splash-in mt-1 text-[34px] font-bold tracking-tight text-ink">
+          {APP_NAME}
+        </h1>
 
         {/* 사진이 보이는 자리 */}
         <div className="flex-1" />
