@@ -99,10 +99,10 @@ export function SplashScreen() {
           제목은 사진이 시작되는 자리(위에서 24%)보다 위에 둡니다.
           아래 사진과 겹치지 않아야 선생 얼굴이 글씨에 가리지 않습니다.
         */}
-        <p className="animate-splash-in text-[13px] font-bold text-brand-500">
+        <p className="animate-splash-in text-[16px] font-bold text-brand-500">
           {COURSE_FULL_NAME}
         </p>
-        <h1 className="animate-splash-in mt-1 text-[34px] font-bold tracking-tight text-ink">
+        <h1 className="animate-splash-in mt-1.5 text-[34px] font-bold tracking-tight text-ink">
           {APP_NAME}
         </h1>
 
