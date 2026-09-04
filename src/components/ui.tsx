@@ -79,7 +79,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-brand-50 px-4 py-2 text-[14px] font-bold text-brand-700"
+          className="rounded-full bg-brand-50 px-4 py-2 text-[14px] font-bold text-brand-500"
         >
           다시 시도
         </button>
@@ -127,7 +127,7 @@ export function Badge({
 }) {
   const styles =
     tone === "brand"
-      ? "bg-brand-50 text-brand-700"
+      ? "bg-brand-50 text-brand-500"
       : "bg-stone-100 text-ink-muted";
   return (
     <span

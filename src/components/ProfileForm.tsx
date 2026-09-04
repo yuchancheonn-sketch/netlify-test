@@ -400,7 +400,7 @@ export default function ProfileForm({
               type="checkbox"
               checked={!form.birthdayYearPublic}
               onChange={(event) => update("birthdayYearPublic", !event.target.checked)}
-              className="h-5 w-5 shrink-0 rounded-md accent-brand-700"
+              className="h-5 w-5 shrink-0 rounded-md accent-brand-500"
             />
             연도는 비공개로 하기
           </label>
@@ -431,7 +431,7 @@ export default function ProfileForm({
                 </span>
                 <span
                   className={`text-[14px] font-bold ${
-                    selected ? "text-brand-700" : "text-ink-soft"
+                    selected ? "text-brand-500" : "text-ink-soft"
                   }`}
                 >
                   {label}

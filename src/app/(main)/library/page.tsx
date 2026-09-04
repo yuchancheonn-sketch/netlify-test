@@ -130,7 +130,7 @@ function VideoList() {
             href="https://www.youtube.com/@dosanacademy"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] font-bold text-brand-700"
+            className="text-[13px] font-bold text-brand-500"
           >
             도산아카데미 유튜브 열기 ↗
           </a>
@@ -205,7 +205,7 @@ function VideoList() {
                     href={watchUrl(video.id)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 text-[12px] font-bold text-brand-700"
+                    className="shrink-0 text-[12px] font-bold text-brand-500"
                   >
                     유튜브에서 보기 ↗
                   </a>
@@ -220,7 +220,7 @@ function VideoList() {
         href="https://www.youtube.com/@dosanacademy"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-700 shadow-[var(--shadow-card)]"
+        className="mt-5 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
       >
         도산아카데미 유튜브 채널 열기 ↗
       </a>
@@ -305,7 +305,7 @@ function AlbumList() {
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-4 text-[15px] font-bold text-brand-700 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
         >
           <PlusIcon className="h-5 w-5" />
           앨범 만들기

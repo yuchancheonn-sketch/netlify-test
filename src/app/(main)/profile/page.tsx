@@ -27,7 +27,7 @@ export default function ProfilePage() {
       {saved ? (
         <p
           role="status"
-          className="mx-5 mb-4 rounded-2xl bg-brand-50 px-4 py-3 text-center text-[14px] font-bold text-brand-700"
+          className="mx-5 mb-4 rounded-2xl bg-brand-50 px-4 py-3 text-center text-[14px] font-bold text-brand-500"
         >
           저장했어요
         </p>

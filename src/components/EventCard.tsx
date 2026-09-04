@@ -20,7 +20,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block rounded-3xl bg-linear-135 from-brand-400 to-brand-600 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
+      className="block rounded-3xl bg-linear-135 from-brand-400 to-brand-500 p-5 text-white shadow-[var(--shadow-float)] transition active:scale-[0.99]"
     >
       {/*
         밝은 주황 위의 흰 글씨는 대비가 넉넉하지 않아, 이 카드 안에서는
@@ -76,13 +76,13 @@ export function EventListItem({
       className="flex items-center gap-4 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-50">
-        <span className="text-[12px] font-bold text-brand-600">
+        <span className="text-[12px] font-bold text-brand-500">
           {date ? WEEKDAYS[date.getDay()] : ""}
         </span>
-        <span className="text-[24px] font-bold leading-tight text-brand-700">
+        <span className="text-[24px] font-bold leading-tight text-brand-500">
           {date ? date.getDate() : "-"}
         </span>
-        <span className="text-[11px] font-medium text-brand-600">
+        <span className="text-[11px] font-medium text-brand-500">
           {date ? `${date.getMonth() + 1}월` : ""}
         </span>
       </div>

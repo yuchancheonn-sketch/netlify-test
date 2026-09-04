@@ -95,7 +95,7 @@ function LoginScreen() {
               priority
             />
           </div>
-          <p className="mt-6 text-[13px] font-bold text-brand-700">{COURSE_FULL_NAME}</p>
+          <p className="mt-6 text-[13px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
           <h1 className="mt-1 text-[30px] font-bold tracking-tight text-ink">{APP_NAME}</h1>
         </div>
 

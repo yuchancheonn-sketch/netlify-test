@@ -52,7 +52,7 @@ export default function HomePage() {
               action={
                 <Link
                   href="/events"
-                  className="flex items-center gap-0.5 text-[13px] font-bold text-brand-700"
+                  className="flex items-center gap-0.5 text-[13px] font-bold text-brand-500"
                 >
                   전체 일정
                   <ChevronRightIcon className="h-4 w-4" />
@@ -75,7 +75,7 @@ export default function HomePage() {
             className="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             <span className="flex items-center gap-2.5 text-[15px] font-bold text-ink">
-              <CalendarIcon className="h-5 w-5 text-brand-600" />
+              <CalendarIcon className="h-5 w-5 text-brand-500" />
               모임 일정 전체 보기
             </span>
             <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
@@ -90,7 +90,7 @@ export default function HomePage() {
             <p className="font-serif text-[18px] leading-[1.8] text-ink">
               &ldquo;{quote.text}&rdquo;
             </p>
-            <p className="mt-5 text-[13px] font-bold text-brand-700">도산 안창호</p>
+            <p className="mt-5 text-[13px] font-bold text-brand-500">도산 안창호</p>
             <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
               {quote.source}
             </p>

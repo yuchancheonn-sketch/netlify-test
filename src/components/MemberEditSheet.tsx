@@ -212,7 +212,7 @@ export default function MemberEditSheet({
                   onClick={() => setMemberType(value)}
                   className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
                     selected
-                      ? "border-brand-500 bg-brand-50 text-brand-700"
+                      ? "border-brand-500 bg-brand-50 text-brand-500"
                       : "border-transparent bg-white text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >

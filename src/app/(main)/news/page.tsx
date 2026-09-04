@@ -78,7 +78,7 @@ export default function NewsPage() {
                 href={SITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] font-bold text-brand-700"
+                className="text-[13px] font-bold text-brand-500"
               >
                 도산아카데미 사이트 열기 ↗
               </a>
@@ -139,7 +139,7 @@ export default function NewsPage() {
             href={SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-700 shadow-[var(--shadow-card)]"
+            className="mt-4 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
           >
             도산아카데미 홈페이지 열기 ↗
           </a>

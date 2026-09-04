@@ -182,7 +182,7 @@ export default function AlbumPage() {
         {/* 업로드 진행 상황 */}
         {uploading ? (
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[var(--shadow-card)]">
-            <Spinner className="h-5 w-5 text-brand-600" />
+            <Spinner className="h-5 w-5 text-brand-500" />
             <span className="text-[14px] font-bold text-ink">
               올리는 중 {uploading.done}/{uploading.total}
             </span>
@@ -196,7 +196,7 @@ export default function AlbumPage() {
         ) : null}
 
         {!isCloudinaryConfigured ? (
-          <p className="mt-4 rounded-2xl bg-brand-50 px-4 py-3 text-[13px] leading-relaxed text-brand-800">
+          <p className="mt-4 rounded-2xl bg-brand-50 px-4 py-3 text-[13px] leading-relaxed text-brand-500">
             사진 보관소(Cloudinary) 설정이 아직 안 되어 있어요. README의 &ldquo;행사 사진
             보관소 연결하기&rdquo;를 참고해 주세요.
           </p>

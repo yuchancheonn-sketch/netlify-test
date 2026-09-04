@@ -370,7 +370,7 @@ function RosterSection({
                 aria-pressed={memberType === value}
                 className={`flex-1 rounded-2xl py-2.5 text-[14px] font-bold transition ${
                   memberType === value
-                    ? "bg-brand-50 text-brand-700 ring-2 ring-brand-500"
+                    ? "bg-brand-50 text-brand-500 ring-2 ring-brand-500"
                     : "bg-canvas text-ink-muted"
                 }`}
               >
@@ -394,7 +394,7 @@ function RosterSection({
             </p>
           ) : null}
           {added ? (
-            <p role="status" className="mt-2 text-center text-[13px] font-bold text-brand-700">
+            <p role="status" className="mt-2 text-center text-[13px] font-bold text-brand-500">
               {added}명을 명단에 추가했어요
             </p>
           ) : null}
@@ -576,7 +576,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                   disabled={isMe}
                   className={`rounded-full px-3.5 py-2 text-[13px] font-bold transition disabled:opacity-45 ${
                     member.role === "admin"
-                      ? "bg-brand-50 text-brand-700"
+                      ? "bg-brand-50 text-brand-500"
                       : "bg-stone-100 text-ink-muted"
                   }`}
                 >

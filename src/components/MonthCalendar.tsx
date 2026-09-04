@@ -102,7 +102,7 @@ export default function MonthCalendar({
                   isSelected
                     ? "bg-brand-500 font-bold text-white"
                     : isToday
-                      ? "bg-brand-50 font-bold text-brand-700"
+                      ? "bg-brand-50 font-bold text-brand-500"
                       : inMonth
                         ? "font-medium text-ink"
                         : "text-ink-faint/60"

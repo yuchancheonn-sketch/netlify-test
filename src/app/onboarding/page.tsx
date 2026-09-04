@@ -18,7 +18,7 @@ function OnboardingScreen() {
   return (
     <div className="mx-auto w-full max-w-[520px]">
       <header className="px-5 pt-12 pb-6">
-        <p className="text-[13px] font-bold text-brand-600">가입 승인 완료 🎉</p>
+        <p className="text-[13px] font-bold text-brand-500">가입 승인 완료 🎉</p>
         <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-ink">
           원우들에게 보여줄
           <br />

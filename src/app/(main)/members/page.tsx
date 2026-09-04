@@ -291,7 +291,7 @@ function MemberRow({
         className="min-w-0 flex-1 py-1 text-left transition active:opacity-70"
       >
         <div className="flex items-baseline gap-1.5">
-          <span className="shrink-0 text-[17px] font-bold text-brand-700 tabular-nums">
+          <span className="shrink-0 text-[17px] font-bold text-brand-500 tabular-nums">
             {number}.
           </span>
           <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
@@ -447,7 +447,7 @@ function MemberDetailSheet({
             </a>
             <a
               href={`sms:${phoneHref(entry.phone)}`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-700 transition active:scale-[0.99]"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
             >
               ✉️ 문자
             </a>
@@ -495,7 +495,7 @@ function MemberDetailSheet({
             href={videoLink.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 block text-center text-[13px] font-bold text-brand-700"
+            className="mt-2 block text-center text-[13px] font-bold text-brand-500"
           >
             {videoLink.kind === "vimeo" ? "비메오에서 보기" : "유튜브에서 보기"} ↗
           </a>
@@ -560,7 +560,7 @@ function MemberDetailSheet({
         <button
           type="button"
           onClick={onEdit}
-          className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-700"
+          className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-500"
         >
           ✎ {isMe ? "내 정보 수정하기" : "정보 채워주기"}
         </button>

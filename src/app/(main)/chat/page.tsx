@@ -120,7 +120,7 @@ function ChatRoomRow({
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
-        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
           <UsersIcon className="h-7 w-7" />
         </span>
       ) : (

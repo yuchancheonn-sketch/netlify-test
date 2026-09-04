@@ -93,7 +93,7 @@ export default function EventDetailPage() {
 
       <div className="flex flex-col gap-6 px-5 pb-8">
         {/* 일정 요약 */}
-        <section className="rounded-3xl bg-linear-135 from-brand-400 to-brand-600 p-6 text-white shadow-[var(--shadow-float)]">
+        <section className="rounded-3xl bg-linear-135 from-brand-400 to-brand-500 p-6 text-white shadow-[var(--shadow-float)]">
           {/* 홈의 일정 카드와 같은 크기로 맞춥니다. */}
           <span className="inline-block rounded-full bg-black/20 px-3.5 py-1.5 text-[16px] font-bold">
             {ddayLabel(event.date)}
