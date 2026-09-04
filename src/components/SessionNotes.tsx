@@ -90,7 +90,7 @@ export default function SessionNotes() {
                       너비가 달라서, 그냥 두면 줄마다 제목 시작점이 어긋납니다.
                       tabular-nums는 숫자 폭을 서로 같게 맞춰줍니다.
                     */}
-                    <span className="w-8 shrink-0 text-center text-[21px] font-bold text-brand-500 tabular-nums">
+                    <span className="w-8 shrink-0 text-center text-[19px] font-bold text-brand-500 tabular-nums">
                       {week}
                     </span>
 
