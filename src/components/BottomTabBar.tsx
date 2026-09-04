@@ -276,7 +276,7 @@ export default function BottomTabBar() {
            * 회색 알약이 덮은 탭은 아이콘과 글씨가 브랜드 주황이 되고 아이콘 속까지
            * 꽉 찹니다. 알약을 끌면 색이 알약을 따라 옮겨 다닙니다.
            */
-          const itemClassName = covered ? "text-brand-500" : "text-ink-muted";
+          const itemClassName = covered ? "text-brand-500" : "text-ink-soft";
           /*
            * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
            * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
