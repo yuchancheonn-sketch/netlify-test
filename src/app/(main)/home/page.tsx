@@ -72,14 +72,14 @@ export default function HomePage() {
           </section>
         ) : (
           /*
-            -mt-4로 위 카드와의 간격을 32 → 16px로 좁힙니다.
-            (바깥 상자의 gap-8에서 16px을 도로 당겨오는 셈입니다.)
+            -mt-6으로 위 카드와의 간격을 32 → 8px로 좁힙니다.
+            (바깥 상자의 gap-8에서 24px을 도로 당겨오는 셈입니다.)
             제목 없이 한 줄짜리 링크라 위 카드에 딸린 것처럼 붙는 편이 자연스럽고,
             이 한 줄이 올라가면 아래 "오늘의 도산"도 그만큼 따라 올라옵니다.
           */
           <Link
             href="/events"
-            className="-mt-4 flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            className="-mt-6 flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             <span className="flex items-center gap-2.5 text-[15px] font-bold text-ink">
               <CalendarIcon className="h-[26px] w-[26px] text-brand-500" />
