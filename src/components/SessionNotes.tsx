@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { CheckIcon, ChevronRightIcon } from "@/components/icons";
 import {
-  FieldError,
   FieldLabel,
   PrimaryButton,
   Skeleton,
@@ -150,28 +149,28 @@ function SessionEditSheet({
   const [topic, setTopic] = useState(session?.topic ?? "");
   const [instructor, setInstructor] = useState(session?.instructor ?? "");
   const [myNote, setMyNote] = useState(note);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || saving) return;
-
     setSaving(true);
-    setError(null);
-    try {
-      /*
-       * 두 곳에 나눠 담습니다.
-       *  - 주제·강사는 sessions/{주차}  — 모두가 함께 보는 칸
-       *  - 느낀점은 sessionNotes/{내 uid} — 나만 보는 칸
-       * 바뀐 쪽만 저장해서, 남이 적어둔 주제를 건드리지 않고 넘어갑니다.
-       */
-      const topicChanged =
-        topic.trim() !== (session?.topic ?? "") ||
-        instructor.trim() !== (session?.instructor ?? "");
 
-      if (topicChanged) {
-        await setDoc(
+    /*
+     * 두 곳에 나눠 담습니다.
+     *  - 주제·강사는 sessions/{주차}  — 모두가 함께 보는 칸
+     *  - 느낀점은 sessionNotes/{내 uid} — 나만 보는 칸
+     * 바뀐 쪽만 저장해서, 남이 적어둔 주제를 건드리지 않고 넘어갑니다.
+     */
+    const topicChanged =
+      topic.trim() !== (session?.topic ?? "") ||
+      instructor.trim() !== (session?.instructor ?? "");
+
+    const writes: Promise<unknown>[] = [];
+
+    if (topicChanged) {
+      writes.push(
+        setDoc(
           doc(db, "sessions", String(week)),
           {
             week,
@@ -182,22 +181,33 @@ function SessionEditSheet({
             updatedAt: serverTimestamp(),
           },
           { merge: true },
-        );
-      }
+        ),
+      );
+    }
 
-      if (myNote !== note) {
-        await setDoc(
+    if (myNote !== note) {
+      writes.push(
+        setDoc(
           doc(db, "sessionNotes", user.uid),
           { notes: { [String(week)]: myNote.trim() } },
           { merge: true },
-        );
-      }
-
-      onClose();
-    } catch {
-      setError("저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
-      setSaving(false);
+        ),
+      );
     }
+
+    /*
+     * ★ 서버 응답을 기다리지 않고 곧바로 창을 닫습니다.
+     *
+     * setDoc이 주는 약속은 "기기에 적혔다"가 아니라 "서버에 닿았다"입니다.
+     * 신호가 약하거나 무료 한도를 넘긴 동안에는 그 약속이 영영 풀리지 않아서,
+     * 기다리게 만들면 저장 버튼이 계속 돌기만 하고 창이 안 닫힙니다.
+     *
+     * 기다리지 않아도 적은 내용은 사라지지 않습니다 — Firestore는 쓰기를 먼저
+     * 기기 안(IndexedDB)에 적어두고 화면에도 바로 반영한 뒤, 연결되면 알아서
+     * 올려보냅니다. 앱을 껐다 켜도 그 대기열은 남아 있습니다.
+     */
+    void Promise.all(writes).catch(() => {});
+    onClose();
   }
 
   return (
@@ -260,17 +270,20 @@ function SessionEditSheet({
           />
         </div>
 
-        {error ? <FieldError>{error}</FieldError> : null}
-
         <div className="mt-6 flex gap-3">
+          {/*
+            shrink-0과 whitespace-nowrap이 둘 다 필요합니다.
+            옆의 저장하기가 폭을 다 가져가려 해서, 그냥 두면 취소 칸이 눌려
+            "취/소"로 줄바꿈됩니다.
+          */}
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl bg-stone-100 px-6 py-4 text-[15px] font-bold text-ink-muted"
+            className="shrink-0 rounded-2xl bg-stone-100 px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
           >
             취소
           </button>
-          <PrimaryButton type="submit" loading={saving}>
+          <PrimaryButton type="submit" size="sm" loading={saving}>
             저장하기
           </PrimaryButton>
         </div>

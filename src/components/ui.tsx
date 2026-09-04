@@ -95,6 +95,7 @@ export function PrimaryButton({
   type = "button",
   disabled,
   loading,
+  size = "md",
   className = "",
 }: {
   children: ReactNode;
@@ -102,14 +103,26 @@ export function PrimaryButton({
   type?: "button" | "submit";
   disabled?: boolean;
   loading?: boolean;
+  /**
+   * 버튼 높이. 화면을 차지하는 큰 버튼은 md, 다른 버튼과 한 줄에 서는
+   * 작은 버튼은 sm.
+   *
+   * 굳이 값으로 받는 이유: 바깥에서 className에 py-2.5를 얹어도 py-4를
+   * 이기지 못합니다. 같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가
+   * 만든 CSS 순서로 이깁니다.
+   */
+  size?: "md" | "sm";
   className?: string;
 }) {
+  const sizeClassName =
+    size === "sm" ? "px-5 py-2.5 text-[15px]" : "px-5 py-4 text-[16px]";
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200 disabled:text-white ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200 disabled:text-white ${sizeClassName} ${className}`}
     >
       {loading ? <Spinner className="h-5 w-5" /> : null}
       {children}
