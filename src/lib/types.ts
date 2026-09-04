@@ -169,13 +169,42 @@ export interface MessageDoc {
 }
 
 /**
- * chatReads/{uid} — 내가 단체방을 마지막으로 본 시각.
+ * chatRooms/{roomId} — 대화방 한 칸.
+ *
+ * 방은 두 종류입니다.
+ *  - group: 10기 전체가 함께 쓰는 단체방. 지금은 "main" 하나뿐입니다.
+ *  - direct: 원우 두 명만의 1:1 대화.
+ *
+ * 마지막 메시지를 방 문서에 적어 두는 이유는, 채팅 목록에서 방마다
+ * 메시지를 뒤지지 않고 방 문서만 읽어 미리보기를 그리기 위해서입니다.
+ */
+export interface ChatRoomDoc {
+  id: string;
+  kind: "group" | "direct";
+  /** 단체방 이름. 1:1 방은 상대 이름을 화면에서 만들어 쓰므로 비어 있습니다. */
+  title: string;
+  /** 이 방에 들어올 수 있는 사람. 단체방은 모두가 들어오므로 비어 있습니다. */
+  memberUids: string[];
+  /** 목록에 보여줄 마지막 메시지 미리보기 */
+  lastMessageText: string;
+  lastMessageSenderId: string;
+  lastMessageAt: Timestamp | null;
+}
+
+/**
+ * chatReads/{uid} — 내가 각 방을 마지막으로 본 시각.
  *
  * 하단 탭의 안 읽은 개수 배지가 이 시각을 기준으로 셉니다.
  * users 문서에 넣지 않고 따로 둔 이유는, users 문서에는 프로필 사진이
  * 통째로 들어 있어서 값 하나를 고칠 때마다 그 큰 문서가 모두에게 다시
- * 내려가기 때문입니다. 이 문서는 시각 하나뿐이라 아주 가볍습니다.
+ * 내려가기 때문입니다. 이 문서는 시각 몇 개뿐이라 아주 가볍습니다.
  */
 export interface ChatReadDoc {
-  lastReadAt: Timestamp | null;
+  /** 방 id → 그 방을 마지막으로 본 시각 */
+  rooms?: Record<string, Timestamp | null>;
+  /**
+   * 방이 단체방 하나뿐이던 시절에 쓰던 자리.
+   * 예전에 읽은 기록이 남아 있는 원우를 위해 단체방 기준으로 계속 읽습니다.
+   */
+  lastReadAt?: Timestamp | null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
@@ -13,10 +13,12 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
+import { emptyGroupRoom } from "@/lib/chat-rooms";
 import { MAIN_CHAT_ROOM_ID, UNREAD_BADGE_MAX } from "@/lib/constants";
 import { todayString } from "@/lib/format";
 import type {
   ChatReadDoc,
+  ChatRoomDoc,
   EventDoc,
   MessageDoc,
   PhotoAlbumDoc,
@@ -258,10 +260,10 @@ export function useAlbumPhotos(albumId: string): ListState<PhotoDoc> {
 }
 
 /**
- * 단체 채팅방 메시지.
- * 최신 count개만 구독하고, 위로 스크롤하면 count를 늘려 이전 메시지를 더 불러옵니다.
+ * 대화방 하나의 메시지.
+ * 최신 count개만 구독하고, "더 보기"를 누르면 count를 늘려 이전 메시지를 불러옵니다.
  */
-export function useMessages(count: number) {
+export function useMessages(roomId: string, count: number) {
   const [messages, setMessages] = useState<MessageDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -269,7 +271,7 @@ export function useMessages(count: number) {
 
   useEffect(() => {
     const messagesQuery = query(
-      collection(db, "chatRooms", MAIN_CHAT_ROOM_ID, "messages"),
+      collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "desc"),
       limit(count),
     );
@@ -290,87 +292,197 @@ export function useMessages(count: number) {
         setError("메시지를 불러오지 못했어요.");
       },
     );
-  }, [count]);
+  }, [roomId, count]);
 
   return { messages, loading, error, hasMore };
 }
 
 /**
- * 내가 단체방을 마지막으로 본 시각. (chatReads/{uid})
+ * 내가 들어가 있는 대화방 목록.
  *
- * 한 번도 채팅을 연 적이 없는 원우는 기록이 없습니다. 그럴 때 예전 대화를
- * 전부 "안 읽음"으로 세면 가입하자마자 배지에 99+가 뜨므로,
- * 기록이 없으면 지금 시각으로 한 번 남겨 그때부터 세기 시작합니다.
+ * 단체방은 늘 맨 위에 있고, 1:1 방은 memberUids에 내 uid가 들어 있는 것만
+ * 가져옵니다. 정렬은 앱에서 합니다. Firestore에서 정렬까지 시키려면 색인을
+ * 따로 만들어 올려야 하는데, 방이 수십 개뿐이라 그럴 값어치가 없습니다.
  */
-function useChatLastRead(uid?: string) {
-  /*
-   * 어느 계정의 기록인지 함께 들고 있습니다.
-   * 계정을 바꿨을 때 이전 사람의 시각을 잠깐이라도 쓰지 않기 위해서입니다.
-   * (구독을 갈아끼우는 동안 상태를 비우면 렌더가 한 번 더 돌아 낭비입니다.)
-   */
-  const [entry, setEntry] = useState<{ uid: string; lastReadAt: Timestamp | null } | null>(
-    null,
-  );
+export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
+  const [directRooms, setDirectRooms] = useState<ChatRoomDoc[] | null>(null);
+  const [groupRoom, setGroupRoom] = useState<ChatRoomDoc | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // 1:1 방
   useEffect(() => {
     if (!uid) return;
-
+    const roomsQuery = query(
+      collection(db, "chatRooms"),
+      where("memberUids", "array-contains", uid),
+    );
     return onSnapshot(
-      doc(db, "chatReads", uid),
+      roomsQuery,
       (snapshot) => {
-        const stored = (snapshot.data() as ChatReadDoc | undefined)?.lastReadAt ?? null;
-        // 기록이 아직 없는 원우라면 지금 시각으로 기준을 잡아둡니다.
-        if (!snapshot.exists()) void markChatRead(uid);
-        setEntry({ uid, lastReadAt: stored });
+        setDirectRooms(
+          snapshot.docs.map(
+            (document) => ({ id: document.id, ...document.data() }) as ChatRoomDoc,
+          ),
+        );
+        setError(null);
       },
-      () => setEntry({ uid, lastReadAt: null }),
+      () => setError("대화 목록을 불러오지 못했어요."),
     );
   }, [uid]);
 
-  const matched = uid && entry?.uid === uid ? entry : null;
-  /*
-   * serverTimestamp()로 적은 값은 서버에 닿기 전까지 null로 보입니다.
-   * 기준 시각이 확실해지기 전에는 세지 않습니다. 잘못 세면 예전 대화가
-   * 통째로 안 읽음으로 잡혀 배지에 엉뚱한 숫자가 뜹니다.
-   */
-  return { lastReadAt: matched?.lastReadAt ?? null, loaded: matched?.lastReadAt != null };
+  // 단체방. 아직 아무도 말을 안 걸어 문서가 없을 수 있어 기본 모습으로 대신합니다.
+  useEffect(() => {
+    return onSnapshot(
+      doc(db, "chatRooms", MAIN_CHAT_ROOM_ID),
+      (snapshot) => {
+        setGroupRoom(
+          snapshot.exists()
+            ? ({ id: snapshot.id, ...snapshot.data() } as ChatRoomDoc)
+            : emptyGroupRoom(),
+        );
+      },
+      () => setGroupRoom(emptyGroupRoom()),
+    );
+  }, []);
+
+  const rooms = useMemo(() => {
+    const group = groupRoom ?? emptyGroupRoom();
+    const others = (directRooms ?? [])
+      .filter((room) => room.id !== MAIN_CHAT_ROOM_ID)
+      // 최근에 말이 오간 방이 위로 옵니다. 아직 한 마디도 없는 방은 맨 아래.
+      .sort((a, b) => (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0));
+    return [group, ...others];
+  }, [groupRoom, directRooms]);
+
+  return { data: rooms, loading: !groupRoom || (!!uid && directRooms === null), error };
 }
 
 /**
- * 하단 탭 배지에 띄울, 아직 안 읽은 단체방 메시지 개수.
+ * 내가 각 방을 마지막으로 본 시각(밀리초).
  *
- * 내가 보낸 메시지는 세지 않고, UNREAD_BADGE_MAX개까지만 셉니다.
- * 마지막으로 본 시각 이후의 메시지만 받아오므로 평소에는 0건을 구독합니다.
+ * 한 번도 연 적이 없는 방은 기록이 없습니다. 그럴 때 예전 대화를 전부
+ * "안 읽음"으로 세면 가입하자마자 배지에 99+가 뜨므로, 기록이 없으면
+ * 지금 시각으로 한 번 남겨 그때부터 세기 시작합니다.
  */
-export function useUnreadChatCount(uid?: string): number {
-  const { lastReadAt, loaded } = useChatLastRead(uid);
-  // Timestamp 객체는 값이 같아도 매번 새로 만들어져 useEffect가 헛돕니다. 숫자로 비교합니다.
-  const sinceMillis = lastReadAt?.toMillis() ?? 0;
-  // 어느 기준 시각으로 센 개수인지 함께 들고 있어야, 채팅을 읽어 기준이
-  // 옮겨간 순간에 예전 개수가 잠깐 남아 보이지 않습니다.
-  const [entry, setEntry] = useState<{ sinceMillis: number; count: number } | null>(null);
+export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
+  const [entry, setEntry] = useState<{ uid: string; doc: ChatReadDoc | null } | null>(null);
+  const roomKey = roomIds.join("|");
 
   useEffect(() => {
-    if (!uid || !loaded) return;
-
-    const unreadQuery = query(
-      collection(db, "chatRooms", MAIN_CHAT_ROOM_ID, "messages"),
-      where("createdAt", ">", Timestamp.fromMillis(sinceMillis)),
-      orderBy("createdAt", "desc"),
-      limit(UNREAD_BADGE_MAX + 1),
-    );
-
+    if (!uid) return;
     return onSnapshot(
-      unreadQuery,
-      (snapshot) => {
-        const fromOthers = snapshot.docs.filter(
-          (document) => (document.data() as MessageDoc).senderId !== uid,
-        );
-        setEntry({ sinceMillis, count: fromOthers.length });
-      },
-      () => setEntry({ sinceMillis, count: 0 }),
+      doc(db, "chatReads", uid),
+      (snapshot) => setEntry({ uid, doc: (snapshot.data() as ChatReadDoc) ?? null }),
+      () => setEntry({ uid, doc: null }),
     );
-  }, [uid, loaded, sinceMillis]);
+  }, [uid]);
 
-  return entry?.sinceMillis === sinceMillis ? entry.count : 0;
+  const stored = uid && entry?.uid === uid ? entry.doc : null;
+  const loaded = uid ? entry?.uid === uid : false;
+
+  const readMillis = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const roomId of roomKey ? roomKey.split("|") : []) {
+      const at =
+        stored?.rooms?.[roomId] ??
+        // 방이 단체방 하나뿐이던 시절의 기록을 이어받습니다.
+        (roomId === MAIN_CHAT_ROOM_ID ? (stored?.lastReadAt ?? null) : null);
+      map[roomId] = at?.toMillis() ?? 0;
+    }
+    return map;
+  }, [stored, roomKey]);
+
+  /*
+   * 기록이 없는 방은 지금 시각으로 기준을 잡아 둡니다.
+   * serverTimestamp()가 서버에 닿기 전까지는 값이 null로 보이므로,
+   * 그동안은 아래 useUnreadCounts가 그 방을 세지 않습니다.
+   */
+  useEffect(() => {
+    if (!uid || !loaded) return;
+    for (const roomId of roomKey ? roomKey.split("|") : []) {
+      const known =
+        stored?.rooms?.[roomId] ??
+        (roomId === MAIN_CHAT_ROOM_ID ? (stored?.lastReadAt ?? null) : null);
+      if (!known) void markChatRead(uid, roomId);
+    }
+  }, [uid, loaded, roomKey, stored]);
+
+  return { readMillis, loaded };
+}
+
+/**
+ * 방마다 아직 안 읽은 메시지 개수.
+ *
+ * 내가 보낸 메시지는 세지 않고, 방마다 UNREAD_BADGE_MAX개까지만 셉니다.
+ * 마지막으로 본 시각 이후의 메시지만 받아오므로 다 읽은 방은 0건을 구독합니다.
+ */
+export function useUnreadCounts(
+  uid: string | undefined,
+  readMillis: Record<string, number>,
+  loaded: boolean,
+): Record<string, number> {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  /*
+   * 방 목록과 기준 시각을 한 줄로 묶어 둡니다.
+   * 객체를 그대로 의존성에 넣으면 렌더마다 새 객체라 구독이 계속 끊겼다 붙습니다.
+   */
+  const signature = Object.entries(readMillis)
+    .map(([roomId, millis]) => `${roomId}:${millis}`)
+    .sort()
+    .join("|");
+
+  useEffect(() => {
+    if (!uid || !loaded || !signature) return;
+
+    const unsubscribes = signature.split("|").map((pair) => {
+      const cut = pair.lastIndexOf(":");
+      const roomId = pair.slice(0, cut);
+      const since = Number(pair.slice(cut + 1));
+
+      // 기준 시각이 아직 정해지지 않은 방(0)은 세지 않습니다.
+      if (!since) {
+        return () => {};
+      }
+
+      const unreadQuery = query(
+        collection(db, "chatRooms", roomId, "messages"),
+        where("createdAt", ">", Timestamp.fromMillis(since)),
+        orderBy("createdAt", "desc"),
+        limit(UNREAD_BADGE_MAX + 1),
+      );
+
+      return onSnapshot(
+        unreadQuery,
+        (snapshot) => {
+          const fromOthers = snapshot.docs.filter(
+            (document) => (document.data() as MessageDoc).senderId !== uid,
+          );
+          setCounts((previous) =>
+            previous[roomId] === fromOthers.length
+              ? previous
+              : { ...previous, [roomId]: fromOthers.length },
+          );
+        },
+        () => setCounts((previous) => ({ ...previous, [roomId]: 0 })),
+      );
+    });
+
+    return () => unsubscribes.forEach((stop) => stop());
+  }, [uid, loaded, signature]);
+
+  return counts;
+}
+
+/**
+ * 하단 탭 배지에 띄울, 모든 방을 통틀어 안 읽은 메시지 개수.
+ * 배지 하나만 필요한 곳(탭바)에서 씁니다.
+ */
+export function useUnreadChatCount(uid?: string): number {
+  const { data: rooms } = useMyChatRooms(uid);
+  const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
+  const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
+  const counts = useUnreadCounts(uid, readMillis, loaded);
+
+  // 나갔거나 사라진 방의 옛 개수가 남아 더해지지 않도록 지금 목록만 훑습니다.
+  return roomIds.reduce((total, roomId) => total + (counts[roomId] ?? 0), 0);
 }

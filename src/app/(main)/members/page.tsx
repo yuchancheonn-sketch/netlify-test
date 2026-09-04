@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
-import { PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
+import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { ensureDirectRoom } from "@/lib/chat-rooms";
 import {
   affiliationLine,
   buildDirectory,
@@ -318,6 +320,51 @@ function MemberRow({
 }
 
 /** 원우 카드를 눌렀을 때 아래에서 올라오는 상세 시트 */
+/**
+ * 이 원우와의 1:1 대화로 넘어가는 버튼.
+ *
+ * 누르는 순간 방을 만들어 둡니다. 방이 있어야 상대의 채팅 목록에도 뜨기
+ * 때문입니다. 이미 있으면 그대로 그 방으로 들어갑니다.
+ */
+function StartChatButton({ otherUid, name }: { otherUid: string; name: string }) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [opening, setOpening] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function handleClick() {
+    if (!user || opening) return;
+    setOpening(true);
+    setFailed(false);
+    try {
+      const roomId = await ensureDirectRoom(user.uid, otherUid);
+      router.push(`/chat/${roomId}`);
+    } catch {
+      setFailed(true);
+      setOpening(false);
+    }
+  }
+
+  return (
+    <div className="mt-6">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={opening}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
+      >
+        <ChatIcon className="h-5 w-5" />
+        {opening ? "여는 중…" : `${name} 원우와 채팅`}
+      </button>
+      {failed ? (
+        <p role="alert" className="mt-2 text-center text-[12px] font-medium text-red-600">
+          대화방을 열지 못했어요. 잠시 후 다시 시도해 주세요.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function MemberDetailSheet({
   entry,
   autoPlay,
@@ -383,9 +430,15 @@ function MemberDetailSheet({
           </div>
         </div>
 
+        {/*
+          앱 안에서 둘만의 대화 시작하기.
+          계정이 있는 원우에게만, 그리고 나 자신에게는 보이지 않습니다.
+        */}
+        {member && !isMe ? <StartChatButton otherUid={member.uid} name={entry.name} /> : null}
+
         {/* 휴대폰 — 눌러서 바로 전화·문자 */}
         {entry.phone ? (
-          <div className="mt-6 flex gap-3">
+          <div className="mt-3 flex gap-3">
             <a
               href={`tel:${phoneHref(entry.phone)}`}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"

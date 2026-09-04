@@ -138,6 +138,27 @@ export function formatDateDivider(date: Date): string {
   })`;
 }
 
+/**
+ * 채팅 목록에 띄우는 마지막 메시지 시각.
+ *
+ * 카카오톡·당근처럼 오늘이면 시각만, 어제면 "어제", 그보다 오래되면 날짜만
+ * 보여줍니다. 목록에서는 한 줄에 이름·미리보기와 함께 들어가야 해서
+ * 짧을수록 좋습니다.
+ */
+export function formatChatListTime(date: Date): string {
+  const now = new Date();
+  if (isSameDay(date, now)) return formatClockTime(date);
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameDay(date, yesterday)) return "어제";
+
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  }
+  return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
+}
+
 /** 같은 날인지 비교 (채팅 날짜 구분선을 넣을 위치를 정할 때 사용) */
 export function isSameDay(a: Date, b: Date): boolean {
   return (

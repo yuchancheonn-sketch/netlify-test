@@ -32,8 +32,14 @@ export const COURSE_START_DATE = "2026-08-25";
 export const COURSE_END_DATE = "2026-11-24";
 export const COURSE_TOTAL_SESSIONS = 10;
 
-/** 단체 채팅방 ID. Phase 2에서 채널을 여러 개로 늘릴 때 이 값을 목록으로 바꾸면 됩니다. */
+/** 10기 전체가 쓰는 단체방 ID. 채팅 목록에서 늘 맨 위에 고정됩니다. */
 export const MAIN_CHAT_ROOM_ID = "main";
+
+/** 단체방 이름 (채팅 목록과 대화방 제목에 함께 쓰입니다) */
+export const MAIN_CHAT_ROOM_TITLE = `${COHORT} 단체방`;
+
+/** 채팅 목록의 미리보기에 보여줄 마지막 메시지 최대 길이 */
+export const CHAT_PREVIEW_MAX_LENGTH = 60;
 
 /** 채팅 한 번에 불러올 메시지 개수 */
 export const CHAT_PAGE_SIZE = 50;

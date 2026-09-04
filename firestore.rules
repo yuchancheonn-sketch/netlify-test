@@ -1,29 +1,27 @@
 rules_version = '2';
 
 /*
- * 애기애타 10기 앱 Firestore 보안 규칙 — 열어둔 상태
+ * 애기애타 10기 앱 Firestore 보안 규칙
  * ------------------------------------------------------------------
- * Google 계정으로 로그인한 사람은 누구나 모든 자료를 읽고 쓸 수 있습니다.
- * 원우들 사이에 권한 차이가 없고, 운영진 승인도 거치지 않습니다.
+ * 한 줄 요약: 수첩·일정·사진은 원우끼리 모두 열려 있고, 채팅만 잠겨 있습니다.
  *
- * 이렇게 두기로 한 이유:
- *   원우들이 가입 직후 프로필을 채우지 못하고 로딩 화면만 도는 문제가 있었고,
- *   기수 안에서 서로 정보를 채워주는 수첩이라 권한을 나눌 실익이 적었습니다.
+ * 원우들이 서로 정보를 채워주는 앱이라 수첩·일정·사진은 예전처럼 열어 둡니다.
+ * 하지만 1:1 대화는 둘만의 이야기라, 그 방에 낀 두 사람만 읽고 쓸 수 있게 합니다.
  *
- * 대신 이 점을 알고 계셔야 합니다:
- *   - 주소를 아는 사람은 Google 계정만 있으면 누구나 들어와 볼 수 있습니다.
- *     (원우들의 휴대폰 번호를 포함해서요)
- *   - 들어온 사람은 남의 정보를 고치거나 지울 수도 있습니다.
- *   - 잘못 들어온 사람을 막는 방법은 지금 없습니다.
+ * ★★ 여기가 가장 중요합니다 ★★
+ * Firestore 규칙은 "규칙 하나라도 허용하면 허용"입니다.
+ * 그래서 예전처럼 match /{document=**} 로 전부 열어두는 줄을 남겨두면,
+ * 아래에 채팅을 아무리 잠가도 그 줄이 통째로 통과시켜 버립니다.
+ * 전체 허용 줄을 없애고 컬렉션을 하나씩 적은 이유가 이것입니다.
+ * 새 컬렉션을 만들면 여기에 직접 추가해야 합니다. 안 적으면 막힙니다.
  *
- * 다시 잠그고 싶어지면 git 이력에서 이 파일의 이전 판을 가져오면 됩니다.
- * (승인 상태·운영진 권한·본인만 수정 같은 장치가 모두 들어 있습니다.)
- *
- * 배포:  Firebase 콘솔 → Firestore → 규칙 탭에 붙여넣고 "게시"
+ * 배포:  Firebase 콘솔 → Firestore → 규칙 탭에 이 파일 전체를 붙여넣고 "게시"
  *        또는  firebase deploy --only firestore:rules
  *
  * ★ 이 파일을 고치는 것만으로는 아무것도 바뀌지 않습니다.
  *   반드시 콘솔에 올려야(게시해야) 실제로 적용됩니다.
+ *   rules_version 줄부터 맨 아래 중괄호까지 전부 붙여넣어야 합니다.
+ *   일부만 붙여넣으면 mismatched input 'match' 오류가 납니다.
  */
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -32,8 +30,70 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    match /{document=**} {
+    /*
+     * 이 대화방에 낄 수 있는 사람인지.
+     *
+     * 방 문서를 따로 읽지 않고 방 id만 보고 판단합니다.
+     * 1:1 방 id는 두 사람의 uid를 정렬해 "__"로 이어 붙인 것이라
+     * (예: abc123__xyz789) id 안에 이미 참여자가 들어 있습니다.
+     * 문서를 읽어 확인하면 규칙을 따질 때마다 읽기 요금이 붙습니다.
+     */
+    function isRoomMember(roomId) {
+      return roomId == 'main' || request.auth.uid in roomId.split('__');
+    }
+
+    // ── 원우들이 함께 쓰는 것들 — 로그인한 원우면 모두 읽고 쓸 수 있습니다 ──
+    // 서로 수첩을 채워주고 명단을 정리하는 앱이라 권한을 나누지 않았습니다.
+
+    match /users/{uid} {
       allow read, write: if isSignedIn();
+    }
+
+    match /roster/{rosterId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /events/{eventId} {
+      allow read, write: if isSignedIn();
+
+      match /rsvps/{uid} {
+        allow read, write: if isSignedIn();
+      }
+    }
+
+    match /photoAlbums/{albumId} {
+      allow read, write: if isSignedIn();
+
+      match /photos/{photoId} {
+        allow read, write: if isSignedIn();
+      }
+    }
+
+    // ── 채팅 — 여기만 잠겨 있습니다 ──
+
+    match /chatRooms/{roomId} {
+      // 단체방은 모든 원우가, 1:1 방은 그 둘만 봅니다.
+      allow read: if isSignedIn() && isRoomMember(roomId);
+      // 방을 만들거나 마지막 메시지를 갱신하는 것도 그 방 사람만.
+      allow write: if isSignedIn() && isRoomMember(roomId);
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && isRoomMember(roomId);
+
+        // 남의 이름으로 보내지 못하도록 보내는 사람이 본인인지 확인합니다.
+        allow create: if isSignedIn()
+                      && isRoomMember(roomId)
+                      && request.resource.data.senderId == request.auth.uid;
+
+        // 보낸 말은 고치거나 지울 수 없습니다.
+        // (지우기가 필요해지면 본인 것만 지우도록 여기를 열면 됩니다.)
+        allow update, delete: if false;
+      }
+    }
+
+    // 내가 각 방을 마지막으로 본 시각. 남의 것은 보지도 고치지도 못합니다.
+    match /chatReads/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }
