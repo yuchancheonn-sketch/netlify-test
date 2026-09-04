@@ -52,7 +52,7 @@ export default function LibraryPage() {
               type="button"
               onClick={() => setSubtab(value)}
               aria-pressed={subtab === value}
-              className={`flex-1 rounded-full py-2.5 text-[14px] font-bold transition ${
+              className={`flex-1 rounded-full py-1.5 text-[14px] font-bold transition ${
                 subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >
@@ -153,10 +153,6 @@ function VideoList() {
 
   return (
     <>
-      <p className="mb-4 text-[12px] leading-relaxed text-ink-faint">
-        도산아카데미 유튜브 채널의 영상 {videos.length}편이에요. 그림을 누르면 바로 재생됩니다.
-      </p>
-
       <ul className="flex flex-col gap-5">
         {videos.map((video) => (
           <li key={video.id}>
