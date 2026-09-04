@@ -306,7 +306,7 @@ export default function ChatRoomPage({
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-canvas"
         >
-          <div className="mx-auto h-full w-full max-w-[560px] overflow-hidden pb-[calc(86px+env(safe-area-inset-bottom))]">
+          <div className="mx-auto h-full w-full max-w-[560px] overflow-hidden pb-[calc(82px+env(safe-area-inset-bottom))]">
             <ChatListPage />
           </div>
           <BottomTabBar />

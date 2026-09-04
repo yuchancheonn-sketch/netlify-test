@@ -64,17 +64,17 @@ export default function BottomTabBar() {
      * 화면 맨 아래에 붙이지 않고 조금 띄워야 알약으로 보이므로,
      * 아이폰 홈 바(safe-area) 위로 한 뼘 더 올려 둡니다.
      *
-     * ★ 띄우는 값(아래 4px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
+     * ★ 띄우는 값(아래 0px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
      *   흐림 층(BottomTabBarScrim)의 높이와 본문 아래 여백이 이 값에서 나옵니다.
      *
-     * 좌우 여백은 px-5 — 화면 안쪽 카드들과 같은 값이라, 알약의 양 끝이
-     * 원우수첩 카드의 양 끝과 정확히 맞아떨어집니다.
-     * 폭 상한 520px은 본문 최대폭 560px에서 이 여백(20px씩)을 뺀 값입니다.
+     * 좌우 여백은 px-4(16px) — 화면 안쪽 카드들(px-5)보다 4px씩 적게 두어
+     * 알약이 카드보다 살짝 넓습니다.
+     * 폭 상한 528px은 본문 최대폭 560px에서 이 여백(16px씩)을 뺀 값입니다.
      */
     <nav
       aria-label="주요 메뉴"
-      className="fixed inset-x-0 z-30 px-5"
-      style={{ bottom: "calc(4px + env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 z-30 px-4"
+      style={{ bottom: "calc(0px + env(safe-area-inset-bottom))" }}
     >
       {/*
         알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다.
@@ -85,7 +85,7 @@ export default function BottomTabBar() {
         흰색을 이보다 더 묽게 하면 글씨가 뒷 내용과 겹쳐 읽기 힘들어지고,
         알약 아래쪽 절반에 깔린 흐림 층(MainShell)과의 경계도 드러납니다.
       */}
-      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
+      <ul className="mx-auto flex w-full max-w-[528px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
         {TABS.map(({ href, label, Icon }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);
