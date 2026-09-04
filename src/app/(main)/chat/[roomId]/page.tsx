@@ -195,7 +195,7 @@ export default function ChatRoomPage({
             ) : null}
 
             {/* gap은 같은 사람이 연달아 보낸 말풍선 사이의 간격입니다. */}
-            <ol className="flex flex-col gap-1.5 pt-2">
+            <ol className="flex flex-col gap-2 pt-2">
               {messages.map((message, index) => (
                 <MessageRow
                   key={message.id}
