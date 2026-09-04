@@ -240,7 +240,7 @@ export default function BottomTabBar() {
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
 
-          이것도 탭바와 같은 유리입니다 — 먹색을 7%만 푼 옅은 회색에 뒤를
+          이것도 탭바와 같은 유리입니다 — 먹색을 12%만 푼 회색에 뒤를
           한 번 더 흐리고, 위쪽 테두리에 흰 실선을 얹어 빛을 받은 유리처럼
           보이게 했습니다. 불투명한 회색을 깔면 그 자리만 유리가 아니게 보입니다.
 
@@ -251,7 +251,7 @@ export default function BottomTabBar() {
         {activeIndex >= 0 ? (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute rounded-full bg-ink/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-md backdrop-saturate-150"
+            className="pointer-events-none absolute rounded-full bg-ink/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-md backdrop-saturate-150"
             style={{
               top: BAR_PADDING,
               bottom: BAR_PADDING,
