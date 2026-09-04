@@ -91,9 +91,14 @@ export default function HomePage() {
 
         {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>
-          <SectionTitle>오늘의 도산</SectionTitle>
-
+          {/*
+            다른 자리와 달리 제목을 카드 바깥이 아니라 안에 둡니다.
+            말씀 한 편만 담긴 카드라, 제목과 글이 한 덩어리로 읽히는 편이 낫습니다.
+            (SectionTitle을 쓰지 않고 같은 크기·굵기로 직접 적었습니다.)
+          */}
           <div className="rounded-3xl bg-white px-6 py-7 shadow-[var(--shadow-card)]">
+            <h2 className="mb-4 text-[17px] font-bold text-ink">오늘의 도산</h2>
+
             <p className="font-serif text-[18px] leading-[1.8] text-ink">
               &ldquo;{quote.text}&rdquo;
             </p>
