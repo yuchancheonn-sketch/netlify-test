@@ -187,6 +187,38 @@ export default function ChatRoomPage({
   }, [lastMessageId, loading]);
 
   /*
+   * 자판이 올라와 있는 동안 body에 표시를 붙입니다. (실제로 여백을 줄이는 건 globals.css)
+   *
+   * 입력줄 아래에는 아이폰 홈 바에 가리지 않도록 안전 영역만큼 여백을 둡니다.
+   * 그런데 자판이 올라오면 그 자리를 자판이 덮어버려서, 여백이 입력줄과 자판
+   * 사이의 빈칸으로 남습니다. 그래서 자판이 보이는 동안에는 그 여백을 걷습니다.
+   *
+   * 자판 높이는 CSS로 알 수 없어서 visualViewport로 잽니다 — 화면 전체 높이에서
+   * "지금 실제로 보이는 높이"를 뺀 값이 자판이 덮은 높이입니다.
+   * 120px을 기준으로 삼은 이유: 주소창이 접혔다 펴질 때도 이 값이 50px쯤
+   * 움직이는데, 그걸 자판으로 오해하면 안 됩니다.
+   */
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    function update() {
+      const covered = window.innerHeight - viewport!.height - viewport!.offsetTop;
+      if (covered > 120) document.body.dataset.keyboard = "open";
+      else delete document.body.dataset.keyboard;
+    }
+
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      delete document.body.dataset.keyboard;
+    };
+  }, []);
+
+  /*
    * 이 방을 보고 있는 동안은 계속 "읽음"으로 표시합니다.
    * 그래야 목록과 하단 탭의 안 읽은 개수가 사라지고, 보는 중에 새 메시지가
    * 와도 다시 붙지 않습니다.
@@ -426,10 +458,16 @@ export default function ChatRoomPage({
         </div>
       </div>
 
-      {/* 입력창 — 탭바가 없으므로 화면 맨 아래에 붙습니다. */}
+      {/*
+        입력창 — 탭바가 없으므로 화면 맨 아래에 붙습니다.
+
+        아래 여백은 인라인 style이 아니라 클래스로 둡니다. 자판이 올라오면
+        globals.css가 body[data-keyboard="open"]을 보고 이 여백을 줄이는데,
+        인라인 style로 두면 CSS가 그걸 이기지 못합니다.
+      */}
       <div
-        className="fixed inset-x-0 bottom-0 z-20 bg-white/95 px-4 pt-2 backdrop-blur"
-        style={{ ...slide, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
+        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+        style={slide}
       >
         {/*
           입력칸을 눌렀을 때 둘러지던 주황 테두리(focus:ring)는 뺐습니다.
