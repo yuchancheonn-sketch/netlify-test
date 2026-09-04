@@ -136,7 +136,7 @@ export default function ChatRoomPage({
   /**
    * 제자리로 돌아오는 애니메이션이 끝나면 뒤에 깔아 둔 목록을 떼어냅니다.
    *
-   * 손을 떼자마자 떼어내면 대화방이 아직 비스듬히 밀려 있는 220ms 동안
+   * 손을 떼자마자 떼어내면 대화방이 아직 비스듬히 밀려 있는 340ms 동안
    * 뒤가 흰 벽으로 보입니다.
    */
   function handleSlideSettled(event: React.TransitionEvent<HTMLDivElement>) {
@@ -268,7 +268,7 @@ export default function ChatRoomPage({
    */
   const slide = {
     transform: dragX ? `translateX(${dragX}px)` : undefined,
-    transition: snapping ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
+    transition: snapping ? "transform 340ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
   };
 
   return (
