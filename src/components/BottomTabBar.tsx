@@ -240,9 +240,16 @@ export default function BottomTabBar() {
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
 
-          이것도 탭바와 같은 유리입니다 — 먹색을 12%만 푼 회색에 뒤를
-          한 번 더 흐리고, 위쪽 테두리에 흰 실선을 얹어 빛을 받은 유리처럼
-          보이게 했습니다. 불투명한 회색을 깔면 그 자리만 유리가 아니게 보입니다.
+          이것도 탭바와 같은 유리입니다. 불투명한 회색을 깔면 그 자리만
+          유리가 아니게 보입니다. 유리로 보이게 하는 것은 네 가지입니다 —
+           · 먹색 10% 반투명 (뒤가 비칩니다)
+           · 뒤를 한 번 더 세게 흐리기(backdrop-blur-xl). 탭바가 이미 흐리므로
+             여기서 한 번 더 흐려야 두 겹이 구분되어 유리판처럼 보입니다.
+           · 색을 진하게 살리기(saturate). 흐리면 색이 바래는데, 진짜 유리는
+             뒤 색을 죽이지 않습니다.
+           · 윗변의 흰 실선과 둘레의 옅은 흰 테. 빛이 위에서 떨어져 유리
+             모서리에 걸린 것처럼 보입니다. 유리 느낌은 사실 이 선에서 가장
+             많이 나옵니다.
 
           자리는 left로 잡고 움직임은 transform으로 줍니다. left는 주소에서
           바로 나오는 값이라 애니메이션 없이 즉시 자리를 잡아야 하고,
@@ -251,7 +258,7 @@ export default function BottomTabBar() {
         {activeIndex >= 0 ? (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute rounded-full bg-ink/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-md backdrop-saturate-150"
+            className="pointer-events-none absolute rounded-full bg-ink/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.35),0_1px_2px_rgba(17,20,24,0.07)] backdrop-blur-xl backdrop-saturate-200"
             style={{
               top: BAR_PADDING,
               bottom: BAR_PADDING,
