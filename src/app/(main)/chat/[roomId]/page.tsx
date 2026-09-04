@@ -132,7 +132,7 @@ export default function ChatRoomPage({
           aria-label="채팅 목록으로"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
         >
-          <ChevronLeftIcon className="h-6 w-6" />
+          <ChevronLeftIcon className="h-7 w-7" />
         </button>
 
         <div className="min-w-0 flex-1 text-center">

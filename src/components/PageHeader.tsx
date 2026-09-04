@@ -43,7 +43,7 @@ export default function PageHeader({
           aria-label="뒤로 가기"
           className="-ml-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
         >
-          <ChevronLeftIcon className="h-6 w-6" />
+          <ChevronLeftIcon className="h-7 w-7" />
         </button>
       ) : null}
 
