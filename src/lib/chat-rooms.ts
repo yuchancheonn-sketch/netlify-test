@@ -62,6 +62,28 @@ export function emptyGroupRoom(): ChatRoomDoc {
   };
 }
 
+/**
+ * Firestore에서 읽은 방 문서를 화면에서 바로 쓸 수 있는 모양으로 맞춥니다.
+ *
+ * 방금 만들어져 아직 한 마디도 오가지 않은 방에는 마지막 메시지 칸이
+ * 아예 없습니다. 그대로 쓰면 목록을 그릴 때 undefined에 걸려 넘어지므로,
+ * 읽어 들이는 이 자리에서 빠진 칸을 채웁니다.
+ */
+export function toChatRoom(id: string, data: Record<string, unknown>): ChatRoomDoc {
+  const isGroup = id === MAIN_CHAT_ROOM_ID;
+  return {
+    id,
+    kind: data.kind === "direct" ? "direct" : isGroup ? "group" : "direct",
+    title: typeof data.title === "string" ? data.title : "",
+    memberUids: Array.isArray(data.memberUids) ? (data.memberUids as string[]) : [],
+    lastMessageText:
+      typeof data.lastMessageText === "string" ? data.lastMessageText : "",
+    lastMessageSenderId:
+      typeof data.lastMessageSenderId === "string" ? data.lastMessageSenderId : "",
+    lastMessageAt: (data.lastMessageAt as ChatRoomDoc["lastMessageAt"]) ?? null,
+  };
+}
+
 /** 채팅 목록에 보여줄 방 이름. 1:1 방은 상대 이름을 씁니다. */
 export function roomTitle(
   room: ChatRoomDoc,
@@ -75,7 +97,8 @@ export function roomTitle(
 
 /** 목록 한 줄에 들어갈 만큼 마지막 메시지를 줄입니다. */
 export function previewText(room: ChatRoomDoc): string {
-  const text = room.lastMessageText.replace(/\s+/g, " ").trim();
+  // 아직 한 마디도 오가지 않은 방에는 이 칸이 없을 수 있습니다.
+  const text = (room.lastMessageText ?? "").replace(/\s+/g, " ").trim();
   if (!text) return "";
   return text.length > CHAT_PREVIEW_MAX_LENGTH
     ? `${text.slice(0, CHAT_PREVIEW_MAX_LENGTH)}…`

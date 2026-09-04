@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
-import { emptyGroupRoom } from "@/lib/chat-rooms";
+import { emptyGroupRoom, toChatRoom } from "@/lib/chat-rooms";
 import { MAIN_CHAT_ROOM_ID, UNREAD_BADGE_MAX } from "@/lib/constants";
 import { todayString } from "@/lib/format";
 import type {
@@ -320,9 +320,7 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
       roomsQuery,
       (snapshot) => {
         setDirectRooms(
-          snapshot.docs.map(
-            (document) => ({ id: document.id, ...document.data() }) as ChatRoomDoc,
-          ),
+          snapshot.docs.map((document) => toChatRoom(document.id, document.data())),
         );
         setError(null);
       },
@@ -337,7 +335,7 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
       (snapshot) => {
         setGroupRoom(
           snapshot.exists()
-            ? ({ id: snapshot.id, ...snapshot.data() } as ChatRoomDoc)
+            ? toChatRoom(snapshot.id, snapshot.data())
             : emptyGroupRoom(),
         );
       },
