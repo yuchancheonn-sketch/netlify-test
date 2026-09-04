@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
@@ -27,6 +27,20 @@ export default function ChatListPage() {
   const uid = user?.uid;
   const { data: rooms, loading, error } = useMyChatRooms(uid);
   const { data: members } = useApprovedMembers();
+
+  /*
+   * 이 탭에 있는 동안 페이지 바탕 자체를 흰색으로 바꿉니다. (globals.css)
+   *
+   * 화면 안쪽만 희게 칠하면 맨 윗줄(시계·배터리가 얹히는 자리)이 회색으로
+   * 남습니다. 그 자리는 사파리가 가져다 칠하는데, 화면 안 요소가 아니라
+   * body의 색을 보기 때문입니다. 탭을 떠나면 원래 색으로 되돌립니다.
+   */
+  useEffect(() => {
+    document.body.dataset.tab = "chat";
+    return () => {
+      delete document.body.dataset.tab;
+    };
+  }, []);
 
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
