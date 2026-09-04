@@ -189,7 +189,7 @@ export default function MembersPage() {
             <button
               type="button"
               onClick={() => setEditing({ entry: null })}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-stone-300 py-2.5 text-[14px] font-bold text-ink-muted transition active:scale-[0.99]"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-ink py-2.5 text-[14px] font-bold text-ink transition active:scale-[0.99]"
             >
               <PlusIcon className="h-4 w-4" />
               원우 추가하기
