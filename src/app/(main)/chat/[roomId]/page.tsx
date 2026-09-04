@@ -305,10 +305,12 @@ function MessageRow({
       ) : isBlockStart ? (
         /*
           내 메시지 위와 1:1 대화에는 이름을 적지 않습니다. 그렇다고 이름 줄을
-          통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보여서, 이름이 있을 때와
-          같은 높이(18px + 위아래 여백)만큼 비워 둡니다.
+          통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보입니다.
+          그렇다고 이름 줄 높이(18px)를 그대로 비워 두면 이번엔 너무 멀어 보입니다.
+          글자가 채워 주는 자리가 없어 빈 곳이 그만큼 더 넓게 읽히기 때문입니다.
+          그래서 절반쯤인 16px만 띄웁니다.
         */
-        <div className="mt-2 mb-1 h-[18px]" aria-hidden="true" />
+        <div className="mt-2 mb-1 h-1" aria-hidden="true" />
       ) : null}
 
       <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
