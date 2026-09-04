@@ -449,7 +449,24 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
     if (!uid) return;
     return onSnapshot(
       doc(db, "chatReads", uid),
-      (snapshot) => setEntry({ uid, doc: (snapshot.data() as ChatReadDoc) ?? null }),
+      (snapshot) =>
+        setEntry({
+          uid,
+          /*
+           * ★ serverTimestamps: "estimate"가 반드시 필요합니다.
+           *
+           * 읽음 시각은 serverTimestamp()로 적습니다. 기본값("none")으로 읽으면
+           * 그 값이 서버에 닿기 전까지 null로 보입니다. 그러면 아래 readMillis가
+           * 0이 되고, 0인 방은 안 읽은 개수를 세지 않고 건너뛰기 때문에
+           * 직전에 세어둔 숫자가 그대로 배지에 남습니다.
+           * 방을 다 읽었는데도 빨간 1이 안 사라지던 이유가 이것입니다.
+           *
+           * "estimate"로 읽으면 서버에 닿기 전에는 이 기기의 시각으로 대신
+           * 채워줍니다. 몇 밀리초 어긋날 수 있지만, 그 오차로 개수가 틀릴 일은
+           * 없습니다.
+           */
+          doc: (snapshot.data({ serverTimestamps: "estimate" }) as ChatReadDoc) ?? null,
+        }),
       () => setEntry({ uid, doc: null }),
     );
   }, [uid]);
@@ -532,8 +549,15 @@ export function useUnreadCounts(
       const roomId = pair.slice(0, cut);
       const since = Number(pair.slice(cut + 1));
 
-      // 기준 시각이 아직 정해지지 않은 방(0)은 세지 않습니다.
+      /*
+       * 기준 시각이 아직 정해지지 않은 방(0)은 셀 수가 없습니다.
+       * 그냥 넘어가면 직전에 세어둔 숫자가 배지에 그대로 남으므로, 0으로
+       * 지우고 넘어갑니다. 모르는 채로 옛 숫자를 띄우는 것보다 낫습니다.
+       */
       if (!since) {
+        setCounts((previous) =>
+          previous[roomId] === 0 ? previous : { ...previous, [roomId]: 0 },
+        );
         return () => {};
       }
 
