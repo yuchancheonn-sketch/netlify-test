@@ -26,21 +26,23 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         밝은 주황 위의 흰 글씨는 대비가 넉넉하지 않아, 이 카드 안에서는
         투명도를 주지 않고 굵기를 올려 또렷하게 보이도록 했습니다.
       */}
+      {/* 윗줄은 이 카드가 무엇인지 알려주는 이름표와 날짜입니다. 둘 다 작게. */}
       <div className="flex items-center justify-between gap-3">
-        {/*
-          카드에서 가장 먼저 눈에 들어와야 하는 숫자입니다.
-          알약이나 배경 없이 글씨만 두고, 크기는 아래 제목과 같게 하되
-          굵기를 한 단계 더 올려(900) 제목보다 앞서게 했습니다.
-        */}
-        <span className="text-[22px] font-black leading-tight">
-          {ddayLabel(event.date)}
-        </span>
+        <span className="text-[14px] font-bold text-white">주요 일정</span>
         <span className="text-[14px] font-bold text-white">
           {formatMonthDay(event.date)}
         </span>
       </div>
 
-      <p className="mt-4 text-[22px] font-bold leading-tight">{event.title}</p>
+      {/*
+        D-day와 제목을 한 줄에 둡니다. 크기는 같고 D-day만 굵기를 한 단계
+        더 올려(900) 먼저 눈에 들어오게 했습니다. 제목이 길면 다음 줄로
+        넘어가되, 두 글자의 밑선은 baseline으로 맞춥니다.
+      */}
+      <p className="mt-4 flex flex-wrap items-baseline gap-x-2.5 text-[22px] leading-tight">
+        <span className="font-black">{ddayLabel(event.date)}</span>
+        <span className="font-bold">{event.title}</span>
+      </p>
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] font-medium text-white">
         {event.startTime ? (
