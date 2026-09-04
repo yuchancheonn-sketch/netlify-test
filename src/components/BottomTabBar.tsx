@@ -76,8 +76,16 @@ export default function BottomTabBar() {
       className="fixed inset-x-0 z-30 px-5"
       style={{ bottom: "calc(4px + env(safe-area-inset-bottom))" }}
     >
-      {/* 알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다. */}
-      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1 shadow-[var(--shadow-float)]">
+      {/*
+        알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다.
+
+        바탕은 불투명한 흰색이 아니라 유리처럼 둡니다 — 흰색 75%에
+        뒤를 흐리는 backdrop-blur를 얹어, 알약 아래로 지나가는 글과 사진이
+        희미하게 비칩니다. 인스타·당근의 하단 바와 같은 방식입니다.
+        흰색을 이보다 더 묽게 하면 글씨가 뒷 내용과 겹쳐 읽기 힘들어지고,
+        알약 아래쪽 절반에 깔린 흐림 층(MainShell)과의 경계도 드러납니다.
+      */}
+      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
         {TABS.map(({ href, label, Icon }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);
