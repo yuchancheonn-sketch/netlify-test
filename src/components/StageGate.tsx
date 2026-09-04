@@ -2,11 +2,10 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import GooseLoader from "@/components/GooseLoader";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { APP_NAME } from "@/lib/constants";
-import { Spinner } from "@/components/ui";
 
 /** 각 단계에서 사용자가 있어야 할 화면 */
 const STAGE_PATH: Record<Exclude<AuthStage, "loading">, string> = {
@@ -44,20 +43,17 @@ export default function StageGate({
   return <>{children}</>;
 }
 
-/** 인증 상태를 확인하는 동안 잠깐 보이는 화면 */
+/**
+ * 인증 상태를 확인하는 동안 잠깐 보이는 화면.
+ *
+ * 도는 동그라미 대신 도산아카데미 로고의 기러기가 날갯짓합니다.
+ * 기다리는 시간을 브랜드를 보여주는 시간으로 씁니다.
+ */
 export function SplashScreen() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-canvas">
-      <Image
-        src="/icon-192.png"
-        alt=""
-        width={72}
-        height={72}
-        className="rounded-2xl shadow-[var(--shadow-card)]"
-        priority
-      />
-      <Spinner className="h-6 w-6 text-brand-300" />
-      <span className="sr-only">불러오는 중이에요</span>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-canvas">
+      <GooseLoader />
+      <p className="text-[13px] font-medium text-ink-faint">{APP_NAME}</p>
     </div>
   );
 }

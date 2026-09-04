@@ -184,6 +184,53 @@ button {
   }
 }
 
+/*
+ * 로딩 화면의 기러기 날갯짓 (components/GooseLoader.tsx)
+ *
+ * 내리치기는 빠르고 되올리기는 느립니다 — 새는 내리칠 때 힘을 주고 올릴 때는
+ * 힘을 뺍니다. 그래서 한 주기의 앞 40%에서 아래로 내려오고 나머지 60%에
+ * 걸쳐 천천히 올라갑니다. 앞뒤를 같게 두면 기계가 부채질하는 것처럼 보입니다.
+ *
+ * 가로로 눌러주는 scaleX도 같이 넣었습니다. 위에서 내려다본 새는 날개가
+ * 위아래 끝에 있을 때 짧아 보이고 수평일 때 가장 길어 보입니다.
+ */
+@keyframes goose-flap {
+  0% {
+    transform: rotate(-17deg) scaleX(0.9);
+  }
+  20% {
+    transform: rotate(-2deg) scaleX(1);
+  }
+  40% {
+    transform: rotate(15deg) scaleX(0.9);
+  }
+  70% {
+    transform: rotate(-2deg) scaleX(1);
+  }
+  100% {
+    transform: rotate(-17deg) scaleX(0.9);
+  }
+}
+
+/* 날개를 내리치면 몸이 살짝 떠오릅니다. 이게 없으면 날개만 파닥이고 새는 굳어 보입니다. */
+@keyframes goose-bob {
+  0%,
+  100% {
+    transform: translateY(2px);
+  }
+  45% {
+    transform: translateY(-2px);
+  }
+}
+
+.goose-wing {
+  animation: goose-flap 1.3s ease-in-out infinite;
+}
+
+.goose-bob {
+  animation: goose-bob 1.3s ease-in-out infinite;
+}
+
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
 @keyframes sheet-up {
   from {
