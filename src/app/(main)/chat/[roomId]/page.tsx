@@ -326,29 +326,40 @@ export default function ChatRoomPage({
           갈라 둡니다. 반투명은 쓰지 않습니다 — 살짝 비치면 위로 지나가는
           말풍선이 제목 글씨에 겹쳐 보입니다.
         */}
-        <header
-          className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-white px-2 pb-2.5"
-          style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
-        >
-          <button
-            type="button"
-            onClick={() => router.push("/chat")}
-            aria-label="채팅 목록으로"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
-          >
-            <ChevronLeftIcon className="h-7 w-7" />
-          </button>
+        <div className="sticky top-0 z-20">
+          {/*
+            상태바(시계·배터리)가 얹히는 자리.
 
-          <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-            {isGroup ? (
-              <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
-            ) : null}
-          </div>
+            여기를 목록과 같은 회색으로 둡니다. 아이폰 사파리는 이 자리를
+            페이지가 칠한 색에서 뽑아 와 화면 전체 너비로 덮어 칠합니다.
+            대화방처럼 희게 두면, 옆으로 밀어 목록을 꺼냈을 때도 이 띠만
+            흰색으로 남아 목록 위에 흰 줄이 그어진 것처럼 보입니다.
+            (색을 바꿔 가며 확인했습니다 — 제목 줄을 보라색으로 칠하면
+            이 띠도 화면 전체가 보라색이 됩니다.)
+          */}
+          <div className="bg-canvas" style={{ height: "env(safe-area-inset-top)" }} />
 
-          {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
-          <div className="h-10 w-10 shrink-0" aria-hidden="true" />
-        </header>
+          <header className="flex items-center gap-1 border-b border-line bg-white px-2 pt-2 pb-2.5">
+            <button
+              type="button"
+              onClick={() => router.push("/chat")}
+              aria-label="채팅 목록으로"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+            >
+              <ChevronLeftIcon className="h-7 w-7" />
+            </button>
+
+            <div className="min-w-0 flex-1 text-center">
+              <p className="truncate text-[17px] font-bold text-ink">{title}</p>
+              {isGroup ? (
+                <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
+              ) : null}
+            </div>
+
+            {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
+            <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+          </header>
+        </div>
 
         <div className="flex-1 px-4 pb-[104px]">
           {loading ? (
