@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   doc,
@@ -418,6 +418,8 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
 export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
   const [entry, setEntry] = useState<{ uid: string; doc: ChatReadDoc | null } | null>(null);
   const roomKey = roomIds.join("|");
+  /** 기준을 잡아달라고 이미 부탁한 방들. 아래 효과가 되풀이되는 것을 막습니다. */
+  const requested = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!uid) return;
@@ -447,6 +449,17 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
    * 기록이 없는 방은 지금 시각으로 기준을 잡아 둡니다.
    * serverTimestamp()가 서버에 닿기 전까지는 값이 null로 보이므로,
    * 그동안은 아래 useUnreadCounts가 그 방을 세지 않습니다.
+   *
+   * ★ requested가 없으면 안 됩니다 — 여기서 무한 되먹임이 생깁니다.
+   *   쓰기를 보내면 서버에 닿기 전에도 그 값이 담긴 스냅샷이 곧바로 돌아오는데,
+   *   그 값이 위에서 말한 null입니다. 이 효과는 스냅샷마다 다시 도니까
+   *   null을 "기록 없음"으로 읽고 또 씁니다. 그 쓰기가 또 스냅샷을 부르고…
+   *   한도를 넘겨 쓰기가 거절되면 Firestore가 로컬 반영까지 되돌리므로
+   *   기록 없는 상태로 돌아가, 고리는 아예 멈추지 않습니다.
+   *   (2026-09-05에 이 고리로 Firestore 무료 한도를 태웠습니다.)
+   *
+   *   그래서 부탁한 방을 기억해 두고 화면당 한 번만 씁니다. 정말 실패했다면
+   *   다음에 앱을 새로 열 때 다시 시도됩니다.
    */
   useEffect(() => {
     if (!uid || !loaded) return;
@@ -454,7 +467,12 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
       const known =
         stored?.rooms?.[roomId] ??
         (roomId === MAIN_CHAT_ROOM_ID ? (stored?.lastReadAt ?? null) : null);
-      if (!known) void markChatRead(uid, roomId);
+      if (known) continue;
+
+      const key = `${uid}:${roomId}`;
+      if (requested.current.has(key)) continue;
+      requested.current.add(key);
+      void markChatRead(uid, roomId);
     }
   }, [uid, loaded, roomKey, stored]);
 

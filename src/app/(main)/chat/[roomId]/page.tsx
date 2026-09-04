@@ -17,6 +17,7 @@ import {
   COHORT,
   MAIN_CHAT_ROOM_ID,
   MAIN_CHAT_ROOM_TITLE,
+  MARK_READ_GAP,
 } from "@/lib/constants";
 import type { MessageDoc } from "@/lib/types";
 
@@ -189,11 +190,47 @@ export default function ChatRoomPage({
    * 이 방을 보고 있는 동안은 계속 "읽음"으로 표시합니다.
    * 그래야 목록과 하단 탭의 안 읽은 개수가 사라지고, 보는 중에 새 메시지가
    * 와도 다시 붙지 않습니다.
+   *
+   * 다만 메시지가 올 때마다 쓰지는 않습니다. 단체방에 원우 마흔 명이 들어와
+   * 있으면 메시지 한 통에 쓰기가 마흔 건 나가고, 그때마다 각자의 chatReads가
+   * 바뀌면서 방마다 걸어둔 안 읽은 개수 구독이 전부 끊겼다 다시 붙습니다.
+   * 그래서 MARK_READ_GAP에 한 번으로 묶고, 방을 나갈 때 미뤄둔 몫을 마저 씁니다.
    */
+  const markedAt = useRef(0);
+  const markTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!uid || loading) return;
-    void markChatRead(uid, roomId);
+    const reader = uid;
+
+    function write() {
+      markedAt.current = Date.now();
+      markTimer.current = null;
+      void markChatRead(reader, roomId);
+    }
+
+    const wait = MARK_READ_GAP - (Date.now() - markedAt.current);
+    if (wait <= 0) {
+      write();
+    } else if (markTimer.current === null) {
+      // 이미 예약해 둔 것이 있으면 그 한 번이 최신 상태까지 담습니다.
+      markTimer.current = setTimeout(write, wait);
+    }
   }, [uid, roomId, loading, lastMessageId]);
+
+  /*
+   * 방을 떠날 때 마무리.
+   * 예약해 둔 쓰기가 남아 있다는 건 아직 읽음으로 안 남긴 메시지가 있다는 뜻이라,
+   * 기다리지 않고 지금 씁니다. 남은 게 없으면 이미 다 적혀 있으므로 그냥 나갑니다.
+   */
+  useEffect(() => {
+    return () => {
+      if (markTimer.current === null) return;
+      clearTimeout(markTimer.current);
+      markTimer.current = null;
+      if (uid) void markChatRead(uid, roomId);
+    };
+  }, [uid, roomId]);
 
   async function handleSend(event: React.FormEvent) {
     event.preventDefault();
