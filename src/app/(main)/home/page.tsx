@@ -7,7 +7,6 @@ import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { greeting } from "@/lib/format";
 import { useUpcomingEvents } from "@/lib/hooks";
 import { quoteOfTheDay } from "@/lib/quotes";
 
@@ -22,11 +21,7 @@ export default function HomePage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={greeting()}
-        title={`${displayName}님`}
-        right={<ProfileAvatarButton />}
-      />
+      <PageHeader title={`${displayName}님`} right={<ProfileAvatarButton />} />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
       <div className="flex flex-col gap-5 px-5">
