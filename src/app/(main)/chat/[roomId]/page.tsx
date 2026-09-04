@@ -283,9 +283,10 @@ function MessageRow({
   const sentAt = message.createdAt?.toDate() ?? new Date();
   const previousSentAt = previous?.createdAt?.toDate();
   const showDateDivider = !previousSentAt || !isSameDay(previousSentAt, sentAt);
+  // 보낸 사람이 바뀌는 자리 — 여기서부터 한 사람의 말 묶음이 새로 시작합니다.
+  const isBlockStart = showDateDivider || previous?.senderId !== message.senderId;
   // 같은 사람이 이어서 보내면 사진과 이름을 반복하지 않습니다.
-  const showSender =
-    !isMine && (showDateDivider || previous?.senderId !== message.senderId);
+  const showSender = !isMine && isBlockStart;
 
   return (
     <li className="flex flex-col">
@@ -298,9 +299,16 @@ function MessageRow({
 
       {/* 왼쪽 여백은 사진 32px + 사이 간격 8px. 이름이 말풍선과 나란히 서도록. */}
       {showSender && showNames ? (
-        <p className="mt-2 mb-1 pl-[40px] text-[12px] font-medium text-ink-faint">
+        <p className="mt-2 mb-1 pl-[40px] text-[12px] leading-[18px] font-medium text-ink-faint">
           {senderName}
         </p>
+      ) : isBlockStart ? (
+        /*
+          내 메시지 위와 1:1 대화에는 이름을 적지 않습니다. 그렇다고 이름 줄을
+          통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보여서, 이름이 있을 때와
+          같은 높이(18px + 위아래 여백)만큼 비워 둡니다.
+        */
+        <div className="mt-2 mb-1 h-[18px]" aria-hidden="true" />
       ) : null}
 
       <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
