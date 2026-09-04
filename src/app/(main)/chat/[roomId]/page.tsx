@@ -116,14 +116,20 @@ export default function ChatRoomPage({
     }
   }
 
+  /*
+   * 대화방만 흰 바탕입니다.
+   * 다른 화면은 연한 회색 배경(canvas) 위에 흰 카드를 얹는 구조지만,
+   * 대화방은 카드가 아니라 말풍선이 놓이는 자리라 바탕과 말풍선의 색을
+   * 서로 맞바꿨습니다 — 바탕이 희고, 남의 말풍선이 연한 회색입니다.
+   */
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col bg-white">
       {/*
         제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
         대화방은 화면을 최대한 대화에 내주는 편이 좋습니다.
       */}
       <header
-        className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-canvas/95 px-2 pb-2.5 backdrop-blur"
+        className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-white/95 px-2 pb-2.5 backdrop-blur"
         style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
       >
         <button
@@ -206,7 +212,7 @@ export default function ChatRoomPage({
 
       {/* 입력창 — 탭바가 없으므로 화면 맨 아래에 붙습니다. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-20 bg-canvas/95 px-4 pt-2 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-20 bg-white/95 px-4 pt-2 backdrop-blur"
         style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
         {/*
@@ -221,14 +227,18 @@ export default function ChatRoomPage({
             placeholder="메시지 보내기"
             aria-label="메시지 입력"
             maxLength={1000}
-            className="min-w-0 flex-1 rounded-full bg-white px-4.5 py-2.5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="min-w-0 flex-1 rounded-full bg-white px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
-          {/* 동그라미는 입력칸과 같은 높이(40px)로 맞춰야 나란히 보입니다. */}
+          {/*
+            동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
+            입력칸 높이 = 글줄 24px(leading-6) + 위아래 여백 10px씩(py-2.5).
+            둘 중 하나를 건드리면 다른 하나도 같이 맞춰야 나란히 보입니다.
+          */}
           <button
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label="메시지 보내기"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
           >
             {sending ? (
               <Spinner className="h-[17px] w-[17px]" />
@@ -338,7 +348,7 @@ function MessageRow({
           className={`max-w-[70%] rounded-3xl px-3.5 py-2 text-[15px] leading-snug whitespace-pre-wrap ${
             isMine
               ? "rounded-br-lg bg-brand-500 text-white"
-              : "rounded-bl-lg bg-white text-ink shadow-[var(--shadow-card)]"
+              : "rounded-bl-lg bg-canvas text-ink shadow-[var(--shadow-card)]"
           }`}
         >
           {message.text}
