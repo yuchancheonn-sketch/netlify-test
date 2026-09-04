@@ -75,6 +75,11 @@ export default function BottomTabBar() {
            * 색 하나로 어디에 있는지 알 수 있으면 그게 가장 조용합니다.
            */
           const itemClassName = active ? "text-brand-500" : "text-ink-muted";
+          /*
+           * 탭 한 칸의 위아래 여백(py-1.5)은 알약 높이를 정하는 값이기도 합니다.
+           * 위아래를 똑같이 두었기 때문에 아이콘과 글씨를 합친 덩어리가
+           * 알약 한가운데에 옵니다. 한쪽만 키우면 가운데가 어긋납니다.
+           */
           return (
             <li key={href} className="flex-1">
               <Link
@@ -88,7 +93,7 @@ export default function BottomTabBar() {
                   event.preventDefault();
                   scrollToTop();
                 }}
-                className={`flex flex-col items-center gap-[3px] rounded-full py-1 transition ${itemClassName}`}
+                className={`flex h-full flex-col items-center justify-center rounded-full py-1.5 transition ${itemClassName}`}
               >
                 <span className="relative flex items-center justify-center">
                   <Icon
@@ -106,8 +111,15 @@ export default function BottomTabBar() {
                     </span>
                   ) : null}
                 </span>
+                {/*
+                  아이콘 SVG는 24 단위 도형을 27px 상자에 그려서 아래쪽에 4px쯤
+                  빈 공간이 딸려 옵니다. 그래서 여기 간격이 0이어도 눈에는
+                  4px쯤 떨어져 보입니다. 더 붙이려면 -mt-, 더 벌리려면 mt-.
+                */}
                 <span
-                  className={`text-[13px] leading-none ${active ? "font-bold" : "font-medium"}`}
+                  className={`text-[13px] leading-none ${
+                    active ? "font-bold" : "font-medium"
+                  }`}
                 >
                   {label}
                   {/* 배지 숫자는 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}

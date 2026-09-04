@@ -24,7 +24,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
         {/*
           하단 탭바에 내용이 가리지 않도록 여백을 둡니다.
           탭바가 화면 바닥에 붙지 않고 떠 있는 알약이라, 띄운 만큼 더 잡습니다.
-          (알약 높이 약 59px + 바닥에서 띄운 12px + 여유)
+          (알약 높이 약 60px + 바닥에서 띄운 12px + 여유)
           탭바를 감추는 대화방에서는 이 여백도 없앱니다.
         */}
         <main
