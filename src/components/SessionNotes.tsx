@@ -65,13 +65,21 @@ export default function SessionNotes() {
           */}
           <h2 className="px-6 pt-4 pb-2 text-[18px] font-bold text-ink">수업 기록</h2>
 
-          {/* 줄 사이 선은 흰색 — 자리는 그대로 두되 눈에는 보이지 않게 합니다. */}
-          <ul className="divide-y divide-white">
-            {weeks.map((week) => {
+          <ul>
+            {weeks.map((week, index) => {
               const session = sessionByWeek.get(week);
               const note = (notes[String(week)] ?? "").trim();
               return (
                 <li key={week}>
+                  {/*
+                    줄 사이 구분선. 카드 폭을 다 채우지 않고 좌우 24px씩 들여
+                    그어, 카드 테두리와 부딪히지 않고 안쪽에서 칸만 나눕니다.
+                    (들여쓴 폭은 위 제목의 왼쪽 끝과 같습니다.)
+                    맨 윗줄 위에는 긋지 않습니다 — 제목과 목록 사이는 여백이
+                    이미 갈라주고 있어서, 선까지 있으면 줄이 두 겹으로 보입니다.
+                  */}
+                  {index > 0 ? <div className="mx-6 border-t border-line" /> : null}
+
                   <button
                     type="button"
                     onClick={() => setEditingWeek(week)}
