@@ -76,7 +76,8 @@ export default function SessionNotes() {
                     onClick={() => setEditingWeek(week)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[14px] font-bold text-brand-500 tabular-nums">
+                    {/* 속은 흰색, 테두리와 숫자는 주황. 카드가 희어서 테두리가 원을 잡아줍니다. */}
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-500 bg-white text-[14px] font-bold text-brand-500 tabular-nums">
                       {week}
                     </span>
 
