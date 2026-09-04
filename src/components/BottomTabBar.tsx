@@ -21,14 +21,20 @@ import { UNREAD_BADGE_MAX } from "@/lib/constants";
  * 다만 360px 화면에서는 라벨이 좁아지므로 A안을 권장합니다.
  * (A안에서 모임 일정은 홈 대시보드의 D-day 카드로 들어갑니다.)
  */
+/**
+ * 다섯 탭 모두, 보고 있는 탭을 한 번 더 누르면 맨 위로 올라갑니다.
+ *
+ * 채팅도 마찬가지입니다. 예전에는 채팅 탭이 곧 대화 화면이라 늘 맨 아래
+ * (가장 최근 메시지)를 봐야 해서 예외로 두었지만, 지금 채팅 탭은 방 목록이고
+ * 대화는 따로 떨어진 화면(거기서는 이 탭바가 아예 없습니다)이라 예외가
+ * 필요 없어졌습니다.
+ */
 const TABS = [
-  { href: "/home", label: "홈", Icon: HomeIcon, backToTop: true },
-  { href: "/members", label: "원우", Icon: UsersIcon, backToTop: true },
-  { href: "/library", label: "자료", Icon: LibraryIcon, backToTop: true },
-  // 채팅만 예외입니다. 채팅은 늘 맨 아래(가장 최근 메시지)를 보는 화면이라,
-  // 맨 위로 올리면 옛날 메시지로 튕겨 나가 오히려 불편합니다.
-  { href: "/chat", label: "채팅", Icon: ChatIcon, backToTop: false },
-  { href: "/news", label: "소식", Icon: MegaphoneIcon, backToTop: true },
+  { href: "/home", label: "홈", Icon: HomeIcon },
+  { href: "/members", label: "원우", Icon: UsersIcon },
+  { href: "/library", label: "자료", Icon: LibraryIcon },
+  { href: "/chat", label: "채팅", Icon: ChatIcon },
+  { href: "/news", label: "소식", Icon: MegaphoneIcon },
 ] as const;
 
 /**
@@ -37,7 +43,14 @@ const TABS = [
  */
 function scrollToTop() {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  const behavior: ScrollBehavior = reduceMotion ? "auto" : "smooth";
+
+  try {
+    window.scrollTo({ top: 0, behavior });
+  } catch {
+    // 옵션 방식을 못 알아듣는 오래된 브라우저를 위한 대비책입니다.
+    window.scrollTo(0, 0);
+  }
 }
 
 export default function BottomTabBar() {
@@ -62,7 +75,7 @@ export default function BottomTabBar() {
     >
       {/* 알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다. */}
       <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white p-1 shadow-[var(--shadow-float)]">
-        {TABS.map(({ href, label, Icon, backToTop }) => {
+        {TABS.map(({ href, label, Icon }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);
           // 탭의 첫 화면에 이미 서 있는지 (하위 화면에 들어와 있는 것과 구분합니다)
@@ -96,7 +109,7 @@ export default function BottomTabBar() {
                   // 인스타그램처럼, 지금 보고 있는 탭을 한 번 더 누르면 맨 위로 올라갑니다.
                   // 앨범 상세 같은 하위 화면에서는 그대로 두어, 원래대로 탭의
                   // 첫 화면으로 돌아가게 합니다.
-                  if (!backToTop || !atTabRoot) return;
+                  if (!atTabRoot) return;
                   event.preventDefault();
                   scrollToTop();
                 }}
