@@ -77,7 +77,7 @@ export default function SessionNotes() {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
                   >
                     {/* 속은 흰색, 테두리와 숫자는 주황. 카드가 희어서 테두리가 원을 잡아줍니다. */}
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1.5px] border-brand-500 bg-white text-[16px] font-bold text-brand-500 tabular-nums">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-brand-500 bg-white text-[16px] font-bold text-brand-500 tabular-nums">
                       {/*
                         숫자를 감싸서 원 한가운데에 앉힙니다.
                         leading-none로 글줄 높이를 글자 크기와 같게 잘라내고,
