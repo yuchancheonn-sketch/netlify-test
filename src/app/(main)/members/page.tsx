@@ -98,7 +98,12 @@ export default function MembersPage() {
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="이름·회사·직책으로 찾기"
             aria-label="원우 검색"
-            className="w-full rounded-xl border border-transparent bg-white py-2.5 pr-4 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none transition placeholder:text-ink-faint focus:border-brand-300 focus:ring-4 focus:ring-brand-100"
+            /*
+              눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
+              깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
+              있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
+            */
+            className="w-full rounded-xl bg-white py-2.5 pr-4 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
         </div>
 
