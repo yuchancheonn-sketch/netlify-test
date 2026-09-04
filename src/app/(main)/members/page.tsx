@@ -104,7 +104,12 @@ export default function MembersPage() {
 
         {/* 필터 칩 + 인원수 */}
         <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex gap-2">
+          {/*
+            자료 탭의 서브탭과 같은 짜임새입니다.
+            흰 알약 하나 안에 셋을 담고, 고른 것만 주황 알약에 흰 글씨가 됩니다.
+            나머지는 배경 없이 흐린 글씨로만 두어 어디에 서 있는지 색 하나로 읽힙니다.
+          */}
+          <div className="flex min-w-0 rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
             {FILTERS.map(({ value, label }) => {
               const active = filter === value;
               return (
@@ -113,10 +118,8 @@ export default function MembersPage() {
                   type="button"
                   onClick={() => setFilter(value)}
                   aria-pressed={active}
-                  className={`rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
-                    active
-                      ? "bg-brand-500 text-white"
-                      : "bg-white text-ink shadow-[var(--shadow-card)]"
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
+                    active ? "bg-brand-500 text-white" : "text-ink-muted"
                   }`}
                 >
                   {label}
