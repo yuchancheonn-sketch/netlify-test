@@ -93,11 +93,29 @@ export default function HomePage() {
         <section>
           <SectionTitle>오늘의 도산</SectionTitle>
 
-          <div className="rounded-3xl bg-white px-6 py-7 shadow-[var(--shadow-card)]">
-            <p className="font-serif text-[18px] leading-[1.8] text-ink">
-              &ldquo;{quote.text}&rdquo;
-            </p>
-            <p className="mt-5 text-[13px] font-bold text-brand-500">도산 안창호</p>
+          <div className="rounded-3xl bg-white px-6 pt-6 pb-7 shadow-[var(--shadow-card)]">
+            {/*
+              장식용 큰 따옴표. 읽을 내용이 아니라 화면 낭독기는 건너뜁니다.
+              leading을 1보다 훨씬 작게 준 이유는, 64px 글자가 차지하는 줄 높이를
+              그대로 두면 따옴표 아래로 빈 공간이 한참 남기 때문입니다.
+            */}
+            <span
+              aria-hidden="true"
+              className="block font-serif text-[64px] leading-[0.55] text-brand-200 select-none"
+            >
+              &ldquo;
+            </span>
+
+            <p className="mt-3 font-serif text-[18px] leading-[1.8] text-ink">{quote.text}</p>
+
+            <span
+              aria-hidden="true"
+              className="mt-3 block text-right font-serif text-[64px] leading-[0.55] text-brand-200 select-none"
+            >
+              &rdquo;
+            </span>
+
+            <p className="mt-6 text-[13px] font-bold text-brand-500">도산 안창호</p>
             <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
               {quote.source}
             </p>
