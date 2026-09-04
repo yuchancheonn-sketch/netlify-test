@@ -80,7 +80,7 @@ export default function HomePage() {
               <CalendarIcon className="h-[26px] w-[26px] text-brand-500" />
               모임 일정 전체 보기
             </span>
-            <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+            <ChevronRightIcon className="h-[26px] w-[26px] text-ink-faint" />
           </Link>
         )}
 
