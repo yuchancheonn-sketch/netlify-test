@@ -102,6 +102,12 @@ body {
   color: var(--color-ink);
   /* 하단 탭바가 홈 인디케이터에 가리지 않도록 안전 영역을 확보합니다. */
   overscroll-behavior-y: none;
+  /*
+   * 대화방을 옆으로 밀 때 화면 밖으로 나간 부분이 가로 스크롤을 만들지 않도록 잘라냅니다.
+   * html의 overflow가 visible이라 이 값은 화면(뷰포트)으로 넘어가고 body 자신은
+   * visible로 남습니다. 그래서 안쪽의 sticky 제목 줄들은 그대로 붙어 있습니다.
+   */
+  overflow-x: hidden;
 }
 
 /* 모바일에서 입력창을 눌렀을 때 iOS가 화면을 확대하지 않도록 최소 16px을 유지합니다. */

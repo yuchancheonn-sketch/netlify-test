@@ -3,6 +3,8 @@
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
+import BottomTabBar from "@/components/BottomTabBar";
+import ChatListPage from "@/app/(main)/chat/page";
 import { ArrowUpIcon, ChatIcon, ChevronLeftIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -55,8 +57,17 @@ export default function ChatRoomPage({
    */
   const [dragX, setDragX] = useState(0);
   const [snapping, setSnapping] = useState(false);
-  /** 손짓이 시작된 자리와 시각. 세로 스크롤로 판정되면 null로 지웁니다. */
-  const swipeStart = useRef<{ x: number; y: number; at: number } | null>(null);
+  /*
+   * 대화방 뒤에 채팅 목록을 깔아 둘지.
+   *
+   * 늘 깔아 두지는 않습니다. 목록 화면은 방 목록·읽은 시각·방마다의 안 읽은
+   * 개수까지 실시간으로 구독하는데, 대화방에 머무는 내내 그걸 덤으로 켜 두면
+   * Firestore 무료 읽기 한도를 그냥 태웁니다. 그래서 가로로 미는 손짓이라고
+   * 판정된 순간에만 붙였다가, 되돌아오는 애니메이션이 끝나면 떼어냅니다.
+   */
+  const [peeking, setPeeking] = useState(false);
+  /** 손짓이 시작된 자리. 세로 스크롤로 판정되면 null로 지웁니다. */
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
   /** 가로인지 세로인지는 처음 8px을 움직여 본 뒤 한 번만 정하고 끝까지 지킵니다. */
   const swipeAxis = useRef<"unknown" | "x" | "y">("unknown");
 
@@ -67,7 +78,7 @@ export default function ChatRoomPage({
     if ((event.target as HTMLElement).closest("input, textarea, button")) return;
 
     const touch = event.touches[0];
-    swipeStart.current = { x: touch.clientX, y: touch.clientY, at: Date.now() };
+    swipeStart.current = { x: touch.clientX, y: touch.clientY };
     swipeAxis.current = "unknown";
     setSnapping(false);
   }
@@ -89,6 +100,8 @@ export default function ChatRoomPage({
        */
       if (dx > 0 && dx > Math.abs(dy) * 1.5) {
         swipeAxis.current = "x";
+        // 밀려나면 곧바로 뒤가 드러나므로, 이때 목록을 깔아 둡니다.
+        setPeeking(true);
       } else {
         swipeAxis.current = "y";
         swipeStart.current = null;
@@ -110,18 +123,26 @@ export default function ChatRoomPage({
       return;
     }
 
-    /*
-     * 나갈지 말지 — 충분히 멀리 밀었거나(88px), 짧고 빠르게 튕겼거나(0.25초 안에 32px).
-     * 튕기는 쪽을 따로 두지 않으면 급하게 미는 손짓이 번번이 무시됩니다.
-     */
-    const flicked = Date.now() - start.at < 250 && dragX > 32;
-    if (dragX > 88 || flicked) {
-      // 되돌아오는 대신 밀려나던 방향으로 마저 빠져나가면서 목록으로 갑니다.
+    // 화면 절반을 넘겼으면 손을 떼는 순간 마저 빠져나가고, 못 넘겼으면 제자리로.
+    if (dragX > window.innerWidth / 2) {
       setDragX(window.innerWidth);
       router.push("/chat");
     } else {
       setDragX(0);
     }
+  }
+
+  /**
+   * 제자리로 돌아오는 애니메이션이 끝나면 뒤에 깔아 둔 목록을 떼어냅니다.
+   *
+   * 손을 떼자마자 떼어내면 대화방이 아직 비스듬히 밀려 있는 220ms 동안
+   * 뒤가 흰 벽으로 보입니다.
+   */
+  function handleSlideSettled(event: React.TransitionEvent<HTMLDivElement>) {
+    // 안쪽 요소의 다른 애니메이션이 타고 올라온 것은 흘려보냅니다.
+    if (event.target !== event.currentTarget) return;
+    if (event.propertyName !== "transform") return;
+    if (dragX === 0) setPeeking(false);
   }
 
   /*
@@ -227,7 +248,30 @@ export default function ChatRoomPage({
       */
       style={{ touchAction: "pan-y" }}
     >
-      <div className="flex flex-1 flex-col" style={slide}>
+      {/*
+        대화방 뒤에 깔리는 진짜 채팅 목록.
+        대화방이 목록 위에 얹힌 종이처럼 보이도록, 미는 동안 뒤에서 드러납니다.
+        보이기만 하면 되므로 손가락은 받지 않습니다(pointer-events-none).
+        MainShell이 씌우던 폭 제한과 탭바 자리는 여기서 흉내 냅니다 —
+        대화방에서는 MainShell이 탭바를 감추기 때문입니다.
+      */}
+      {peeking ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-canvas"
+        >
+          <div className="mx-auto h-full w-full max-w-[560px] overflow-hidden pb-[calc(94px+env(safe-area-inset-bottom))]">
+            <ChatListPage />
+          </div>
+          <BottomTabBar />
+        </div>
+      ) : null}
+
+      <div
+        className="relative z-10 flex flex-1 flex-col bg-white"
+        style={slide}
+        onTransitionEnd={handleSlideSettled}
+      >
         {/*
           제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
           대화방은 화면을 최대한 대화에 내주는 편이 좋습니다.
