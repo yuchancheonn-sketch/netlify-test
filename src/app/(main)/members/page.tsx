@@ -255,7 +255,14 @@ function MemberRow({
         aria-label={
           videoLink?.id ? `${entry.name} 소개 영상 보기` : `${entry.name} 사진 크게 보기`
         }
-        className="relative h-[62px] w-[86px] shrink-0 overflow-hidden rounded-2xl bg-canvas transition active:scale-95"
+        /*
+          112×63 — 정확히 16:9입니다. 이 비율이어야 유튜브 미리보기의 위아래
+          검은 띠가 남김없이 잘려 나갑니다(자세한 까닭은 lib/video.ts).
+          비율을 바꾸면 검은 줄이 다시 보이니 폭과 높이를 함께 고쳐야 합니다.
+          영상이 없는 원우는 여기에 프로필 사진이 들어오고, 그때는 가로로
+          넓게 잘립니다.
+        */
+        className="relative h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-canvas transition active:scale-95"
       >
         {thumbnail ? (
           <>
