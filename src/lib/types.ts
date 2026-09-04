@@ -176,6 +176,36 @@ export interface MessageDoc {
 }
 
 /**
+ * sessions/{week} — 주차별 수업 정보 (주제·강사).
+ *
+ * 원우수첩처럼 **누구나 채울 수 있는 공용 기록**입니다. 한 명이 적어두면
+ * 모든 원우가 같은 내용을 봅니다. 수업 주제와 강사는 사실이라 사람마다
+ * 다를 이유가 없습니다.
+ * 문서 id는 주차 번호를 적은 글자입니다. ("1" ~ "11")
+ */
+export interface SessionDoc {
+  week: number;
+  topic: string;
+  instructor: string;
+  /** 마지막으로 채운 사람 (원우수첩과 같은 방식으로 남겨둡니다) */
+  updatedBy?: string;
+  updatedByName?: string;
+  updatedAt?: Timestamp | null;
+}
+
+/**
+ * sessionNotes/{uid} — 내가 주차별로 남긴 느낀점.
+ *
+ * **본인만 읽고 씁니다.** 수업을 듣고 스스로 남기는 기록이라 남에게 보이면
+ * 안 됩니다. 주차마다 문서를 따로 두지 않고 한 문서에 모아 담습니다.
+ * 열한 칸뿐이라 한 번만 읽으면 되고, 무료 한도의 읽기 횟수도 아낍니다.
+ */
+export interface SessionNotesDoc {
+  /** 주차 번호를 적은 글자 → 그 주에 남긴 느낀점 */
+  notes?: Record<string, string>;
+}
+
+/**
  * chatRooms/{roomId} — 대화방 한 칸.
  *
  * 방은 두 종류입니다.

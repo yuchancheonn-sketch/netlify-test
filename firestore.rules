@@ -69,6 +69,18 @@ service cloud.firestore {
       }
     }
 
+    // 주차별 수업의 주제·강사. 원우수첩처럼 누구나 채웁니다.
+    match /sessions/{week} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── 개인 기록 — 본인만 ──
+
+    // 주차별 느낀점. 수업을 듣고 스스로 남기는 기록이라 남이 보면 안 됩니다.
+    match /sessionNotes/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
     // ── 채팅 — 여기만 잠겨 있습니다 ──
 
     match /chatRooms/{roomId} {

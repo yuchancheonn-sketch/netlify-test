@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -102,6 +103,9 @@ export default function HomePage() {
             </p>
           </div>
         </section>
+
+        {/* 주차별 수업 기록 — 주제·강사는 함께 채우고, 느낀점은 각자 남깁니다. */}
+        <SessionNotes />
       </div>
     </>
   );

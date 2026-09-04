@@ -30,7 +30,16 @@ export const COHORT = "10기";
 /** 10기 수업 기간 (포스터 기준: 2026년 8월 25일 ~ 11월 24일, 10주) */
 export const COURSE_START_DATE = "2026-08-25";
 export const COURSE_END_DATE = "2026-11-24";
-export const COURSE_TOTAL_SESSIONS = 10;
+export const COURSE_TOTAL_SESSIONS = 11;
+
+/** 수업 기록에 적는 주제·강사·느낀점의 길이 제한 */
+export const SESSION_TOPIC_MAX_LENGTH = 40;
+export const SESSION_INSTRUCTOR_MAX_LENGTH = 20;
+/**
+ * 느낀점 최대 글자 수.
+ * 열한 주차를 한 문서에 모아 담으므로, 넉넉히 잡아도 문서가 6KB를 넘지 않습니다.
+ */
+export const SESSION_NOTE_MAX_LENGTH = 500;
 
 /** 10기 전체가 쓰는 단체방 ID. 채팅 목록에서 늘 맨 위에 고정됩니다. */
 export const MAIN_CHAT_ROOM_ID = "main";

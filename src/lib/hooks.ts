@@ -25,6 +25,8 @@ import type {
   PhotoDoc,
   RosterDoc,
   RsvpDoc,
+  SessionDoc,
+  SessionNotesDoc,
   UserDoc,
 } from "@/lib/types";
 
@@ -183,6 +185,57 @@ export function useRsvps(eventId: string): ListState<RsvpDoc> {
   }, [eventId]);
 
   return state;
+}
+
+/**
+ * 주차별 수업 정보 (주제·강사).
+ * 원우 누구나 채우는 공용 기록이라, 모두가 같은 내용을 봅니다.
+ */
+export function useSessions(): ListState<SessionDoc> {
+  const [state, setState] = useState<ListState<SessionDoc>>(EMPTY);
+
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, "sessions"),
+      (snapshot) => {
+        const sessions = snapshot.docs.map(
+          (document) => ({ ...document.data(), week: Number(document.id) }) as SessionDoc,
+        );
+        setState({ data: sessions, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "수업 기록을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/**
+ * 내가 주차별로 남긴 느낀점. 본인 것만 봅니다.
+ * 열한 주차가 문서 하나에 모여 있어 구독도 하나면 됩니다.
+ */
+export function useMySessionNotes(uid?: string) {
+  // 어느 계정의 기록인지 함께 들고 있어야 계정을 바꿨을 때 섞이지 않습니다.
+  const [entry, setEntry] = useState<{
+    uid: string;
+    notes: Record<string, string>;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(
+      doc(db, "sessionNotes", uid),
+      (snapshot) =>
+        setEntry({
+          uid,
+          notes: (snapshot.data() as SessionNotesDoc | undefined)?.notes ?? {},
+        }),
+      () => setEntry({ uid, notes: {} }),
+    );
+  }, [uid]);
+
+  const matched = uid && entry?.uid === uid ? entry : null;
+  return { notes: matched?.notes ?? {}, loading: Boolean(uid) && !matched };
 }
 
 /** 행사 사진 앨범 목록 (최근 행사가 위로) */
