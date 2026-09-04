@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
@@ -28,20 +28,6 @@ export default function ChatListPage() {
   const { data: rooms, loading, error } = useMyChatRooms(uid);
   const { data: members } = useApprovedMembers();
 
-  /*
-   * 이 탭에 있는 동안 페이지 바탕 자체를 흰색으로 바꿉니다. (globals.css)
-   *
-   * 화면 안쪽만 희게 칠하면 맨 윗줄(시계·배터리가 얹히는 자리)이 회색으로
-   * 남습니다. 그 자리는 사파리가 가져다 칠하는데, 화면 안 요소가 아니라
-   * body의 색을 보기 때문입니다. 탭을 떠나면 원래 색으로 되돌립니다.
-   */
-  useEffect(() => {
-    document.body.dataset.tab = "chat";
-    return () => {
-      delete document.body.dataset.tab;
-    };
-  }, []);
-
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
   const unreadCounts = useUnreadCounts(uid, readMillis, loaded);
@@ -62,12 +48,16 @@ export default function ChatListPage() {
 
   return (
     /*
-     * 이 탭만 바탕이 흰색입니다.
-     * 다른 탭은 연한 회색 바탕에 흰 카드를 얹지만, 대화방 목록은 카톡처럼
-     * 카드 없이 줄만 늘어놓는 편이 읽기 좋습니다. 카드가 없으니 바탕이
-     * 회색이면 줄들이 회색 위에 떠 있는 것처럼 보입니다.
+     * 바탕은 다른 탭과 같은 연한 회색입니다.
+     *
+     * 흰색으로도 해봤는데, 화면 맨 윗줄(시계·배터리가 얹히는 자리)만 회색으로
+     * 남아 흰 화면 위에 회색 띠가 그어진 것처럼 보였습니다. 그 자리는 사파리가
+     * 제 나름의 색으로 칠하는 자리라 페이지에서 덮을 수 없습니다.
+     * 다른 탭과 같은 회색으로 두면 띠가 바탕에 묻혀 보이지 않습니다.
+     *
+     * 줄마다 카드를 두르지 않는 카톡식 배치는 그대로입니다.
      */
-    <div className="min-h-dvh bg-white">
+    <>
       <PageHeader title="채팅" right={<ProfileAvatarButton />} />
 
       {/* 좌우 여백은 다른 탭과 같은 px-4로 맞춥니다. */}
@@ -115,7 +105,7 @@ export default function ChatListPage() {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
