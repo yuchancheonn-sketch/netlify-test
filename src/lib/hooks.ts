@@ -111,6 +111,21 @@ export function useRoster(): ListState<RosterDoc> {
 }
 
 /** 모든 모임 일정 (날짜 오름차순) */
+/**
+ * 같은 날 일정끼리의 순서를 정하는 값 — 자정에서 몇 분 지났는지.
+ *
+ * 시각을 안 적은 일정은 -1이라 그날의 맨 위로 옵니다. 몇 시인지 모르는 일정을
+ * 시각이 적힌 일정들 사이에 끼워 넣을 수는 없어서, 달력 앱들처럼 맨 위에 둡니다.
+ *
+ * ★ "9:00"과 "10:00"을 글자끼리 비교하면 9시가 10시보다 뒤로 갑니다.
+ *   그래서 분으로 바꿔서 셈합니다.
+ */
+function startMinutes(event: EventDoc): number {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(event.startTime ?? "");
+  if (!match) return -1;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
 export function useEvents(): ListState<EventDoc> {
   const [state, setState] = useState<ListState<EventDoc>>(EMPTY);
 
@@ -119,9 +134,18 @@ export function useEvents(): ListState<EventDoc> {
     return onSnapshot(
       eventsQuery,
       (snapshot) => {
-        const events = snapshot.docs.map(
-          (document) => ({ id: document.id, ...document.data() }) as EventDoc,
-        );
+        const events = snapshot.docs
+          .map((document) => ({ id: document.id, ...document.data() }) as EventDoc)
+          /*
+           * 빠른 일정이 위로. 날짜가 같으면 시작 시각이 이른 쪽이 먼저입니다.
+           *
+           * 날짜 정렬은 Firestore가 해주지만 같은 날끼리의 순서는 정해주지
+           * 않습니다. 시각까지 Firestore에 맡기려면 색인을 따로 만들어 올려야
+           * 하는데, 일정이 몇십 개뿐이라 여기서 한 번 더 세우는 편이 낫습니다.
+           */
+          .sort(
+            (a, b) => a.date.localeCompare(b.date) || startMinutes(a) - startMinutes(b),
+          );
         setState({ data: events, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "일정을 불러오지 못했어요." }),

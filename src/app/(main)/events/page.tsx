@@ -15,14 +15,21 @@ type ViewMode = "list" | "calendar";
 
 export default function EventsPage() {
   const { isAdmin } = useAuth();
-  const { data: events, loading, error } = useEvents();
+  const { data: allEvents, loading, error } = useEvents();
   const [view, setView] = useState<ViewMode>("list");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
+  /*
+   * 지난 일정은 목록에서도 캘린더에서도 아예 빼둡니다.
+   * 모임 당일까지는 보이고, 그 다음 날부터 사라집니다.
+   *
+   * 화면에서만 감추고 저장된 기록은 그대로 둡니다. 앱이 알아서 지우게 하면
+   * 되돌릴 수 없고, 참석 응답까지 딸려 사라집니다. 정말 지워야 할 일정은
+   * Firebase 콘솔에서 지우는 편이 안전합니다.
+   */
   const today = todayString();
-  const upcoming = events.filter((event) => event.date >= today);
-  // 지난 일정은 최근 것이 위로 오도록 뒤집습니다.
-  const past = events.filter((event) => event.date < today).reverse();
+  const events = allEvents.filter((event) => event.date >= today);
+
   const selectedEvents = selectedDate
     ? events.filter((event) => event.date === selectedDate)
     : [];
@@ -107,37 +114,14 @@ export default function EventsPage() {
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-8">
-            <section>
-              <SectionTitle>다가오는 일정</SectionTitle>
-              {upcoming.length === 0 ? (
-                <p className="rounded-2xl bg-white px-5 py-6 text-center text-[14px] text-ink-faint shadow-[var(--shadow-card)]">
-                  예정된 모임이 아직 없어요
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {upcoming.map((event) => (
-                    <li key={event.id}>
-                      <EventListItem event={event} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {past.length > 0 ? (
-              <section>
-                <SectionTitle>지난 일정</SectionTitle>
-                <ul className="flex flex-col gap-3 opacity-70">
-                  {past.map((event) => (
-                    <li key={event.id}>
-                      <EventListItem event={event} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-          </div>
+          /* 남는 것은 앞으로의 일정뿐이라 따로 나눌 구역이 없습니다. */
+          <ul className="flex flex-col gap-3">
+            {events.map((event) => (
+              <li key={event.id}>
+                <EventListItem event={event} />
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
