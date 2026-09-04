@@ -33,7 +33,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         이 카드에서 가장 먼저 눈에 들어옵니다.
       */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[28px] font-bold leading-tight text-white">주요 일정</span>
+        <span className="text-[18px] font-bold leading-tight text-white">주요 일정</span>
         <span className="flex shrink-0 items-baseline gap-2.5">
           <span className="text-[14px] font-bold text-white">
             {formatMonthDay(event.date)}
