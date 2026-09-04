@@ -326,19 +326,24 @@ export default function ChatRoomPage({
           갈라 둡니다. 반투명은 쓰지 않습니다 — 살짝 비치면 위로 지나가는
           말풍선이 제목 글씨에 겹쳐 보입니다.
         */}
-        <div className="sticky top-0 z-20">
-          {/*
-            상태바(시계·배터리)가 얹히는 자리.
+        {/*
+          위쪽 회색 띠 = 상태바(시계·배터리)가 얹히는 자리.
 
-            여기를 목록과 같은 회색으로 둡니다. 아이폰 사파리는 이 자리를
-            페이지가 칠한 색에서 뽑아 와 화면 전체 너비로 덮어 칠합니다.
-            대화방처럼 희게 두면, 옆으로 밀어 목록을 꺼냈을 때도 이 띠만
-            흰색으로 남아 목록 위에 흰 줄이 그어진 것처럼 보입니다.
-            (색을 바꿔 가며 확인했습니다 — 제목 줄을 보라색으로 칠하면
-            이 띠도 화면 전체가 보라색이 됩니다.)
-          */}
-          <div className="bg-canvas" style={{ height: "env(safe-area-inset-top)" }} />
+          여기를 목록과 같은 회색으로 둡니다. 아이폰 사파리는 이 자리를
+          페이지가 칠한 색에서 뽑아 와 화면 전체 너비로 덮어 칠합니다.
+          대화방처럼 희게 두면, 옆으로 밀어 목록을 꺼냈을 때도 이 띠만
+          흰색으로 남아 목록 위에 흰 줄이 그어진 것처럼 보입니다.
+          (색을 바꿔 가며 확인했습니다 — 제목 줄을 보라색으로 칠하면
+          이 띠도 화면 전체가 보라색이 됩니다.)
 
+          띠는 height가 아니라 padding으로 만듭니다. height에 env()를 그대로
+          넣으면 0으로 잡혀 띠가 아예 안 생겼습니다. 이 파일과 PageHeader의
+          padding 쪽 env()는 잘 듣습니다.
+        */}
+        <div
+          className="sticky top-0 z-20 bg-canvas"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
           <header className="flex items-center gap-1 border-b border-line bg-white px-2 pt-2 pb-2.5">
             <button
               type="button"
