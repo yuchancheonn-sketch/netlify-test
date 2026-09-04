@@ -129,7 +129,7 @@ export default function MembersPage() {
 
         {!busy && !error ? (
           /* 글씨 크기는 위 필터와 같은 13px로 맞춥니다. */
-          <p className="mt-2 text-right text-[13px] font-medium text-ink-soft">
+          <p className="mt-2 text-[13px] font-medium text-ink-soft">
             원우 <span className="font-bold text-ink">{visible.length}</span>명
           </p>
         ) : null}
