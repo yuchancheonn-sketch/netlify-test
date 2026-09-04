@@ -336,13 +336,13 @@ export default function ChatRoomPage({
           (색을 바꿔 가며 확인했습니다 — 제목 줄을 보라색으로 칠하면
           이 띠도 화면 전체가 보라색이 됩니다.)
 
-          띠는 height가 아니라 padding으로 만듭니다. height에 env()를 그대로
-          넣으면 0으로 잡혀 띠가 아예 안 생겼습니다. 이 파일과 PageHeader의
-          padding 쪽 env()는 잘 듣습니다.
+          ★ env()는 반드시 calc() 안에 넣습니다. 맨몸으로 쓰면(height: env(...),
+          padding: env(...)) 사파리가 0으로 버려서 띠가 아예 안 생깁니다.
+          이 파일과 PageHeader에서 잘 듣는 env()는 전부 calc() 안에 있습니다.
         */}
         <div
           className="sticky top-0 z-20 bg-canvas"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
+          style={{ paddingTop: "calc(0px + env(safe-area-inset-top))" }}
         >
           <header className="flex items-center gap-1 border-b border-line bg-white px-2 pt-2 pb-2.5">
             <button
