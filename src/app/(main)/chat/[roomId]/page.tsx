@@ -271,9 +271,18 @@ export default function ChatRoomPage({
     transition: snapping ? "transform 340ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
   };
 
+  /*
+   * 바깥 상자는 흰색이 아니라 목록과 같은 배경색입니다.
+   *
+   * 대화방의 흰 바탕은 안쪽 상자(아래 slide가 걸린 것)가 칠합니다. 바깥까지
+   * 희게 칠하면, 옆으로 미는 동안 뒤에 깔아둔 목록이 못 덮은 자리에서 이 흰색이
+   * 배어 나옵니다. 특히 아이폰 사파리는 주소창이 접혔다 펴지는 사이 fixed 요소가
+   * 화면 맨 위를 잠깐 못 덮어서, 목록의 "채팅" 제목 위로 흰 띠가 생깁니다.
+   * 배경색을 목록과 같게 두면 그럴 때도 색이 이어져 보입니다.
+   */
   return (
     <div
-      className="flex min-h-dvh flex-col bg-white"
+      className="flex min-h-dvh flex-col bg-canvas"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
