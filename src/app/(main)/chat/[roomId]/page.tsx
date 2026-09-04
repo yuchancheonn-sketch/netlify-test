@@ -209,6 +209,11 @@ export default function ChatRoomPage({
         className="fixed inset-x-0 bottom-0 z-20 bg-canvas/95 px-4 pt-2 backdrop-blur"
         style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
+        {/*
+          입력칸을 눌렀을 때 둘러지던 주황 테두리(focus:ring)는 뺐습니다.
+          글자를 치는 칸이라, 깜빡이는 커서와 올라온 자판만으로도
+          어디에 쓰고 있는지 알 수 있습니다.
+        */}
         <form onSubmit={handleSend} className="mx-auto flex w-full max-w-[560px] items-end gap-2">
           <input
             value={draft}
@@ -216,15 +221,20 @@ export default function ChatRoomPage({
             placeholder="메시지 보내기"
             aria-label="메시지 입력"
             maxLength={1000}
-            className="min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint focus:ring-4 focus:ring-brand-100"
+            className="min-w-0 flex-1 rounded-full bg-white px-4.5 py-2.5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
+          {/* 동그라미는 입력칸과 같은 높이(40px)로 맞춰야 나란히 보입니다. */}
           <button
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label="메시지 보내기"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
           >
-            {sending ? <Spinner className="h-5 w-5" /> : <ArrowUpIcon className="h-5 w-5" />}
+            {sending ? (
+              <Spinner className="h-[17px] w-[17px]" />
+            ) : (
+              <ArrowUpIcon className="h-[17px] w-[17px]" />
+            )}
           </button>
         </form>
         {sendError ? (
