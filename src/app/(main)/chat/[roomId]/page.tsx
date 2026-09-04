@@ -47,6 +47,84 @@ export default function ChatRoomPage({
   const skipAutoScroll = useRef(false);
 
   /*
+   * 오른쪽으로 밀어서 목록으로 나가기 — 왼쪽 위 < 버튼과 같은 동작입니다.
+   *
+   * dragX는 손가락을 따라 화면이 밀려난 거리입니다. 미는 동안에는 애니메이션
+   * 없이 손가락에 딱 붙고(snapping=false), 손을 떼는 순간부터 부드럽게
+   * 제자리로 돌아가거나 바깥으로 빠져나갑니다(snapping=true).
+   */
+  const [dragX, setDragX] = useState(0);
+  const [snapping, setSnapping] = useState(false);
+  /** 손짓이 시작된 자리와 시각. 세로 스크롤로 판정되면 null로 지웁니다. */
+  const swipeStart = useRef<{ x: number; y: number; at: number } | null>(null);
+  /** 가로인지 세로인지는 처음 8px을 움직여 본 뒤 한 번만 정하고 끝까지 지킵니다. */
+  const swipeAxis = useRef<"unknown" | "x" | "y">("unknown");
+
+  function handleTouchStart(event: React.TouchEvent) {
+    // 두 손가락은 확대·축소이지 넘기기가 아닙니다.
+    if (event.touches.length !== 1) return;
+    // 입력칸이나 버튼 위에서 시작한 손짓은 그쪽 몫으로 둡니다.
+    if ((event.target as HTMLElement).closest("input, textarea, button")) return;
+
+    const touch = event.touches[0];
+    swipeStart.current = { x: touch.clientX, y: touch.clientY, at: Date.now() };
+    swipeAxis.current = "unknown";
+    setSnapping(false);
+  }
+
+  function handleTouchMove(event: React.TouchEvent) {
+    const start = swipeStart.current;
+    if (!start) return;
+
+    const touch = event.touches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+
+    if (swipeAxis.current === "unknown") {
+      // 아직 어느 쪽인지 알기엔 너무 조금 움직였습니다.
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      /*
+       * 오른쪽으로, 그리고 세로보다 1.5배는 더 갔을 때만 넘기기로 봅니다.
+       * 이 기준이 없으면 대화를 비스듬히 훑어 올릴 때마다 방을 나가버립니다.
+       */
+      if (dx > 0 && dx > Math.abs(dy) * 1.5) {
+        swipeAxis.current = "x";
+      } else {
+        swipeAxis.current = "y";
+        swipeStart.current = null;
+        return;
+      }
+    }
+
+    // 왼쪽으로 되돌아오는 건 따라가되, 시작점보다 왼쪽으로는 넘어가지 않습니다.
+    setDragX(Math.max(0, dx));
+  }
+
+  function handleTouchEnd() {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    setSnapping(true);
+
+    if (!start || swipeAxis.current !== "x") {
+      setDragX(0);
+      return;
+    }
+
+    /*
+     * 나갈지 말지 — 충분히 멀리 밀었거나(88px), 짧고 빠르게 튕겼거나(0.25초 안에 32px).
+     * 튕기는 쪽을 따로 두지 않으면 급하게 미는 손짓이 번번이 무시됩니다.
+     */
+    const flicked = Date.now() - start.at < 250 && dragX > 32;
+    if (dragX > 88 || flicked) {
+      // 되돌아오는 대신 밀려나던 방향으로 마저 빠져나가면서 목록으로 갑니다.
+      setDragX(window.innerWidth);
+      router.push("/chat");
+    } else {
+      setDragX(0);
+    }
+  }
+
+  /*
    * 보낸 사람의 지금 이름을 uid로 찾아볼 수 있게 해둡니다.
    * 메시지에도 이름을 적어 두지만, 원우가 이름을 고치면 예전 메시지까지
    * 함께 바뀌는 편이 자연스럽습니다.
@@ -122,105 +200,131 @@ export default function ChatRoomPage({
    * 대화방은 카드가 아니라 말풍선이 놓이는 자리라 바탕과 말풍선의 색을
    * 서로 맞바꿨습니다 — 바탕이 희고, 남의 말풍선이 연한 회색입니다.
    */
+  /*
+   * 미는 동안 화면이 따라 움직이는 값.
+   *
+   * 제목·대화 묶음과 입력줄에 따로 겁니다. 하나로 묶어 바깥 상자에 걸면
+   * 안 됩니다 — transform이 걸린 상자는 그 안의 fixed 요소가 화면이 아니라
+   * 상자를 기준으로 자리를 잡아서, 스크롤을 내려둔 상태에서는 입력줄이
+   * 대화 맨 아래로 뚝 떨어집니다.
+   */
+  const slide = {
+    transform: dragX ? `translateX(${dragX}px)` : undefined,
+    transition: snapping ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
+  };
+
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
-      {/*
-        제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
-        대화방은 화면을 최대한 대화에 내주는 편이 좋습니다.
-      */}
-      {/*
-        구분선도 반투명도 없이 그냥 흰 면입니다. 대화 바탕과 같은 흰색이라
-        경계가 보이지 않아야 이름 위쪽이 한 덩어리로 읽힙니다.
-        대신 불투명해야 합니다 — 살짝 비치면 위로 지나가는 말풍선이
-        제목 글씨에 겹쳐 보입니다.
-      */}
-      <header
-        className="sticky top-0 z-20 flex items-center gap-1 bg-white px-2 pb-2.5"
-        style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
-      >
-        <button
-          type="button"
-          onClick={() => router.push("/chat")}
-          aria-label="채팅 목록으로"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+    <div
+      className="flex min-h-dvh flex-col bg-white"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      /*
+        세로 스크롤만 브라우저에 맡기고 가로는 우리가 씁니다.
+        이게 없으면 미는 도중에 브라우저가 제 나름의 가로 스크롤·뒤로가기를
+        끼어들어 처리해서 손짓이 중간에 끊깁니다.
+      */
+      style={{ touchAction: "pan-y" }}
+    >
+      <div className="flex flex-1 flex-col" style={slide}>
+        {/*
+          제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
+          대화방은 화면을 최대한 대화에 내주는 편이 좋습니다.
+
+          구분선도 반투명도 없이 그냥 흰 면입니다. 대화 바탕과 같은 흰색이라
+          경계가 보이지 않아야 이름 위쪽이 한 덩어리로 읽힙니다.
+          대신 불투명해야 합니다 — 살짝 비치면 위로 지나가는 말풍선이
+          제목 글씨에 겹쳐 보입니다.
+        */}
+        <header
+          className="sticky top-0 z-20 flex items-center gap-1 bg-white px-2 pb-2.5"
+          style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
         >
-          <ChevronLeftIcon className="h-7 w-7" />
-        </button>
+          <button
+            type="button"
+            onClick={() => router.push("/chat")}
+            aria-label="채팅 목록으로"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+          >
+            <ChevronLeftIcon className="h-7 w-7" />
+          </button>
 
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-          {isGroup ? (
-            <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
-          ) : null}
-        </div>
-
-        {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
-        <div className="h-10 w-10 shrink-0" aria-hidden="true" />
-      </header>
-
-      <div className="flex-1 px-4 pb-[104px]">
-        {loading ? (
-          <div className="flex flex-col gap-4 px-1 pt-4">
-            <Skeleton className="h-12 w-2/3 rounded-2xl" />
-            <Skeleton className="ml-auto h-12 w-1/2 rounded-2xl" />
-            <Skeleton className="h-12 w-3/5 rounded-2xl" />
-          </div>
-        ) : error ? (
-          <ErrorState message={error} />
-        ) : messages.length === 0 ? (
-          <EmptyState
-            icon={<ChatIcon className="h-10 w-10" />}
-            title="아직 대화가 없어요"
-            description={
-              isGroup
-                ? "첫 인사를 남겨보세요. 모든 원우에게 보입니다."
-                : `${title} 원우에게 첫 메시지를 보내보세요.`
-            }
-          />
-        ) : (
-          <>
-            {hasMore ? (
-              <div className="flex justify-center py-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    skipAutoScroll.current = true;
-                    setCount((previous) => previous + CHAT_PAGE_SIZE);
-                  }}
-                  className="rounded-full bg-white px-4 py-2 text-[13px] font-bold text-ink-muted shadow-[var(--shadow-card)]"
-                >
-                  이전 메시지 더 보기
-                </button>
-              </div>
+          <div className="min-w-0 flex-1 text-center">
+            <p className="truncate text-[17px] font-bold text-ink">{title}</p>
+            {isGroup ? (
+              <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
             ) : null}
+          </div>
 
-            {/* gap은 같은 사람이 연달아 보낸 말풍선 사이의 간격입니다. */}
-            <ol className="flex flex-col gap-2.5 pt-2">
-              {messages.map((message, index) => (
-                <MessageRow
-                  key={message.id}
-                  message={message}
-                  previous={messages[index - 1]}
-                  isMine={message.senderId === uid}
-                  senderName={resolveSenderName(message, nameByUid)}
-                  /* 지금 프로필 사진을 우선 쓰고, 없으면 예전 메시지에 남은 사진. */
-                  senderPhoto={
-                    photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
-                  }
-                  /* 1:1 방은 상대가 한 명뿐이라 이름을 반복해 적지 않습니다. */
-                  showNames={isGroup}
-                />
-              ))}
-            </ol>
-          </>
-        )}
-        <div ref={bottomRef} />
+          {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
+          <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+        </header>
+
+        <div className="flex-1 px-4 pb-[104px]">
+          {loading ? (
+            <div className="flex flex-col gap-4 px-1 pt-4">
+              <Skeleton className="h-12 w-2/3 rounded-2xl" />
+              <Skeleton className="ml-auto h-12 w-1/2 rounded-2xl" />
+              <Skeleton className="h-12 w-3/5 rounded-2xl" />
+            </div>
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : messages.length === 0 ? (
+            <EmptyState
+              icon={<ChatIcon className="h-10 w-10" />}
+              title="아직 대화가 없어요"
+              description={
+                isGroup
+                  ? "첫 인사를 남겨보세요. 모든 원우에게 보입니다."
+                  : `${title} 원우에게 첫 메시지를 보내보세요.`
+              }
+            />
+          ) : (
+            <>
+              {hasMore ? (
+                <div className="flex justify-center py-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      skipAutoScroll.current = true;
+                      setCount((previous) => previous + CHAT_PAGE_SIZE);
+                    }}
+                    className="rounded-full bg-white px-4 py-2 text-[13px] font-bold text-ink-muted shadow-[var(--shadow-card)]"
+                  >
+                    이전 메시지 더 보기
+                  </button>
+                </div>
+              ) : null}
+
+              {/* gap은 같은 사람이 연달아 보낸 말풍선 사이의 간격입니다. */}
+              <ol className="flex flex-col gap-2.5 pt-2">
+                {messages.map((message, index) => (
+                  <MessageRow
+                    key={message.id}
+                    message={message}
+                    previous={messages[index - 1]}
+                    isMine={message.senderId === uid}
+                    senderName={resolveSenderName(message, nameByUid)}
+                    /* 지금 프로필 사진을 우선 쓰고, 없으면 예전 메시지에 남은 사진. */
+                    senderPhoto={
+                      photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
+                    }
+                    /* 1:1 방은 상대가 한 명뿐이라 이름을 반복해 적지 않습니다. */
+                    showNames={isGroup}
+                  />
+                ))}
+              </ol>
+            </>
+          )}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       {/* 입력창 — 탭바가 없으므로 화면 맨 아래에 붙습니다. */}
       <div
         className="fixed inset-x-0 bottom-0 z-20 bg-white/95 px-4 pt-2 backdrop-blur"
-        style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
+        style={{ ...slide, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
         {/*
           입력칸을 눌렀을 때 둘러지던 주황 테두리(focus:ring)는 뺐습니다.
