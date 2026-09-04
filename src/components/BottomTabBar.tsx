@@ -50,10 +50,14 @@ export default function BottomTabBar() {
      * 당근처럼 화면 아래에 떠 있는 가로로 긴 알약 모양입니다.
      * 화면 맨 아래에 붙이지 않고 조금 띄워야 알약으로 보이므로,
      * 아이폰 홈 바(safe-area) 위로 한 뼘 더 올려 둡니다.
+     *
+     * 좌우 여백은 px-5 — 화면 안쪽 카드들과 같은 값이라, 알약의 양 끝이
+     * 원우수첩 카드의 양 끝과 정확히 맞아떨어집니다.
+     * 폭 상한 520px은 본문 최대폭 560px에서 이 여백(20px씩)을 뺀 값입니다.
      */
     <nav
       aria-label="주요 메뉴"
-      className="fixed inset-x-0 z-30 px-4"
+      className="fixed inset-x-0 z-30 px-5"
       style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
       {/* 알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다. */}
@@ -76,9 +80,12 @@ export default function BottomTabBar() {
            */
           const itemClassName = active ? "text-brand-500" : "text-ink-muted";
           /*
-           * 탭 한 칸의 위아래 여백(py-1.5)은 알약 높이를 정하는 값이기도 합니다.
-           * 위아래를 똑같이 두었기 때문에 아이콘과 글씨를 합친 덩어리가
-           * 알약 한가운데에 옵니다. 한쪽만 키우면 가운데가 어긋납니다.
+           * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
+           * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
+           *  - 두 값의 합(16px)이 알약 높이를 정합니다. 같이 키우면 높아집니다.
+           *  - 두 값의 차(4px) 때문에 아이콘과 글씨를 합친 덩어리가
+           *    수학적 한가운데보다 2px 위에 섭니다. 눈으로는 이쪽이 가운데로
+           *    보입니다. 정확히 가운데로 되돌리려면 두 값을 같게 두면 됩니다.
            */
           return (
             <li key={href} className="flex-1">
@@ -93,7 +100,7 @@ export default function BottomTabBar() {
                   event.preventDefault();
                   scrollToTop();
                 }}
-                className={`flex h-full flex-col items-center justify-center rounded-full py-1.5 transition ${itemClassName}`}
+                className={`flex h-full flex-col items-center justify-center rounded-full pt-1.5 pb-2.5 transition ${itemClassName}`}
               >
                 <span className="relative flex items-center justify-center">
                   <Icon

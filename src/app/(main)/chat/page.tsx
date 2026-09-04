@@ -50,7 +50,8 @@ export default function ChatListPage() {
     <>
       <PageHeader title="채팅" right={<ProfileAvatarButton />} />
 
-      <div className="px-4 pb-8">
+      {/* 좌우 여백은 다른 탭과 같은 px-5로 맞춥니다. */}
+      <div className="px-5 pb-8">
         {loading ? (
           <ul className="flex flex-col gap-2">
             {[0, 1, 2].map((key) => (
