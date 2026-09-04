@@ -9,6 +9,9 @@ import {
   MegaphoneIcon,
   UsersIcon,
 } from "@/components/icons";
+import { useAuth } from "@/lib/auth-context";
+import { useUnreadChatCount } from "@/lib/hooks";
+import { UNREAD_BADGE_MAX } from "@/lib/constants";
 
 /**
  * 하단 탭 5개 (기획서 A안).
@@ -39,6 +42,8 @@ function scrollToTop() {
 
 export default function BottomTabBar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const unreadChatCount = useUnreadChatCount(user?.uid);
 
   return (
     <nav
@@ -52,6 +57,12 @@ export default function BottomTabBar() {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           // 탭의 첫 화면에 이미 서 있는지 (하위 화면에 들어와 있는 것과 구분합니다)
           const atTabRoot = pathname === href;
+          /*
+           * 안 읽은 개수 배지는 채팅에만 답니다.
+           * 채팅 화면을 보고 있는 동안에는 달지 않습니다. 새 메시지가 올 때마다
+           * 배지가 반짝 떴다가 읽음 처리로 사라지는 것이 오히려 어수선합니다.
+           */
+          const badge = href === "/chat" && pathname !== "/chat" ? unreadChatCount : 0;
           return (
             <li key={href} className="flex-1">
               <Link
@@ -68,11 +79,20 @@ export default function BottomTabBar() {
                 className="flex flex-col items-center gap-1 py-2.5"
               >
                 <span
-                  className={`flex h-8 w-14 items-center justify-center rounded-full transition ${
+                  className={`relative flex h-8 w-14 items-center justify-center rounded-full transition ${
                     active ? "bg-brand-50 text-brand-700" : "text-ink-faint"
                   }`}
                 >
                   <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.1 : 1.7} />
+
+                  {badge > 0 ? (
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-0 left-[calc(50%+6px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
+                    >
+                      {badge > UNREAD_BADGE_MAX ? `${UNREAD_BADGE_MAX}+` : badge}
+                    </span>
+                  ) : null}
                 </span>
                 <span
                   className={`text-[11px] ${
@@ -80,6 +100,10 @@ export default function BottomTabBar() {
                   }`}
                 >
                   {label}
+                  {/* 배지 숫자는 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
+                  {badge > 0 ? (
+                    <span className="sr-only">, 안 읽은 메시지 {badge}개</span>
+                  ) : null}
                 </span>
               </Link>
             </li>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import { ArrowUpIcon, ChatIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { markChatRead } from "@/lib/chat-read";
 import { db } from "@/lib/firebase";
 import { formatClockTime, formatDateDivider, isSameDay } from "@/lib/format";
-import { useMessages } from "@/lib/hooks";
+import { useApprovedMembers, useMessages } from "@/lib/hooks";
 import { CHAT_PAGE_SIZE, COHORT, MAIN_CHAT_ROOM_ID } from "@/lib/constants";
 import type { MessageDoc } from "@/lib/types";
 
@@ -17,14 +18,29 @@ export default function ChatPage() {
   const { user, profile } = useAuth();
   const [count, setCount] = useState(CHAT_PAGE_SIZE);
   const { messages, loading, error, hasMore } = useMessages(count);
+  const { data: members } = useApprovedMembers();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageId = messages.at(-1)?.id;
+  const uid = user?.uid;
   /** "더 보기"로 과거를 불러왔을 때는 맨 아래로 끌어내리지 않습니다. */
   const skipAutoScroll = useRef(false);
+
+  /*
+   * 보낸 사람의 지금 이름을 uid로 찾아볼 수 있게 해둡니다.
+   * 메시지에도 이름을 적어 두지만, 원우가 이름을 고치면 예전 메시지까지
+   * 함께 바뀌는 편이 자연스럽습니다.
+   */
+  const nameByUid = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const member of members) {
+      if (member.name) map.set(member.uid, member.name);
+    }
+    return map;
+  }, [members]);
 
   useEffect(() => {
     if (skipAutoScroll.current) {
@@ -33,6 +49,16 @@ export default function ChatPage() {
     }
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [lastMessageId, loading]);
+
+  /*
+   * 채팅을 보고 있는 동안은 계속 "읽음"으로 표시합니다.
+   * 그래야 하단 탭의 안 읽은 개수 배지가 사라지고, 보는 중에 새 메시지가
+   * 와도 배지가 다시 붙지 않습니다.
+   */
+  useEffect(() => {
+    if (!uid || loading) return;
+    void markChatRead(uid);
+  }, [uid, loading, lastMessageId]);
 
   async function handleSend(event: React.FormEvent) {
     event.preventDefault();
@@ -47,7 +73,8 @@ export default function ChatPage() {
     try {
       await addDoc(collection(db, "chatRooms", MAIN_CHAT_ROOM_ID, "messages"), {
         senderId: user.uid,
-        senderNickname: profile?.nickname || profile?.name || "원우",
+        // 채팅에는 별칭이 아니라 본명으로 나옵니다.
+        senderName: profile?.name || profile?.nickname || "원우",
         senderPhotoURL: profile?.photoURL ?? null,
         text,
         imageUrl: null,
@@ -108,7 +135,8 @@ export default function ChatPage() {
                   key={message.id}
                   message={message}
                   previous={messages[index - 1]}
-                  isMine={message.senderId === user?.uid}
+                  isMine={message.senderId === uid}
+                  senderName={resolveSenderName(message, nameByUid)}
                 />
               ))}
             </ol>
@@ -150,15 +178,33 @@ export default function ChatPage() {
   );
 }
 
+/**
+ * 말풍선에 띄울 보낸 사람 이름 — 언제나 본명입니다.
+ *
+ * 1) 지금 원우수첩에 올라와 있는 이름을 가장 먼저 씁니다.
+ * 2) 탈퇴 등으로 못 찾으면 메시지에 적어둔 이름을 씁니다.
+ * 3) 본명으로 바꾸기 전에 쌓인 메시지에는 별칭만 있어서 그거라도 씁니다.
+ */
+function resolveSenderName(message: MessageDoc, nameByUid: Map<string, string>): string {
+  return (
+    nameByUid.get(message.senderId) ||
+    message.senderName ||
+    message.senderNickname ||
+    "원우"
+  );
+}
+
 /** 말풍선 한 줄. 날짜가 바뀌면 위에 날짜 구분선을 함께 그립니다. */
 function MessageRow({
   message,
   previous,
   isMine,
+  senderName,
 }: {
   message: MessageDoc;
   previous?: MessageDoc;
   isMine: boolean;
+  senderName: string;
 }) {
   // 서버 시각이 아직 도착하지 않은 방금 보낸 메시지는 현재 시각으로 보여줍니다.
   const sentAt = message.createdAt?.toDate() ?? new Date();
@@ -180,7 +226,7 @@ function MessageRow({
 
       {showSender ? (
         <p className="mt-2 mb-1 pl-[52px] text-[12px] font-medium text-ink-faint">
-          {message.senderNickname}
+          {senderName}
         </p>
       ) : null}
 
@@ -189,7 +235,7 @@ function MessageRow({
           showSender ? (
             <Avatar
               src={message.senderPhotoURL}
-              name={message.senderNickname}
+              name={senderName}
               seed={message.senderId}
               size={40}
             />

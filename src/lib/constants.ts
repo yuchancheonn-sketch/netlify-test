@@ -39,6 +39,13 @@ export const MAIN_CHAT_ROOM_ID = "main";
 export const CHAT_PAGE_SIZE = 50;
 
 /**
+ * 하단 탭 배지에 표시할 안 읽은 메시지의 최대 개수.
+ * 이 수를 넘으면 "99+"로 줄여 보여줍니다. (카카오톡과 같은 방식)
+ * 세는 개수에도 상한이 되어, 한참 만에 들어와도 읽기 한도를 크게 쓰지 않습니다.
+ */
+export const UNREAD_BADGE_MAX = 99;
+
+/**
  * 프로필 사진 한 변의 길이(px).
  *
  * 사진을 Firebase Storage에 올리지 않고 Firestore 문서에 문자열로 담기 때문에

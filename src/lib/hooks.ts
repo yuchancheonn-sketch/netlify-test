@@ -8,12 +8,15 @@ import {
   onSnapshot,
   orderBy,
   query,
+  Timestamp,
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
+import { markChatRead } from "@/lib/chat-read";
+import { MAIN_CHAT_ROOM_ID, UNREAD_BADGE_MAX } from "@/lib/constants";
 import { todayString } from "@/lib/format";
 import type {
+  ChatReadDoc,
   EventDoc,
   MessageDoc,
   PhotoAlbumDoc,
@@ -290,4 +293,84 @@ export function useMessages(count: number) {
   }, [count]);
 
   return { messages, loading, error, hasMore };
+}
+
+/**
+ * 내가 단체방을 마지막으로 본 시각. (chatReads/{uid})
+ *
+ * 한 번도 채팅을 연 적이 없는 원우는 기록이 없습니다. 그럴 때 예전 대화를
+ * 전부 "안 읽음"으로 세면 가입하자마자 배지에 99+가 뜨므로,
+ * 기록이 없으면 지금 시각으로 한 번 남겨 그때부터 세기 시작합니다.
+ */
+function useChatLastRead(uid?: string) {
+  /*
+   * 어느 계정의 기록인지 함께 들고 있습니다.
+   * 계정을 바꿨을 때 이전 사람의 시각을 잠깐이라도 쓰지 않기 위해서입니다.
+   * (구독을 갈아끼우는 동안 상태를 비우면 렌더가 한 번 더 돌아 낭비입니다.)
+   */
+  const [entry, setEntry] = useState<{ uid: string; lastReadAt: Timestamp | null } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!uid) return;
+
+    return onSnapshot(
+      doc(db, "chatReads", uid),
+      (snapshot) => {
+        const stored = (snapshot.data() as ChatReadDoc | undefined)?.lastReadAt ?? null;
+        // 기록이 아직 없는 원우라면 지금 시각으로 기준을 잡아둡니다.
+        if (!snapshot.exists()) void markChatRead(uid);
+        setEntry({ uid, lastReadAt: stored });
+      },
+      () => setEntry({ uid, lastReadAt: null }),
+    );
+  }, [uid]);
+
+  const matched = uid && entry?.uid === uid ? entry : null;
+  /*
+   * serverTimestamp()로 적은 값은 서버에 닿기 전까지 null로 보입니다.
+   * 기준 시각이 확실해지기 전에는 세지 않습니다. 잘못 세면 예전 대화가
+   * 통째로 안 읽음으로 잡혀 배지에 엉뚱한 숫자가 뜹니다.
+   */
+  return { lastReadAt: matched?.lastReadAt ?? null, loaded: matched?.lastReadAt != null };
+}
+
+/**
+ * 하단 탭 배지에 띄울, 아직 안 읽은 단체방 메시지 개수.
+ *
+ * 내가 보낸 메시지는 세지 않고, UNREAD_BADGE_MAX개까지만 셉니다.
+ * 마지막으로 본 시각 이후의 메시지만 받아오므로 평소에는 0건을 구독합니다.
+ */
+export function useUnreadChatCount(uid?: string): number {
+  const { lastReadAt, loaded } = useChatLastRead(uid);
+  // Timestamp 객체는 값이 같아도 매번 새로 만들어져 useEffect가 헛돕니다. 숫자로 비교합니다.
+  const sinceMillis = lastReadAt?.toMillis() ?? 0;
+  // 어느 기준 시각으로 센 개수인지 함께 들고 있어야, 채팅을 읽어 기준이
+  // 옮겨간 순간에 예전 개수가 잠깐 남아 보이지 않습니다.
+  const [entry, setEntry] = useState<{ sinceMillis: number; count: number } | null>(null);
+
+  useEffect(() => {
+    if (!uid || !loaded) return;
+
+    const unreadQuery = query(
+      collection(db, "chatRooms", MAIN_CHAT_ROOM_ID, "messages"),
+      where("createdAt", ">", Timestamp.fromMillis(sinceMillis)),
+      orderBy("createdAt", "desc"),
+      limit(UNREAD_BADGE_MAX + 1),
+    );
+
+    return onSnapshot(
+      unreadQuery,
+      (snapshot) => {
+        const fromOthers = snapshot.docs.filter(
+          (document) => (document.data() as MessageDoc).senderId !== uid,
+        );
+        setEntry({ sinceMillis, count: fromOthers.length });
+      },
+      () => setEntry({ sinceMillis, count: 0 }),
+    );
+  }, [uid, loaded, sinceMillis]);
+
+  return entry?.sinceMillis === sinceMillis ? entry.count : 0;
 }

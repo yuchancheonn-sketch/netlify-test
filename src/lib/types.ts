@@ -151,9 +151,31 @@ export interface PhotoDoc {
 export interface MessageDoc {
   id: string;
   senderId: string;
-  senderNickname: string;
+  /**
+   * 보낸 사람의 본명. 보낼 때 함께 적어 둡니다.
+   * 다만 화면에는 users 문서의 최신 이름을 먼저 쓰고, 그 사람을 못 찾을 때만
+   * 이 값을 씁니다. (이름을 고쳐도 예전 메시지까지 같이 바뀌도록)
+   */
+  senderName: string;
+  /**
+   * 별칭을 적어 두던 예전 자리.
+   * 본명으로 바꾸기 전에 쌓인 메시지에는 이 값밖에 없어서 아직 읽습니다.
+   */
+  senderNickname?: string;
   senderPhotoURL: string | null;
   text: string;
   imageUrl: string | null;
   createdAt: Timestamp | null;
+}
+
+/**
+ * chatReads/{uid} — 내가 단체방을 마지막으로 본 시각.
+ *
+ * 하단 탭의 안 읽은 개수 배지가 이 시각을 기준으로 셉니다.
+ * users 문서에 넣지 않고 따로 둔 이유는, users 문서에는 프로필 사진이
+ * 통째로 들어 있어서 값 하나를 고칠 때마다 그 큰 문서가 모두에게 다시
+ * 내려가기 때문입니다. 이 문서는 시각 하나뿐이라 아주 가볍습니다.
+ */
+export interface ChatReadDoc {
+  lastReadAt: Timestamp | null;
 }
