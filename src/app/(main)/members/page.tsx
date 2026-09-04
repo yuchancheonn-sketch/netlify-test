@@ -122,11 +122,17 @@ export default function MembersPage() {
                 type="button"
                 onClick={() => setFilter(value)}
                 aria-pressed={active}
-                className={`flex-1 rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
+                className={`flex flex-1 items-center justify-center rounded-full px-3 py-2 text-[13px] font-bold transition ${
                   active ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
-                {label}
+                {/*
+                  글씨를 감싸서 알약 한가운데에 앉힙니다.
+                  leading-none로 글줄 높이를 글자 크기와 같게 잘라내고 1px 올립니다 —
+                  한글 폰트는 내림 부분(descender)이 커서, 상자 한가운데에 맞춰도
+                  눈으로는 살짝 아래에 앉아 보입니다.
+                */}
+                <span className="-mt-px leading-none">{label}</span>
               </button>
             );
           })}
