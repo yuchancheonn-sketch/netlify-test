@@ -58,11 +58,12 @@ export default function SessionNotes() {
         */
         <div className="overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
           {/*
-            제목이 카드 모서리에서 떨어진 거리는 위 "오늘의 도산" 카드와 같게 맞췄습니다.
-            그쪽은 카드에 px-6 pt-5를 주고 제목에 mb-4를 얹었습니다 —
-            여기는 카드에 안쪽 여백이 없으니 제목이 그 값을 그대로 들고 있습니다.
+            제목 글씨 둘레의 여백은 위 "오늘의 도산" 카드와 같게 맞췄습니다.
+            왼쪽 24px, 위 12px, 아래 8px — 그쪽은 카드에 px-6 pt-3을 주고
+            제목에 mb-2를 얹었고, 여기는 카드에 안쪽 여백이 없으니
+            제목이 그 값을 그대로 들고 있습니다.
           */}
-          <h2 className="px-6 pt-5 pb-4 text-[18px] font-bold text-ink">수업 기록</h2>
+          <h2 className="px-6 pt-3 pb-2 text-[18px] font-bold text-ink">수업 기록</h2>
 
           {/* 줄 사이 선은 흰색 — 자리는 그대로 두되 눈에는 보이지 않게 합니다. */}
           <ul className="divide-y divide-white">
