@@ -85,15 +85,14 @@ export default function SessionNotes() {
                     onClick={() => setEditingWeek(week)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
                   >
-                    {/* 속은 흰색, 테두리와 숫자는 주황. 카드가 희어서 테두리가 원을 잡아줍니다. */}
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-brand-500 bg-white text-[16px] font-bold text-brand-500 tabular-nums">
-                      {/*
-                        숫자를 감싸서 원 한가운데에 앉힙니다.
-                        leading-none로 글줄 높이를 글자 크기와 같게 잘라내고,
-                        -mt-px로 1px 올립니다 — 한글 폰트는 내림 부분(descender)이
-                        커서 숫자만 놓으면 가운데보다 살짝 아래에 앉습니다.
-                      */}
-                      <span className="-mt-px leading-none">{week}</span>
+                    {/*
+                      원 없이 숫자만 둡니다.
+                      폭을 32px로 못 박아 두는 이유: 한 자리(1)와 두 자리(11)의
+                      너비가 달라서, 그냥 두면 줄마다 제목 시작점이 어긋납니다.
+                      tabular-nums는 숫자 폭을 서로 같게 맞춰줍니다.
+                    */}
+                    <span className="w-8 shrink-0 text-center text-[21px] font-bold text-brand-500 tabular-nums">
+                      {week}
                     </span>
 
                     <span className="min-w-0 flex-1">
