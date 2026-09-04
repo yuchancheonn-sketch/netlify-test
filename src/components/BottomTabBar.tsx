@@ -31,12 +31,24 @@ import { UNREAD_BADGE_MAX } from "@/lib/constants";
  * 필요 없어졌습니다.
  */
 const TABS = [
-  { href: "/home", label: "홈", Icon: HomeIcon },
-  { href: "/members", label: "원우", Icon: UsersIcon },
-  { href: "/library", label: "자료", Icon: LibraryIcon },
-  { href: "/chat", label: "채팅", Icon: ChatIcon },
-  { href: "/news", label: "소식", Icon: MegaphoneIcon },
+  /*
+   * owns: 이 탭에 딸린 것으로 볼 다른 주소들.
+   *
+   * 모임 화면(/events)은 탭이 따로 없고 홈의 "모임 일정 전체 보기"로 들어갑니다.
+   * 여기에 적어두지 않으면 모임 화면에서 다섯 탭이 모두 꺼진 채로 보여,
+   * 원우가 앱의 어디에 서 있는지 알 수 없게 됩니다.
+   */
+  { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events"] },
+  { href: "/members", label: "원우", Icon: UsersIcon, owns: [] },
+  { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
+  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
+  { href: "/news", label: "소식", Icon: MegaphoneIcon, owns: [] },
 ] as const;
+
+/** 지금 보고 있는 주소가 이 탭에 속하는지. 하위 화면(/events/3 등)까지 포함합니다. */
+function tabHolds(pathname: string, root: string): boolean {
+  return pathname === root || pathname.startsWith(`${root}/`);
+}
 
 /**
  * 화면을 맨 위로 부드럽게 올립니다.
@@ -111,9 +123,10 @@ export default function BottomTabBar() {
   /** 끌고 난 직후의 손뗌이 링크 이동으로 이어지지 않도록 막는 표시 */
   const draggedRef = useRef(false);
 
-  // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
+  // 앨범 상세처럼 하위 화면에 들어가 있어도 그 탭이 켜져 보이도록 접두사로 비교합니다.
   const activeIndex = TABS.findIndex(
-    ({ href }) => pathname === href || pathname.startsWith(`${href}/`),
+    ({ href, owns }) =>
+      tabHolds(pathname, href) || owns.some((root) => tabHolds(pathname, root)),
   );
 
   /*

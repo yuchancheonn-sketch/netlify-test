@@ -16,15 +16,24 @@ export default function PageHeader({
   eyebrow,
   right,
   back,
+  backHref,
 }: {
   title: ReactNode;
   /** 제목 위에 작게 붙는 문구 */
   eyebrow?: ReactNode;
   right?: ReactNode;
-  /** 뒤로가기 화살표를 보여줄지 */
+  /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
   back?: boolean;
+  /**
+   * 뒤로가기가 갈 곳을 못 박고 싶을 때.
+   *
+   * 기록을 되돌리는 대신 이 주소로 갑니다. 여러 곳에서 들어올 수 있는 화면인데
+   * 돌아갈 자리는 하나로 정해두고 싶을 때 씁니다. (예: 모임 → 홈)
+   */
+  backHref?: string;
 }) {
   const router = useRouter();
+  const showBack = back || !!backHref;
 
   return (
     /*
@@ -38,10 +47,10 @@ export default function PageHeader({
       className="flex items-start gap-3 px-4 pb-3"
       style={{ paddingTop: "calc(6px + env(safe-area-inset-top))" }}
     >
-      {back ? (
+      {showBack ? (
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => (backHref ? router.push(backHref) : router.back())}
           aria-label="뒤로 가기"
           className="-ml-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
         >

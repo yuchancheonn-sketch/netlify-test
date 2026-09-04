@@ -38,6 +38,8 @@ export default function EventsPage() {
     <>
       <PageHeader
         title="모임"
+        /* 홈의 "모임 일정 전체 보기"로 들어오는 화면이라, 돌아갈 자리를 홈으로 못 박습니다. */
+        backHref="/home"
         right={
           <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
             {(
