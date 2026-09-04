@@ -30,7 +30,7 @@ import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video
 import type { MemberType } from "@/lib/types";
 
 const MEMBER_TYPES: { value: MemberType; emoji: string; label: string }[] = [
-  { value: "general", emoji: "🌿", label: "일반원우" },
+  { value: "general", emoji: "🌿", label: "일반 원우" },
   { value: "youth", emoji: "🌱", label: "대학생 원우" },
 ];
 

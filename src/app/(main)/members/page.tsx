@@ -25,12 +25,12 @@ type Filter = "all" | MemberType;
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "전체" },
-  { value: "general", label: "일반원우" },
+  { value: "general", label: "일반 원우" },
   { value: "youth", label: "대학생 원우" },
 ];
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
-  general: "일반원우",
+  general: "일반 원우",
   youth: "대학생 원우",
 };
 
@@ -116,7 +116,7 @@ export default function MembersPage() {
                   className={`rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
                     active
                       ? "bg-brand-500 text-white"
-                      : "bg-white text-ink-muted shadow-[var(--shadow-card)]"
+                      : "bg-white text-ink shadow-[var(--shadow-card)]"
                   }`}
                 >
                   {label}
@@ -125,17 +125,17 @@ export default function MembersPage() {
             })}
           </div>
           {!busy && !error ? (
-            <p className="shrink-0 text-[13px] text-ink-faint">
-              원우 <span className="font-bold text-ink-soft">{visible.length}</span>명
+            <p className="shrink-0 text-[14px] font-medium text-ink-soft">
+              원우 <span className="font-bold text-ink">{visible.length}</span>명
             </p>
           ) : null}
         </div>
 
         {/* 사용법 안내 */}
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
+        <p className="mt-3 text-[12px] leading-relaxed text-ink">
           사진을 누르면 크게 보이고, 이름을 누르면 회사·직책·휴대폰·자기소개를 볼 수 있어요.
-          <span className="font-bold text-ink-muted"> 수정</span> 버튼으로 서로의 정보를
-          채워줄 수 있고, 맨 아래 <span className="font-bold text-ink-muted">원우 추가하기</span>로
+          <span className="font-bold"> 수정</span> 버튼으로 서로의 정보를
+          채워줄 수 있고, 맨 아래 <span className="font-bold">원우 추가하기</span>로
           수첩에 빠진 원우를 올릴 수 있습니다.
         </p>
 

@@ -29,7 +29,7 @@ import { useAllUsers, useRoster } from "@/lib/hooks";
 import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
-  general: "일반원우",
+  general: "일반 원우",
   youth: "대학생 원우",
 };
 

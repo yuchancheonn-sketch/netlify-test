@@ -29,7 +29,7 @@ import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video
 import type { MemberType } from "@/lib/types";
 
 const MEMBER_TYPES: { value: MemberType; label: string }[] = [
-  { value: "general", label: "일반원우" },
+  { value: "general", label: "일반 원우" },
   { value: "youth", label: "대학생 원우" },
 ];
 
