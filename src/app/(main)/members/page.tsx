@@ -247,7 +247,8 @@ function MemberRow({
   const affiliation = affiliationLine(entry);
 
   return (
-    <div className="flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)]">
+    /* gap-4 = 썸네일과 이름 사이 16px. 이 값이 이름 줄의 왼쪽 자리를 정합니다. */
+    <div className="flex items-center gap-4 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
