@@ -99,12 +99,29 @@ export function SplashScreen() {
         className="relative flex min-h-dvh w-full flex-col items-center px-8 pt-16"
         style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom))" }}
       >
-        <p className="animate-splash-in font-serif text-[46px] leading-none font-semibold tracking-[0.1em] text-ink">
-          {APP_DEFINITION_HANJA}
-        </p>
-        <p className="animate-splash-in mt-5 text-[13px] font-bold text-brand-500">
+        <p className="animate-splash-in text-[13px] font-bold text-brand-500">
           {COURSE_FULL_NAME}
         </p>
+
+        {/*
+          애기애타(愛己愛他)를 두 글자씩 세로로 세워 얼굴 양옆에 둡니다.
+          세로쓰기는 오른쪽 줄부터 읽으므로 오른쪽이 愛己, 왼쪽이 愛他입니다.
+          앱 아이콘의 글자 배치와 같습니다.
+        */}
+        <div
+          aria-label={APP_DEFINITION_HANJA}
+          role="img"
+          className="animate-splash-in pointer-events-none absolute inset-x-0 top-[27%] flex justify-between px-5 font-serif text-[60px] leading-none font-semibold text-ink"
+        >
+          <span className="flex flex-col items-center gap-4">
+            <span aria-hidden="true">愛</span>
+            <span aria-hidden="true">他</span>
+          </span>
+          <span className="flex flex-col items-center gap-4">
+            <span aria-hidden="true">愛</span>
+            <span aria-hidden="true">己</span>
+          </span>
+        </div>
 
         {/* 사진이 보이는 자리 */}
         <div className="flex-1" />
