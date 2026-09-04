@@ -77,10 +77,16 @@ type PillDrag = {
 };
 
 /**
- * 탭 한 칸의 몇 %까지 어긋나도 "맞아떨어졌다"고 볼지.
- * 0.2 = 칸 폭의 20%. 이보다 벗어나 있으면 이동하지 않고 원래 자리로 돌아갑니다.
+ * 알약을 끈 거리가 몇 칸째인지.
+ *
+ * 지나온 칸 수만 셉니다 — 한 칸 반을 끌었으면 두 칸째에는 아직 못 닿았으므로
+ * 방금 지나온 한 칸째로 봅니다. 반올림하지 않는 것이 중요합니다. 반올림하면
+ * 한 칸 반에서 두 칸째로 튀어, 아직 닿지도 않은 탭으로 넘어가 버립니다.
+ * (음수도 같습니다: 왼쪽으로 한 칸 반은 왼쪽 한 칸째입니다.)
  */
-const ALIGN_TOLERANCE = 0.2;
+function passedSlots(dx: number, slot: number): number {
+  return Math.trunc(dx / slot);
+}
 
 /** 알약 바깥 여백(p-1 = 4px). 칸 폭을 계산할 때 양쪽으로 빼줍니다. */
 const BAR_PADDING = 4;
@@ -159,18 +165,16 @@ export default function BottomTabBar() {
   function handleTouchEnd() {
     if (!drag) return;
 
-    const steps = drag.dx / drag.slot;
-    const nearest = Math.round(steps);
-    const target = activeIndex + nearest;
     /*
-     * 칸 한가운데에 제대로 맞았을 때만 그 탭으로 갑니다.
-     * 어중간하게 걸쳐 있으면 아무 일도 없이 원래 자리로 돌아갑니다.
+     * 지나온 칸까지만 갑니다.
+     * 한 칸도 못 지났으면(반 칸쯤 끌다 말았으면) 아무 일 없이 제자리로 돌아갑니다.
      */
-    const aligned = Math.abs(steps - nearest) <= ALIGN_TOLERANCE;
+    const passed = passedSlots(drag.dx, drag.slot);
+    const target = activeIndex + passed;
 
-    if (aligned && target !== activeIndex && TABS[target]) {
-      // 딱 맞는 자리에 세워두고 이동합니다. 주소가 따라오면 위에서 풀어줍니다.
-      setDrag({ ...drag, dx: nearest * drag.slot, settling: true, target });
+    if (passed !== 0 && TABS[target]) {
+      // 그 탭 자리에 세워두고 이동합니다. 주소가 따라오면 위에서 풀어줍니다.
+      setDrag({ ...drag, dx: passed * drag.slot, settling: true, target });
       router.push(TABS[target].href);
     } else {
       setDrag({ ...drag, dx: 0, settling: true, target: null });
@@ -178,16 +182,17 @@ export default function BottomTabBar() {
   }
 
   /*
-   * 알약이 덮고 있는 탭 — 이 탭의 아이콘과 글씨가 주황이 됩니다.
+   * 지금 주황으로 켜둘 탭 — 손을 떼면 가게 될 그 탭입니다.
    *
-   * 알약 폭이 한 칸과 같아서, 칸 한가운데(아이콘·글씨가 있는 자리)가 알약 안에
-   * 들어오는 탭은 언제나 하나뿐입니다. 그 하나를 고르는 식이 반올림입니다.
+   * 손을 뗐을 때와 똑같은 셈법(지나온 칸까지만)을 씁니다. 여기만 반올림하면
+   * 한 칸 반쯤 끌었을 때 두 칸째가 주황으로 켜졌다가 손을 떼면 한 칸째로
+   * 가버려서, 보이는 것과 벌어지는 일이 어긋납니다.
    */
   const coveredIndex =
     drag && drag.slot
       ? Math.min(
           TABS.length - 1,
-          Math.max(0, Math.round(activeIndex + drag.dx / drag.slot)),
+          Math.max(0, activeIndex + passedSlots(drag.dx, drag.slot)),
         )
       : activeIndex;
 
