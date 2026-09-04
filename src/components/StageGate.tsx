@@ -111,7 +111,7 @@ export function SplashScreen() {
         <div
           aria-label={APP_DEFINITION_HANJA}
           role="img"
-          className="animate-splash-in pointer-events-none absolute inset-x-0 top-[27%] flex justify-between px-5 font-serif text-[60px] leading-none font-semibold text-ink"
+          className="animate-splash-in pointer-events-none absolute inset-x-0 top-[12%] flex justify-between px-5 font-serif text-[80px] leading-none font-semibold text-ink"
         >
           <span className="flex flex-col items-center gap-4">
             <span aria-hidden="true">愛</span>
