@@ -85,7 +85,7 @@ export default function MembersPage() {
     <>
       <PageHeader title="원우수첩" right={<ProfileAvatarButton />} />
 
-      <div className="px-5">
+      <div className="px-4">
         {/* 검색 */}
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 h-[18px] w-[18px] -translate-y-1/2 text-ink-faint" />

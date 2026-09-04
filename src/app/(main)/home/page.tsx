@@ -24,7 +24,7 @@ export default function HomePage() {
       <PageHeader title={`${displayName}님`} right={<ProfileAvatarButton />} />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
-      <div className="flex flex-col gap-5 px-5">
+      <div className="flex flex-col gap-5 px-4">
         {/* 다가오는 모임 */}
         <section>
           {events.loading ? (

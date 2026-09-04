@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
       <ProfileForm mode="edit" onSaved={handleSaved} />
 
-      <div className="px-5 pb-10">
+      <div className="px-4 pb-10">
         <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-card)]">
           <dl className="flex items-center justify-between text-[14px]">
             <dt className="text-ink-faint">소속</dt>

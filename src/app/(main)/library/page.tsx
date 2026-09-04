@@ -44,7 +44,7 @@ export default function LibraryPage() {
     <>
       <PageHeader title="자료" right={<ProfileAvatarButton />} />
 
-      <div className="px-5 pb-8">
+      <div className="px-4 pb-8">
         <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
           {SUBTABS.map(({ value, label }) => (
             <button

@@ -55,7 +55,7 @@ export default function EventsPage() {
         }
       />
 
-      <div className="px-5 pb-6">
+      <div className="px-4 pb-6">
         {loading ? (
           <div className="flex flex-col gap-3">
             <Skeleton className="h-[98px] rounded-3xl" />

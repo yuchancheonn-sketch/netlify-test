@@ -67,13 +67,14 @@ export default function BottomTabBar() {
      * ★ 띄우는 값(아래 0px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
      *   흐림 층(BottomTabBarScrim)의 높이와 본문 아래 여백이 이 값에서 나옵니다.
      *
-     * 좌우 여백은 px-4(16px) — 화면 안쪽 카드들(px-5)보다 4px씩 적게 두어
-     * 알약이 카드보다 살짝 넓습니다.
-     * 폭 상한 528px은 본문 최대폭 560px에서 이 여백(16px씩)을 뺀 값입니다.
+     * 좌우 여백은 px-5(20px) — 화면 안쪽 카드들(px-4)보다 4px씩 더 두어
+     * 알약이 카드보다 살짝 좁습니다. 떠 있는 알약이라 안으로 조금 들어와 있는
+     * 편이 자연스럽습니다.
+     * 폭 상한 520px은 본문 최대폭 560px에서 이 여백(20px씩)을 뺀 값입니다.
      */
     <nav
       aria-label="주요 메뉴"
-      className="fixed inset-x-0 z-30 px-4"
+      className="fixed inset-x-0 z-30 px-5"
       style={{ bottom: "calc(0px + env(safe-area-inset-bottom))" }}
     >
       {/*
@@ -85,7 +86,7 @@ export default function BottomTabBar() {
         흰색을 이보다 더 묽게 하면 글씨가 뒷 내용과 겹쳐 읽기 힘들어지고,
         알약 아래쪽 절반에 깔린 흐림 층(MainShell)과의 경계도 드러납니다.
       */}
-      <ul className="mx-auto flex w-full max-w-[528px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
+      <ul className="mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150">
         {TABS.map(({ href, label, Icon }) => {
           // /events 같은 하위 화면에서도 관련 탭이 켜져 보이도록 접두사로 비교합니다.
           const active = pathname === href || pathname.startsWith(`${href}/`);

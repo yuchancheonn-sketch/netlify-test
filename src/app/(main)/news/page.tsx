@@ -56,7 +56,7 @@ export default function NewsPage() {
         right={<ProfileAvatarButton />}
       />
 
-      <div className="px-5 pb-6">
+      <div className="px-4 pb-6">
         <p className="mb-4 text-[12px] leading-relaxed text-ink-faint">
           도산아카데미 홈페이지에 올라오는 포럼·강좌 안내를 그대로 가져옵니다.
           글을 누르면 원문으로 넘어가요.

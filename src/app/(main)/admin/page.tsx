@@ -69,7 +69,7 @@ export default function AdminPage() {
     <>
       <PageHeader title="운영진" eyebrow="가입 승인과 명단 관리" back />
 
-      <div className="px-5 pb-8">
+      <div className="px-4 pb-8">
         <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
           {tabs.map(({ value, label }) => (
             <button

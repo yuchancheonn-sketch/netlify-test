@@ -28,12 +28,14 @@ export default function PageHeader({
 
   return (
     /*
+     * 좌우 여백은 각 화면의 본문(px-4)과 같은 값이라 제목과 카드의 왼쪽 끝이 맞습니다.
+     *
      * 위 여백은 최소한만 둡니다. 브라우저에서는 6px,
      * 홈 화면에 추가한 앱에서는 노치·상태바 높이를 더해 제목이 가리지 않게 합니다.
      * (viewport-fit: cover 라서 안전 영역을 직접 챙겨야 합니다.)
      */
     <header
-      className="flex items-start gap-3 px-5 pb-3"
+      className="flex items-start gap-3 px-4 pb-3"
       style={{ paddingTop: "calc(6px + env(safe-area-inset-top))" }}
     >
       {back ? (
