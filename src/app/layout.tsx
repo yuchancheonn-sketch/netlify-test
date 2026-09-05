@@ -13,9 +13,7 @@ import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
 const notoSansKr = Noto_Sans_KR({
   variable: "--font-noto-sans-kr",
   subsets: ["latin"],
-  // 600은 홈의 앱 이름에만 씁니다. 500은 옅고 700은 다른 제목과 같아져서,
-  // 그 사이 한 단계가 필요했습니다.
-  weight: ["400", "500", "600", "700", "900"],
+  weight: ["400", "500", "700", "900"],
   display: "swap",
 });
 

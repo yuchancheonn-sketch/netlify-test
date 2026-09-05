@@ -19,12 +19,11 @@ export default function HomePage() {
 
   return (
     <>
-      {/* 홈의 제목 자리는 앱 이름 하나로만 씁니다. */}
-      <PageHeader
-        wordmark
-        title={APP_DEFINITION_TITLE}
-        right={<HeaderActions />}
-      />
+      {/*
+        홈의 제목 자리는 앱 이름 하나로만 씁니다.
+        글씨는 다른 탭 제목("원우수첩", "자료" …)과 똑같습니다.
+      */}
+      <PageHeader title={APP_DEFINITION_TITLE} right={<HeaderActions />} />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
       <div className="flex flex-col gap-5 px-4">

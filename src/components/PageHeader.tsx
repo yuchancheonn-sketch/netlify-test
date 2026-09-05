@@ -15,27 +15,11 @@ export default function PageHeader({
   right,
   back,
   backHref,
-  wordmark,
 }: {
   title: ReactNode;
   /** 제목 위에 작게 붙는 문구 */
   eyebrow?: ReactNode;
   right?: ReactNode;
-  /**
-   * 제목을 앱 로고처럼 보이게 합니다. 홈에서만 씁니다.
-   *
-   * 홈은 "여기가 무슨 화면인가"를 알려줄 필요가 없는 자리라, 제목 칸을
-   * 앱의 이름 그 자체로 내줍니다.
-   *
-   * 다른 화면 제목(22px·700)보다 오히려 작고 옅게 씁니다. 여기서 이름은
-   * 무언가를 알려주는 제목이 아니라 그저 어느 앱인지 알려주는 표시라,
-   * 아래 일정 카드보다 앞서 나오지 않는 편이 낫습니다.
-   *
-   * 굵기 600은 layout.tsx에서 이 한 곳을 위해 따로 불러옵니다. 500은 옅고
-   * 700은 다른 화면 제목과 같아져서, 그 사이 한 단계가 필요했습니다.
-   * (불러오지 않은 굵기를 적으면 브라우저가 억지로 만들어내며 획이 뭉갭니다.)
-   */
-  wordmark?: boolean;
   /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
   back?: boolean;
   /**
@@ -76,13 +60,7 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        <h1
-          className={`truncate tracking-tight text-ink ${
-            wordmark ? "text-[20px] font-semibold" : "text-[22px] font-bold"
-          }`}
-        >
-          {title}
-        </h1>
+        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
       </div>
 
       {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
