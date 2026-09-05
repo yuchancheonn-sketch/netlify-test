@@ -6,7 +6,7 @@ import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
-import { APP_DEFINITION_HANJA, APP_NAME } from "@/lib/constants";
+import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
 import { quoteOfTheDay } from "@/lib/quotes";
 
@@ -20,14 +20,12 @@ export default function HomePage() {
   return (
     <>
       {/*
-        홈의 제목 자리는 앱의 이름으로 씁니다.
+        홈의 제목 자리는 앱 이름 하나로만 씁니다.
         내 이름은 오른쪽 프로필 사진이 이미 알려주고 있어서 겹칩니다.
-        한자 위에 한글 이름을 얹어, 한자를 못 읽어도 어디인지 알 수 있게 합니다.
       */}
       <PageHeader
         wordmark
-        eyebrow={APP_NAME}
-        title={APP_DEFINITION_HANJA}
+        title={APP_DEFINITION_TITLE}
         right={<ProfileAvatarButton />}
       />
 

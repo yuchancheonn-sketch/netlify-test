@@ -27,8 +27,7 @@ export default function PageHeader({
    * 제목을 앱 로고처럼 보이게 합니다. 홈에서만 씁니다.
    *
    * 홈은 "여기가 무슨 화면인가"를 알려줄 필요가 없는 자리라, 제목 칸을
-   * 앱의 이름 그 자체로 내줍니다. 서예 로고와 결을 맞춰 명조체로 쓰고,
-   * 한자가 서로 붙지 않도록 자간을 조금 벌립니다.
+   * 앱의 이름 그 자체로 내줍니다. 서예 로고와 결을 맞춰 명조체로 씁니다.
    *
    * 굵기가 font-bold(700)가 아니라 font-semibold(600)인 이유:
    * 명조체는 400과 600만 불러옵니다(layout.tsx). 700을 쓰면 브라우저가
@@ -78,7 +77,7 @@ export default function PageHeader({
         <h1
           className={`truncate text-ink ${
             wordmark
-              ? "font-serif text-[26px] font-semibold tracking-[0.08em]"
+              ? "font-serif text-[26px] font-semibold"
               : "text-[22px] font-bold tracking-tight"
           }`}
         >
