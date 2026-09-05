@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { CheckIcon, ChevronRightIcon } from "@/components/icons";
 import {
+  FieldError,
   FieldLabel,
   PrimaryButton,
   Skeleton,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useMySessionNotes, useSessions } from "@/lib/hooks";
 import {
   COURSE_TOTAL_SESSIONS,
@@ -150,11 +152,13 @@ function SessionEditSheet({
   const [instructor, setInstructor] = useState(session?.instructor ?? "");
   const [myNote, setMyNote] = useState(note);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || saving) return;
     setSaving(true);
+    setError(null);
 
     /*
      * 두 곳에 나눠 담습니다.
@@ -196,18 +200,17 @@ function SessionEditSheet({
     }
 
     /*
-     * ★ 서버 응답을 기다리지 않고 곧바로 창을 닫습니다.
-     *
-     * setDoc이 주는 약속은 "기기에 적혔다"가 아니라 "서버에 닿았다"입니다.
-     * 신호가 약하거나 무료 한도를 넘긴 동안에는 그 약속이 영영 풀리지 않아서,
-     * 기다리게 만들면 저장 버튼이 계속 돌기만 하고 창이 안 닫힙니다.
-     *
-     * 기다리지 않아도 적은 내용은 사라지지 않습니다 — Firestore는 쓰기를 먼저
-     * 기기 안(IndexedDB)에 적어두고 화면에도 바로 반영한 뒤, 연결되면 알아서
-     * 올려보냅니다. 앱을 껐다 켜도 그 대기열은 남아 있습니다.
+     * 서버 응답을 잠깐만 기다리고 창을 닫습니다 — 자세한 이유는 commitWrite에.
+     * 응답이 늦으면 기다리기를 그만두고 넘어가되(내용은 기기에 이미 적혀 있음),
+     * 그 안에 거절당하면 창을 열어둔 채 이유를 알려줍니다.
      */
-    void Promise.all(writes).catch(() => {});
-    onClose();
+    try {
+      await commitWrite(writes);
+      onClose();
+    } catch (caught) {
+      setError(saveErrorMessage(caught));
+      setSaving(false);
+    }
   }
 
   return (
@@ -269,6 +272,8 @@ function SessionEditSheet({
             className={`${inputClassName} resize-none leading-relaxed`}
           />
         </div>
+
+        {error ? <FieldError>{error}</FieldError> : null}
 
         <div className="mt-6 flex gap-3">
           {/*

@@ -10,6 +10,7 @@ import { CheckIcon, ClockIcon, PinIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { ddayLabel, formatDotDate, formatMonthDay, formatTime } from "@/lib/format";
 import { useApprovedMembers, useEvent, useRsvps } from "@/lib/hooks";
 import type { RsvpStatus } from "@/lib/types";
@@ -44,13 +45,16 @@ export default function EventDetailPage() {
     if (!user || saving) return;
     setSaving(true);
     setActionError(null);
+    // 응답을 잠깐만 기다립니다 — 이유는 lib/firestore-commit.ts에.
     try {
-      await setDoc(doc(db, "events", eventId, "rsvps", user.uid), {
-        status,
-        updatedAt: serverTimestamp(),
-      });
-    } catch {
-      setActionError("참석 여부를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      await commitWrite(
+        setDoc(doc(db, "events", eventId, "rsvps", user.uid), {
+          status,
+          updatedAt: serverTimestamp(),
+        }),
+      );
+    } catch (caught) {
+      setActionError(saveErrorMessage(caught));
     } finally {
       setSaving(false);
     }
@@ -59,7 +63,7 @@ export default function EventDetailPage() {
   async function handleDelete() {
     if (!window.confirm("이 일정을 삭제할까요? 되돌릴 수 없어요.")) return;
     try {
-      await deleteDoc(doc(db, "events", eventId));
+      await commitWrite(deleteDoc(doc(db, "events", eventId)));
       router.replace("/events");
     } catch {
       setActionError("일정을 삭제하지 못했어요.");

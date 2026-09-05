@@ -25,6 +25,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite } from "@/lib/firestore-commit";
 import { useAllUsers, useRoster } from "@/lib/hooks";
 import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 
@@ -125,8 +126,9 @@ function PendingSection({
   async function approve(user: UserDoc) {
     setBusyUid(user.uid);
     setError(null);
+    // 응답을 잠깐만 기다립니다 — 이유는 lib/firestore-commit.ts에.
     try {
-      await updateDoc(doc(db, "users", user.uid), { status: "approved" });
+      await commitWrite(updateDoc(doc(db, "users", user.uid), { status: "approved" }));
 
       /*
        * 미리 등록해 둔 명단에 같은 이름이 있으면 자동으로 이어 붙입니다.
@@ -137,7 +139,9 @@ function PendingSection({
         (entry) => !entry.linkedUid && entry.name.trim() === user.name.trim(),
       );
       if (matches.length === 1) {
-        await updateDoc(doc(db, "roster", matches[0].id), { linkedUid: user.uid });
+        await commitWrite(
+          updateDoc(doc(db, "roster", matches[0].id), { linkedUid: user.uid }),
+        );
       }
     } catch {
       setError("승인하지 못했어요. 잠시 후 다시 시도해 주세요.");
@@ -157,7 +161,7 @@ function PendingSection({
     setBusyUid(user.uid);
     setError(null);
     try {
-      await deleteDoc(doc(db, "users", user.uid));
+      await commitWrite(deleteDoc(doc(db, "users", user.uid)));
     } catch {
       // 규칙에서 users 삭제를 막아두었으므로 안내만 합니다.
       setError(
@@ -288,14 +292,16 @@ function RosterSection({
     setAdded(null);
     try {
       if (newNames.length === 1) {
-        await addDoc(collection(db, "roster"), {
-          name: newNames[0],
-          memberType,
-          linkedUid: null,
-          note: "",
-          createdBy: user.uid,
-          createdAt: serverTimestamp(),
-        });
+        await commitWrite(
+          addDoc(collection(db, "roster"), {
+            name: newNames[0],
+            memberType,
+            linkedUid: null,
+            note: "",
+            createdBy: user.uid,
+            createdAt: serverTimestamp(),
+          }),
+        );
       } else {
         // 여러 명을 한 번에 넣을 때는 한 묶음으로 보내 중간에 끊기지 않게 합니다.
         const batch = writeBatch(db);
@@ -309,7 +315,7 @@ function RosterSection({
             createdAt: serverTimestamp(),
           });
         }
-        await batch.commit();
+        await commitWrite(batch.commit());
       }
       setAdded(newNames.length);
       setNames("");

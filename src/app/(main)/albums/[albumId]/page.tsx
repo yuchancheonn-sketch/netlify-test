@@ -16,6 +16,7 @@ import PhotoViewer from "@/components/PhotoViewer";
 import { ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite } from "@/lib/firestore-commit";
 import { isCloudinaryConfigured, thumbnailUrl, uploadImage } from "@/lib/cloudinary";
 import { resizeImage } from "@/lib/image";
 import { formatDotDate } from "@/lib/format";
@@ -55,17 +56,24 @@ export default function AlbumPage() {
         const payload = keepOriginal ? file : await resizeImage(file, PHOTO_MAX_DIMENSION);
         const uploaded = await uploadImage(payload, file.name);
 
-        await addDoc(collection(db, "photoAlbums", albumId, "photos"), {
-          imageUrl: uploaded.url,
-          publicId: uploaded.publicId,
-          width: uploaded.width,
-          height: uploaded.height,
-          caption: "",
-          uploadedBy: user.uid,
-          uploadedByNickname: profile?.nickname || profile?.name || "원우",
-          uploadedAt: serverTimestamp(),
-          likes: [],
-        });
+        /*
+         * 사진 파일은 Cloudinary에 이미 올라갔습니다(위 uploadImage).
+         * 남은 것은 "이 앨범에 그 사진이 있다"는 짧은 기록뿐이라, 서버 응답이
+         * 늦으면 기다리지 않고 넘어갑니다 — 이유는 lib/firestore-commit.ts에.
+         */
+        await commitWrite(
+          addDoc(collection(db, "photoAlbums", albumId, "photos"), {
+            imageUrl: uploaded.url,
+            publicId: uploaded.publicId,
+            width: uploaded.width,
+            height: uploaded.height,
+            caption: "",
+            uploadedBy: user.uid,
+            uploadedByNickname: profile?.nickname || profile?.name || "원우",
+            uploadedAt: serverTimestamp(),
+            likes: [],
+          }),
+        );
 
         if (!firstUrl) firstUrl = uploaded.url;
         succeeded += 1;
@@ -83,10 +91,12 @@ export default function AlbumPage() {
     // 대표 이미지가 없으면 이번에 올린 첫 사진으로 채웁니다.
     if (succeeded > 0) {
       try {
-        await updateDoc(doc(db, "photoAlbums", albumId), {
-          photoCount: increment(succeeded),
-          ...(album?.coverImageUrl ? {} : { coverImageUrl: firstUrl }),
-        });
+        await commitWrite(
+          updateDoc(doc(db, "photoAlbums", albumId), {
+            photoCount: increment(succeeded),
+            ...(album?.coverImageUrl ? {} : { coverImageUrl: firstUrl }),
+          }),
+        );
       } catch {
         // 대표 이미지 갱신은 실패해도 사진 자체는 이미 올라갔으므로 넘어갑니다.
       }
@@ -98,8 +108,10 @@ export default function AlbumPage() {
   async function handleDeletePhoto(photoId: string) {
     if (!window.confirm("이 사진을 앨범에서 지울까요?")) return;
     try {
-      await deleteDoc(doc(db, "photoAlbums", albumId, "photos", photoId));
-      await updateDoc(doc(db, "photoAlbums", albumId), { photoCount: increment(-1) });
+      await commitWrite([
+        deleteDoc(doc(db, "photoAlbums", albumId, "photos", photoId)),
+        updateDoc(doc(db, "photoAlbums", albumId), { photoCount: increment(-1) }),
+      ]);
       setViewerIndex(null);
     } catch {
       setUploadError("사진을 지우지 못했어요.");
@@ -116,12 +128,12 @@ export default function AlbumPage() {
     }
     try {
       // 사진 문서를 먼저 지우고 앨범을 지웁니다.
-      await Promise.all(
-        photos.data.map((photo) =>
+      await commitWrite([
+        ...photos.data.map((photo) =>
           deleteDoc(doc(db, "photoAlbums", albumId, "photos", photo.id)),
         ),
-      );
-      await deleteDoc(doc(db, "photoAlbums", albumId));
+        deleteDoc(doc(db, "photoAlbums", albumId)),
+      ]);
       router.replace("/library");
     } catch {
       setUploadError("앨범을 지우지 못했어요.");

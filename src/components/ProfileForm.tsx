@@ -13,6 +13,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { cropToSquareDataUrl } from "@/lib/image";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
@@ -231,40 +232,43 @@ export default function ProfileForm({
         carried = null;
       }
 
-      await updateDoc(doc(db, "users", user.uid), {
-        name,
-        nickname: form.nickname.trim(),
-        photoURL: form.photoURL,
-        // 생일을 안 골랐으면 빈 값으로 둡니다. 수첩에는 "생일 미입력"으로 보입니다.
-        birthdayMonthDay:
-          form.month && form.day
-            ? `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`
-            : "",
-        birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
-        birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
-        // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
-        memberType: form.memberType || "general",
-        company: form.company.trim() || carried?.company || "",
-        position: form.position.trim() || carried?.position || "",
-        phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
-        councilRole: form.councilRole || carried?.councilRole || "",
-        bio: form.bio.trim(),
-        introduction: form.introduction.trim(),
-        introVideoUrl: form.introVideoUrl.trim() || carried?.introVideoUrl || "",
-        profileCompleted: true,
-        // 다른 원우가 채워준 뒤 본인이 손보면, 수첩의 "○○ 님이 채워주셨어요"가 사라집니다.
-        updatedBy: user.uid,
-        updatedByName: name,
-        updatedAt: serverTimestamp(),
-      });
+      // 응답을 잠깐만 기다리고 넘어갑니다 — 이유는 lib/firestore-commit.ts에.
+      await commitWrite(
+        updateDoc(doc(db, "users", user.uid), {
+          name,
+          nickname: form.nickname.trim(),
+          photoURL: form.photoURL,
+          // 생일을 안 골랐으면 빈 값으로 둡니다. 수첩에는 "생일 미입력"으로 보입니다.
+          birthdayMonthDay:
+            form.month && form.day
+              ? `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`
+              : "",
+          birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
+          birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
+          // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
+          memberType: form.memberType || "general",
+          company: form.company.trim() || carried?.company || "",
+          position: form.position.trim() || carried?.position || "",
+          phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
+          councilRole: form.councilRole || carried?.councilRole || "",
+          bio: form.bio.trim(),
+          introduction: form.introduction.trim(),
+          introVideoUrl: form.introVideoUrl.trim() || carried?.introVideoUrl || "",
+          profileCompleted: true,
+          // 다른 원우가 채워준 뒤 본인이 손보면, 수첩의 "○○ 님이 채워주셨어요"가 사라집니다.
+          updatedBy: user.uid,
+          updatedByName: name,
+          updatedAt: serverTimestamp(),
+        }),
+      );
       onSaved?.();
     } catch (caught) {
-      // 실패 이유를 함께 남깁니다. permission-denied면 보안 규칙을 아직 올리지 않은 것입니다.
-      const code = (caught as { code?: string })?.code ?? "";
+      // permission-denied면 보안 규칙을 아직 콘솔에 올리지 않은 것입니다.
       setSaveError(
-        code === "permission-denied"
-          ? "저장 권한이 없어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)"
-          : `저장하지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`,
+        saveErrorMessage(
+          caught,
+          "저장 권한이 없어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)",
+        ),
       );
     } finally {
       setSaving(false);

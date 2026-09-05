@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import {
   FieldError,
   FieldLabel,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import type { EventDoc } from "@/lib/types";
 
 /**
@@ -59,25 +60,31 @@ export default function EventForm({ event }: { event?: EventDoc }) {
       description: description.trim(),
     };
 
+    /*
+     * 응답을 잠깐만 기다리고 넘어갑니다 — 이유는 lib/firestore-commit.ts에.
+     *
+     * 새 일정은 addDoc의 결과에서 id를 받아야 그 일정 화면으로 갈 수 있는데,
+     * 서버를 기다리면 또 멈춰 설 수 있습니다. addDoc은 문서 참조(id 포함)를
+     * 보내기 전에 이미 만들어 두므로, id는 doc()으로 미리 뽑아 쓰고
+     * setDoc으로 적습니다. 그러면 저장이 늦어도 곧바로 이동할 수 있습니다.
+     */
     try {
-      if (event) {
-        await updateDoc(doc(db, "events", event.id), payload);
-        router.replace(`/events/${event.id}`);
-      } else {
-        const created = await addDoc(collection(db, "events"), {
-          ...payload,
-          createdBy: user.uid,
-          createdAt: serverTimestamp(),
-        });
-        router.replace(`/events/${created.id}`);
-      }
-    } catch (caught) {
-      const code = (caught as { code?: string })?.code ?? "";
-      setSaveError(
-        code === "permission-denied"
-          ? "일정 등록은 운영진만 할 수 있어요."
-          : "저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+      const target = event
+        ? doc(db, "events", event.id)
+        : doc(collection(db, "events"));
+
+      await commitWrite(
+        event
+          ? updateDoc(target, payload)
+          : setDoc(target, {
+              ...payload,
+              createdBy: user.uid,
+              createdAt: serverTimestamp(),
+            }),
       );
+      router.replace(`/events/${target.id}`);
+    } catch (caught) {
+      setSaveError(saveErrorMessage(caught, "일정 등록은 운영진만 할 수 있어요."));
       setSaving(false);
     }
   }

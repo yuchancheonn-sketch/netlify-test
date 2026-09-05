@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import {
   BIO_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
@@ -132,24 +133,31 @@ export default function MemberEditSheet({
       introVideoUrl: introVideoUrl.trim(),
     };
 
+    // 응답을 잠깐만 기다리고 창을 닫습니다 — 이유는 lib/firestore-commit.ts에.
     try {
       if (!entry) {
-        await addDoc(collection(db, "roster"), {
-          ...fields,
-          ...stamp,
-          linkedUid: null,
-          note: "",
-          createdBy: profile.uid,
-          createdAt: serverTimestamp(),
-        });
+        await commitWrite(
+          addDoc(collection(db, "roster"), {
+            ...fields,
+            ...stamp,
+            linkedUid: null,
+            note: "",
+            createdBy: profile.uid,
+            createdAt: serverTimestamp(),
+          }),
+        );
       } else if (entry.member) {
-        await updateDoc(doc(db, "users", entry.member.uid), { ...fields, ...stamp });
+        await commitWrite(
+          updateDoc(doc(db, "users", entry.member.uid), { ...fields, ...stamp }),
+        );
       } else if (entry.roster) {
-        await updateDoc(doc(db, "roster", entry.roster.id), { ...fields, ...stamp });
+        await commitWrite(
+          updateDoc(doc(db, "roster", entry.roster.id), { ...fields, ...stamp }),
+        );
       }
       onClose();
-    } catch {
-      setError("저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (caught) {
+      setError(saveErrorMessage(caught));
       setSaving(false);
     }
   }

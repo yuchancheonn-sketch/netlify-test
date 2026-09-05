@@ -16,6 +16,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { thumbnailUrl } from "@/lib/cloudinary";
 import { formatDotDate, todayString } from "@/lib/format";
 import { useAlbums } from "@/lib/hooks";
@@ -331,18 +332,23 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
 
     setSaving(true);
     setError(null);
+    // 응답을 잠깐만 기다리고 창을 닫습니다 — 이유는 lib/firestore-commit.ts에.
     try {
-      await addDoc(collection(db, "photoAlbums"), {
-        title: title.trim(),
-        eventDate,
-        coverImageUrl: null,
-        photoCount: 0,
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-      });
+      await commitWrite(
+        addDoc(collection(db, "photoAlbums"), {
+          title: title.trim(),
+          eventDate,
+          coverImageUrl: null,
+          photoCount: 0,
+          createdBy: user.uid,
+          createdAt: serverTimestamp(),
+        }),
+      );
       onClose();
-    } catch {
-      setError("앨범을 만들지 못했어요. 운영진 권한인지 확인해 주세요.");
+    } catch (caught) {
+      setError(
+        saveErrorMessage(caught, "앨범을 만들지 못했어요. 운영진 권한인지 확인해 주세요."),
+      );
       setSaving(false);
     }
   }
