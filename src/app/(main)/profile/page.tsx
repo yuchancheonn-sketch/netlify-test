@@ -7,6 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import { ChevronRightIcon } from "@/components/icons";
 import ProfileForm from "@/components/ProfileForm";
 import { useAuth } from "@/lib/auth-context";
+import { useSwipeBack } from "@/lib/use-swipe-back";
 import { COHORT } from "@/lib/constants";
 
 export default function ProfilePage() {
@@ -20,8 +21,33 @@ export default function ProfilePage() {
     window.setTimeout(() => setSaved(false), 2200);
   }
 
+  /*
+   * 오른쪽으로 밀어서 앞 화면으로 — 왼쪽 위 < 버튼과 같은 동작입니다.
+   * 손짓을 읽는 부분은 대화방과 함께 쓰는 lib/use-swipe-back.ts에 있습니다.
+   *
+   * router.back()을 쓰는 이유: 이 화면은 홈·원우수첩·자료·채팅·소식 어느
+   * 탭에서든 제목 줄의 사람 아이콘으로 들어옵니다. 갈 곳을 하나로 못 박으면
+   * 원우가 있던 탭이 아니라 엉뚱한 탭으로 나가게 됩니다.
+   * (제목 줄의 < 버튼도 같은 router.back()입니다.)
+   */
+  const swipe = useSwipeBack({ onCommit: () => router.back() });
+
   return (
-    <>
+    /*
+      밀려나는 부분과 손짓을 받는 부분이 같은 상자입니다.
+      대화방처럼 둘로 나눌 필요가 없습니다 — 이 화면에는 떠 있는(fixed) 요소가
+      없어서, 통째로 transform을 걸어도 자리가 틀어질 것이 없습니다.
+
+      바탕색은 body와 같은 canvas라, 밀려나 드러나는 자리도 색이 이어집니다.
+      min-h-dvh는 일부러 주지 않습니다 — MainShell이 이미 탭바 자리만큼 아래
+      여백을 두고 있어서, 여기에 화면 높이를 또 못 박으면 그 둘이 더해져
+      내용이 짧아도 화면이 괜히 스크롤됩니다.
+    */
+    <div
+      className="bg-canvas"
+      {...swipe.handlers}
+      style={{ ...swipe.touchAction, ...swipe.slideStyle }}
+    >
       <PageHeader title="내 프로필" back />
 
       {saved ? (
@@ -81,6 +107,6 @@ export default function ProfilePage() {
           작성한 글과 사진을 함께 정리해 드릴게요.
         </p>
       </div>
-    </>
+    </div>
   );
 }

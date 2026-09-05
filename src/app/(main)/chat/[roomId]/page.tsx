@@ -12,6 +12,7 @@ import { markChatRead } from "@/lib/chat-read";
 import { otherUidOf, sendChatMessage } from "@/lib/chat-rooms";
 import { formatClockTime, formatDateDivider, isSameDay } from "@/lib/format";
 import { useApprovedMembers, useMessages } from "@/lib/hooks";
+import { useSwipeBack } from "@/lib/use-swipe-back";
 import {
   CHAT_PAGE_SIZE,
   COHORT,
@@ -50,15 +51,6 @@ export default function ChatRoomPage({
   const skipAutoScroll = useRef(false);
 
   /*
-   * 오른쪽으로 밀어서 목록으로 나가기 — 왼쪽 위 < 버튼과 같은 동작입니다.
-   *
-   * dragX는 손가락을 따라 화면이 밀려난 거리입니다. 미는 동안에는 애니메이션
-   * 없이 손가락에 딱 붙고(snapping=false), 손을 떼는 순간부터 부드럽게
-   * 제자리로 돌아가거나 바깥으로 빠져나갑니다(snapping=true).
-   */
-  const [dragX, setDragX] = useState(0);
-  const [snapping, setSnapping] = useState(false);
-  /*
    * 대화방 뒤에 채팅 목록을 깔아 둘지.
    *
    * 늘 깔아 두지는 않습니다. 목록 화면은 방 목록·읽은 시각·방마다의 안 읽은
@@ -67,84 +59,16 @@ export default function ChatRoomPage({
    * 판정된 순간에만 붙였다가, 되돌아오는 애니메이션이 끝나면 떼어냅니다.
    */
   const [peeking, setPeeking] = useState(false);
-  /** 손짓이 시작된 자리. 세로 스크롤로 판정되면 null로 지웁니다. */
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
-  /** 가로인지 세로인지는 처음 8px을 움직여 본 뒤 한 번만 정하고 끝까지 지킵니다. */
-  const swipeAxis = useRef<"unknown" | "x" | "y">("unknown");
 
-  function handleTouchStart(event: React.TouchEvent) {
-    // 두 손가락은 확대·축소이지 넘기기가 아닙니다.
-    if (event.touches.length !== 1) return;
-    // 입력칸이나 버튼 위에서 시작한 손짓은 그쪽 몫으로 둡니다.
-    if ((event.target as HTMLElement).closest("input, textarea, button")) return;
-
-    const touch = event.touches[0];
-    swipeStart.current = { x: touch.clientX, y: touch.clientY };
-    swipeAxis.current = "unknown";
-    setSnapping(false);
-  }
-
-  function handleTouchMove(event: React.TouchEvent) {
-    const start = swipeStart.current;
-    if (!start) return;
-
-    const touch = event.touches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-
-    if (swipeAxis.current === "unknown") {
-      // 아직 어느 쪽인지 알기엔 너무 조금 움직였습니다.
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      /*
-       * 오른쪽으로, 그리고 세로보다 1.5배는 더 갔을 때만 넘기기로 봅니다.
-       * 이 기준이 없으면 대화를 비스듬히 훑어 올릴 때마다 방을 나가버립니다.
-       */
-      if (dx > 0 && dx > Math.abs(dy) * 1.5) {
-        swipeAxis.current = "x";
-        // 밀려나면 곧바로 뒤가 드러나므로, 이때 목록을 깔아 둡니다.
-        setPeeking(true);
-      } else {
-        swipeAxis.current = "y";
-        swipeStart.current = null;
-        return;
-      }
-    }
-
-    // 왼쪽으로 되돌아오는 건 따라가되, 시작점보다 왼쪽으로는 넘어가지 않습니다.
-    setDragX(Math.max(0, dx));
-  }
-
-  function handleTouchEnd() {
-    const start = swipeStart.current;
-    swipeStart.current = null;
-    setSnapping(true);
-
-    if (!start || swipeAxis.current !== "x") {
-      setDragX(0);
-      return;
-    }
-
-    // 화면 절반을 넘겼으면 손을 떼는 순간 마저 빠져나가고, 못 넘겼으면 제자리로.
-    if (dragX > window.innerWidth / 2) {
-      setDragX(window.innerWidth);
-      router.push("/chat");
-    } else {
-      setDragX(0);
-    }
-  }
-
-  /**
-   * 제자리로 돌아오는 애니메이션이 끝나면 뒤에 깔아 둔 목록을 떼어냅니다.
-   *
-   * 손을 떼자마자 떼어내면 대화방이 아직 비스듬히 밀려 있는 340ms 동안
-   * 뒤가 흰 벽으로 보입니다.
+  /*
+   * 오른쪽으로 밀어서 목록으로 나가기 — 왼쪽 위 < 버튼과 같은 동작입니다.
+   * 손짓을 읽는 부분은 내 프로필 화면과 함께 쓰는 lib/use-swipe-back.ts에 있습니다.
    */
-  function handleSlideSettled(event: React.TransitionEvent<HTMLDivElement>) {
-    // 안쪽 요소의 다른 애니메이션이 타고 올라온 것은 흘려보냅니다.
-    if (event.target !== event.currentTarget) return;
-    if (event.propertyName !== "transform") return;
-    if (dragX === 0) setPeeking(false);
-  }
+  const swipe = useSwipeBack({
+    onAxisLocked: () => setPeeking(true),
+    onCommit: () => router.push("/chat"),
+    onSettled: () => setPeeking(false),
+  });
 
   /*
    * 보낸 사람의 지금 이름을 uid로 찾아볼 수 있게 해둡니다.
@@ -298,10 +222,7 @@ export default function ChatRoomPage({
    * 상자를 기준으로 자리를 잡아서, 스크롤을 내려둔 상태에서는 입력줄이
    * 대화 맨 아래로 뚝 떨어집니다.
    */
-  const slide = {
-    transform: dragX ? `translateX(${dragX}px)` : undefined,
-    transition: snapping ? "transform 340ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
-  };
+  const slide = swipe.slideStyle;
 
   /*
    * 바깥 상자는 흰색이 아니라 목록과 같은 배경색입니다.
@@ -315,16 +236,8 @@ export default function ChatRoomPage({
   return (
     <div
       className="flex min-h-dvh flex-col bg-canvas"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      /*
-        세로 스크롤만 브라우저에 맡기고 가로는 우리가 씁니다.
-        이게 없으면 미는 도중에 브라우저가 제 나름의 가로 스크롤·뒤로가기를
-        끼어들어 처리해서 손짓이 중간에 끊깁니다.
-      */
-      style={{ touchAction: "pan-y" }}
+      {...swipe.handlers}
+      style={swipe.touchAction}
     >
       {/*
         대화방 뒤에 깔리는 진짜 채팅 목록.
@@ -348,7 +261,7 @@ export default function ChatRoomPage({
       <div
         className="relative z-10 flex flex-1 flex-col bg-white"
         style={slide}
-        onTransitionEnd={handleSlideSettled}
+        onTransitionEnd={swipe.onSlideSettled}
       >
         {/*
           제목 줄 — 다른 화면의 큰 제목(PageHeader) 대신 얇게 둡니다.
