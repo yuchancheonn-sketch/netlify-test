@@ -368,13 +368,18 @@ export function LockIcon({ className, strokeWidth = 1.8 }: IconProps) {
  * 사람 하나. 제목 줄 오른쪽의 "내 프로필" 단추에 씁니다.
  * (여럿이 나오는 UsersIcon은 원우수첩 탭이 이미 쓰고 있어 헷갈리지 않게 따로 그렸습니다.)
  */
-export function PersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function PersonIcon({ className, strokeWidth = 1.9 }: IconProps) {
+  /*
+    24 상자를 꽤 꽉 채웁니다(가로 3.9~20.1). 옆에 서는 톱니바퀴가 상자를
+    거의 다 쓰기 때문에, 여백을 넉넉히 두면 같은 크기로 지정해도 사람만
+    작아 보입니다. 둘의 크기는 지정값이 아니라 눈으로 맞춰야 합니다.
+  */
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
-      <circle cx="12" cy="8" r="3.6" stroke="currentColor" strokeWidth={strokeWidth} />
+      <circle cx="12" cy="7.44" r="4.1" stroke="currentColor" strokeWidth={strokeWidth} />
       {/* 어깨선은 양 끝을 열어 둡니다. 닫으면 반원처럼 보여 사람 같지 않습니다. */}
       <path
-        d="M4.9 19.6c0-3.4 3.2-5.5 7.1-5.5s7.1 2.1 7.1 5.5"
+        d="M3.91 20.66c0-3.88 3.65-6.27 8.09-6.27s8.09 2.39 8.09 6.27"
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
@@ -383,26 +388,27 @@ export function PersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-/** 톱니바퀴. 제목 줄 오른쪽의 "설정" 단추에 씁니다. */
-export function SettingsIcon({ className, strokeWidth = 1.8 }: IconProps) {
+/**
+ * 톱니바퀴. 제목 줄 오른쪽의 "설정" 단추에 씁니다.
+ *
+ * 둥근 돌기 여덟 개가 달린 고리 + 가운데 원입니다. 바깥선은 손으로 찍지
+ * 않고 "몸통 원 하나와 돌기 원 여덟 개를 합친 도형의 경계"로 계산했습니다.
+ *   · 몸통 반지름 7.2, 돌기 반지름 1.9, 돌기 중심까지 7.6 (바깥 9.5)
+ * 그래서 돌기와 고리가 만나는 자리가 정확히 맞물려 이어집니다.
+ * 눈대중으로 좌표를 찍으면 이음매에 미세한 각이 생겨 작게 줄였을 때 지저분해집니다.
+ *
+ * 비율을 바꾸고 싶으면 저 세 값으로 경로를 다시 계산하는 편이 안전합니다.
+ */
+export function SettingsIcon({ className, strokeWidth = 1.9 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
-      {/*
-        톱니는 하나를 그려 8번 돌려 붙입니다. 좌표를 여덟 벌 적어두면
-        굵기나 크기를 손볼 때 여덟 곳을 똑같이 고쳐야 합니다.
-      */}
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-        <path
-          key={angle}
-          d="M12 2.6v2.9"
-          stroke="currentColor"
-          strokeWidth={strokeWidth + 0.6}
-          strokeLinecap="round"
-          transform={`rotate(${angle} 12 12)`}
-        />
-      ))}
-      <circle cx="12" cy="12" r="6.4" stroke="currentColor" strokeWidth={strokeWidth} />
-      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
+      <path
+        d="M10.206 5.027A1.9 1.9 0 1 1 13.794 5.027A7.2 7.2 0 0 1 15.662 5.801A1.9 1.9 0 1 1 18.199 8.338A7.2 7.2 0 0 1 18.973 10.206A1.9 1.9 0 1 1 18.973 13.794A7.2 7.2 0 0 1 18.199 15.662A1.9 1.9 0 1 1 15.662 18.199A7.2 7.2 0 0 1 13.794 18.973A1.9 1.9 0 1 1 10.206 18.973A7.2 7.2 0 0 1 8.338 18.199A1.9 1.9 0 1 1 5.801 15.662A7.2 7.2 0 0 1 5.027 13.794A1.9 1.9 0 1 1 5.027 10.206A7.2 7.2 0 0 1 5.801 8.338A1.9 1.9 0 1 1 8.338 5.801A7.2 7.2 0 0 1 10.206 5.027Z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.1" stroke="currentColor" strokeWidth={strokeWidth} />
     </svg>
   );
 }

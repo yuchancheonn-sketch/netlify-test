@@ -80,14 +80,25 @@ export function HeaderActions() {
   return (
     <div className="flex items-center gap-1">
       <HeaderIconLink href="/profile" label="내 프로필 열기">
-        <PersonIcon className="h-[23px] w-[23px]" />
+        <PersonIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>
       <HeaderIconLink href="/settings" label="설정 열기">
-        <SettingsIcon className="h-[23px] w-[23px]" />
+        <SettingsIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>
     </div>
   );
 }
+
+/**
+ * 제목 줄 오른쪽 아이콘 크기. 두 아이콘이 같은 값을 봅니다.
+ *
+ * 값을 두 번 적으면 한쪽만 고쳐져 크기가 어긋나기 마련이라 한 곳에 묶었습니다.
+ * 27px은 하단 탭바 아이콘과 같은 크기입니다.
+ *
+ * (아이콘 자체가 24 상자를 얼마나 채우는지도 크기에 영향을 줍니다.
+ *  icons.tsx의 PersonIcon·SettingsIcon은 채우는 정도를 서로 맞춰 두었습니다.)
+ */
+const HEADER_ICON_SIZE = "h-[27px] w-[27px]";
 
 /**
  * 헤더 아이콘 단추 한 개.
