@@ -15,11 +15,21 @@ export default function PageHeader({
   right,
   back,
   backHref,
+  wordmark,
 }: {
   title: ReactNode;
   /** 제목 위에 작게 붙는 문구 */
   eyebrow?: ReactNode;
   right?: ReactNode;
+  /**
+   * 제목이 화면 이름이 아니라 앱 이름일 때. 홈에서만 씁니다.
+   *
+   * 글씨체와 굵기는 다른 화면 제목과 똑같이 두고 크기만 22 → 20px로
+   * 한 단계 낮춥니다. 홈의 "애기애타"는 여기가 어느 화면인지 알려주는
+   * 말이 아니라 그저 어느 앱인지 알려주는 표시라, 다른 탭의 제목만큼
+   * 크게 설 이유가 없습니다.
+   */
+  wordmark?: boolean;
   /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
   back?: boolean;
   /**
@@ -60,7 +70,13 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1
+          className={`truncate font-bold tracking-tight text-ink ${
+            wordmark ? "text-[20px]" : "text-[22px]"
+          }`}
+        >
+          {title}
+        </h1>
       </div>
 
       {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
