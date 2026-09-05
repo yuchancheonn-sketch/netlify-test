@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
@@ -48,31 +49,29 @@ export default function StageGate({
  * 흰 바탕 한가운데에 도산아카데미 로고만 둡니다. 도는 동그라미도, 점도,
  * 글씨도 없습니다 — 잠깐 스쳐 가는 화면이라 조용할수록 좋습니다.
  *
- * 로고 파일(public/brand/dosan-academy.png)이 아직 없으면 그 자리에
- * 기관 이름을 남색으로 대신 씁니다. 깨진 그림 아이콘이 뜨는 것보다 낫고,
- * 파일을 넣는 순간 따로 고칠 것 없이 로고로 바뀝니다.
+ * 로고는 public/brand/goose.png입니다. 파일 이름이 로고 같지 않은 것은
+ * 앱 아이콘의 기러기 무늬를 이 그림에서 따내느라 먼저 들어온 파일이기
+ * 때문입니다(scripts/generate-icons.mjs). 같은 그림을 두 벌 두면 언젠가
+ * 한쪽만 바뀌므로 그대로 함께 씁니다.
  */
 export function SplashScreen() {
-  const [logoMissing, setLogoMissing] = useState(false);
-
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-white px-8">
-      {logoMissing ? (
-        <p className="text-[20px] font-bold tracking-tight text-navy">도산아카데미</p>
-      ) : (
-        /*
-          next/image가 아니라 맨 img를 쓰는 이유: next/image는 가로·세로를
-          미리 알려줘야 하는데, 이 파일은 나중에 넣는 것이라 비율을 못 박아
-          둘 수 없습니다. 여기서는 폭만 정하고 높이는 비율대로 따라오게 둡니다.
-        */
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src="/brand/dosan-academy.png"
-          alt="도산아카데미"
-          onError={() => setLogoMissing(true)}
-          className="animate-splash-in h-auto w-[150px]"
-        />
-      )}
+      {/*
+        원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
+        고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
+
+        w-[150px] h-auto로 크기를 다시 잡아, 나중에 정사각형이 아닌 그림으로
+        바뀌더라도 눌리거나 늘어나지 않고 비율을 지킵니다.
+      */}
+      <Image
+        src="/brand/goose.png"
+        alt="도산아카데미"
+        width={700}
+        height={700}
+        priority
+        className="animate-splash-in h-auto w-[150px]"
+      />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
   );
