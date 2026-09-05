@@ -66,7 +66,7 @@ export default function ChatListPage() {
           <ul className="flex flex-col gap-2">
             {[0, 1, 2].map((key) => (
               <li key={key}>
-                {/* 실제 칸과 같은 높이(12 + 사진 54 + 12). 어긋나면 다 불러온 순간 목록이 덜컥 움직입니다. */}
+                {/* 실제 칸과 같은 높이(8 + 사진 62 + 8). 어긋나면 다 불러온 순간 목록이 덜컥 움직입니다. */}
                 <Skeleton className="h-[78px] rounded-3xl" />
               </li>
             ))}
@@ -142,20 +142,24 @@ function ChatRoomRow({
     <Link
       href={`/chat/${room.id}`}
       /*
-        칸 높이는 안쪽 여백이 정합니다.
+        칸 높이 = 위아래 여백 + 사진.
 
-        가운데 글 두 줄(16px + 14px)을 합쳐도 49px이라, 54px짜리 사진이
-        칸 높이를 혼자 정하고 있습니다. 그래서 글씨나 줄 간격을 건드려도
-        칸은 꿈쩍하지 않고, 여백만 높이를 움직입니다.
-        지금은 위아래 12px씩이라 12 + 54 + 12 = 78px입니다.
+        가운데 글 두 줄(16px + 14px)을 합쳐도 49px이라, 사진이 칸 높이를
+        혼자 정합니다. 글씨나 줄 간격을 건드려도 칸은 꿈쩍하지 않습니다.
+        지금은 8 + 62 + 8 = 78px입니다.
+
+        위아래(py-2)와 좌우(px-3)를 다르게 준 이유: 사진을 키우면서도 칸
+        높이는 78px 그대로 두려고 위아래만 8px로 좁혔습니다. 좌우까지 8px로
+        좁히면 오른쪽 시각·안 읽은 배지가 카드 모서리에 바짝 붙습니다.
         (아래 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
       */
-      className="flex items-center gap-3.5 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-3.5 rounded-3xl bg-white px-3 py-2 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
-        <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-500">
-          <UsersIcon className="h-7 w-7" />
+        // 아이콘도 사진과 같은 비율로 키웁니다(54:28 → 62:32).
+        <span className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-500">
+          <UsersIcon className="h-8 w-8" />
         </span>
       ) : (
         /*
@@ -168,7 +172,7 @@ function ChatRoomRow({
           src={other?.photoURL ?? null}
           name={title}
           seed={room.id}
-          size={54}
+          size={62}
           className="rounded-2xl!"
         />
       )}
