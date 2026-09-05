@@ -53,7 +53,13 @@ export default function LibraryPage() {
               type="button"
               onClick={() => setSubtab(value)}
               aria-pressed={subtab === value}
-              className={`flex-1 rounded-full py-1.5 text-[14px] font-bold transition ${
+              /*
+                위 4px(pt-1) + 아래 8px(pb-2).
+                두 값의 합(12px)이 py-1.5(6+6)와 같아서 알약 높이는 그대로이고,
+                두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
+                원우수첩의 서브탭과 같은 방식입니다.
+              */
+              className={`flex-1 rounded-full pt-1 pb-2 text-[14px] font-bold transition ${
                 subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >

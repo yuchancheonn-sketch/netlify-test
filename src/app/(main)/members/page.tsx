@@ -122,7 +122,13 @@ export default function MembersPage() {
                 type="button"
                 onClick={() => setFilter(value)}
                 aria-pressed={active}
-                className={`flex flex-1 items-center justify-center rounded-full px-3 py-2 text-[13px] font-bold transition ${
+                /*
+                  위 6px(pt-1.5) + 아래 10px(pb-2.5).
+                  두 값의 합(16px)이 py-2(8+8)와 같아서 알약 높이는 그대로이고,
+                  두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
+                  높이를 건드리지 않고 글씨만 올리려면 이렇게 합을 지켜야 합니다.
+                */
+                className={`flex flex-1 items-center justify-center rounded-full px-3 pt-1.5 pb-2.5 text-[13px] font-bold transition ${
                   active ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
