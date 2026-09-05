@@ -77,8 +77,16 @@ export default function PageHeader({
  * 아이콘이 서면 둘의 결이 맞지 않습니다.
  */
 export function HeaderActions() {
+  /*
+   * -space-x-1로 두 단추를 4px 겹칩니다.
+   *
+   * 단추는 손끝이 닿아야 해서 40px인데 아이콘은 27px이라, 아이콘 둘레에
+   * 6.5px씩 빈 자리가 이미 붙어 있습니다. 사이를 0으로 붙여도 아이콘끼리는
+   * 13px 떨어져 보이는 이유입니다. 그래서 4px을 겹쳐 9px로 좁혔습니다.
+   * 겹치는 4px은 아이콘이 아니라 빈 여백이라 누르는 데는 지장이 없습니다.
+   */
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center -space-x-1">
       <HeaderIconLink href="/profile" label="내 프로필 열기">
         <PersonIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>
@@ -103,9 +111,13 @@ const HEADER_ICON_SIZE = "h-[27px] w-[27px]";
 /**
  * 헤더 아이콘 단추 한 개.
  *
- * 아이콘은 23px이지만 단추는 40px입니다. 손끝이 닿는 자리는 아이콘보다
- * 넉넉해야 합니다. -mr-2는 오른쪽 끝 단추의 그 여백만큼을 도로 당겨,
- * 아이콘이 화면 가장자리에서 제목과 같은 거리에 서게 합니다.
+ * 아이콘은 27px이지만 단추는 40px입니다. 손끝이 닿는 자리는 아이콘보다
+ * 넉넉해야 합니다.
+ *
+ * last:-mr-1은 맨 오른쪽 단추의 그 빈 여백을 4px 도로 당깁니다. 안 당기면
+ * 아이콘이 화면 가장자리에서 22.5px 안쪽에 서서, 16px에 맞춰 선 카드들보다
+ * 혼자 들어가 보입니다. 4px만 당겨 18.5px에 세웠습니다.
+ * (8px까지 당기면 14.5px이 되어 이번에는 카드보다 밖으로 나갑니다.)
  */
 function HeaderIconLink({
   href,
@@ -120,7 +132,7 @@ function HeaderIconLink({
     <Link
       href={href}
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-2 active:bg-stone-100 active:scale-95"
+      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-stone-100 active:scale-95"
     >
       {children}
     </Link>
