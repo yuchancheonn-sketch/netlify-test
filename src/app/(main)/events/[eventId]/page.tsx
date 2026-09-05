@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { deleteDoc, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
+import { EventHeroCard } from "@/components/EventCard";
 import PageHeader from "@/components/PageHeader";
-import { CheckIcon, ClockIcon, PinIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { ddayLabel, formatDotDate, formatMonthDay, formatTime } from "@/lib/format";
+import { formatYear } from "@/lib/format";
 import { useApprovedMembers, useEvent, useRsvps } from "@/lib/hooks";
 import type { RsvpStatus } from "@/lib/types";
 
@@ -96,32 +97,12 @@ export default function EventDetailPage() {
       <PageHeader title="모임 상세" back />
 
       <div className="flex flex-col gap-6 px-5 pb-8">
-        {/* 일정 요약 */}
-        <section className="rounded-3xl bg-linear-135 from-brand-400 to-brand-500 p-6 text-white shadow-[var(--shadow-float)]">
-          {/* 홈의 일정 카드와 같은 크기로 맞춥니다. */}
-          <span className="inline-block rounded-full bg-black/20 px-3.5 py-1.5 text-[16px] font-bold">
-            {ddayLabel(event.date)}
-          </span>
-          <h2 className="mt-4 text-[24px] font-bold leading-tight">{event.title}</h2>
-          <p className="mt-1 text-[15px] font-medium text-white">
-            {formatDotDate(event.date)} · {formatMonthDay(event.date)}
-          </p>
-
-          <div className="mt-4 flex flex-col gap-2 text-[15px] font-medium text-white">
-            {event.startTime ? (
-              <span className="flex items-center gap-2">
-                <ClockIcon className="h-5 w-5" />
-                {formatTime(event.startTime)}
-                {event.endTime ? ` ~ ${formatTime(event.endTime)}` : ""}
-              </span>
-            ) : null}
-            {event.location ? (
-              <span className="flex items-center gap-2">
-                <PinIcon className="h-5 w-5" />
-                {event.location}
-              </span>
-            ) : null}
-          </div>
+        {/*
+          일정 요약 — 홈의 "주요 일정" 카드와 같은 상자입니다.
+          여기서는 눌러서 갈 곳이 없으니 href를 주지 않습니다.
+        */}
+        <section>
+          <EventHeroCard event={event} caption={formatYear(event.date)} />
         </section>
 
         {event.description ? (

@@ -34,6 +34,15 @@ export function formatMonthDay(value: string): string {
   return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
 }
 
+/**
+ * "2026-09-06" → "2026년"
+ * 모임 상세의 주황 상자에서, 옆에 붙는 "9월 6일 (일)"에 없는 연도만 따로 얹습니다.
+ */
+export function formatYear(value: string): string {
+  const date = parseDateString(value);
+  return date ? `${date.getFullYear()}년` : "";
+}
+
 /** "2026-09-06" → "2026.09.06" */
 export function formatDotDate(value: string): string {
   const date = parseDateString(value);

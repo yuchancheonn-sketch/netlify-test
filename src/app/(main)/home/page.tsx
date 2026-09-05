@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EventDdayCard, EventListItem } from "@/components/EventCard";
+import { EventHeroCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
@@ -30,7 +30,11 @@ export default function HomePage() {
           {events.loading ? (
             <Skeleton className="h-[150px] rounded-3xl" />
           ) : nextEvent ? (
-            <EventDdayCard event={nextEvent} />
+            <EventHeroCard
+              event={nextEvent}
+              caption="주요 일정"
+              href={`/events/${nextEvent.id}`}
+            />
           ) : (
             <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
               <EmptyState
