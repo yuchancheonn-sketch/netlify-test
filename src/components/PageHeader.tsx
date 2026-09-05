@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import Avatar from "@/components/Avatar";
-import { ChevronLeftIcon } from "@/components/icons";
-import { useAuth } from "@/lib/auth-context";
+import { ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
 
 /**
  * 화면 상단 제목 줄.
@@ -33,8 +31,9 @@ export default function PageHeader({
    * 무언가를 알려주는 제목이 아니라 그저 어느 앱인지 알려주는 표시라,
    * 아래 일정 카드보다 앞서 나오지 않는 편이 낫습니다.
    *
-   * 굵기 500은 고딕체가 실제로 갖고 있는 굵기입니다(layout.tsx에서 400·500·
-   * 700·900을 불러옵니다). 없는 굵기를 적으면 브라우저가 억지로 만들어냅니다.
+   * 굵기 600은 layout.tsx에서 이 한 곳을 위해 따로 불러옵니다. 500은 옅고
+   * 700은 다른 화면 제목과 같아져서, 그 사이 한 단계가 필요했습니다.
+   * (불러오지 않은 굵기를 적으면 브라우저가 억지로 만들어내며 획이 뭉갭니다.)
    */
   wordmark?: boolean;
   /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
@@ -79,7 +78,7 @@ export default function PageHeader({
         ) : null}
         <h1
           className={`truncate tracking-tight text-ink ${
-            wordmark ? "text-[20px] font-medium" : "text-[22px] font-bold"
+            wordmark ? "text-[20px] font-semibold" : "text-[22px] font-bold"
           }`}
         >
           {title}
@@ -91,22 +90,49 @@ export default function PageHeader({
   );
 }
 
-/** 헤더 오른쪽에 놓는 내 프로필 진입 버튼 */
-export function ProfileAvatarButton() {
-  const { profile, user } = useAuth();
-  const name = profile?.nickname || profile?.name || user?.displayName || "나";
+/**
+ * 헤더 오른쪽에 놓는 단추 두 개 — 내 프로필과 설정.
+ *
+ * 예전에는 내 프로필 사진을 동그랗게 띄웠습니다. 사람 아이콘으로 바꾼 이유:
+ * 사진은 사람마다 색과 밝기가 제각각이라 제목 줄에서 혼자 튀고, 옆에 설정
+ * 아이콘이 서면 둘의 결이 맞지 않습니다.
+ */
+export function HeaderActions() {
+  return (
+    <div className="flex items-center gap-1">
+      <HeaderIconLink href="/profile" label="내 프로필 열기">
+        <PersonIcon className="h-[23px] w-[23px]" />
+      </HeaderIconLink>
+      <HeaderIconLink href="/settings" label="설정 열기">
+        <SettingsIcon className="h-[23px] w-[23px]" />
+      </HeaderIconLink>
+    </div>
+  );
+}
 
-  /*
-   * 사진은 제목보다 눈에 먼저 들어오지 않게 작게 두고,
-   * 손가락으로 누르는 범위만 보이지 않는 여백(::before)으로 48px쯤 넓혀둡니다.
-   */
+/**
+ * 헤더 아이콘 단추 한 개.
+ *
+ * 아이콘은 23px이지만 단추는 40px입니다. 손끝이 닿는 자리는 아이콘보다
+ * 넉넉해야 합니다. -mr-2는 오른쪽 끝 단추의 그 여백만큼을 도로 당겨,
+ * 아이콘이 화면 가장자리에서 제목과 같은 거리에 서게 합니다.
+ */
+function HeaderIconLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <Link
-      href="/profile"
-      aria-label="내 프로필 열기"
-      className="relative block rounded-full ring-2 ring-white transition before:absolute before:-inset-[5px] before:content-[''] active:scale-95"
+      href={href}
+      aria-label={label}
+      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-2 active:bg-stone-100 active:scale-95"
     >
-      <Avatar src={profile?.photoURL} name={name} seed={profile?.uid} size={38} />
+      {children}
     </Link>
   );
 }

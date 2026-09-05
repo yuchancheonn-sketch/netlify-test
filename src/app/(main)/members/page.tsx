@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import MemberEditSheet from "@/components/MemberEditSheet";
-import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -83,7 +83,7 @@ export default function MembersPage() {
 
   return (
     <>
-      <PageHeader title="원우수첩" right={<ProfileAvatarButton />} />
+      <PageHeader title="원우수첩" right={<HeaderActions />} />
 
       <div className="px-4">
         {/* 검색 */}

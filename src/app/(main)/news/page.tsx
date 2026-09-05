@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { ChevronRightIcon, MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
@@ -50,7 +50,7 @@ export default function NewsPage() {
 
   return (
     <>
-      <PageHeader title="소식" right={<ProfileAvatarButton />} />
+      <PageHeader title="소식" right={<HeaderActions />} />
 
       <div className="px-4 pb-6">
         {loading ? (

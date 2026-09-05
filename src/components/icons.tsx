@@ -364,6 +364,49 @@ export function LockIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+/**
+ * 사람 하나. 제목 줄 오른쪽의 "내 프로필" 단추에 씁니다.
+ * (여럿이 나오는 UsersIcon은 원우수첩 탭이 이미 쓰고 있어 헷갈리지 않게 따로 그렸습니다.)
+ */
+export function PersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="8" r="3.6" stroke="currentColor" strokeWidth={strokeWidth} />
+      {/* 어깨선은 양 끝을 열어 둡니다. 닫으면 반원처럼 보여 사람 같지 않습니다. */}
+      <path
+        d="M4.9 19.6c0-3.4 3.2-5.5 7.1-5.5s7.1 2.1 7.1 5.5"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 톱니바퀴. 제목 줄 오른쪽의 "설정" 단추에 씁니다. */
+export function SettingsIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      {/*
+        톱니는 하나를 그려 8번 돌려 붙입니다. 좌표를 여덟 벌 적어두면
+        굵기나 크기를 손볼 때 여덟 곳을 똑같이 고쳐야 합니다.
+      */}
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+        <path
+          key={angle}
+          d="M12 2.6v2.9"
+          stroke="currentColor"
+          strokeWidth={strokeWidth + 0.6}
+          strokeLinecap="round"
+          transform={`rotate(${angle} 12 12)`}
+        />
+      ))}
+      <circle cx="12" cy="12" r="6.4" stroke="currentColor" strokeWidth={strokeWidth} />
+      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
+    </svg>
+  );
+}
+
 export function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={base(className)} aria-hidden="true">

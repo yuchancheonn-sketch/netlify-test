@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { EventHeroCard, EventListItem } from "@/components/EventCard";
-import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
@@ -19,14 +19,11 @@ export default function HomePage() {
 
   return (
     <>
-      {/*
-        홈의 제목 자리는 앱 이름 하나로만 씁니다.
-        내 이름은 오른쪽 프로필 사진이 이미 알려주고 있어서 겹칩니다.
-      */}
+      {/* 홈의 제목 자리는 앱 이름 하나로만 씁니다. */}
       <PageHeader
         wordmark
         title={APP_DEFINITION_TITLE}
-        right={<ProfileAvatarButton />}
+        right={<HeaderActions />}
       />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}

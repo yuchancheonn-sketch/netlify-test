@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { PlusIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -43,7 +43,7 @@ export default function LibraryPage() {
 
   return (
     <>
-      <PageHeader title="자료" right={<ProfileAvatarButton />} />
+      <PageHeader title="자료" right={<HeaderActions />} />
 
       <div className="px-4 pb-8">
         <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">

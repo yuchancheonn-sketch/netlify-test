@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
-import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
+import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { ChatIcon, UsersIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -58,7 +58,7 @@ export default function ChatListPage() {
      * 줄마다 카드를 두르지 않는 카톡식 배치는 그대로입니다.
      */
     <>
-      <PageHeader title="채팅" right={<ProfileAvatarButton />} />
+      <PageHeader title="채팅" right={<HeaderActions />} />
 
       {/* 좌우 여백은 다른 탭과 같은 px-4로 맞춥니다. */}
       <div className="px-4 pb-8">
