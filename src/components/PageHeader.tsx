@@ -27,11 +27,14 @@ export default function PageHeader({
    * 제목을 앱 로고처럼 보이게 합니다. 홈에서만 씁니다.
    *
    * 홈은 "여기가 무슨 화면인가"를 알려줄 필요가 없는 자리라, 제목 칸을
-   * 앱의 이름 그 자체로 내줍니다. 서예 로고와 결을 맞춰 명조체로 씁니다.
+   * 앱의 이름 그 자체로 내줍니다.
    *
-   * 굵기가 font-bold(700)가 아니라 font-semibold(600)인 이유:
-   * 명조체는 400과 600만 불러옵니다(layout.tsx). 700을 쓰면 브라우저가
-   * 없는 굵기를 억지로 만들어내면서 획이 뭉갭니다.
+   * 다른 화면 제목(22px·700)보다 오히려 작고 옅게 씁니다. 여기서 이름은
+   * 무언가를 알려주는 제목이 아니라 그저 어느 앱인지 알려주는 표시라,
+   * 아래 일정 카드보다 앞서 나오지 않는 편이 낫습니다.
+   *
+   * 굵기 500은 고딕체가 실제로 갖고 있는 굵기입니다(layout.tsx에서 400·500·
+   * 700·900을 불러옵니다). 없는 굵기를 적으면 브라우저가 억지로 만들어냅니다.
    */
   wordmark?: boolean;
   /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
@@ -75,10 +78,8 @@ export default function PageHeader({
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
         <h1
-          className={`truncate text-ink ${
-            wordmark
-              ? "font-serif text-[26px] font-semibold"
-              : "text-[22px] font-bold tracking-tight"
+          className={`truncate tracking-tight text-ink ${
+            wordmark ? "text-[20px] font-medium" : "text-[22px] font-bold"
           }`}
         >
           {title}
