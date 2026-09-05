@@ -6,22 +6,30 @@ import PageHeader, { ProfileAvatarButton } from "@/components/PageHeader";
 import SessionNotes from "@/components/SessionNotes";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
-import { useAuth } from "@/lib/auth-context";
+import { APP_DEFINITION_HANJA, APP_NAME } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
 import { quoteOfTheDay } from "@/lib/quotes";
 
 export default function HomePage() {
-  const { profile } = useAuth();
   const events = useUpcomingEvents();
   // 화면을 열 때의 날짜로 정합니다. 날짜가 바뀌면 다음에 열 때 새 말씀이 보입니다.
   const quote = quoteOfTheDay();
 
   const [nextEvent, ...laterEvents] = events.data;
-  const displayName = profile?.nickname || profile?.name || "원우";
 
   return (
     <>
-      <PageHeader title={`${displayName}님`} right={<ProfileAvatarButton />} />
+      {/*
+        홈의 제목 자리는 앱의 이름으로 씁니다.
+        내 이름은 오른쪽 프로필 사진이 이미 알려주고 있어서 겹칩니다.
+        한자 위에 한글 이름을 얹어, 한자를 못 읽어도 어디인지 알 수 있게 합니다.
+      */}
+      <PageHeader
+        wordmark
+        eyebrow={APP_NAME}
+        title={APP_DEFINITION_HANJA}
+        right={<ProfileAvatarButton />}
+      />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
       <div className="flex flex-col gap-5 px-4">

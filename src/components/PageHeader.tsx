@@ -17,11 +17,24 @@ export default function PageHeader({
   right,
   back,
   backHref,
+  wordmark,
 }: {
   title: ReactNode;
   /** 제목 위에 작게 붙는 문구 */
   eyebrow?: ReactNode;
   right?: ReactNode;
+  /**
+   * 제목을 앱 로고처럼 보이게 합니다. 홈에서만 씁니다.
+   *
+   * 홈은 "여기가 무슨 화면인가"를 알려줄 필요가 없는 자리라, 제목 칸을
+   * 앱의 이름 그 자체로 내줍니다. 서예 로고와 결을 맞춰 명조체로 쓰고,
+   * 한자가 서로 붙지 않도록 자간을 조금 벌립니다.
+   *
+   * 굵기가 font-bold(700)가 아니라 font-semibold(600)인 이유:
+   * 명조체는 400과 600만 불러옵니다(layout.tsx). 700을 쓰면 브라우저가
+   * 없는 굵기를 억지로 만들어내면서 획이 뭉갭니다.
+   */
+  wordmark?: boolean;
   /** 뒤로가기 화살표를 보여줄지 (브라우저 기록을 한 칸 되돌립니다) */
   back?: boolean;
   /**
@@ -62,7 +75,15 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1
+          className={`truncate text-ink ${
+            wordmark
+              ? "font-serif text-[26px] font-semibold tracking-[0.08em]"
+              : "text-[22px] font-bold tracking-tight"
+          }`}
+        >
+          {title}
+        </h1>
       </div>
 
       {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
