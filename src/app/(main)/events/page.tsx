@@ -53,7 +53,9 @@ export default function EventsPage() {
                 type="button"
                 onClick={() => setView(mode)}
                 aria-pressed={view === mode}
-                className={`rounded-full px-3 py-1.5 text-[13px] font-bold transition ${
+                /* 위 4px + 아래 8px. 합(12px)이 py-1.5와 같아 알약 높이는
+                   그대로이고 글씨만 2px 위에 앉습니다. 다른 서브탭과 같은 방식. */
+                className={`rounded-full px-3 pt-1 pb-2 text-[13px] font-bold transition ${
                   view === mode ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >

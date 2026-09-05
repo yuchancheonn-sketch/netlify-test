@@ -97,8 +97,11 @@ export default function HomePage() {
             말씀 한 편만 담긴 카드라, 제목과 글이 한 덩어리로 읽히는 편이 낫습니다.
             (SectionTitle을 쓰지 않고 같은 크기·굵기로 직접 적었습니다.)
           */}
-          {/* 제목 글씨 위 16px(pt-4), 아래 8px(mb-2). 카드 아래쪽 여백은 그대로 28px. */}
-          <div className="rounded-3xl bg-white px-6 pt-4 pb-7 shadow-[var(--shadow-card)]">
+          {/*
+            제목 글씨 위 20px(pt-5), 아래 8px(mb-2). 카드 아래쪽 여백은 그대로 28px.
+            ★ 위 여백은 아래 "수업 기록" 카드와 같은 값이어야 나란히 보입니다.
+          */}
+          <div className="rounded-3xl bg-white px-6 pt-5 pb-7 shadow-[var(--shadow-card)]">
             <h2 className="mb-2 text-[18px] font-bold text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">

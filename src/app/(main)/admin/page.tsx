@@ -78,7 +78,9 @@ export default function AdminPage() {
               type="button"
               onClick={() => setTab(value)}
               aria-pressed={tab === value}
-              className={`flex-1 rounded-full py-2.5 text-[13px] font-bold transition ${
+              /* 위 8px + 아래 12px. 합(20px)이 py-2.5와 같아 알약 높이는
+                 그대로이고 글씨만 2px 위에 앉습니다. 다른 서브탭과 같은 방식. */
+              className={`flex-1 rounded-full pt-2 pb-3 text-[13px] font-bold transition ${
                 tab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >

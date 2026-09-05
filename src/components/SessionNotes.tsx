@@ -60,13 +60,25 @@ export default function SessionNotes() {
         <div className="overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
           {/*
             제목 글씨 둘레의 여백은 위 "오늘의 도산" 카드와 같게 맞췄습니다.
-            왼쪽 24px, 위 16px, 아래 8px — 그쪽은 카드에 px-6 pt-4를 주고
+            왼쪽 24px, 위 20px, 아래 8px — 그쪽은 카드에 px-6 pt-5를 주고
             제목에 mb-2를 얹었고, 여기는 카드에 안쪽 여백이 없으니
             제목이 그 값을 그대로 들고 있습니다.
+            ★ 위 여백을 고치면 두 카드를 함께 고쳐야 나란히 보입니다.
           */}
-          <h2 className="px-6 pt-4 pb-2 text-[18px] font-bold text-ink">수업 기록</h2>
+          <h2 className="px-6 pt-5 pb-2 text-[18px] font-bold text-ink">수업 기록</h2>
 
-          <ul>
+          {/*
+            마지막 줄(11주차) 아래에 8px을 더 둡니다.
+
+            줄마다 위아래 12px(py-3)씩 갖고 있는데, 맨 아랫줄은 그 12px이
+            그대로 카드 끝이 되어 다른 줄보다 답답해 보입니다. 위쪽은 제목이
+            20px을 들고 있어 더 그렇습니다. 여기 8px을 보태면 아랫줄 아래가
+            20px이 되어 위아래가 맞습니다.
+
+            줄 자체의 py-3을 키우지 않는 이유: 그러면 열한 줄이 모두 커져
+            카드가 훌쩍 길어집니다. 늘려야 할 곳은 맨 아래 한 곳뿐입니다.
+          */}
+          <ul className="pb-2">
             {weeks.map((week, index) => {
               const session = sessionByWeek.get(week);
               const note = (notes[String(week)] ?? "").trim();
