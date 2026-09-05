@@ -262,9 +262,9 @@ button {
 /*
  * 로딩 화면 (components/StageGate.tsx의 SplashScreen)
  *
- * 사진과 말씀은 한 번만 부드럽게 떠오르고, 점 세 개만 계속 깜빡입니다.
- * 조용한 화면이라 아무것도 움직이지 않으면 멈춘 것처럼 보이는데,
- * 도는 동그라미를 두면 그 조용함이 깨집니다.
+ * 로고가 한 번만 부드럽게 떠오릅니다. 도는 동그라미도 깜빡이는 점도 두지
+ * 않습니다 — 잠깐 스쳐 가는 화면이라, 뭔가가 계속 움직이면 오히려
+ * 오래 기다린 것처럼 느껴집니다.
  */
 @keyframes splash-in {
   from {
@@ -277,22 +277,8 @@ button {
   }
 }
 
-@keyframes splash-dot {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 @utility animate-splash-in {
   animation: splash-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@utility animate-splash-dot {
-  animation: splash-dot 1.2s ease-in-out infinite;
 }
 
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
