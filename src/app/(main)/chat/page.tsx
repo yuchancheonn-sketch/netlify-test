@@ -66,7 +66,8 @@ export default function ChatListPage() {
           <ul className="flex flex-col gap-2">
             {[0, 1, 2].map((key) => (
               <li key={key}>
-                <Skeleton className="h-[76px] rounded-2xl" />
+                {/* 실제 칸과 같은 높이(12 + 사진 54 + 12). 어긋나면 다 불러온 순간 목록이 덜컥 움직입니다. */}
+                <Skeleton className="h-[78px] rounded-3xl" />
               </li>
             ))}
           </ul>
@@ -140,7 +141,16 @@ function ChatRoomRow({
   return (
     <Link
       href={`/chat/${room.id}`}
-      className="flex items-center gap-3.5 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      /*
+        칸 높이는 안쪽 여백이 정합니다.
+
+        가운데 글 두 줄(16px + 14px)을 합쳐도 49px이라, 54px짜리 사진이
+        칸 높이를 혼자 정하고 있습니다. 그래서 글씨나 줄 간격을 건드려도
+        칸은 꿈쩍하지 않고, 여백만 높이를 움직입니다.
+        지금은 위아래 12px씩이라 12 + 54 + 12 = 78px입니다.
+        (아래 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
+      */
+      className="flex items-center gap-3.5 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
