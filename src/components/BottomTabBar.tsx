@@ -100,17 +100,30 @@ function passedSlots(dx: number, slot: number): number {
   return Math.trunc(dx / slot);
 }
 
-/** 알약 바깥 여백(p-1 = 4px). 칸 폭을 계산할 때 양쪽으로 빼줍니다. */
+/** 회색 알약과 탭바 테두리 사이에 두는 간격(px). 사방 모두 이 값입니다. */
 const BAR_PADDING = 4;
 
 /**
  * 회색 알약이 한 칸보다 좌우로 더 나오는 길이(px).
- *
  * 칸 폭과 똑같으면 아이콘·글씨가 알약 가장자리에 닿아 답답해 보입니다.
- * 여기서 3px보다 키우면 양 끝 탭에서 알약이 탭바 테두리를 넘어갑니다
- * (칸 바깥으로 남은 여백이 BAR_PADDING뿐이라서요).
  */
 const PILL_BLEED = 3;
+
+/**
+ * 칸이 시작되는 자리 — 탭바 왼쪽 끝에서 이만큼 들어옵니다.
+ *
+ * ★ 왜 BAR_PADDING만으로는 안 되는가
+ *
+ * 알약은 칸보다 좌우로 PILL_BLEED씩 더 나옵니다. 칸이 BAR_PADDING(4px)에서
+ * 시작하면 맨 왼쪽 탭의 알약은 4-3=1px에서 시작해서, 위아래 간격은 4px인데
+ * 좌우만 1px이 됩니다. 오른쪽 끝도 마찬가지고요. 그래서 알약이 양 끝에
+ * 갔을 때만 테두리에 눌어붙은 것처럼 보였습니다.
+ *
+ * 칸 자체를 미리 PILL_BLEED만큼 더 들여두면, 알약이 그만큼 밖으로 나와도
+ * 딱 BAR_PADDING 자리에 멈춥니다. 사방 간격이 4px로 같아집니다.
+ * 알약은 여전히 칸보다 6px 넓습니다.
+ */
+const TRACK_INSET = BAR_PADDING + PILL_BLEED;
 
 export default function BottomTabBar() {
   const pathname = usePathname();
@@ -143,7 +156,7 @@ export default function BottomTabBar() {
   function slotWidth(): number {
     const width = listRef.current?.clientWidth ?? 0;
     if (!width) return 0;
-    return (width - BAR_PADDING * 2) / TABS.length;
+    return (width - TRACK_INSET * 2) / TABS.length;
   }
 
   function handleTouchStart(event: React.TouchEvent) {
@@ -155,7 +168,8 @@ export default function BottomTabBar() {
     if (!list || !slot) return;
 
     // 회색 알약을 짚었을 때만 끌기가 시작됩니다. 다른 탭을 누른 건 그냥 이동입니다.
-    const touchX = event.touches[0].clientX - list.getBoundingClientRect().left - BAR_PADDING;
+    const touchX =
+      event.touches[0].clientX - list.getBoundingClientRect().left - TRACK_INSET;
     const pillStart = activeIndex * slot;
     if (touchX < pillStart || touchX > pillStart + slot) return;
 
@@ -209,8 +223,8 @@ export default function BottomTabBar() {
         )
       : activeIndex;
 
-  /** 알약 한 칸의 폭을 CSS로 적은 것 (좌우 여백 4px씩을 뺀 나머지를 나눕니다) */
-  const slotCss = `((100% - ${BAR_PADDING * 2}px) / ${TABS.length})`;
+  /** 알약 한 칸의 폭을 CSS로 적은 것 (좌우로 들여둔 7px씩을 뺀 나머지를 나눕니다) */
+  const slotCss = `((100% - ${TRACK_INSET * 2}px) / ${TABS.length})`;
 
   return (
     /*
@@ -248,7 +262,13 @@ export default function BottomTabBar() {
         onTouchCancel={handleTouchEnd}
         /* 세로 스크롤은 브라우저에 맡기고 가로는 알약 끌기에 씁니다. */
         style={{ touchAction: "pan-y" }}
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 p-1 shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
+        /*
+          위아래는 BAR_PADDING(4px), 좌우는 TRACK_INSET(7px)입니다.
+          좌우가 더 넓은 것은 알약이 칸보다 3px씩 밖으로 나오기 때문입니다 —
+          그만큼 미리 들여두어야 알약이 사방 4px 자리에 멈춥니다.
+          두 상수를 고치면 이 값도 같이 고쳐야 합니다.
+        */
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 py-1 px-[7px] shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
@@ -275,7 +295,7 @@ export default function BottomTabBar() {
             style={{
               top: BAR_PADDING,
               bottom: BAR_PADDING,
-              left: `calc(${BAR_PADDING - PILL_BLEED}px + ${activeIndex} * ${slotCss})`,
+              left: `calc(${BAR_PADDING}px + ${activeIndex} * ${slotCss})`,
               width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
               transform: drag?.dx ? `translateX(${drag.dx}px)` : undefined,
               transition: drag?.settling
