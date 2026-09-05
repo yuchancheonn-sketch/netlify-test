@@ -161,4 +161,4 @@ export const BRAND_COLOR = "#FF7210";
  * globals.css의 --color-canvas와 항상 같은 값을 유지해 주세요.
  * 다르면 홈 화면에서 앱을 열 때 뜨는 첫 화면 색만 튑니다.
  */
-export const BRAND_BACKGROUND = "#F4F5F6";
+export const BRAND_BACKGROUND = "#ECEDEE";
