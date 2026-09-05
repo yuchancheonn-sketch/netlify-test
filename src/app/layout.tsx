@@ -63,24 +63,33 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    /*
+     * suppressHydrationWarning: 아래 조각 스크립트가 리액트보다 먼저 <html>에
+     * data-text-scale·data-mono를 붙입니다. 그러면 서버가 보낸 html 태그와
+     * 브라우저의 html 태그가 달라져서 리액트가 "안 맞는다"고 경고합니다.
+     * 우리가 일부러 붙인 것이니 이 태그에 한해 눈감아 달라고 알려둡니다.
+     */
     <html
       lang="ko"
       className={`${notoSansKr.variable} ${notoSerifKr.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <head>
-        {/*
-          보기 설정(글씨 크기·흑백)을 화면이 그려지기 전에 적용합니다.
-          리액트가 켜진 뒤에 적용하면 보통 크기로 한 번 그려졌다가 바뀌면서
-          화면이 번쩍입니다. 그래서 <head>에서 막고 들어갑니다.
-
-          우리가 쓴 글이라 밖에서 들어온 값이 섞이지 않습니다.
-        */}
-        <script dangerouslySetInnerHTML={{ __html: DISPLAY_SETTINGS_SCRIPT }} />
-      </head>
       <body
         className="min-h-full font-sans"
         style={{ backgroundColor: BRAND_BACKGROUND }}
       >
+        {/*
+          보기 설정(글씨 크기·흑백)을 화면이 그려지기 전에 적용합니다.
+          리액트가 켜진 뒤에 적용하면 보통 크기로 한 번 그려졌다가 바뀌면서
+          화면이 번쩍입니다.
+
+          <head>에 넣지 않고 본문 맨 앞에 두는 이유: App Router에서는 Next가
+          <head>를 직접 관리해서, 우리가 <head>를 그리면 하이드레이션이 어긋납니다.
+          여기 두어도 아래 내용보다 먼저 실행되므로 번쩍임은 똑같이 막힙니다.
+
+          우리가 쓴 글이라 밖에서 들어온 값이 섞이지 않습니다.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: DISPLAY_SETTINGS_SCRIPT }} />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
