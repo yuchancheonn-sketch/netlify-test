@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import TextScaleSlider from "@/components/TextScaleSlider";
-import { CheckIcon } from "@/components/icons";
+import SegmentedControl from "@/components/SegmentedControl";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { THEMES } from "@/lib/display-settings";
+import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
 import { useDisplaySettings } from "@/lib/use-display-settings";
@@ -45,12 +44,12 @@ export default function SettingsPage() {
 
         <section>
           <SectionTitle>글씨 크기</SectionTitle>
-          {/*
-            아이폰 제어센터와 같은 슬라이더입니다. 세 칸짜리 버튼이 아니라
-            막대를 쓰는 이유는, 왼쪽 "가"와 오른쪽 "가"의 크기 차이가 곧
-            무엇을 바꾸는지에 대한 설명이 되기 때문입니다.
-          */}
-          <TextScaleSlider value={textScale} onChange={setTextScale} />
+          {/* 칸마다 그 크기로 글씨를 써서, 고르기 전에도 어떻게 될지 보입니다. */}
+          <SegmentedControl
+            options={TEXT_SCALES}
+            value={textScale}
+            onChange={setTextScale}
+          />
         </section>
 
         <section>
@@ -60,35 +59,12 @@ export default function SettingsPage() {
             설명이 필요한 이름인 데다, 아무것도 안 고른 상태가 이미 시스템이라
             굳이 누를 일이 없습니다.
 
-            그래서 불이 켜지는 기준이 "고른 값"이 아니라 **지금 실제로 보이는
-            밝기(resolved)** 입니다. 아직 아무것도 안 고른 원우에게도 둘 중
-            하나에는 불이 들어와 있고, 폰에서 다크 모드를 켜면 그 불이
+            그래서 주황 상자가 앉는 기준이 "고른 값"이 아니라 **지금 실제로
+            보이는 밝기(resolved)** 입니다. 아직 아무것도 안 고른 원우에게도
+            둘 중 하나에는 상자가 앉아 있고, 폰에서 다크 모드를 켜면 상자가
             저절로 옮겨갑니다. 하나를 누르면 그때부터 이 앱만 그 밝기로 굳습니다.
-
-            체크 아이콘은 두지 않습니다. "라이트 모드"가 칸을 거의 다 채워서
-            아이콘까지 넣으면 글씨가 두 줄로 접힙니다. 고른 칸은 주황으로
-            칠해지므로 아이콘 없이도 구분됩니다.
           */}
-          <div className="flex gap-2.5">
-            {THEMES.map(({ value, label }) => {
-              const selected = resolved === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTheme(value)}
-                  aria-pressed={selected}
-                  className={`flex-1 rounded-2xl py-4 text-[15px] font-bold whitespace-nowrap transition active:scale-[0.98] ${
-                    selected
-                      ? "bg-brand-500 text-white"
-                      : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl options={THEMES} value={resolved} onChange={setTheme} />
         </section>
       </div>
     </div>
@@ -108,23 +84,28 @@ function permissionProblem(permission: PushPermission): string {
 }
 
 /**
- * 알림 켜기/끄기 — 글씨 크기·화면과 같은 모양의 두 칸입니다.
+ * 알림 켜기/끄기 — 글씨 크기·화면과 같은 모양의 고르개입니다.
  *
  * 이 설정은 **기기마다 따로**입니다. 폰에서 켜도 태블릿에서는 따로 켜야 합니다.
  * 브라우저 권한이 기기 단위로 주어지기 때문입니다.
+ *
+ * 켜고 끄는 데 시간이 걸리고(브라우저에 권한을 묻고 토큰을 받아옵니다) 실패도
+ * 하므로, 다른 두 줄과 달리 누르는 중임을 스피너로 알리고 막힌 이유를 아래에
+ * 적습니다. 모양만은 세 줄이 같게 두었습니다.
  */
 function PushSection({ uid }: { uid: string | undefined }) {
   const { on, blocked } = usePushState();
   /** 지금 켜는/끄는 중인 쪽. 그 칸에만 스피너가 돕니다. */
-  const [pending, setPending] = useState<boolean | null>(null);
+  const [pending, setPending] = useState<"on" | "off" | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
-  async function choose(next: boolean) {
-    if (pending !== null || !uid || next === on) return;
+  async function choose(next: "on" | "off") {
+    const turningOn = next === "on";
+    if (pending !== null || !uid || turningOn === on) return;
     setPending(next);
     setProblem(null);
     try {
-      if (next) {
+      if (turningOn) {
         const permission = await enablePush(uid);
         if (permission !== "granted") setProblem(permissionProblem(permission));
       } else {
@@ -141,39 +122,20 @@ function PushSection({ uid }: { uid: string | undefined }) {
   }
 
   const message = blocked ?? problem;
+  const spinner = <Spinner className="h-[18px] w-[18px]" />;
 
   return (
     <section>
       <SectionTitle>알림</SectionTitle>
-      <div className="flex gap-2.5">
-        {[
-          { value: false, label: "끄기" },
-          { value: true, label: "켜기" },
-        ].map(({ value, label }) => {
-          const selected = on === value;
-          return (
-            <button
-              key={label}
-              type="button"
-              onClick={() => choose(value)}
-              disabled={pending !== null || blocked !== null}
-              aria-pressed={selected}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-4 text-[17px] font-bold transition active:scale-[0.98] disabled:opacity-50 ${
-                selected
-                  ? "bg-brand-500 text-white"
-                  : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
-              }`}
-            >
-              {pending === value ? (
-                <Spinner className="h-[18px] w-[18px]" />
-              ) : selected ? (
-                <CheckIcon className="h-[18px] w-[18px]" />
-              ) : null}
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <SegmentedControl
+        value={on ? "on" : "off"}
+        onChange={choose}
+        disabled={pending !== null || blocked !== null}
+        options={[
+          { value: "off", label: "끄기", icon: pending === "off" ? spinner : null },
+          { value: "on", label: "켜기", icon: pending === "on" ? spinner : null },
+        ]}
+      />
       {message ? (
         <p role="alert" className="mt-2.5 text-[13px] leading-relaxed text-danger">
           {message}

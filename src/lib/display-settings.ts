@@ -19,10 +19,18 @@ export const THEME_KEY = "agikaeta:theme";
 
 export type TextScale = "small" | "normal" | "large";
 
-export const TEXT_SCALES: { value: TextScale; label: string }[] = [
-  { value: "small", label: "작게" },
-  { value: "normal", label: "보통" },
-  { value: "large", label: "크게" },
+/**
+ * 고르는 칸 세 개. textClassName은 칸마다 다른 글씨 크기입니다 —
+ * 칸 자체가 미리보기가 되어, 고르기 전에도 어떻게 될지 눈으로 보입니다.
+ */
+export const TEXT_SCALES: {
+  value: TextScale;
+  label: string;
+  textClassName: string;
+}[] = [
+  { value: "small", label: "작게", textClassName: "text-[14px]" },
+  { value: "normal", label: "중간", textClassName: "text-[17px]" },
+  { value: "large", label: "크게", textClassName: "text-[20px]" },
 ];
 
 /**
