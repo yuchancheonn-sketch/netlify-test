@@ -96,7 +96,7 @@ export default function ProfilePage() {
             await logOut();
             router.replace("/login");
           }}
-          className="mt-5 w-full rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          className="mt-5 w-full rounded-2xl bg-brand-500 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
         >
           로그아웃
         </button>

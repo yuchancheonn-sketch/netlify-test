@@ -1,13 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { ChatIcon, UsersIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { otherUidOf, previewText, roomTitle } from "@/lib/chat-rooms";
+import {
+  otherUidOf,
+  previewText,
+  roomTitle,
+  sameMembers,
+  syncGroupRoomMembers,
+} from "@/lib/chat-rooms";
 import { formatChatListTime } from "@/lib/format";
 import {
   useApprovedMembers,
@@ -45,6 +51,24 @@ export default function ChatListPage() {
     }
     return map;
   }, [members]);
+
+  /*
+   * 새로 가입 승인된 원우도 단체방에 저절로 들어와 있어야 합니다.
+   * 단체방 문서에는 memberUids를 손으로 관리하는 자리가 없으므로, 채팅
+   * 목록을 열 때마다 지금의 원우 명단과 다르면 이 자리에서 맞춰 씁니다.
+   * (누구든 먼저 채팅 탭을 열면 그 순간 모두에게 반영됩니다.)
+   */
+  const groupRoom = rooms.find((room) => room.kind === "group");
+  const syncedFor = useRef<string>("");
+  useEffect(() => {
+    if (!uid || !groupRoom || members.length === 0) return;
+    const approvedUids = members.map((member) => member.uid);
+    if (sameMembers(groupRoom.memberUids, approvedUids)) return;
+    const key = approvedUids.slice().sort().join(",");
+    if (syncedFor.current === key) return;
+    syncedFor.current = key;
+    void syncGroupRoomMembers(approvedUids);
+  }, [uid, groupRoom, members]);
 
   return (
     /*

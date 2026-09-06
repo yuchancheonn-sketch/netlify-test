@@ -106,24 +106,39 @@ export function previewText(room: ChatRoomDoc): string {
 }
 
 /**
- * 1:1 방을 아직 없으면 만들어 둡니다.
+ * 두 원우의 1:1 방 id로 바로 이동할 수 있게 계산만 합니다.
  *
- * 메시지를 보내기 전에 방부터 만들어야 상대의 채팅 목록에 뜹니다.
- * (목록은 memberUids로 찾기 때문입니다.)
- * 이미 있으면 memberUids만 다시 확인하고 지나갑니다.
+ * 예전에는 여기서 방 문서를 미리 만들어 두었는데, 그러면 메시지를 한 마디도
+ * 보내지 않아도 채팅 목록(memberUids로 찾는 목록)에 빈 방이 나타났습니다.
+ * 방 문서는 실제로 첫 메시지를 보낼 때 sendChatMessage가 만듭니다.
  */
-export async function ensureDirectRoom(myUid: string, otherId: string): Promise<string> {
-  const roomId = directRoomId(myUid, otherId);
+export function ensureDirectRoom(myUid: string, otherId: string): string {
+  return directRoomId(myUid, otherId);
+}
+
+/**
+ * 단체방의 memberUids를 지금의 원우 명단과 맞춥니다.
+ *
+ * 원우가 새로 가입 승인되어도 자동으로 단체방에 들어와야 하므로, 채팅
+ * 목록을 열 때마다 실제 명단과 다르면 이 함수로 다시 맞춰 씁니다.
+ */
+export async function syncGroupRoomMembers(uids: string[]): Promise<void> {
   await setDoc(
-    doc(db, "chatRooms", roomId),
+    doc(db, "chatRooms", MAIN_CHAT_ROOM_ID),
     {
-      kind: "direct",
-      title: "",
-      memberUids: [myUid, otherId].sort(),
+      kind: "group",
+      title: MAIN_CHAT_ROOM_TITLE,
+      memberUids: uids,
     },
     { merge: true },
   );
-  return roomId;
+}
+
+/** 두 배열이 순서와 상관없이 같은 uid들을 담고 있는지 */
+export function sameMembers(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sorted = [...b].sort();
+  return [...a].sort().every((uid, index) => uid === sorted[index]);
 }
 
 /**
@@ -167,8 +182,15 @@ export async function sendChatMessage({
     {
       kind: isGroup ? "group" : "direct",
       title: isGroup ? MAIN_CHAT_ROOM_TITLE : "",
-      // 1:1 방은 방을 만들 때 넣은 memberUids를 건드리지 않도록 단체방에서만 씁니다.
-      ...(isGroup ? { memberUids: [] } : {}),
+      /*
+        1:1 방은 이제 미리 만들어 두지 않으므로, 첫 메시지를 보내는 이 자리에서
+        memberUids를 함께 적어야 상대의 채팅 목록에도 뜹니다. roomId 자체가
+        두 uid를 정렬해 이은 값이라 다시 계산할 필요 없이 그대로 씁니다.
+        단체방의 memberUids는 여기서 건드리지 않습니다 — syncGroupRoomMembers가
+        원우 명단을 보고 따로 맞춥니다. 여기서 손대면 메시지를 보낼 때마다
+        그 값을 지워버립니다.
+      */
+      ...(isGroup ? {} : { memberUids: roomId.split(DIRECT_SEPARATOR) }),
       lastMessageText: text,
       lastMessageSenderId: sender.uid,
       lastMessageAt: serverTimestamp(),

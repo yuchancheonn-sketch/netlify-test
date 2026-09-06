@@ -92,6 +92,7 @@ export default function MembersPage() {
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
+            오른쪽에는 지금 몇 명이 보이는지를 넣어, 따로 줄을 만들지 않습니다.
           */}
           <input
             value={keyword}
@@ -102,9 +103,15 @@ export default function MembersPage() {
               눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
               깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
               있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
+              오른쪽은 인원 수 자리만큼(pr-16) 비워 글자와 겹치지 않게 합니다.
             */
-            className="w-full rounded-xl bg-white py-2.5 pr-4 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="w-full rounded-xl bg-white py-2.5 pr-16 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
+          {!busy && !error ? (
+            <p className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-[13px] font-medium text-ink-soft">
+              원우 <span className="font-bold text-ink">{visible.length}</span>명
+            </p>
+          ) : null}
         </div>
 
         {/*
@@ -143,13 +150,6 @@ export default function MembersPage() {
             );
           })}
         </div>
-
-        {!busy && !error ? (
-          /* 글씨 크기는 위 필터와 같은 13px로 맞춥니다. */
-          <p className="mt-2 text-[13px] font-medium text-ink-soft">
-            원우 <span className="font-bold text-ink">{visible.length}</span>명
-          </p>
-        ) : null}
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
@@ -353,26 +353,17 @@ function MemberRow({
 /**
  * 이 원우와의 1:1 대화로 넘어가는 버튼.
  *
- * 누르는 순간 방을 만들어 둡니다. 방이 있어야 상대의 채팅 목록에도 뜨기
- * 때문입니다. 이미 있으면 그대로 그 방으로 들어갑니다.
+ * 방 문서는 미리 만들지 않습니다 — 실제로 메시지를 보내야 sendChatMessage가
+ * 만듭니다. 그래야 들어와 보기만 하고 아무 말도 안 하면 채팅 목록에
+ * 빈 방이 뜨지 않습니다. 여기서는 두 uid로 정해지는 방 id로 이동만 합니다.
  */
 function StartChatButton({ otherUid, name }: { otherUid: string; name: string }) {
   const router = useRouter();
   const { user } = useAuth();
-  const [opening, setOpening] = useState(false);
-  const [failed, setFailed] = useState(false);
 
-  async function handleClick() {
-    if (!user || opening) return;
-    setOpening(true);
-    setFailed(false);
-    try {
-      const roomId = await ensureDirectRoom(user.uid, otherUid);
-      router.push(`/chat/${roomId}`);
-    } catch {
-      setFailed(true);
-      setOpening(false);
-    }
+  function handleClick() {
+    if (!user) return;
+    router.push(`/chat/${ensureDirectRoom(user.uid, otherUid)}`);
   }
 
   return (
@@ -380,17 +371,11 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
       <button
         type="button"
         onClick={handleClick}
-        disabled={opening}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
       >
         <ChatIcon className="h-5 w-5" />
-        {opening ? "여는 중…" : `${name} 원우와 채팅`}
+        {name} 원우와 채팅
       </button>
-      {failed ? (
-        <p role="alert" className="mt-2 text-center text-[12px] font-medium text-red-600">
-          대화방을 열지 못했어요. 잠시 후 다시 시도해 주세요.
-        </p>
-      ) : null}
     </div>
   );
 }
