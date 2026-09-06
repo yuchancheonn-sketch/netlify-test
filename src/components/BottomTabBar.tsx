@@ -125,6 +125,23 @@ const PILL_BLEED = 3;
  */
 const TRACK_INSET = BAR_PADDING + PILL_BLEED;
 
+/**
+ * 알약을 짚고 있는 동안 커지는 배율. 쉬고 있을 때의 크기는 그대로입니다.
+ *
+ * 손끝에 붙잡힌 것이 커지면 "지금 이걸 쥐고 있다"가 눈으로 보입니다.
+ *
+ * ★ 더 키우려면 탭바 가장자리와의 거리를 먼저 보세요.
+ *   맨 왼쪽·오른쪽 탭에서 알약은 탭바 테두리와 BAR_PADDING(4px)밖에 떨어져
+ *   있지 않습니다. 커지면 그 여유를 좌우로 반씩 먹습니다.
+ *   폰 화면(390~430px)에서는 알약 폭이 73~81px이라 1.10이면 좌우로 3.7~4.1px씩
+ *   자라 딱 그 여유를 채웁니다. 여기서 더 키우면 맨 끝 탭에서만 알약이
+ *   탭바 밖으로 삐져나옵니다. (위아래로는 1.14까지 여유가 있습니다.)
+ */
+const PILL_GRAB_SCALE = 1.1;
+
+/** 커졌다 작아지는 데 걸리는 시간과 가락. */
+const POP_TRANSITION = "180ms cubic-bezier(0.22, 1, 0.36, 1)";
+
 export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -249,6 +266,29 @@ export default function BottomTabBar() {
         )
       : pillIndex;
 
+  /*
+   * 지금 손끝에 알약이 붙잡혀 있는지.
+   *
+   * 짚는 순간(dx가 아직 0일 때)부터 참이고, 손을 떼면 settling으로 넘어가며
+   * 거짓이 됩니다. 알약이 커지는 것도, 아이콘이 돋보기처럼 커지는 것도
+   * 이 값 하나를 봅니다 — 둘이 같은 순간에 함께 커졌다 함께 돌아옵니다.
+   */
+  const holding = drag !== null && !drag.settling;
+
+  /*
+   * 실제로 커질 배율.
+   *
+   * 알약은 좌우로 BAR_PADDING(4px)씩만 자랄 수 있습니다 — 맨 끝 탭에서 그게
+   * 탭바 테두리까지 남은 전부이기 때문입니다. 폰에서는 1.10이 그 여유에
+   * 딱 맞지만, 태블릿처럼 탭바가 상한(520px)까지 넓어지면 알약도 함께 넓어져
+   * 같은 배율이 여유를 넘어섭니다. 그래서 끌기 시작할 때 재둔 칸 폭으로
+   * 넘지 않을 만큼만 잘라 씁니다.
+   */
+  const pillWidth = drag ? drag.slot + PILL_BLEED * 2 : 0;
+  const grabScale = pillWidth
+    ? Math.min(PILL_GRAB_SCALE, 1 + (BAR_PADDING * 2) / pillWidth)
+    : PILL_GRAB_SCALE;
+
   /** 알약 한 칸의 폭을 CSS로 적은 것 (좌우로 들여둔 7px씩을 뺀 나머지를 나눕니다) */
   const slotCss = `((100% - ${TRACK_INSET * 2}px) / ${TABS.length})`;
 
@@ -310,9 +350,15 @@ export default function BottomTabBar() {
              모서리에 걸린 것처럼 보입니다. 유리 느낌은 사실 이 선에서 가장
              많이 나옵니다.
 
-          자리는 left로 잡고 움직임은 transform으로 줍니다. left는 주소에서
+          자리는 left로 잡고 움직임은 translate로 줍니다. left는 주소에서
           바로 나오는 값이라 애니메이션 없이 즉시 자리를 잡아야 하고,
-          transform만 손가락을 따라오거나 부드럽게 제자리로 돌아갑니다.
+          translate만 손가락을 따라오거나 부드럽게 제자리로 돌아갑니다.
+
+          ★ translate와 scale을 transform 하나로 묶지 않은 이유
+            둘을 한 속성에 담으면 시간도 하나로 묶입니다. 그런데 이 둘은
+            반대로 움직여야 합니다 — 이동은 손가락에 즉시 붙어야 하고(전환 없음),
+            크기는 부드럽게 커져야 합니다(전환 있음). CSS의 개별 속성으로
+            나누면 각자 다른 전환을 걸 수 있습니다.
         */}
         {/*
           설정·내 프로필처럼 탭 밖 화면에서도 알약은 그대로 남습니다.
@@ -326,10 +372,18 @@ export default function BottomTabBar() {
             bottom: BAR_PADDING,
             left: `calc(${BAR_PADDING}px + ${pillIndex} * ${slotCss})`,
             width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
-            transform: drag?.dx ? `translateX(${drag.dx}px)` : undefined,
-            transition: drag?.settling
-              ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
-              : undefined,
+            translate: drag?.dx ? `${drag.dx}px` : undefined,
+            scale: holding ? String(grabScale) : "1",
+            /*
+              이동은 손을 뗀 뒤 제자리를 찾아갈 때만 부드럽게 하고,
+              크기는 언제나 부드럽게 합니다.
+            */
+            transition: [
+              drag?.settling ? "translate 220ms cubic-bezier(0.22, 1, 0.36, 1)" : null,
+              `scale ${POP_TRANSITION}`,
+            ]
+              .filter(Boolean)
+              .join(", "),
           }}
         />
 
