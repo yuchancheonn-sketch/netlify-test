@@ -187,6 +187,16 @@ export interface SessionDoc {
   week: number;
   topic: string;
   instructor: string;
+  /** 그 주 수업 영상 주소 (유튜브·비메오). 없으면 빈 글자 */
+  videoUrl?: string;
+  /**
+   * 그 주에 달린 댓글 수.
+   *
+   * 홈의 수업 기록 줄에 "댓글 3"을 보여주려고 둡니다. 이게 없으면 줄마다
+   * 댓글을 세어야 해서, 홈을 열 때마다 열 주치 댓글을 전부 읽게 됩니다.
+   * 댓글을 쓰고 지울 때 increment로 함께 올리고 내립니다.
+   */
+  commentCount?: number;
   /** 마지막으로 채운 사람 (원우수첩과 같은 방식으로 남겨둡니다) */
   updatedBy?: string;
   updatedByName?: string;
@@ -194,15 +204,25 @@ export interface SessionDoc {
 }
 
 /**
- * sessionNotes/{uid} — 내가 주차별로 남긴 느낀점.
+ * sessions/{week}/comments/{commentId} — 그 주 수업에 남기는 느낀점.
  *
- * **본인만 읽고 씁니다.** 수업을 듣고 스스로 남기는 기록이라 남에게 보이면
- * 안 됩니다. 주차마다 문서를 따로 두지 않고 한 문서에 모아 담습니다.
- * 열한 칸뿐이라 한 번만 읽으면 되고, 무료 한도의 읽기 횟수도 아낍니다.
+ * 예전에는 본인만 보는 개인 기록(sessionNotes)이었는데, 서로 무엇을 느꼈는지
+ * 나누자는 취지로 **모두에게 보이는 댓글**로 바꿨습니다.
+ *
+ * 답글은 한 겹만 둡니다. 답글에 다시 답글을 달면 그것도 같은 원 댓글에
+ * 매답니다(parentId가 늘 맨 위 댓글을 가리킵니다). 두 겹, 세 겹으로 들어가면
+ * 폰 화면에서 글이 오른쪽으로 밀려 읽기 어려워집니다. 인스타·유튜브도
+ * 같은 방식입니다.
  */
-export interface SessionNotesDoc {
-  /** 주차 번호를 적은 글자 → 그 주에 남긴 느낀점 */
-  notes?: Record<string, string>;
+export interface SessionCommentDoc {
+  id: string;
+  text: string;
+  authorId: string;
+  /** 쓴 사람 본명. 화면에는 users 문서의 최신 이름을 먼저 씁니다. */
+  authorName: string;
+  /** 답글이면 원 댓글의 id, 맨 위 댓글이면 null */
+  parentId: string | null;
+  createdAt: Timestamp | null;
 }
 
 /**

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { EventHeroCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import SessionNotes from "@/components/SessionNotes";
+import SessionList from "@/components/SessionList";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
@@ -114,8 +114,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 주차별 수업 기록 — 주제·강사는 함께 채우고, 느낀점은 각자 남깁니다. */}
-        <SessionNotes />
+        {/* 주차별 수업 기록 — 한 줄을 누르면 그 주 화면으로 넘어갑니다. */}
+        <SessionList />
       </div>
     </>
   );

@@ -25,8 +25,8 @@ import type {
   PhotoDoc,
   RosterDoc,
   RsvpDoc,
+  SessionCommentDoc,
   SessionDoc,
-  SessionNotesDoc,
   UserDoc,
 } from "@/lib/types";
 
@@ -234,32 +234,75 @@ export function useSessions(): ListState<SessionDoc> {
   return state;
 }
 
-/**
- * 내가 주차별로 남긴 느낀점. 본인 것만 봅니다.
- * 열 주차가 문서 하나에 모여 있어 구독도 하나면 됩니다.
- */
-export function useMySessionNotes(uid?: string) {
-  // 어느 계정의 기록인지 함께 들고 있어야 계정을 바꿨을 때 섞이지 않습니다.
-  const [entry, setEntry] = useState<{
-    uid: string;
-    notes: Record<string, string>;
-  } | null>(null);
+/** 한 주차의 수업 정보. 그 주 화면에서만 씁니다. */
+export function useSession(week: number) {
+  const [state, setState] = useState<{
+    data: SessionDoc | null;
+    loading: boolean;
+    error: string | null;
+  }>({ data: null, loading: true, error: null });
 
   useEffect(() => {
-    if (!uid) return;
     return onSnapshot(
-      doc(db, "sessionNotes", uid),
+      doc(db, "sessions", String(week)),
       (snapshot) =>
-        setEntry({
-          uid,
-          notes: (snapshot.data() as SessionNotesDoc | undefined)?.notes ?? {},
+        setState({
+          data: snapshot.exists()
+            ? ({ ...snapshot.data(), week } as SessionDoc)
+            : null,
+          loading: false,
+          error: null,
         }),
-      () => setEntry({ uid, notes: {} }),
+      () =>
+        setState({ data: null, loading: false, error: "수업 기록을 불러오지 못했어요." }),
     );
-  }, [uid]);
+  }, [week]);
 
-  const matched = uid && entry?.uid === uid ? entry : null;
-  return { notes: matched?.notes ?? {}, loading: Boolean(uid) && !matched };
+  return state;
+}
+
+/**
+ * 그 주 수업에 달린 느낀점 댓글. 오래된 것이 위로 옵니다.
+ *
+ * 답글까지 한 번에 받아 화면에서 원 댓글 아래로 묶습니다. 답글만 따로
+ * 질의하면 원 댓글 수만큼 구독이 생겨서, 댓글이 스무 개면 구독도 스무 개가
+ * 됩니다. 한 주에 달릴 댓글은 많아야 수십 개라 통째로 받는 편이 훨씬 쌉니다.
+ */
+export function useSessionComments(week: number): ListState<SessionCommentDoc> {
+  const [state, setState] = useState<ListState<SessionCommentDoc>>(EMPTY);
+
+  useEffect(() => {
+    const commentsQuery = query(
+      collection(db, "sessions", String(week), "comments"),
+      orderBy("createdAt", "asc"),
+    );
+    return onSnapshot(
+      commentsQuery,
+      (snapshot) => {
+        const comments = snapshot.docs
+          .map(
+            (document) => ({ ...document.data(), id: document.id }) as SessionCommentDoc,
+          )
+          /*
+           * 방금 쓴 댓글을 맨 아래에 둡니다.
+           *
+           * 시각은 서버가 찍어주는 값이라, 막 보낸 댓글은 응답이 올 때까지
+           * createdAt이 비어 있습니다. Firestore는 그 빈 값을 가장 이른 것으로
+           * 보고 맨 위에 올려버려서, 내가 쓴 글이 목록 꼭대기에 나타났다가
+           * 잠시 뒤 맨 아래로 뛰어내립니다. 빈 값을 "지금"으로 쳐서 그 튐을 막습니다.
+           */
+          .sort(
+            (a, b) =>
+              (a.createdAt?.toMillis() ?? Number.MAX_SAFE_INTEGER) -
+              (b.createdAt?.toMillis() ?? Number.MAX_SAFE_INTEGER),
+          );
+        setState({ data: comments, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "댓글을 불러오지 못했어요." }),
+    );
+  }, [week]);
+
+  return state;
 }
 
 /** 행사 사진 앨범 목록 (최근 행사가 위로) */

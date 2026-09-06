@@ -36,10 +36,13 @@ export const COURSE_TOTAL_SESSIONS = 10;
 export const SESSION_TOPIC_MAX_LENGTH = 40;
 export const SESSION_INSTRUCTOR_MAX_LENGTH = 20;
 /**
- * 느낀점 최대 글자 수.
- * 열 주차를 한 문서에 모아 담으므로, 넉넉히 잡아도 문서가 6KB를 넘지 않습니다.
+ * 느낀점 댓글 최대 글자 수.
+ *
+ * 예전에는 본인만 보는 기록이라 한 문서에 열 주치를 모아 담았고, 그래서
+ * 길이를 문서 크기에 맞춰 잡았습니다. 지금은 댓글 하나가 문서 하나라
+ * 그런 제약이 없고, 대신 "여럿이 주고받는 글"에 맞는 길이로 둡니다.
  */
-export const SESSION_NOTE_MAX_LENGTH = 500;
+export const SESSION_COMMENT_MAX_LENGTH = 1000;
 
 /**
  * 저장 버튼을 누른 뒤 서버 응답을 기다려주는 시간(밀리초).

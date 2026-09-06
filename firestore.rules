@@ -69,17 +69,31 @@ service cloud.firestore {
       }
     }
 
-    // 주차별 수업의 주제·강사. 원우수첩처럼 누구나 채웁니다.
+    // 주차별 수업의 주제·강사·영상. 원우수첩처럼 누구나 채웁니다.
     match /sessions/{week} {
       allow read, write: if isSignedIn();
+
+      /*
+       * 그 주 수업에 남기는 느낀점 댓글. 모든 원우가 서로 읽습니다.
+       *
+       * 남의 이름으로 쓰지 못하도록 쓴 사람이 본인인지 확인하고,
+       * 지우는 것도 자기 글만 됩니다. 고치기는 막아 두었습니다 —
+       * 오간 이야기가 나중에 조용히 바뀌면 대화가 남지 않습니다.
+       */
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+                      && request.resource.data.authorId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+        allow update: if false;
+      }
     }
 
-    // ── 개인 기록 — 본인만 ──
-
-    // 주차별 느낀점. 수업을 듣고 스스로 남기는 기록이라 남이 보면 안 됩니다.
-    match /sessionNotes/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
-    }
+    /*
+     * sessionNotes — 본인만 보던 주차별 느낀점이 있던 자리입니다.
+     * 서로 나누자는 취지로 위 comments로 바뀌면서 앱에서 더는 읽지 않습니다.
+     * 예전에 적어둔 글은 Firestore 콘솔에 그대로 남아 있습니다.
+     */
 
     // ── 채팅 — 여기만 잠겨 있습니다 ──
 
