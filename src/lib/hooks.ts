@@ -424,7 +424,13 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
     const group = groupRoom ?? emptyGroupRoom();
     const others = (directRooms ?? [])
       .filter((room) => room.id !== MAIN_CHAT_ROOM_ID)
-      // 최근에 말이 오간 방이 위로 옵니다. 아직 한 마디도 없는 방은 맨 아래.
+      /*
+       * 메시지를 한 통도 안 보낸 방은 목록에 올리지 않습니다.
+       * 방은 첫 메시지를 보낼 때 만들어지므로 보통은 이런 방이 없지만,
+       * 예전 코드가 남겨둔 빈 방 문서가 있을 수 있어 한 번 더 걸러냅니다.
+       */
+      .filter((room) => room.lastMessageAt !== null)
+      // 최근에 말이 오간 방이 위로 옵니다.
       .sort((a, b) => (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0));
     return [group, ...others];
   }, [groupRoom, directRooms]);
