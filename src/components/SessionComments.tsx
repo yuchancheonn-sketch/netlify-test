@@ -12,20 +12,38 @@ import {
   deleteSessionComment,
   rootCommentId,
 } from "@/lib/session-comments";
+import { commentPeriod } from "@/lib/sessions";
 import { SESSION_COMMENT_MAX_LENGTH } from "@/lib/constants";
-import type { SessionCommentDoc, UserDoc } from "@/lib/types";
+import type { SessionCommentDoc, SessionPeriod, UserDoc } from "@/lib/types";
 
 /**
  * 그 주 수업에 남기는 느낀점 — 원우 모두가 읽고 서로 답합니다.
  *
  * 답글은 한 겹만 들어갑니다. 답글에 단 답글도 같은 원 댓글 아래로 들어가서,
  * 폰 화면에서 글이 오른쪽으로 계속 밀리지 않습니다.
+ *
+ * 느낀점은 **교시마다 따로** 답니다. 1교시 이야기와 2교시 이야기가 한 줄로
+ * 섞이면 무엇에 대한 말인지 알 수 없어서입니다. 다만 Firestore에서 받아올
+ * 때는 한 번에 다 받고 여기서 골라 씁니다 — 교시마다 따로 물으면 구독이
+ * 두 개가 되는데, 한 주에 달릴 글은 많아야 수십 개라 그럴 값어치가 없습니다.
  */
-export default function SessionComments({ week }: { week: number }) {
+export default function SessionComments({
+  week,
+  period,
+}: {
+  week: number;
+  period: SessionPeriod;
+}) {
   const { user, profile } = useAuth();
   const uid = user?.uid;
-  const { data: comments, loading, error } = useSessionComments(week);
+  const { data: allComments, loading, error } = useSessionComments(week);
   const { data: members } = useApprovedMembers();
+
+  /** 지금 보고 있는 교시의 글만. 답글도 원 댓글과 같은 교시에 있습니다. */
+  const comments = useMemo(
+    () => allComments.filter((comment) => commentPeriod(comment) === period),
+    [allComments, period],
+  );
 
   /** 답글을 달고 있는 원 댓글. null이면 새 댓글을 쓰는 중입니다. */
   const [replyTo, setReplyTo] = useState<SessionCommentDoc | null>(null);
@@ -128,6 +146,7 @@ export default function SessionComments({ week }: { week: number }) {
 
       <CommentComposer
         week={week}
+        period={period}
         uid={uid}
         profile={profile}
         replyTo={replyTo}
@@ -229,6 +248,7 @@ function CommentRow({
  */
 function CommentComposer({
   week,
+  period,
   uid,
   profile,
   replyTo,
@@ -238,6 +258,7 @@ function CommentComposer({
   allComments,
 }: {
   week: number;
+  period: SessionPeriod;
   uid?: string;
   profile: UserDoc | null;
   replyTo: SessionCommentDoc | null;
@@ -263,6 +284,7 @@ function CommentComposer({
     try {
       await addSessionComment({
         week,
+        period,
         author: { uid, profile },
         text,
         // 답글에 단 답글도 맨 위 댓글에 매답니다.

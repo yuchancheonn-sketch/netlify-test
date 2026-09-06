@@ -37,19 +37,21 @@ export default function SessionEditSheet({
   const { user, profile } = useAuth();
   const [topic, setTopic] = useState(session?.topic ?? "");
   const [instructor, setInstructor] = useState(session?.instructor ?? "");
+  /* 교시마다 영상이 하나씩입니다. 1교시가 videoUrl, 2교시가 videoUrl2입니다. */
   const [videoUrl, setVideoUrl] = useState(session?.videoUrl ?? "");
+  const [videoUrl2, setVideoUrl2] = useState(session?.videoUrl2 ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
 
-  // 주소를 붙여넣는 즉시 썸네일을 보여줍니다 — 맞는 영상인지 눈으로 확인됩니다.
-  const link = parseVideoLink(videoUrl);
-  const preview = link?.id ? videoThumbnail(link) : null;
+  /*
+   * 주소가 잘못됐으면 저장 자체를 막습니다.
+   * 두 칸 중 하나라도 걸리면 안 되므로 함께 봅니다.
+   */
   const videoProblem =
-    videoUrl.trim() && !isSupportedVideoUrl(videoUrl)
-      ? "유튜브나 비메오 주소를 넣어주세요."
-      : null;
+    (videoUrl.trim() && !isSupportedVideoUrl(videoUrl)) ||
+    (videoUrl2.trim() && !isSupportedVideoUrl(videoUrl2));
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -66,6 +68,7 @@ export default function SessionEditSheet({
             topic: topic.trim(),
             instructor: instructor.trim(),
             videoUrl: videoUrl.trim(),
+            videoUrl2: videoUrl2.trim(),
             updatedBy: user.uid,
             updatedByName: profile?.name || profile?.nickname || "원우",
             updatedAt: serverTimestamp(),
@@ -132,32 +135,27 @@ export default function SessionEditSheet({
             />
           </div>
 
-          <div className="mb-6">
-            <FieldLabel htmlFor="session-video" hint="선택">
-              수업 영상 주소
-            </FieldLabel>
-            <input
+          {/*
+            수업이 1·2교시로 나뉘어 있어 영상 칸도 둘입니다.
+            느낀점도 교시마다 따로 달리므로, 2교시 주소를 여기 넣어야
+            수업 화면의 2교시 칸이 열립니다.
+          */}
+          <div className="mb-5">
+            <VideoField
               id="session-video"
-              type="url"
-              inputMode="url"
+              label="1교시 영상 주소"
               value={videoUrl}
-              onChange={(changed) => setVideoUrl(changed.target.value)}
-              placeholder="https://youtu.be/..."
-              className={inputClassName}
+              onChange={setVideoUrl}
             />
-            {videoProblem ? <FieldError>{videoProblem}</FieldError> : null}
+          </div>
 
-            {/* 붙여넣은 주소의 썸네일. 상자가 16:9여야 검은 띠가 안 남습니다(lib/video.ts) */}
-            {preview ? (
-              <div className="mt-3 overflow-hidden rounded-2xl bg-black">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={preview}
-                  alt=""
-                  className="aspect-video w-full object-cover"
-                />
-              </div>
-            ) : null}
+          <div className="mb-6">
+            <VideoField
+              id="session-video-2"
+              label="2교시 영상 주소"
+              value={videoUrl2}
+              onChange={setVideoUrl2}
+            />
           </div>
 
           {error ? <FieldError>{error}</FieldError> : null}
@@ -177,5 +175,56 @@ export default function SessionEditSheet({
         </form>
       </div>
     </div>
+  );
+}
+
+/**
+ * 영상 주소 한 칸. 1교시와 2교시가 이걸 한 벌씩 씁니다.
+ *
+ * 주소를 붙여넣는 즉시 썸네일을 보여줍니다 — 맞는 영상인지 눈으로 확인되고,
+ * 유튜브 목록에서 엉뚱한 주를 집어온 것도 그 자리에서 알아챕니다.
+ */
+function VideoField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const link = parseVideoLink(value);
+  const preview = link?.id ? videoThumbnail(link) : null;
+  const problem =
+    value.trim() && !isSupportedVideoUrl(value)
+      ? "유튜브나 비메오 주소를 넣어주세요."
+      : null;
+
+  return (
+    <>
+      <FieldLabel htmlFor={id} hint="선택">
+        {label}
+      </FieldLabel>
+      <input
+        id={id}
+        type="url"
+        inputMode="url"
+        value={value}
+        onChange={(changed) => onChange(changed.target.value)}
+        placeholder="https://youtu.be/..."
+        className={inputClassName}
+      />
+      {problem ? <FieldError>{problem}</FieldError> : null}
+
+      {/* 붙여넣은 주소의 썸네일. 상자가 16:9여야 검은 띠가 안 남습니다(lib/video.ts) */}
+      {preview ? (
+        <div className="mt-3 overflow-hidden rounded-2xl bg-black">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="" className="aspect-video w-full object-cover" />
+        </div>
+      ) : null}
+    </>
   );
 }

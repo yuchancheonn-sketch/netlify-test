@@ -18,7 +18,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { SessionCommentDoc, UserDoc } from "@/lib/types";
+import type { SessionCommentDoc, SessionPeriod, UserDoc } from "@/lib/types";
 
 /** 답글은 한 겹만 둡니다 — 답글에 단 답글도 같은 원 댓글에 매답니다. */
 export function rootCommentId(
@@ -42,11 +42,13 @@ export function rootCommentId(
  */
 export async function addSessionComment({
   week,
+  period,
   author,
   text,
   parentId,
 }: {
   week: number;
+  period: SessionPeriod;
   author: { uid: string; profile: UserDoc | null };
   text: string;
   parentId: string | null;
@@ -56,6 +58,7 @@ export async function addSessionComment({
     authorId: author.uid,
     authorName: author.profile?.name || author.profile?.nickname || "원우",
     parentId,
+    period,
     createdAt: serverTimestamp(),
   });
 

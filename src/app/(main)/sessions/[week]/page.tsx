@@ -3,19 +3,28 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import SegmentedControl from "@/components/SegmentedControl";
 import SessionComments from "@/components/SessionComments";
 import SessionEditSheet from "@/components/SessionEditSheet";
-import { Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton } from "@/components/ui";
+import { LibraryIcon } from "@/components/icons";
 import { useSession } from "@/lib/hooks";
+import { SESSION_PERIODS, periodLabel, sessionVideoUrl } from "@/lib/sessions";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import { COURSE_TOTAL_SESSIONS } from "@/lib/constants";
+import type { SessionPeriod } from "@/lib/types";
 
 /**
- * 한 주차 수업 화면 — 주제·강사·영상, 그리고 원우들의 느낀점.
+ * 한 주차 수업 화면 — 교시별 영상과 원우들의 느낀점.
  *
  * 예전에는 홈에서 바텀시트로 열었습니다. 느낀점이 본인만 보는 한 칸일 때는
  * 그만해도 됐지만, 여럿이 주고받는 자리가 되면서 시트로는 좁아졌습니다.
+ *
+ * ★ 영상 칸에는 썸네일만 둡니다. 주제·강사 이름·"○○ 원우가 정리했어요"를
+ *   함께 적던 시절이 있었는데, 그 내용은 이미 유튜브 썸네일 안에 적혀 있어서
+ *   같은 말이 두 번 나왔습니다. 주제·강사는 홈의 수업 기록 목록에서 어느
+ *   주인지 가려내는 데 여전히 쓰이므로, 적는 칸은 수정 시트에 그대로 둡니다.
  */
 export default function SessionPage({
   params,
@@ -27,6 +36,14 @@ export default function SessionPage({
   const router = useRouter();
   const { data: session, loading } = useSession(week);
   const [editing, setEditing] = useState(false);
+  /*
+   * 지금 보고 있는 교시. 영상도 느낀점도 이 값 하나를 따라 함께 바뀝니다.
+   *
+   * 두 교시를 위아래로 늘어놓지 않고 고르개로 나눈 이유: 느낀점 입력줄이
+   * 화면 아래에 붙어 있는(sticky) 구조라, 두 벌을 한 화면에 두면 입력줄
+   * 둘이 같은 자리를 두고 겹칩니다.
+   */
+  const [period, setPeriod] = useState<SessionPeriod>(1);
 
   /*
    * 오른쪽으로 밀어서 홈으로 — 왼쪽 위 < 버튼과 같은 곳으로 갑니다.
@@ -37,7 +54,7 @@ export default function SessionPage({
    */
   const swipe = useSwipeBack({ onCommit: () => router.push("/home") });
 
-  const videoLink = parseVideoLink(session?.videoUrl ?? "");
+  const videoLink = parseVideoLink(sessionVideoUrl(session, period));
   const isValidWeek =
     Number.isInteger(week) && week >= 1 && week <= COURSE_TOTAL_SESSIONS;
 
@@ -78,36 +95,43 @@ export default function SessionPage({
         }
       />
 
+      {/* 교시 고르개. 아래 영상과 느낀점이 통째로 이 칸을 따라갑니다. */}
+      <div className="px-4 pb-4">
+        <SegmentedControl
+          options={SESSION_PERIODS.map((value) => ({
+            value: String(value),
+            label: periodLabel(value),
+          }))}
+          value={String(period)}
+          onChange={(next) => setPeriod(Number(next) as SessionPeriod)}
+        />
+      </div>
+
       <div className="px-4 pb-6">
         {loading ? (
-          <Skeleton className="h-40 rounded-3xl" />
-        ) : (
+          <Skeleton className="aspect-video rounded-3xl" />
+        ) : videoLink?.id ? (
+          /*
+            영상 칸에는 썸네일만 둡니다 — 주제도 강사 이름도 그림 안에
+            이미 적혀 있습니다. (파일 맨 위 설명 참고)
+            key에 교시를 넣어, 1교시를 재생하다 2교시로 넘어가면 재생이
+            멈추고 다시 썸네일로 돌아옵니다.
+          */
           <div className="overflow-hidden rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-            {/* 수업 영상 — 누르기 전에는 썸네일만 두어 유튜브를 부르지 않습니다. */}
-            {videoLink?.id ? <SessionVideo link={videoLink} week={week} /> : null}
-
-            <div className="px-5 py-4">
-              <h2 className="text-[18px] leading-snug font-bold text-ink">
-                {session?.topic || `${week}주차`}
-              </h2>
-              <p className="mt-1 text-[14px] text-ink-muted">
-                {session?.instructor
-                  ? `${session.instructor} 강사님`
-                  : "강사를 아직 안 적었어요"}
-              </p>
-
-              {/* 누가 마지막으로 채웠는지 — 원우수첩과 같은 방식입니다. */}
-              {session?.updatedByName ? (
-                <p className="mt-2.5 text-[12px] text-ink-faint">
-                  {session.updatedByName} 원우가 정리했어요
-                </p>
-              ) : null}
-            </div>
+            <SessionVideo key={period} link={videoLink} week={week} period={period} />
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+            <EmptyState
+              icon={<LibraryIcon className="h-10 w-10" />}
+              title={`${periodLabel(period)} 영상이 아직 없어요`}
+            />
           </div>
         )}
       </div>
 
-      <SessionComments week={week} />
+      {/* 느낀점도 교시마다 따로 답니다. */}
+      <SessionComments week={week} period={period} />
 
       {editing ? (
         <SessionEditSheet
@@ -124,19 +148,23 @@ export default function SessionPage({
 function SessionVideo({
   link,
   week,
+  period,
 }: {
   link: NonNullable<ReturnType<typeof parseVideoLink>>;
   week: number;
+  period: SessionPeriod;
 }) {
   const [playing, setPlaying] = useState(false);
   const thumbnail = videoThumbnail(link);
+  /** 화면 낭독기용 이름 — 눈에 보이는 글씨는 아닙니다. */
+  const name = `${week}주차 ${periodLabel(period)} 수업 영상`;
 
   return (
     <div className="bg-black">
       {playing ? (
         <iframe
           src={videoEmbedUrl(link) ?? ""}
-          title={`${week}주차 수업 영상`}
+          title={name}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="aspect-video w-full"
@@ -145,7 +173,7 @@ function SessionVideo({
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          aria-label={`${week}주차 수업 영상 재생`}
+          aria-label={`${name} 재생`}
           className="relative block aspect-video w-full transition active:scale-[0.99]"
         >
           {/*

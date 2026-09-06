@@ -183,12 +183,26 @@ export interface MessageDoc {
  * 다를 이유가 없습니다.
  * 문서 id는 주차 번호를 적은 글자입니다. ("1" ~ "11")
  */
+/**
+ * 한 주 수업은 1교시·2교시로 나뉩니다.
+ * 영상도 느낀점도 교시마다 따로 답니다.
+ */
+export type SessionPeriod = 1 | 2;
+
 export interface SessionDoc {
   week: number;
   topic: string;
   instructor: string;
-  /** 그 주 수업 영상 주소 (유튜브·비메오). 없으면 빈 글자 */
+  /**
+   * 1교시 영상 주소 (유튜브·비메오). 없으면 빈 글자.
+   *
+   * 이름에 1이 안 붙은 것은 교시를 나누기 전에 쓰던 필드를 그대로
+   * 이어받았기 때문입니다. videoUrl1로 바꾸면 이미 적어둔 주의 영상이
+   * 통째로 사라지므로(Firestore는 이름이 곧 값의 자리입니다) 그냥 둡니다.
+   */
   videoUrl?: string;
+  /** 2교시 영상 주소. 교시를 나누면서 새로 생긴 자리입니다. */
+  videoUrl2?: string;
   /**
    * 그 주에 달린 댓글 수.
    *
@@ -222,6 +236,14 @@ export interface SessionCommentDoc {
   authorName: string;
   /** 답글이면 원 댓글의 id, 맨 위 댓글이면 null */
   parentId: string | null;
+  /**
+   * 몇 교시에 남긴 느낀점인지.
+   *
+   * 교시를 나누기 전에 달린 댓글에는 이 값이 없습니다. 그런 글은 1교시로
+   * 봅니다 — 예전 댓글이 어디에도 안 보이게 되는 것보다 낫고, 그 시절
+   * 수업은 어차피 하나였습니다. (읽을 때는 commentPeriod()를 쓰세요)
+   */
+  period?: SessionPeriod;
   createdAt: Timestamp | null;
 }
 
