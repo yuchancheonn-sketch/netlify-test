@@ -1,6 +1,37 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type TouchEvent, type TransitionEvent } from "react";
+import {
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type TouchEvent,
+  type TransitionEvent,
+} from "react";
+
+/**
+ * 이 위에서 시작한 손짓은 넘기기로 보지 않습니다.
+ *
+ * 기준은 "가로로 끄는 것이 그 자리에서 이미 뜻을 갖는가"입니다.
+ *  - 글자를 치고 있는 칸: 가로로 끄는 것이 글자 고르기·커서 옮기기입니다.
+ *  - 막대(슬라이더): 가로로 끄는 것이 값 바꾸기입니다. (설정의 글씨 크기)
+ *  - 고르는 칸(select): 손대면 폰이 제 목록을 띄웁니다.
+ *  - data-no-swipe-back: 앞으로 그런 것이 생기면 이 표시만 달면 됩니다.
+ *
+ * ★ 버튼과 링크는 일부러 뺐습니다.
+ *   예전에는 여기 들어 있었는데, 그러면 설정 화면처럼 버튼으로 꽉 찬 화면은
+ *   밀 자리가 없어 손짓이 아예 먹지 않습니다. 버튼을 가로로 끄는 것은 아무
+ *   뜻도 없으므로 넘기기로 봐도 잃을 것이 없습니다. 그냥 누르는 것은 8px도
+ *   움직이지 않아 넘기기로 판정되지 않고, 밀고 나서 손을 뗐을 때 눌린 것으로
+ *   처리되는 것은 아래 onClickCapture가 막습니다.
+ *
+ * ★ 입력칸도 "지금 치고 있는 칸"만 뺍니다(:focus).
+ *   전부 빼면 내 프로필 화면은 입력칸으로 꽉 차 있어서 밀 자리가 없습니다.
+ *   글자를 고르려고 끄는 것은 이미 그 칸을 누른 뒤의 일이므로, 치고 있지 않은
+ *   칸 위에서 시작한 가로 손짓은 넘기기로 봐도 됩니다.
+ */
+const NO_SWIPE =
+  "input:focus, textarea:focus, select, [role='slider'], [data-no-swipe-back]";
 
 /**
  * 오른쪽으로 밀어서 앞 화면으로 돌아가기.
@@ -45,17 +76,34 @@ export function useSwipeBack({
   const start = useRef<{ x: number; y: number } | null>(null);
   /** 가로인지 세로인지는 처음 8px을 움직여 본 뒤 한 번만 정하고 끝까지 지킵니다. */
   const axis = useRef<"unknown" | "x" | "y">("unknown");
+  /** 방금 민 손짓이 버튼 누름으로 이어지지 않도록 막는 표시 */
+  const swiped = useRef(false);
 
   function onTouchStart(event: TouchEvent) {
+    swiped.current = false;
     // 두 손가락은 확대·축소이지 넘기기가 아닙니다.
     if (event.touches.length !== 1) return;
-    // 입력칸이나 버튼 위에서 시작한 손짓은 그쪽 몫으로 둡니다.
-    if ((event.target as HTMLElement).closest("input, textarea, button, select, a")) return;
+    // 가로로 끄는 것이 이미 제 뜻을 갖는 자리는 그쪽 몫으로 둡니다.
+    if ((event.target as HTMLElement).closest(NO_SWIPE)) return;
 
     const touch = event.touches[0];
     start.current = { x: touch.clientX, y: touch.clientY };
     axis.current = "unknown";
     setSnapping(false);
+  }
+
+  /**
+   * 밀고 나서 손을 뗀 것이 버튼 누름으로 이어지지 않게 막습니다.
+   *
+   * 브라우저는 손가락이 조금 움직여도 손을 뗀 자리에 버튼이 있으면 눌린 것으로
+   * 봅니다. 그대로 두면 설정 화면을 밀어 나가면서 그 자리의 버튼(예: 다크 모드)이
+   * 함께 눌립니다. 내려가는 길목(capture)에서 잡아야 버튼에 닿기 전에 막힙니다.
+   */
+  function onClickCapture(event: MouseEvent) {
+    if (!swiped.current) return;
+    swiped.current = false;
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   function onTouchMove(event: TouchEvent) {
@@ -75,6 +123,8 @@ export function useSwipeBack({
        */
       if (dx > 0 && dx > Math.abs(dy) * 1.5) {
         axis.current = "x";
+        // 이 손짓은 넘기기입니다 — 손을 뗄 때 버튼이 눌리면 안 됩니다.
+        swiped.current = true;
         onAxisLocked?.();
       } else {
         axis.current = "y";
@@ -133,6 +183,7 @@ export function useSwipeBack({
       onTouchMove,
       onTouchEnd,
       onTouchCancel: onTouchEnd,
+      onClickCapture,
     },
     /*
      * 세로 스크롤만 브라우저에 맡기고 가로는 우리가 씁니다.
