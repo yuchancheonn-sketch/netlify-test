@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import TextScaleSlider from "@/components/TextScaleSlider";
 import { CheckIcon } from "@/components/icons";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
+import { THEMES } from "@/lib/display-settings";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
 import { useDisplaySettings } from "@/lib/use-display-settings";
@@ -45,36 +46,11 @@ export default function SettingsPage() {
         <section>
           <SectionTitle>글씨 크기</SectionTitle>
           {/*
-            세 칸이 한 줄에 나란히 섭니다. 고른 칸만 주황으로 칠해
-            지금 무엇이 켜져 있는지 눈으로 바로 알 수 있게 합니다.
-            글씨 크기 자체가 보기(미리보기)가 되도록 칸마다 그 크기로 씁니다.
+            아이폰 제어센터와 같은 슬라이더입니다. 세 칸짜리 버튼이 아니라
+            막대를 쓰는 이유는, 왼쪽 "가"와 오른쪽 "가"의 크기 차이가 곧
+            무엇을 바꾸는지에 대한 설명이 되기 때문입니다.
           */}
-          <div className="flex gap-2.5">
-            {TEXT_SCALES.map(({ value, label }) => {
-              const selected = textScale === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTextScale(value)}
-                  aria-pressed={selected}
-                  className={`flex-1 rounded-2xl py-4 font-bold transition active:scale-[0.98] ${
-                    value === "small"
-                      ? "text-[14px]"
-                      : value === "large"
-                        ? "text-[20px]"
-                        : "text-[17px]"
-                  } ${
-                    selected
-                      ? "bg-brand-500 text-white"
-                      : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <TextScaleSlider value={textScale} onChange={setTextScale} />
         </section>
 
         <section>
