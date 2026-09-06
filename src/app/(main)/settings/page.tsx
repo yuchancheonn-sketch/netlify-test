@@ -19,7 +19,7 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
  */
 export default function SettingsPage() {
-  const { textScale, theme, setTextScale, setTheme } = useDisplaySettings();
+  const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -80,21 +80,22 @@ export default function SettingsPage() {
         <section>
           <SectionTitle>화면</SectionTitle>
           {/*
-            세 칸. 위 글씨 크기와 같은 모양으로 두어, 설정 화면 안에서
-            고르는 방식이 하나로 읽히게 했습니다.
+            두 칸뿐입니다. "시스템" 칸은 두지 않았습니다 —
+            설명이 필요한 이름인 데다, 아무것도 안 고른 상태가 이미 시스템이라
+            굳이 누를 일이 없습니다.
 
-            "시스템"이 기본입니다 — 폰에서 다크 모드를 켜면 앱도 함께 어두워지고,
-            폰이 시간대에 따라 자동으로 바뀌면 앱도 따라 바뀝니다.
-            앱만 따로 두고 싶을 때만 라이트·다크 모드를 고르면 됩니다.
+            그래서 불이 켜지는 기준이 "고른 값"이 아니라 **지금 실제로 보이는
+            밝기(resolved)** 입니다. 아직 아무것도 안 고른 원우에게도 둘 중
+            하나에는 불이 들어와 있고, 폰에서 다크 모드를 켜면 그 불이
+            저절로 옮겨갑니다. 하나를 누르면 그때부터 이 앱만 그 밝기로 굳습니다.
 
-            여기에는 체크 아이콘을 두지 않습니다. "라이트 모드"가 좁은 칸을
-            거의 다 채워서, 아이콘까지 넣으면 글씨가 두 줄로 접힙니다.
-            고른 칸은 주황으로 칠해지므로 아이콘 없이도 구분됩니다.
-            (바로 위 글씨 크기 줄도 같은 방식입니다.)
+            체크 아이콘은 두지 않습니다. "라이트 모드"가 칸을 거의 다 채워서
+            아이콘까지 넣으면 글씨가 두 줄로 접힙니다. 고른 칸은 주황으로
+            칠해지므로 아이콘 없이도 구분됩니다.
           */}
           <div className="flex gap-2.5">
             {THEMES.map(({ value, label }) => {
-              const selected = theme === value;
+              const selected = resolved === value;
               return (
                 <button
                   key={value}

@@ -27,7 +27,7 @@ export const TEXT_SCALES: { value: TextScale; label: string }[] = [
 
 /**
  * 화면 밝기.
- *  - system : 폰(또는 컴퓨터)의 다크 모드를 그대로 따릅니다. 기본값입니다.
+ *  - system : 폰(또는 컴퓨터)의 다크 모드를 그대로 따릅니다. **기본값입니다.**
  *  - light  : 폰이 어두워도 이 앱만 밝게 둡니다.
  *  - dark   : 폰이 밝아도 이 앱만 어둡게 둡니다.
  *
@@ -36,8 +36,18 @@ export const TEXT_SCALES: { value: TextScale; label: string }[] = [
  */
 export type Theme = "system" | "light" | "dark";
 
-export const THEMES: { value: Theme; label: string }[] = [
-  { value: "system", label: "시스템" },
+/** 실제로 지금 눈에 보이는 밝기. "system"이 무엇으로 풀렸는지까지 담습니다. */
+export type ResolvedTheme = "light" | "dark";
+
+/**
+ * 설정 화면에 놓는 칸 — **라이트와 다크 둘뿐입니다.**
+ *
+ * "시스템"은 고르는 칸으로 두지 않았습니다. 설명이 필요한 이름이고,
+ * 아무것도 안 고른 상태가 이미 시스템이라 굳이 누를 일이 없습니다.
+ * 대신 지금 보이는 쪽에 불이 들어와 있고, 폰 설정을 바꾸면 그 불도 따라
+ * 옮겨갑니다. 하나를 누르면 그때부터 이 앱만 그 밝기로 고정됩니다.
+ */
+export const THEMES: { value: ResolvedTheme; label: string }[] = [
   { value: "light", label: "라이트 모드" },
   { value: "dark", label: "다크 모드" },
 ];
