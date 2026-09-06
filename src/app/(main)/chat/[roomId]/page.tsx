@@ -102,31 +102,27 @@ export default function ChatRoomPage({
   /*
    * 자판이 올라와 있는 동안 body에 표시를 붙입니다. (실제로 여백을 줄이는 건 globals.css)
    *
-   * 입력줄 아래에는 아이폰 홈 바에 가리지 않도록 안전 영역만큼 여백을 둡니다.
-   * 그런데 자판이 올라오면 그 자리를 자판이 덮어버려서, 여백이 입력줄과 자판
-   * 사이의 빈칸으로 남습니다. 그래서 자판이 보이는 동안에는 그 여백을 걷습니다.
+   * 입력줄 아래에는 아이폰 홈 바에 가리지 않도록 안전 영역만큼(34px쯤) 여백을
+   * 둡니다. 그런데 자판이 올라오면 그 자리를 자판이 덮어버려서, 여백이 입력줄과
+   * 자판 사이의 빈칸으로만 남습니다. 카톡처럼 바짝 붙이려면 그동안 걷어야 합니다.
    *
-   * 자판 높이는 CSS로 알 수 없어서 visualViewport로 잽니다 — 화면 전체 높이에서
-   * "지금 실제로 보이는 높이"를 뺀 값이 자판이 덮은 높이입니다.
-   * 120px을 기준으로 삼은 이유: 주소창이 접혔다 펴질 때도 이 값이 50px쯤
-   * 움직이는데, 그걸 자판으로 오해하면 안 됩니다.
+   * ★ 자판 높이를 재서 알아내려던 것을 그만두고, 입력칸이 focus를 잡았는지로
+   *   바꿨습니다.
+   *
+   *   예전에는 visualViewport로 "화면 전체 높이 - 지금 보이는 높이"를 재서
+   *   자판 높이로 삼았습니다. 그런데 자판이 올라올 때 아이폰은 화면을 위로
+   *   밀어 올리고 그만큼 visualViewport.offsetTop이 커집니다. 그 둘이 서로
+   *   상쇄돼 잰 값이 0에 가깝게 나오면, 자판이 떠 있는데도 안 떠 있다고 보고
+   *   여백을 그대로 두었습니다. 입력줄과 자판 사이에 46px(여백 12 + 안전영역
+   *   34)이 남던 것이 이것입니다.
+   *
+   *   폰에서 입력칸에 커서가 들어갔다는 건 곧 자판이 올라왔다는 뜻이라,
+   *   focus/blur로 보면 잴 것도 없고 어긋날 일도 없습니다.
+   *   (마우스가 있는 컴퓨터에서는 안전 영역 자체가 0이라 달라지는 게 없습니다.)
    */
   useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    function update() {
-      const covered = window.innerHeight - viewport!.height - viewport!.offsetTop;
-      if (covered > 120) document.body.dataset.keyboard = "open";
-      else delete document.body.dataset.keyboard;
-    }
-
-    update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
+    // 방을 떠날 때 표시가 남아 다른 화면에 영향을 주지 않도록 지웁니다.
     return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
       delete document.body.dataset.keyboard;
     };
   }, []);
@@ -343,10 +339,23 @@ export default function ChatRoomPage({
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            /* 커서가 들어오면 자판이 올라온 것으로 봅니다 (위 useEffect 설명 참고). */
+            onFocus={() => {
+              document.body.dataset.keyboard = "open";
+            }}
+            onBlur={() => {
+              delete document.body.dataset.keyboard;
+            }}
             placeholder="메시지 보내기"
             aria-label="메시지 입력"
             maxLength={1000}
-            className="min-w-0 flex-1 rounded-full bg-surface px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            /*
+              바탕은 canvas — 남의 말풍선과 같은 회색입니다.
+              대화방은 바탕이 흰색(surface)이라 입력칸까지 흰색이면 테두리 없는
+              칸이 바탕에 묻혔습니다. 어두운 화면에서는 이 색이 바탕보다 한 단
+              더 진한 회색이 되어, 카톡처럼 입력칸이 또렷하게 앉습니다.
+            */
+            className="min-w-0 flex-1 rounded-full bg-canvas px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {/*
             동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
