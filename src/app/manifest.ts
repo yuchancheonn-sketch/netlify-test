@@ -19,6 +19,11 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
+    /*
+     * 홈 화면에 추가한 안드로이드 앱은 이 값 하나로 세로에 잠깁니다.
+     * 다만 브라우저 탭과 아이폰에는 듣지 않아서, 거기서는 눕혔을 때
+     * 덮개(components/PortraitGuard.tsx)가 대신 막습니다.
+     */
     orientation: "portrait",
     lang: "ko",
     background_color: BRAND_BACKGROUND,

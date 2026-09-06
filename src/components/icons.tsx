@@ -413,6 +413,65 @@ export function SettingsIcon({ className, strokeWidth = 1.9 }: IconProps) {
   );
 }
 
+/**
+ * 폰을 세로로 돌리라는 아이콘. 세로로 선 폰 양옆에 굽은 화살표가 감싸고 있습니다.
+ * 가로로 눕혔을 때 덮는 화면(PortraitGuard)에서만 씁니다.
+ */
+export function RotatePhoneIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      {/* 세로로 선 폰 */}
+      <rect
+        x="8.25"
+        y="2.75"
+        width="7.5"
+        height="18.5"
+        rx="2.25"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+      />
+      {/* 화면 아래 홈 바. 이게 있어야 그냥 네모가 아니라 폰으로 읽힙니다. */}
+      <path
+        d="M10.75 18.6h2.5"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      {/*
+        양옆의 굽은 화살표. 둘 다 폰 바깥쪽으로 불룩해야 해서 sweep-flag는 1입니다
+        (화면 좌표는 y가 아래로 커지므로, 왼쪽 것은 아래에서 위로 시계 방향으로
+         돌면 왼쪽으로 부풀고 오른쪽 것은 그 반대가 됩니다).
+      */}
+      <path
+        d="M5.4 15.6A8.4 8.4 0 0 1 5.9 7.4"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      <path
+        d="m3.6 9.2 2.3-2 1.7 2.4"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.6 8.4a8.4 8.4 0 0 1-.5 8.2"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      <path
+        d="m20.4 14.8-2.3 2-1.7-2.4"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={base(className)} aria-hidden="true">
