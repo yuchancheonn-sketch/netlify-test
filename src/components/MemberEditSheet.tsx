@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   addDoc,
@@ -39,6 +39,11 @@ const SELECT_ARROW_STYLE = {
     "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
 };
 
+/** 이만큼 아래로 끌면 놓아도 손가락 속도와 상관없이 닫힙니다. */
+const DISMISS_DISTANCE = 120;
+/** 짧게 끌어도 이 속도(px/ms)보다 빠르게 놓으면 닫힙니다 — 툭 튕기는 손짓. */
+const DISMISS_VELOCITY = 0.6;
+
 /**
  * 수첩 항목을 채우는 시트.
  *
@@ -72,6 +77,41 @@ export default function MemberEditSheet({
   const [nameError, setNameError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  /*
+   * 상단 손잡이 바를 아래로 끌면 시트가 따라 내려오다가, 많이 끌거나
+   * 빠르게 놓으면 닫힙니다. 손잡이에서 시작한 손짓만 받습니다 — 시트
+   * 전체에 걸면 입력칸이 많아 스크롤해야 하는 이 화면에서 스크롤 손짓과
+   * 부딪힙니다.
+   */
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartTime = useRef(0);
+
+  function handleHandleTouchStart(event: React.TouchEvent) {
+    setIsDragging(true);
+    dragStartY.current = event.touches[0].clientY;
+    dragStartTime.current = Date.now();
+  }
+
+  function handleHandleTouchMove(event: React.TouchEvent) {
+    if (!isDragging) return;
+    const delta = event.touches[0].clientY - dragStartY.current;
+    setDragY(Math.max(0, delta));
+  }
+
+  function handleHandleTouchEnd() {
+    if (!isDragging) return;
+    setIsDragging(false);
+    const elapsed = Date.now() - dragStartTime.current || 1;
+    const velocity = dragY / elapsed;
+    if (dragY > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY) {
+      onClose();
+    } else {
+      setDragY(0);
+    }
+  }
 
   /** 붙여넣은 주소를 알아봤는지 바로 보여주는 미리보기 */
   const videoThumb = (() => {
@@ -178,8 +218,26 @@ export default function MemberEditSheet({
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-2 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        style={{
+          transform: dragY ? `translateY(${dragY}px)` : undefined,
+          transition: isDragging ? "none" : "transform 240ms cubic-bezier(0.22,1,0.36,1)",
+        }}
       >
+        {/*
+          손잡이 바 — 위아래로 넉넉한 손끝 자리(py-3)를 두어 작은 바보다
+          누르기 쉽게 하고, sticky로 스크롤을 내려도 늘 맨 위에 남깁니다.
+        */}
+        <div
+          onTouchStart={handleHandleTouchStart}
+          onTouchMove={handleHandleTouchMove}
+          onTouchEnd={handleHandleTouchEnd}
+          aria-hidden="true"
+          className="sticky top-0 z-10 -mx-6 mb-3 flex touch-none justify-center bg-canvas py-3"
+        >
+          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
+        </div>
+
         <h2 className="text-[19px] font-bold text-ink">
           {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
         </h2>
