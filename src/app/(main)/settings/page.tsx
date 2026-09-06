@@ -85,7 +85,12 @@ export default function SettingsPage() {
 
             "시스템"이 기본입니다 — 폰에서 다크 모드를 켜면 앱도 함께 어두워지고,
             폰이 시간대에 따라 자동으로 바뀌면 앱도 따라 바뀝니다.
-            앱만 따로 두고 싶을 때만 밝게·어둡게를 고르면 됩니다.
+            앱만 따로 두고 싶을 때만 라이트·다크 모드를 고르면 됩니다.
+
+            여기에는 체크 아이콘을 두지 않습니다. "라이트 모드"가 좁은 칸을
+            거의 다 채워서, 아이콘까지 넣으면 글씨가 두 줄로 접힙니다.
+            고른 칸은 주황으로 칠해지므로 아이콘 없이도 구분됩니다.
+            (바로 위 글씨 크기 줄도 같은 방식입니다.)
           */}
           <div className="flex gap-2.5">
             {THEMES.map(({ value, label }) => {
@@ -96,13 +101,12 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setTheme(value)}
                   aria-pressed={selected}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-4 text-[17px] font-bold transition active:scale-[0.98] ${
+                  className={`flex-1 rounded-2xl py-4 text-[15px] font-bold whitespace-nowrap transition active:scale-[0.98] ${
                     selected
                       ? "bg-brand-500 text-white"
                       : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >
-                  {selected ? <CheckIcon className="h-[18px] w-[18px]" /> : null}
                   {label}
                 </button>
               );
