@@ -3,8 +3,6 @@
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
-import BottomTabBar from "@/components/BottomTabBar";
-import ChatListPage from "@/app/(main)/chat/page";
 import { ArrowUpIcon, ChatIcon, ChevronLeftIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -51,24 +49,15 @@ export default function ChatRoomPage({
   const skipAutoScroll = useRef(false);
 
   /*
-   * 대화방 뒤에 채팅 목록을 깔아 둘지.
-   *
-   * 늘 깔아 두지는 않습니다. 목록 화면은 방 목록·읽은 시각·방마다의 안 읽은
-   * 개수까지 실시간으로 구독하는데, 대화방에 머무는 내내 그걸 덤으로 켜 두면
-   * Firestore 무료 읽기 한도를 그냥 태웁니다. 그래서 가로로 미는 손짓이라고
-   * 판정된 순간에만 붙였다가, 되돌아오는 애니메이션이 끝나면 떼어냅니다.
-   */
-  const [peeking, setPeeking] = useState(false);
-
-  /*
    * 오른쪽으로 밀어서 목록으로 나가기 — 왼쪽 위 < 버튼과 같은 동작입니다.
-   * 손짓을 읽는 부분은 내 프로필 화면과 함께 쓰는 lib/use-swipe-back.ts에 있습니다.
+   * 손짓을 읽는 부분은 내 프로필·설정 화면과 함께 쓰는 lib/use-swipe-back.ts에 있습니다.
+   *
+   * 예전에는 미는 동안 대화방 뒤로 진짜 채팅 목록을 깔아 두었는데, 밀 때마다
+   * 목록이 통째로 다시 그려지며 뒤에서 움직이는 모습이 오히려 어색했습니다.
+   * 내 프로필·설정 화면처럼 민 만큼 흰 바탕만 드러나다가, 손을 떼고 실제로
+   * 목록으로 넘어갈 때 비로소 목록이 나타나는 편이 자연스럽습니다.
    */
-  const swipe = useSwipeBack({
-    onAxisLocked: () => setPeeking(true),
-    onCommit: () => router.push("/chat"),
-    onSettled: () => setPeeking(false),
-  });
+  const swipe = useSwipeBack({ onCommit: () => router.push("/chat") });
 
   /*
    * 보낸 사람의 지금 이름을 uid로 찾아볼 수 있게 해둡니다.
@@ -225,39 +214,18 @@ export default function ChatRoomPage({
   const slide = swipe.slideStyle;
 
   /*
-   * 바깥 상자는 흰색이 아니라 목록과 같은 배경색입니다.
+   * 바깥 상자도 안쪽과 같은 흰색입니다.
    *
-   * 대화방의 흰 바탕은 안쪽 상자(아래 slide가 걸린 것)가 칠합니다. 바깥까지
-   * 희게 칠하면, 옆으로 미는 동안 뒤에 깔아둔 목록이 못 덮은 자리에서 이 흰색이
-   * 배어 나옵니다. 특히 아이폰 사파리는 주소창이 접혔다 펴지는 사이 fixed 요소가
-   * 화면 맨 위를 잠깐 못 덮어서, 목록의 "채팅" 제목 위로 흰 띠가 생깁니다.
-   * 배경색을 목록과 같게 두면 그럴 때도 색이 이어져 보입니다.
+   * 밀리는 안쪽 상자(아래 slide가 걸린 것)가 오른쪽으로 빠져나가는 동안
+   * 그 자리로 바깥 상자의 색이 드러납니다. 내 프로필·설정 화면이 canvas
+   * 회색을 두는 것과 같은 이유로, 대화방은 자기 바탕색인 흰색을 둡니다.
    */
   return (
     <div
-      className="flex min-h-dvh flex-col bg-canvas"
+      className="flex min-h-dvh flex-col bg-white"
       {...swipe.handlers}
       style={swipe.touchAction}
     >
-      {/*
-        대화방 뒤에 깔리는 진짜 채팅 목록.
-        대화방이 목록 위에 얹힌 종이처럼 보이도록, 미는 동안 뒤에서 드러납니다.
-        보이기만 하면 되므로 손가락은 받지 않습니다(pointer-events-none).
-        MainShell이 씌우던 폭 제한과 탭바 자리는 여기서 흉내 냅니다 —
-        대화방에서는 MainShell이 탭바를 감추기 때문입니다.
-      */}
-      {peeking ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-canvas"
-        >
-          <div className="mx-auto h-full w-full max-w-[560px] overflow-hidden pb-[calc(82px+env(safe-area-inset-bottom))]">
-            <ChatListPage />
-          </div>
-          <BottomTabBar />
-        </div>
-      ) : null}
-
       <div
         className="relative z-10 flex flex-1 flex-col bg-white"
         style={slide}
@@ -270,22 +238,6 @@ export default function ChatRoomPage({
           바탕은 대화와 같은 흰색이되, 아래에 연한 회색 실선 한 줄로 대화와
           갈라 둡니다. 반투명은 쓰지 않습니다 — 살짝 비치면 위로 지나가는
           말풍선이 제목 글씨에 겹쳐 보입니다.
-        */}
-        {/*
-          옆으로 밀 때 화면 맨 위에 흰 띠가 남는 것은 알고 두는 것입니다.
-
-          아이폰 사파리는 화면 맨 위 자기 영역(시계·배터리가 얹히는 줄)을
-          "페이지 맨 윗부분 색"에서 실시간으로 뽑아 와 화면 전체 너비로 칠합니다.
-          색을 바꿔 가며 확인했습니다 — 이 제목 줄을 보라색으로 칠하면 그 띠도
-          화면 전체가 보라색이 됩니다. 그래서 제목 줄이 흰 동안에는 목록을
-          꺼내도 그 띠만 흰색으로 남습니다.
-
-          고치려면 제목 줄을 회색으로 두는 수밖에 없는데(그러면 띠도 회색이 됩니다),
-          보고 나서 흰 제목 줄이 낫다고 정했습니다. 아래 두 가지는 이미 해봤고
-          효과가 없으니 다시 시도하지 마세요:
-           - 목록 층을 화면 맨 위까지 깔기 → 사파리 영역이라 못 덮습니다.
-           - 안전 영역을 회색으로 채우기 → 사파리로 볼 때
-             env(safe-area-inset-top)은 0이라 띠 자체가 안 생깁니다.
         */}
         <header
           className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-white px-2 pb-2.5"
