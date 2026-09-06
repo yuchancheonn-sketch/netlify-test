@@ -206,6 +206,26 @@ export interface SessionNotesDoc {
 }
 
 /**
+ * pushTokens/{token} — 웹 푸시 알림을 받을 기기 한 대.
+ *
+ * 문서 id가 곧 FCM 등록 토큰입니다. 한 원우가 폰·태블릿 여러 대에서 켜면
+ * 그 수만큼 문서가 생깁니다. 토큰은 브라우저를 지우거나 오래 안 쓰면
+ * 만료되므로, 서버가 발송하다 "없는 토큰" 응답을 받으면 그 문서를 지웁니다.
+ *
+ * **클라이언트는 이 컬렉션을 읽지 못합니다.** 남의 기기 목록이 보이면
+ * 안 되고, 발송은 서버(Admin SDK)가 규칙을 건너뛰고 훑습니다.
+ */
+export interface PushTokenDoc {
+  /** 이 기기를 켠 원우의 uid */
+  uid: string;
+  /** 어느 기기·브라우저인지 (navigator.userAgent). 목록에서 사람이 알아보라고 남깁니다. */
+  userAgent: string;
+  createdAt: Timestamp | null;
+  /** 앱을 열 때마다 갱신합니다. 오래된 토큰을 골라내는 기준이 됩니다. */
+  refreshedAt: Timestamp | null;
+}
+
+/**
  * chatRooms/{roomId} — 대화방 한 칸.
  *
  * 방은 두 종류입니다.

@@ -68,6 +68,12 @@ export const MAIN_CHAT_ROOM_TITLE = `${COHORT} 단체방`;
 /** 채팅 목록의 미리보기에 보여줄 마지막 메시지 최대 길이 */
 export const CHAT_PREVIEW_MAX_LENGTH = 60;
 
+/**
+ * 푸시 알림 본문에 담을 메시지 최대 길이.
+ * 잠금화면 알림은 어차피 두세 줄에서 잘리므로 넉넉히 이 정도만 보냅니다.
+ */
+export const PUSH_BODY_MAX_LENGTH = 120;
+
 /** 채팅 한 번에 불러올 메시지 개수 */
 export const CHAT_PAGE_SIZE = 50;
 

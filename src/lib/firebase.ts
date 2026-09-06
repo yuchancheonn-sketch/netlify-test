@@ -8,6 +8,7 @@ import {
   type Firestore,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
 /**
  * Firebase 설정값은 .env.local 에서 읽어옵니다.
@@ -84,5 +85,28 @@ export const storage = getStorage(app);
 /** Google 로그인 제공자. 매번 계정을 고를 수 있도록 prompt를 지정합니다. */
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
+
+/**
+ * 웹 푸시 알림(FCM)을 쓸 수 있는 환경에서만 Messaging을 시작합니다.
+ *
+ * getMessaging()은 서비스워커·Notification·PushManager가 없는 환경(서버,
+ * 옛 브라우저, 알림을 막은 iOS 사파리 등)에서 곧바로 오류를 던집니다.
+ * 그래서 isSupported()로 먼저 확인하고, 안 되면 null을 돌려줍니다.
+ * 결과는 한 번만 만들어 재사용합니다.
+ */
+let messagingPromise: Promise<Messaging | null> | null = null;
+export function getMessagingIfSupported(): Promise<Messaging | null> {
+  if (!messagingPromise) {
+    messagingPromise = (async () => {
+      if (typeof window === "undefined" || !isFirebaseConfigured) return null;
+      try {
+        return (await isSupported()) ? getMessaging(app) : null;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return messagingPromise;
+}
 
 export default app;

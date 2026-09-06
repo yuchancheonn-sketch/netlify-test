@@ -131,5 +131,25 @@ service cloud.firestore {
     match /chatReads/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
+
+    /*
+     * 웹 푸시 알림을 받을 기기 목록. 문서 id가 곧 FCM 등록 토큰입니다.
+     *
+     * 여기는 **원우끼리 열어두면 안 되는 자리**입니다. 목록을 훑을 수 있으면
+     * 누가 어떤 기기를 쓰는지 다 보이고, 남의 토큰을 지워 알림을 끊을 수도
+     * 있습니다. 그래서 자기 기기 하나만 만들고·고치고·지울 수 있게 합니다.
+     *
+     * 훑기(list)는 아무에게도 열지 않습니다. 발송할 때 받는 사람들의 토큰을
+     * 모으는 일은 서버(Admin SDK)가 하는데, Admin SDK는 이 규칙을 건너뜁니다.
+     */
+    match /pushTokens/{token} {
+      allow get: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow list: if false;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
   }
 }

@@ -15,7 +15,7 @@ import {
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import {
   CHAT_PREVIEW_MAX_LENGTH,
   MAIN_CHAT_ROOM_ID,
@@ -197,4 +197,36 @@ export async function sendChatMessage({
     },
     { merge: true },
   );
+
+  // 알림은 보낸 뒤에 곁들이는 일이라 기다리지 않습니다.
+  void notifyByPush(roomId, text);
+}
+
+/**
+ * 이 방의 다른 사람들에게 푸시 알림을 보내달라고 서버에 알립니다.
+ *
+ * Cloud Functions(유료 요금제 필요)를 쓰지 않으므로, 메시지를 넣은 쪽이
+ * 직접 서버 창구를 두드립니다. 남의 이름으로 부를 수 없도록 로그인 토큰을
+ * 함께 보내고, 받는 사람이 누구인지는 서버가 방 문서를 보고 정합니다.
+ *
+ * 실패해도 아무것도 하지 않습니다. 메시지는 이미 저장됐고, 알림이 한 번
+ * 안 온 것뿐이라 원우에게 오류를 띄울 만한 일이 아닙니다.
+ */
+async function notifyByPush(roomId: string, text: string): Promise<void> {
+  try {
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) return;
+    await fetch("/api/push/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ roomId, text }),
+      // 보내자마자 화면을 옮겨도 요청이 끊기지 않게 합니다.
+      keepalive: true,
+    });
+  } catch {
+    // 조용히 넘어갑니다.
+  }
 }

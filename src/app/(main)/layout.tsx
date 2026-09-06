@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import MainShell from "@/components/MainShell";
+import PushSync from "@/components/PushSync";
 import StageGate from "@/components/StageGate";
 
 /**
@@ -13,6 +14,7 @@ import StageGate from "@/components/StageGate";
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <StageGate allow={["ready"]}>
+      <PushSync />
       <MainShell>{children}</MainShell>
     </StageGate>
   );
