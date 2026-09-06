@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   addDoc,
@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
+import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
   BIO_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
@@ -38,11 +39,6 @@ const SELECT_ARROW_STYLE = {
   backgroundImage:
     "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
 };
-
-/** 이만큼 아래로 끌면 놓아도 손가락 속도와 상관없이 닫힙니다. */
-const DISMISS_DISTANCE = 120;
-/** 짧게 끌어도 이 속도(px/ms)보다 빠르게 놓으면 닫힙니다 — 툭 튕기는 손짓. */
-const DISMISS_VELOCITY = 0.6;
 
 /**
  * 수첩 항목을 채우는 시트.
@@ -78,40 +74,7 @@ export default function MemberEditSheet({
   const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  /*
-   * 상단 손잡이 바를 아래로 끌면 시트가 따라 내려오다가, 많이 끌거나
-   * 빠르게 놓으면 닫힙니다. 손잡이에서 시작한 손짓만 받습니다 — 시트
-   * 전체에 걸면 입력칸이 많아 스크롤해야 하는 이 화면에서 스크롤 손짓과
-   * 부딪힙니다.
-   */
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartY = useRef(0);
-  const dragStartTime = useRef(0);
-
-  function handleHandleTouchStart(event: React.TouchEvent) {
-    setIsDragging(true);
-    dragStartY.current = event.touches[0].clientY;
-    dragStartTime.current = Date.now();
-  }
-
-  function handleHandleTouchMove(event: React.TouchEvent) {
-    if (!isDragging) return;
-    const delta = event.touches[0].clientY - dragStartY.current;
-    setDragY(Math.max(0, delta));
-  }
-
-  function handleHandleTouchEnd() {
-    if (!isDragging) return;
-    setIsDragging(false);
-    const elapsed = Date.now() - dragStartTime.current || 1;
-    const velocity = dragY / elapsed;
-    if (dragY > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY) {
-      onClose();
-    } else {
-      setDragY(0);
-    }
-  }
+  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
 
   /** 붙여넣은 주소를 알아봤는지 바로 보여주는 미리보기 */
   const videoThumb = (() => {
@@ -211,227 +174,229 @@ export default function MemberEditSheet({
       onClick={onClose}
     >
       {/*
-        입력칸이 많아 화면보다 길어지므로 시트 안에서 스크롤합니다.
-        바깥(회색 배경)에 스크롤을 걸면 시트 윗부분이 화면 위로 밀려
-        이름·구분 칸에 손이 닿지 않습니다.
+        손잡이와 내용을 감싸는 바깥 상자.
+        손잡이는 여기 바로 아래(스크롤 밖)에 두고, 내용만 안쪽 <form>에서
+        따로 스크롤합니다. 예전에는 손잡이를 스크롤되는 상자 안에 sticky로
+        띄웠는데, iOS에서 스크롤하는 동안 입력칸 글자가 그 위로 잠깐씩
+        겹쳐 보였습니다. 아예 스크롤 영역 바깥에 두면 그럴 일이 없습니다.
       */}
-      <form
-        onSubmit={handleSubmit}
+      <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-2 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
-        style={{
-          transform: dragY ? `translateY(${dragY}px)` : undefined,
-          transition: isDragging ? "none" : "transform 240ms cubic-bezier(0.22,1,0.36,1)",
-        }}
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-canvas sm:rounded-[16px]"
+        style={sheetStyle}
       >
-        {/*
-          손잡이 바 — 위아래로 넉넉한 손끝 자리(py-3)를 두어 작은 바보다
-          누르기 쉽게 하고, sticky로 스크롤을 내려도 늘 맨 위에 남깁니다.
-        */}
+        {/* 손잡이 바 — 위아래로 넉넉한 손끝 자리를 두어 작은 바보다 누르기 쉽습니다. */}
         <div
-          onTouchStart={handleHandleTouchStart}
-          onTouchMove={handleHandleTouchMove}
-          onTouchEnd={handleHandleTouchEnd}
+          {...handleTouchHandlers}
           aria-hidden="true"
-          className="sticky top-0 z-10 -mx-6 mb-3 flex touch-none justify-center bg-canvas py-3"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
         >
           <div className="h-1.5 w-10 rounded-full bg-stone-300" />
         </div>
 
-        <h2 className="text-[19px] font-bold text-ink">
-          {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
-        </h2>
-        <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
-          {!entry
-            ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
-            : isMine
-              ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
-              : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
-        </p>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-name">이름</FieldLabel>
-          <input
-            id="edit-name"
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value.slice(0, 20));
-              setNameError(null);
-            }}
-            placeholder="예) 홍길동"
-            className={inputClassName}
-          />
-          {nameError ? <FieldError>{nameError}</FieldError> : null}
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel>구분</FieldLabel>
-          <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
-            {MEMBER_TYPES.map(({ value, label }) => {
-              const selected = memberType === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setMemberType(value)}
-                  className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
-                    selected
-                      ? "border-brand-500 bg-brand-50 text-brand-500"
-                      : "border-transparent bg-white text-ink-soft shadow-[var(--shadow-card)]"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-company" hint="선택">
-            회사·소속
-          </FieldLabel>
-          <input
-            id="edit-company"
-            value={company}
-            onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
-            placeholder="예) (주)착한부자"
-            className={inputClassName}
-          />
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-position" hint="선택">
-            직책
-          </FieldLabel>
-          <input
-            id="edit-position"
-            value={position}
-            onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
-            placeholder="예) 대표 / 본부장"
-            className={inputClassName}
-          />
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-phone" hint="선택">
-            휴대폰
-          </FieldLabel>
-          <input
-            id="edit-phone"
-            value={phone}
-            onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
-            inputMode="tel"
-            placeholder="010-1234-5678"
-            className={inputClassName}
-          />
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-council" hint="선택">
-            원우회 직위
-          </FieldLabel>
-          <select
-            id="edit-council"
-            value={councilRole}
-            onChange={(event) => setCouncilRole(event.target.value)}
-            className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-            style={SELECT_ARROW_STYLE}
-          >
-            <option value="">직위 없음</option>
-            {COUNCIL_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="edit-bio" hint="선택">
-            한 줄 소개
-          </FieldLabel>
-          <input
-            id="edit-bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
-            placeholder="예) 마케팅 일을 해요 / 서울 거주"
-            className={inputClassName}
-          />
-        </div>
-
-        {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}
-        <div className="mb-7">
-          <FieldLabel htmlFor="edit-video" hint="선택">
-            소개 영상 링크
-          </FieldLabel>
-          <input
-            id="edit-video"
-            value={introVideoUrl}
-            onChange={(event) => {
-              setIntroVideoUrl(event.target.value);
-              setVideoError(null);
-            }}
-            inputMode="url"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder="https://youtu.be/..."
-            className={inputClassName}
-          />
-          {videoError ? (
-            <FieldError>{videoError}</FieldError>
-          ) : videoThumb ? (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={videoThumb}
-                alt=""
-                className="h-14 w-24 shrink-0 rounded-xl object-cover"
-              />
-              <p className="text-[13px] font-bold text-ink-soft">
-                영상을 찾았어요
-                <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
-                  수첩 카드에 이 장면이 보입니다
-                </span>
-              </p>
-            </div>
-          ) : (
-            <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
-              입학식 자기소개 영상 주소를 붙여넣으면 카드 사진이 영상 썸네일로 바뀝니다.
-            </p>
-          )}
-        </div>
-
-        {error ? (
-          <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
-            {error}
-          </p>
-        ) : null}
-
-        <PrimaryButton type="submit" loading={saving}>
-          {entry ? "저장하기" : "수첩에 추가하기"}
-        </PrimaryButton>
-
-        {isMine ? (
-          <Link
-            href="/profile"
-            className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
-          >
-            사진·자기소개까지 고치기
-          </Link>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 w-full rounded-2xl py-3 text-[15px] font-bold text-ink-faint"
+        {/*
+          입력칸이 많아 화면보다 길어지므로 이 안에서만 스크롤합니다.
+          바깥 상자까지 스크롤을 걸면 손잡이도 함께 밀려 올라가 손이 안 닿습니다.
+        */}
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
         >
-          닫기
-        </button>
-      </form>
+          <h2 className="text-[19px] font-bold text-ink">
+            {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
+          </h2>
+          <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
+            {!entry
+              ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
+              : isMine
+                ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
+                : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
+          </p>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-name">이름</FieldLabel>
+            <input
+              id="edit-name"
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value.slice(0, 20));
+                setNameError(null);
+              }}
+              placeholder="예) 홍길동"
+              className={inputClassName}
+            />
+            {nameError ? <FieldError>{nameError}</FieldError> : null}
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel>구분</FieldLabel>
+            <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
+              {MEMBER_TYPES.map(({ value, label }) => {
+                const selected = memberType === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setMemberType(value)}
+                    className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
+                      selected
+                        ? "border-brand-500 bg-brand-50 text-brand-500"
+                        : "border-transparent bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-company" hint="선택">
+              회사·소속
+            </FieldLabel>
+            <input
+              id="edit-company"
+              value={company}
+              onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
+              placeholder="예) (주)착한부자"
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-position" hint="선택">
+              직책
+            </FieldLabel>
+            <input
+              id="edit-position"
+              value={position}
+              onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
+              placeholder="예) 대표 / 본부장"
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-phone" hint="선택">
+              휴대폰
+            </FieldLabel>
+            <input
+              id="edit-phone"
+              value={phone}
+              onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
+              inputMode="tel"
+              placeholder="010-1234-5678"
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-council" hint="선택">
+              원우회 직위
+            </FieldLabel>
+            <select
+              id="edit-council"
+              value={councilRole}
+              onChange={(event) => setCouncilRole(event.target.value)}
+              className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+              style={SELECT_ARROW_STYLE}
+            >
+              <option value="">직위 없음</option>
+              {COUNCIL_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-bio" hint="선택">
+              한 줄 소개
+            </FieldLabel>
+            <input
+              id="edit-bio"
+              value={bio}
+              onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
+              placeholder="예) 마케팅 일을 해요 / 서울 거주"
+              className={inputClassName}
+            />
+          </div>
+
+          {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}
+          <div className="mb-7">
+            <FieldLabel htmlFor="edit-video" hint="선택">
+              소개 영상 링크
+            </FieldLabel>
+            <input
+              id="edit-video"
+              value={introVideoUrl}
+              onChange={(event) => {
+                setIntroVideoUrl(event.target.value);
+                setVideoError(null);
+              }}
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="https://youtu.be/..."
+              className={inputClassName}
+            />
+            {videoError ? (
+              <FieldError>{videoError}</FieldError>
+            ) : videoThumb ? (
+              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={videoThumb}
+                  alt=""
+                  className="h-14 w-24 shrink-0 rounded-xl object-cover"
+                />
+                <p className="text-[13px] font-bold text-ink-soft">
+                  영상을 찾았어요
+                  <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
+                    수첩 카드에 이 장면이 보입니다
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
+                입학식 자기소개 영상 주소를 붙여넣으면 카드 사진이 영상 썸네일로 바뀝니다.
+              </p>
+            )}
+          </div>
+
+          {error ? (
+            <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
+              {error}
+            </p>
+          ) : null}
+
+          <PrimaryButton type="submit" loading={saving}>
+            {entry ? "저장하기" : "수첩에 추가하기"}
+          </PrimaryButton>
+
+          {isMine ? (
+            <Link
+              href="/profile"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+            >
+              사진·자기소개까지 고치기
+            </Link>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-3 w-full rounded-2xl py-3 text-[15px] font-bold text-ink-faint"
+          >
+            닫기
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

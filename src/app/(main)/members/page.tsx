@@ -18,6 +18,7 @@ import {
 } from "@/lib/directory";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
 import { useApprovedMembers, useRoster } from "@/lib/hooks";
+import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -402,6 +403,8 @@ function MemberDetailSheet({
   const affiliation = affiliationLine(entry);
   const member = entry.member;
 
+  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
@@ -410,192 +413,204 @@ function MemberDetailSheet({
       aria-label={`${entry.name} 상세 정보`}
       onClick={onClose}
     >
+      {/* 손잡이는 스크롤 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
       <div
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-white px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-white sm:rounded-[16px]"
         onClick={(event) => event.stopPropagation()}
+        style={sheetStyle}
       >
-        <div className="flex flex-col items-center text-center">
-          <button
-            type="button"
-            onClick={onEnlargePhoto}
-            aria-label={`${entry.name} 사진 크게 보기`}
-            className="rounded-full transition active:scale-95"
-          >
-            <Avatar
-              src={entry.photoURL}
-              name={entry.name}
-              seed={entry.key}
-              size={104}
-            />
-          </button>
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <p className="text-[22px] font-bold text-ink">{entry.name}</p>
-            {entry.councilRole ? <Badge>{entry.councilRole}</Badge> : null}
-          </div>
-          {affiliation ? (
-            <p className="mt-1 text-[15px] text-ink-muted">{affiliation}</p>
-          ) : null}
-          {entry.nickname && entry.nickname !== entry.name ? (
-            <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
-          ) : null}
-          <div className="mt-3">
-            <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
-              {MEMBER_TYPE_LABEL[entry.memberType]}
-            </Badge>
-          </div>
+        <div
+          {...handleTouchHandlers}
+          aria-hidden="true"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
+        >
+          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
         </div>
 
-        {/*
-          앱 안에서 둘만의 대화 시작하기.
-          계정이 있는 원우에게만, 그리고 나 자신에게는 보이지 않습니다.
-        */}
-        {member && !isMe ? <StartChatButton otherUid={member.uid} name={entry.name} /> : null}
-
-        {/* 휴대폰 — 눌러서 바로 전화·문자 */}
-        {entry.phone ? (
-          <div className="mt-3 flex gap-3">
-            <a
-              href={`tel:${phoneHref(entry.phone)}`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7">
+          <div className="flex flex-col items-center text-center">
+            <button
+              type="button"
+              onClick={onEnlargePhoto}
+              aria-label={`${entry.name} 사진 크게 보기`}
+              className="rounded-full transition active:scale-95"
             >
-              📞 전화
-            </a>
-            <a
-              href={`sms:${phoneHref(entry.phone)}`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
-            >
-              ✉️ 문자
-            </a>
-          </div>
-        ) : null}
-
-        {/* 본인이 올린 소개 영상 */}
-        {videoLink?.id ? (
-          <div className="mt-6 overflow-hidden rounded-2xl bg-black">
-            {playing ? (
-              <iframe
-                src={videoEmbedUrl(videoLink) ?? ""}
-                title={`${entry.name} 소개 영상`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="aspect-video w-full"
+              <Avatar
+                src={entry.photoURL}
+                name={entry.name}
+                seed={entry.key}
+                size={104}
               />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPlaying(true)}
-                aria-label="소개 영상 재생"
-                className="relative block aspect-video w-full"
-              >
-                {thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-                ) : null}
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-[22px] text-white">
-                    ▶
-                  </span>
-                </span>
-              </button>
-            )}
+            </button>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <p className="text-[22px] font-bold text-ink">{entry.name}</p>
+              {entry.councilRole ? <Badge>{entry.councilRole}</Badge> : null}
+            </div>
+            {affiliation ? (
+              <p className="mt-1 text-[15px] text-ink-muted">{affiliation}</p>
+            ) : null}
+            {entry.nickname && entry.nickname !== entry.name ? (
+              <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
+            ) : null}
+            <div className="mt-3">
+              <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
+                {MEMBER_TYPE_LABEL[entry.memberType]}
+              </Badge>
+            </div>
           </div>
-        ) : null}
 
-        {/*
-          영상에 따라 앱 안에서 재생이 막혀 있을 수 있어(퍼가기 금지 설정),
-          유튜브 앱·웹으로 바로 넘어가는 길을 함께 둡니다.
-        */}
-        {videoLink?.id ? (
-          <a
-            href={videoLink.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 block text-center text-[13px] font-bold text-brand-500"
-          >
-            {videoLink.kind === "vimeo" ? "비메오에서 보기" : "유튜브에서 보기"} ↗
-          </a>
-        ) : null}
+          {/*
+            앱 안에서 둘만의 대화 시작하기.
+            계정이 있는 원우에게만, 그리고 나 자신에게는 보이지 않습니다.
+          */}
+          {member && !isMe ? <StartChatButton otherUid={member.uid} name={entry.name} /> : null}
 
-        <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
-          {entry.company ? (
-            <div className="flex items-start justify-between gap-4">
-              <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
-              <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
-            </div>
-          ) : null}
-          {entry.position ? (
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-[14px] text-ink-faint">직책</dt>
-              <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
-            </div>
-          ) : null}
+          {/* 휴대폰 — 눌러서 바로 전화·문자 */}
           {entry.phone ? (
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-[14px] text-ink-faint">휴대폰</dt>
-              <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
+            <div className="mt-3 flex gap-3">
+              <a
+                href={`tel:${phoneHref(entry.phone)}`}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
+              >
+                📞 전화
+              </a>
+              <a
+                href={`sms:${phoneHref(entry.phone)}`}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
+              >
+                ✉️ 문자
+              </a>
             </div>
           ) : null}
-          {member ? (
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-[14px] text-ink-faint">생일</dt>
-              <dd className="text-[15px] font-bold text-ink">
-                {formatBirthday(
-                  member.birthdayMonthDay,
-                  member.birthdayYear,
-                  member.birthdayYearPublic,
-                )}
+
+          {/* 본인이 올린 소개 영상 */}
+          {videoLink?.id ? (
+            <div className="mt-6 overflow-hidden rounded-2xl bg-black">
+              {playing ? (
+                <iframe
+                  src={videoEmbedUrl(videoLink) ?? ""}
+                  title={`${entry.name} 소개 영상`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="aspect-video w-full"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPlaying(true)}
+                  aria-label="소개 영상 재생"
+                  className="relative block aspect-video w-full"
+                >
+                  {thumbnail ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                  ) : null}
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-[22px] text-white">
+                      ▶
+                    </span>
+                  </span>
+                </button>
+              )}
+            </div>
+          ) : null}
+
+          {/*
+            영상에 따라 앱 안에서 재생이 막혀 있을 수 있어(퍼가기 금지 설정),
+            유튜브 앱·웹으로 바로 넘어가는 길을 함께 둡니다.
+          */}
+          {videoLink?.id ? (
+            <a
+              href={videoLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 block text-center text-[13px] font-bold text-brand-500"
+            >
+              {videoLink.kind === "vimeo" ? "비메오에서 보기" : "유튜브에서 보기"} ↗
+            </a>
+          ) : null}
+
+          <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
+            {entry.company ? (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
+                <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
+              </div>
+            ) : null}
+            {entry.position ? (
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-[14px] text-ink-faint">직책</dt>
+                <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
+              </div>
+            ) : null}
+            {entry.phone ? (
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-[14px] text-ink-faint">휴대폰</dt>
+                <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
+              </div>
+            ) : null}
+            {member ? (
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-[14px] text-ink-faint">생일</dt>
+                <dd className="text-[15px] font-bold text-ink">
+                  {formatBirthday(
+                    member.birthdayMonthDay,
+                    member.birthdayYear,
+                    member.birthdayYearPublic,
+                  )}
+                </dd>
+              </div>
+            ) : null}
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-[14px] text-ink-faint">한 줄 소개</dt>
+              <dd className="text-right text-[15px] leading-relaxed text-ink">
+                {entry.bio || "아직 소개가 없어요"}
               </dd>
             </div>
+          </dl>
+
+          {/* 본인이 쓴 자기소개 전문 */}
+          {entry.introduction ? (
+            <div className="mt-4 rounded-2xl bg-canvas p-5">
+              <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
+              <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
+                {entry.introduction}
+              </p>
+            </div>
           ) : null}
-          <div className="flex items-start justify-between gap-4">
-            <dt className="shrink-0 text-[14px] text-ink-faint">한 줄 소개</dt>
-            <dd className="text-right text-[15px] leading-relaxed text-ink">
-              {entry.bio || "아직 소개가 없어요"}
-            </dd>
-          </div>
-        </dl>
 
-        {/* 본인이 쓴 자기소개 전문 */}
-        {entry.introduction ? (
-          <div className="mt-4 rounded-2xl bg-canvas p-5">
-            <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
-            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
-              {entry.introduction}
+          {/* 누가 채워줬는지 (본인이 정리한 경우에는 굳이 보여주지 않습니다) */}
+          {entry.updatedByName && entry.updatedBy !== member?.uid ? (
+            <p className="mt-4 text-center text-[12px] text-ink-faint">
+              {entry.updatedByName} 님이 채워주셨어요
             </p>
-          </div>
-        ) : null}
+          ) : null}
 
-        {/* 누가 채워줬는지 (본인이 정리한 경우에는 굳이 보여주지 않습니다) */}
-        {entry.updatedByName && entry.updatedBy !== member?.uid ? (
-          <p className="mt-4 text-center text-[12px] text-ink-faint">
-            {entry.updatedByName} 님이 채워주셨어요
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onEdit}
-          className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-500"
-        >
-          ✎ {isMe ? "내 정보 수정하기" : "정보 채워주기"}
-        </button>
-
-        {isMe ? (
-          <Link
-            href="/profile"
-            className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+          <button
+            type="button"
+            onClick={onEdit}
+            className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-500"
           >
-            사진·자기소개까지 고치기
-          </Link>
-        ) : null}
+            ✎ {isMe ? "내 정보 수정하기" : "정보 채워주기"}
+          </button>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 w-full rounded-2xl bg-stone-100 py-4 text-[15px] font-bold text-ink-soft"
-        >
-          닫기
-        </button>
+          {isMe ? (
+            <Link
+              href="/profile"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+            >
+              사진·자기소개까지 고치기
+            </Link>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-3 w-full rounded-2xl bg-stone-100 py-4 text-[15px] font-bold text-ink-soft"
+          >
+            닫기
+          </button>
+        </div>
       </div>
     </div>
   );
