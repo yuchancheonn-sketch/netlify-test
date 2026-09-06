@@ -1,7 +1,12 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { isPushConfigured, isPushOn, isPushSupported } from "@/lib/push";
+import {
+  isPushConfigured,
+  isPushOn,
+  isPushSupported,
+  shouldAskPush,
+} from "@/lib/push";
 
 /**
  * 이 기기의 알림 상태를 읽는 훅.
@@ -60,9 +65,33 @@ function subscribe(listener: () => void): () => void {
 /** 알림을 켜거나 끈 뒤에 불러 화면을 다시 맞춥니다. */
 export function refreshPushState(): void {
   current = read();
+  ask = shouldAskPush();
   for (const listener of listeners) listener();
 }
 
 export function usePushState(): PushState {
   return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+}
+
+/*
+ * "알림 받으시겠어요?"를 띄워도 되는지.
+ *
+ * 위 PushState와 같은 자리에서 구독합니다. 값이 참·거짓 하나라 담아두는 방식이
+ * 더 단순합니다 — 객체가 아니라서 리액트가 같은 값인지 바로 알아봅니다.
+ * 서버에는 브라우저가 없어 늘 거짓으로 그리고, 브라우저에서 곧 맞춰집니다.
+ * (그려두었다가 지우는 것보다 없다가 나타나는 편이 눈에 덜 걸립니다.)
+ */
+let ask: boolean | null = null;
+
+function askSnapshot(): boolean {
+  if (ask === null) ask = shouldAskPush();
+  return ask;
+}
+
+function askServerSnapshot(): boolean {
+  return false;
+}
+
+export function useShouldAskPush(): boolean {
+  return useSyncExternalStore(subscribe, askSnapshot, askServerSnapshot);
 }

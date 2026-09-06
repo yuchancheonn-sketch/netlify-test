@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import MainShell from "@/components/MainShell";
+import PushPermissionPrompt from "@/components/PushPermissionPrompt";
 import PushSync from "@/components/PushSync";
 import StageGate from "@/components/StageGate";
 
@@ -15,6 +16,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <StageGate allow={["ready"]}>
       <PushSync />
+      {/*
+        가입을 마치고 처음 들어온 기기에 딱 한 번 뜹니다.
+        StageGate 안에 두어, 로그인·가입을 다 마친 뒤에만 물어봅니다.
+      */}
+      <PushPermissionPrompt />
       <MainShell>{children}</MainShell>
     </StageGate>
   );

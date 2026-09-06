@@ -28,6 +28,15 @@ const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 const PUSH_KEY = "agikaeta:push";
 
 /**
+ * "이 기기에서 알림을 받겠냐고 이미 물어봤다"는 표시.
+ *
+ * 처음 로그인한 뒤 한 번만 묻고, 나중에 하겠다고 하면 다시 묻지 않습니다.
+ * 볼 때마다 물으면 그게 곧 잔소리라, 그다음부터는 설정에서 켜게 둡니다.
+ * 알림 권한과 마찬가지로 기기 단위라 서버가 아니라 이 기기에 남깁니다.
+ */
+const ASKED_KEY = "agikaeta:push-asked";
+
+/**
  * "이 일이 생겼으니 관련된 사람들에게 알림을 보내달라"고 서버에 부탁합니다.
  *
  * Cloud Functions(유료 요금제 필요)를 쓰지 않으므로, 일을 벌인 쪽이 직접
@@ -88,6 +97,45 @@ function rememberChoice(on: boolean): void {
   } catch {
     // 시크릿 모드처럼 저장할 수 없는 곳 — 이번 방문에만 켜진 셈이 됩니다.
   }
+}
+
+/** 이 기기에 알림을 받겠냐고 물어본 적이 있는지 */
+export function wasPushAsked(): boolean {
+  try {
+    return localStorage.getItem(ASKED_KEY) === "yes";
+  } catch {
+    // 저장할 수 없는 곳에서는 매번 처음인 셈이 됩니다.
+    return false;
+  }
+}
+
+/** 물어봤다고 적어 둡니다. 허용했든 나중에 하겠다고 했든 한 번이면 됩니다. */
+export function rememberPushAsked(): void {
+  try {
+    localStorage.setItem(ASKED_KEY, "yes");
+  } catch {
+    // 시크릿 모드처럼 저장할 수 없는 곳 — 다음에 또 물어보게 됩니다.
+  }
+}
+
+/**
+ * 지금 이 기기에 "알림 받으시겠어요?"를 띄워도 되는지.
+ *
+ * 넷을 모두 만족해야 합니다.
+ *  - 이 브라우저가 알림을 쓸 수 있고 (아이폰은 홈 화면에 추가한 앱 안에서만)
+ *  - 운영진이 VAPID 키를 넣어 두었고
+ *  - 아직 한 번도 물어본 적이 없고
+ *  - 브라우저 권한이 아직 "안 정함"일 때. 이미 허용했거나 거절했다면
+ *    물어봐야 아무 일도 일어나지 않습니다 — 거절한 사람에게 다시 물으면
+ *    브라우저가 창을 띄우지도 않고 곧바로 denied를 돌려줍니다.
+ */
+export function shouldAskPush(): boolean {
+  return (
+    isPushSupported() &&
+    isPushConfigured() &&
+    !wasPushAsked() &&
+    getPushPermission() === "default"
+  );
 }
 
 /** 지금 이 기기에서 알림이 켜져 있는지 (권한이 있고, 내가 끄지 않았는지) */
