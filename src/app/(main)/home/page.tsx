@@ -98,10 +98,12 @@ export default function HomePage() {
             (SectionTitle을 쓰지 않고 같은 크기·굵기로 직접 적었습니다.)
           */}
           {/*
-            제목 글씨 위 20px(pt-5), 아래 8px(mb-2). 카드 아래쪽 여백은 그대로 28px.
+            제목 글씨 위 20px(pt-5), 아래 8px(mb-2). 카드 아래쪽 여백은 24px(pb-6).
+            아래가 위(20px)보다 조금 넓은 것은 출처 줄의 글씨가 작아서 그렇습니다 —
+            같은 값으로 맞추면 눈에는 아래가 더 좁아 보입니다.
             ★ 위 여백은 아래 "수업 기록" 카드와 같은 값이어야 나란히 보입니다.
           */}
-          <div className="rounded-3xl bg-surface px-6 pt-5 pb-7 shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface px-6 pt-5 pb-6 shadow-[var(--shadow-card)]">
             <h2 className="mb-2 text-[18px] font-bold text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">
