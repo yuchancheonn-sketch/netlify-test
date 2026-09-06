@@ -236,7 +236,7 @@ export function useSessions(): ListState<SessionDoc> {
 
 /**
  * 내가 주차별로 남긴 느낀점. 본인 것만 봅니다.
- * 열한 주차가 문서 하나에 모여 있어 구독도 하나면 됩니다.
+ * 열 주차가 문서 하나에 모여 있어 구독도 하나면 됩니다.
  */
 export function useMySessionNotes(uid?: string) {
   // 어느 계정의 기록인지 함께 들고 있어야 계정을 바꿨을 때 섞이지 않습니다.
