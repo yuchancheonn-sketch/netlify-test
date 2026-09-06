@@ -222,12 +222,12 @@ export default function ChatRoomPage({
    */
   return (
     <div
-      className="flex min-h-dvh flex-col bg-white"
+      className="flex min-h-dvh flex-col bg-surface"
       {...swipe.handlers}
       style={swipe.touchAction}
     >
       <div
-        className="relative z-10 flex flex-1 flex-col bg-white"
+        className="relative z-10 flex flex-1 flex-col bg-surface"
         style={slide}
         onTransitionEnd={swipe.onSlideSettled}
       >
@@ -240,14 +240,14 @@ export default function ChatRoomPage({
           말풍선이 제목 글씨에 겹쳐 보입니다.
         */}
         <header
-          className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-white px-2 pb-2.5"
+          className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-surface px-2 pb-2.5"
           style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
         >
           <button
             type="button"
             onClick={() => router.push("/chat")}
             aria-label="채팅 목록으로"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-fill"
           >
             <ChevronLeftIcon className="h-7 w-7" />
           </button>
@@ -292,7 +292,7 @@ export default function ChatRoomPage({
                       skipAutoScroll.current = true;
                       setCount((previous) => previous + CHAT_PAGE_SIZE);
                     }}
-                    className="rounded-full bg-white px-4 py-2 text-[13px] font-bold text-ink-muted shadow-[var(--shadow-card)]"
+                    className="rounded-full bg-surface px-4 py-2 text-[13px] font-bold text-ink-muted shadow-[var(--shadow-card)]"
                   >
                     이전 메시지 더 보기
                   </button>
@@ -331,7 +331,7 @@ export default function ChatRoomPage({
         인라인 style로 두면 CSS가 그걸 이기지 못합니다.
       */}
       <div
-        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-surface/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
         style={slide}
       >
         {/*
@@ -346,7 +346,7 @@ export default function ChatRoomPage({
             placeholder="메시지 보내기"
             aria-label="메시지 입력"
             maxLength={1000}
-            className="min-w-0 flex-1 rounded-full bg-white px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="min-w-0 flex-1 rounded-full bg-surface px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {/*
             동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
@@ -367,7 +367,7 @@ export default function ChatRoomPage({
           </button>
         </form>
         {sendError ? (
-          <p role="alert" className="mt-2 text-center text-[12px] font-medium text-red-600">
+          <p role="alert" className="mt-2 text-center text-[12px] font-medium text-danger">
             {sendError}
           </p>
         ) : null}

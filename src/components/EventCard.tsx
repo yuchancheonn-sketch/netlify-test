@@ -114,7 +114,7 @@ export function EventListItem({
   return (
     <Link
       href={`/events/${event.id}`}
-      className="flex items-center gap-4 rounded-3xl bg-white p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-4 rounded-3xl bg-surface p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-50">
         <span className="text-[12px] font-bold text-brand-500">

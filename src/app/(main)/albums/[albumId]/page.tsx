@@ -186,14 +186,14 @@ export default function AlbumPage() {
               onChange={(event) => setKeepOriginal(event.target.checked)}
               className="peer sr-only"
             />
-            <span className="block h-8 w-14 rounded-full bg-stone-200 transition peer-checked:bg-brand-500 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100" />
-            <span className="pointer-events-none absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition peer-checked:translate-x-6" />
+            <span className="block h-8 w-14 rounded-full bg-fill transition peer-checked:bg-brand-500 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100" />
+            <span className="pointer-events-none absolute top-1 left-1 h-6 w-6 rounded-full bg-surface shadow transition peer-checked:translate-x-6" />
           </span>
         </label>
 
         {/* 업로드 진행 상황 */}
         {uploading ? (
-          <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[var(--shadow-card)]">
+          <div className="mt-4 flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 shadow-[var(--shadow-card)]">
             <Spinner className="h-5 w-5 text-brand-500" />
             <span className="text-[14px] font-bold text-ink">
               올리는 중 {uploading.done}/{uploading.total}
@@ -202,7 +202,7 @@ export default function AlbumPage() {
         ) : null}
 
         {uploadError ? (
-          <p role="alert" className="mt-3 text-[13px] font-medium text-red-600">
+          <p role="alert" className="mt-3 text-[13px] font-medium text-danger">
             {uploadError}
           </p>
         ) : null}
@@ -225,7 +225,7 @@ export default function AlbumPage() {
           ) : photos.error ? (
             <ErrorState message={photos.error} />
           ) : photos.data.length === 0 ? (
-            <div className="rounded-3xl bg-white px-6 py-14 text-center shadow-[var(--shadow-card)]">
+            <div className="rounded-3xl bg-surface px-6 py-14 text-center shadow-[var(--shadow-card)]">
               <p className="text-[40px]" aria-hidden="true">
                 📸
               </p>
@@ -243,7 +243,7 @@ export default function AlbumPage() {
                   <button
                     type="button"
                     onClick={() => setViewerIndex(position)}
-                    className="block w-full overflow-hidden rounded-xl bg-stone-100 transition active:scale-[0.98]"
+                    className="block w-full overflow-hidden rounded-xl bg-fill transition active:scale-[0.98]"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -263,7 +263,7 @@ export default function AlbumPage() {
           <button
             type="button"
             onClick={handleDeleteAlbum}
-            className="mt-8 w-full rounded-2xl bg-white py-3.5 text-[14px] font-bold text-red-600 shadow-[var(--shadow-card)]"
+            className="mt-8 w-full rounded-2xl bg-surface py-3.5 text-[14px] font-bold text-danger shadow-[var(--shadow-card)]"
           >
             앨범 삭제하기
           </button>

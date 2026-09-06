@@ -181,7 +181,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
       </div>
 
       {saveError ? (
-        <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
+        <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
           {saveError}
         </p>
       ) : null}

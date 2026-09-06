@@ -49,13 +49,13 @@ export default function MonthCalendar({
   }
 
   return (
-    <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-3xl bg-surface p-4 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
           onClick={() => moveMonth(-1)}
           aria-label="이전 달"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted active:bg-stone-100"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted active:bg-fill"
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
@@ -66,7 +66,7 @@ export default function MonthCalendar({
           type="button"
           onClick={() => moveMonth(1)}
           aria-label="다음 달"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted active:bg-stone-100"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted active:bg-fill"
         >
           <ChevronRightIcon className="h-5 w-5" />
         </button>

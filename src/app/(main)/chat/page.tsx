@@ -120,7 +120,7 @@ export default function ChatListPage() {
 
             {/* 1:1 방이 하나도 없을 때만, 어디서 말을 걸 수 있는지 알려줍니다. */}
             {rooms.length === 1 ? (
-              <div className="mt-3 rounded-3xl bg-white shadow-[var(--shadow-card)]">
+              <div className="mt-3 rounded-3xl bg-surface shadow-[var(--shadow-card)]">
                 <EmptyState
                   icon={<ChatIcon className="h-10 w-10" />}
                   title="아직 1:1 대화가 없어요"
@@ -177,7 +177,7 @@ function ChatRoomRow({
         좁히면 오른쪽 시각·안 읽은 배지가 카드 모서리에 바짝 붙습니다.
         (아래 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
       */
-      className="flex items-center gap-3.5 rounded-3xl bg-white px-3 py-2 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-3.5 rounded-3xl bg-surface px-3 py-2 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {isGroup ? (
         // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.

@@ -62,7 +62,7 @@ export default function NewsPage() {
             ))}
           </ul>
         ) : error ? (
-          <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
             <ErrorState message={error} />
             <div className="px-6 pb-6 text-center">
               <a
@@ -76,7 +76,7 @@ export default function NewsPage() {
             </div>
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
             <EmptyState
               icon={<MegaphoneIcon className="h-10 w-10" />}
               title="올라온 소식이 없어요"
@@ -91,7 +91,7 @@ export default function NewsPage() {
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+                  className="flex items-center gap-3 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
                 >
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -130,7 +130,7 @@ export default function NewsPage() {
             href={SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
+            className="mt-4 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
           >
             도산아카데미 홈페이지 열기 ↗
           </a>

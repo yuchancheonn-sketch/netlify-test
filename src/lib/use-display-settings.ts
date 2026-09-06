@@ -3,10 +3,11 @@
 import { useSyncExternalStore } from "react";
 import {
   DEFAULT_DISPLAY_SETTINGS,
-  MONO_KEY,
+  THEME_KEY,
   TEXT_SCALE_KEY,
   type DisplaySettings,
   type TextScale,
+  type Theme,
 } from "@/lib/display-settings";
 
 /*
@@ -23,9 +24,11 @@ function snapshot(): DisplaySettings {
   if (!current) {
     const root = document.documentElement;
     const scale = root.getAttribute("data-text-scale");
+    const theme = root.getAttribute("data-theme");
     current = {
       textScale: scale === "small" || scale === "large" ? scale : "normal",
-      mono: root.getAttribute("data-mono") === "on",
+      // 표시가 없으면 폰 설정을 따르는 중이라는 뜻입니다.
+      theme: theme === "light" || theme === "dark" ? theme : "system",
     };
   }
   return current;
@@ -72,14 +75,18 @@ export function useDisplaySettings() {
     update({ ...settings, textScale });
   }
 
-  function setMono(mono: boolean) {
+  function setTheme(theme: Theme) {
     const root = document.documentElement;
-    if (mono) root.setAttribute("data-mono", "on");
-    else root.removeAttribute("data-mono");
+    /*
+     * "시스템"은 표시를 아예 지웁니다. 남겨두면 CSS의
+     * prefers-color-scheme 규칙이 비켜서서 폰 설정을 못 따라갑니다.
+     */
+    if (theme === "system") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", theme);
 
-    save(MONO_KEY, mono ? "on" : "off");
-    update({ ...settings, mono });
+    save(THEME_KEY, theme);
+    update({ ...settings, theme });
   }
 
-  return { ...settings, setTextScale, setMono };
+  return { ...settings, setTextScale, setTheme };
 }

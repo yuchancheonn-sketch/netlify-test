@@ -106,7 +106,7 @@ export default function MembersPage() {
               있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
               오른쪽은 인원 수 자리만큼(pr-16) 비워 글자와 겹치지 않게 합니다.
             */
-            className="w-full rounded-xl bg-white py-2.5 pr-16 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="w-full rounded-xl bg-surface py-2.5 pr-16 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {!busy && !error ? (
             <p className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-[13px] font-medium text-ink-soft">
@@ -121,7 +121,7 @@ export default function MembersPage() {
           나머지는 배경 없이 흐린 글씨로만 두어 어디에 서 있는지 색 하나로 읽힙니다.
           알약은 화면 폭을 꽉 채워 아래 원우 카드와 좌우 끝이 맞습니다.
         */}
-        <div className="mt-3 flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
+        <div className="mt-3 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {FILTERS.map(({ value, label }) => {
             const active = filter === value;
             return (
@@ -165,7 +165,7 @@ export default function MembersPage() {
           ) : error ? (
             <ErrorState message={error} />
           ) : visible.length === 0 ? (
-            <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+            <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<UsersIcon className="h-10 w-10" />}
                 title={
@@ -266,7 +266,7 @@ function MemberRow({
 
   return (
     /* gap-4 = 썸네일과 이름 사이 16px. 이 값이 이름 줄의 왼쪽 자리를 정합니다. */
-    <div className="flex items-center gap-4 rounded-3xl bg-white p-3 shadow-[var(--shadow-card)]">
+    <div className="flex items-center gap-4 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
@@ -415,7 +415,7 @@ function MemberDetailSheet({
     >
       {/* 손잡이는 스크롤 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
       <div
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-white sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
         onClick={(event) => event.stopPropagation()}
         style={sheetStyle}
       >
@@ -424,7 +424,7 @@ function MemberDetailSheet({
           aria-hidden="true"
           className="flex shrink-0 touch-none justify-center pt-3 pb-2"
         >
-          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
+          <div className="h-1.5 w-10 rounded-full bg-line" />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7">
@@ -597,7 +597,7 @@ function MemberDetailSheet({
           {isMe ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               사진·자기소개까지 고치기
             </Link>
@@ -606,7 +606,7 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onClose}
-            className="mt-3 w-full rounded-2xl bg-stone-100 py-4 text-[15px] font-bold text-ink-soft"
+            className="mt-3 w-full rounded-2xl bg-fill py-4 text-[15px] font-bold text-ink-soft"
           >
             닫기
           </button>

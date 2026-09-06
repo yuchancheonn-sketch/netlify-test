@@ -427,7 +427,7 @@ export default function ProfileForm({
                 className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-4 transition ${
                   selected
                     ? "border-brand-500 bg-brand-50"
-                    : "border-transparent bg-white shadow-[var(--shadow-card)]"
+                    : "border-transparent bg-surface shadow-[var(--shadow-card)]"
                 }`}
               >
                 <span className="text-[22px]" aria-hidden="true">
@@ -576,7 +576,7 @@ export default function ProfileForm({
         {errors.introVideoUrl ? <FieldError>{errors.introVideoUrl}</FieldError> : null}
 
         {videoPreview ? (
-          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
+          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-[var(--shadow-card)]">
             {videoPreview.thumbnail ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -608,7 +608,7 @@ export default function ProfileForm({
       </div>
 
       {saveError ? (
-        <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
+        <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
           {saveError}
         </p>
       ) : null}

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
-import { APP_NAME, APP_TAGLINE, BRAND_BACKGROUND, BRAND_COLOR } from "@/lib/constants";
+import { APP_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
 import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
 
 /**
@@ -63,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     /*
      * suppressHydrationWarning: 아래 조각 스크립트가 리액트보다 먼저 <html>에
-     * data-text-scale·data-mono를 붙입니다. 그러면 서버가 보낸 html 태그와
+     * data-text-scale·data-theme을 붙입니다. 그러면 서버가 보낸 html 태그와
      * 브라우저의 html 태그가 달라져서 리액트가 "안 맞는다"고 경고합니다.
      * 우리가 일부러 붙인 것이니 이 태그에 한해 눈감아 달라고 알려둡니다.
      */
@@ -72,12 +72,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${notoSansKr.variable} ${notoSerifKr.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body
-        className="min-h-full font-sans"
-        style={{ backgroundColor: BRAND_BACKGROUND }}
-      >
+      {/*
+        배경색은 globals.css의 body 규칙(var(--color-canvas))이 정합니다.
+        예전에는 여기에 인라인 style로 밝은 회색을 박아두었는데, 인라인은
+        CSS를 이기기 때문에 어두운 화면에서도 배경만 밝은 채로 남았습니다.
+      */}
+      <body className="min-h-full font-sans">
         {/*
-          보기 설정(글씨 크기·흑백)을 화면이 그려지기 전에 적용합니다.
+          보기 설정(글씨 크기·화면 밝기)을 화면이 그려지기 전에 적용합니다.
           리액트가 켜진 뒤에 적용하면 보통 크기로 한 번 그려졌다가 바뀌면서
           화면이 번쩍입니다.
 

@@ -38,7 +38,7 @@ export default function HomePage() {
               href={`/events/${nextEvent.id}`}
             />
           ) : (
-            <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+            <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<CalendarIcon className="h-9 w-9" />}
                 title="다가오는 모임이 아직 없어요"
@@ -80,7 +80,7 @@ export default function HomePage() {
           */
           <Link
             href="/events"
-            className="-mt-3 flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            className="-mt-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             <span className="flex items-center gap-2.5 text-[15px] font-bold text-ink">
               <CalendarIcon className="h-[26px] w-[26px] text-brand-500" />
@@ -101,7 +101,7 @@ export default function HomePage() {
             제목 글씨 위 20px(pt-5), 아래 8px(mb-2). 카드 아래쪽 여백은 그대로 28px.
             ★ 위 여백은 아래 "수업 기록" 카드와 같은 값이어야 나란히 보입니다.
           */}
-          <div className="rounded-3xl bg-white px-6 pt-5 pb-7 shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface px-6 pt-5 pb-7 shadow-[var(--shadow-card)]">
             <h2 className="mb-2 text-[18px] font-bold text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">

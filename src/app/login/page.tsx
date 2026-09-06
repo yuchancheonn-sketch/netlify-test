@@ -69,8 +69,12 @@ function LoginScreen() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
+          /*
+            막의 바탕색은 globals.css의 --scrim 입니다. 값을 박아두면 어두운
+            화면에서 크림색 막 위에 흰 글씨가 올라가 아무것도 안 보입니다.
+          */
           background:
-            "linear-gradient(to bottom, rgba(255,250,246,0.5) 0%, rgba(255,250,246,0.28) 38%, rgba(255,250,246,0.68) 60%, rgba(255,250,246,0.95) 74%, rgb(255,250,246) 84%)",
+            "linear-gradient(to bottom, rgb(var(--scrim) / 0.5) 0%, rgb(var(--scrim) / 0.28) 38%, rgb(var(--scrim) / 0.68) 60%, rgb(var(--scrim) / 0.95) 74%, rgb(var(--scrim)) 84%)",
         }}
       />
 
@@ -85,7 +89,7 @@ function LoginScreen() {
         {/* 앱 아이콘 + 이름 */}
         <div className="flex flex-col items-center text-center">
           {/* 흰 테두리는 아이콘이 배경 사진에서 살짝 떠 보일 만큼만 얇게 둡니다. */}
-          <div className="rounded-[22px] bg-white p-[3px] shadow-[var(--shadow-card)]">
+          <div className="rounded-[22px] bg-surface p-[3px] shadow-[var(--shadow-card)]">
             <Image
               src="/icon-192.png"
               alt={`${APP_NAME} 아이콘`}
@@ -117,7 +121,7 @@ function LoginScreen() {
           </PrimaryButton>
 
           {authError ? (
-            <p role="alert" className="mt-3 text-center text-[13px] font-medium text-red-600">
+            <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
               {authError}
             </p>
           ) : null}

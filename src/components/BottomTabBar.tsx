@@ -268,7 +268,7 @@ export default function BottomTabBar() {
           그만큼 미리 들여두어야 알약이 사방 4px 자리에 멈춥니다.
           두 상수를 고치면 이 값도 같이 고쳐야 합니다.
         */
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-white/75 py-1 px-[7px] shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface/75 py-1 px-[7px] shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.

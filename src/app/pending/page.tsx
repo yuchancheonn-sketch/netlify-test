@@ -35,7 +35,7 @@ function PendingScreen() {
         바로 이 화면에서 앱으로 넘어갑니다.
       </p>
 
-      <div className="mt-8 w-full rounded-2xl bg-white p-5 text-left shadow-[var(--shadow-card)]">
+      <div className="mt-8 w-full rounded-2xl bg-surface p-5 text-left shadow-[var(--shadow-card)]">
         <p className="text-[13px] font-bold text-ink-faint">로그인한 계정</p>
         <p className="mt-1.5 text-[15px] font-bold text-ink">{profile?.name || "이름 없음"}</p>
         <p className="text-[14px] text-ink-muted">{profile?.email}</p>

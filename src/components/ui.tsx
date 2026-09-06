@@ -10,7 +10,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-3xl bg-white shadow-[var(--shadow-card)] ${className}`}
+      className={`rounded-3xl bg-surface shadow-[var(--shadow-card)] ${className}`}
     >
       {children}
     </div>
@@ -141,7 +141,7 @@ export function Badge({
   const styles =
     tone === "brand"
       ? "bg-brand-50 text-brand-500"
-      : "bg-stone-100 text-ink-muted";
+      : "bg-fill text-ink-muted";
   return (
     <span
       className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-bold ${styles}`}
@@ -188,12 +188,12 @@ export function FieldLabel({
 
 /** 흰 카드형 입력창. 참고 디자인의 입력 필드 스타일입니다. */
 export const inputClassName =
-  "w-full rounded-2xl border border-transparent bg-white px-5 py-4 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none transition placeholder:text-ink-faint focus:border-brand-300 focus:ring-4 focus:ring-brand-100";
+  "w-full rounded-2xl border border-transparent bg-surface px-5 py-4 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none transition placeholder:text-ink-faint focus:border-brand-300 focus:ring-4 focus:ring-brand-100";
 
 /** 폼 아래에 뜨는 오류 문구 */
 export function FieldError({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="mt-2 text-[13px] font-medium text-red-600">
+    <p role="alert" className="mt-2 text-[13px] font-medium text-danger">
       {children}
     </p>
   );

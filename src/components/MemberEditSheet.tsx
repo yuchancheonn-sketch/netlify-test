@@ -191,7 +191,7 @@ export default function MemberEditSheet({
           aria-hidden="true"
           className="flex shrink-0 touch-none justify-center pt-3 pb-2"
         >
-          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
+          <div className="h-1.5 w-10 rounded-full bg-line" />
         </div>
 
         {/*
@@ -243,7 +243,7 @@ export default function MemberEditSheet({
                     className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
                       selected
                         ? "border-brand-500 bg-brand-50 text-brand-500"
-                        : "border-transparent bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                        : "border-transparent bg-surface text-ink-soft shadow-[var(--shadow-card)]"
                     }`}
                   >
                     {label}
@@ -348,7 +348,7 @@ export default function MemberEditSheet({
             {videoError ? (
               <FieldError>{videoError}</FieldError>
             ) : videoThumb ? (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[var(--shadow-card)]">
+              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-[var(--shadow-card)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={videoThumb}
@@ -370,7 +370,7 @@ export default function MemberEditSheet({
           </div>
 
           {error ? (
-            <p role="alert" className="mb-4 text-center text-[13px] font-medium text-red-600">
+            <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
               {error}
             </p>
           ) : null}
@@ -382,7 +382,7 @@ export default function MemberEditSheet({
           {isMine ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               사진·자기소개까지 고치기
             </Link>

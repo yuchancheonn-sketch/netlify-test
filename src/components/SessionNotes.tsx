@@ -58,7 +58,7 @@ export default function SessionNotes() {
           칸마다 카드를 띄우면 화면이 너무 길어지고, 제목을 카드 밖에 두면
           제목과 목록이 따로 노는 두 덩어리로 보입니다.
         */
-        <div className="overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)]">
+        <div className="overflow-hidden rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           {/*
             제목 글씨 둘레의 여백은 위 "오늘의 도산" 카드와 같게 맞췄습니다.
             왼쪽 24px, 위 20px, 아래 8px — 그쪽은 카드에 px-6 pt-5를 주고
@@ -247,7 +247,7 @@ function SessionEditSheet({
           aria-hidden="true"
           className="flex shrink-0 touch-none justify-center pt-3 pb-2"
         >
-          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
+          <div className="h-1.5 w-10 rounded-full bg-line" />
         </div>
 
         <form
@@ -312,7 +312,7 @@ function SessionEditSheet({
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 rounded-2xl bg-stone-100 px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+              className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
             >
               취소
             </button>

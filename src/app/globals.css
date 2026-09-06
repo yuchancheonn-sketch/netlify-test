@@ -44,11 +44,29 @@
    */
   --color-line: #e4e6e9;
 
+  /*
+   * 카드 바탕.
+   *
+   * 예전에는 카드마다 bg-white 를 적었는데, 그러면 어두운 화면에서 카드가
+   * 눈부신 흰 판으로 남습니다. 흰색이라는 "색"이 아니라 "바탕"이라는 역할로
+   * 이름을 바꿔 두면, 아래 어두운 화면 블록에서 값만 갈아끼우면 됩니다.
+   */
+  --color-surface: #ffffff;
+
+  /*
+   * 바탕 위에 한 겹 더 옅게 까는 자리 — 눌린 상태, 중립 배지, 입력칸 등.
+   * 밝은 화면에서는 stone-100 자리였습니다.
+   */
+  --color-fill: #f5f5f4;
+
   /* 따뜻한 뉴트럴 — 완전한 검정 대신 살짝 붉은 기가 도는 차콜을 씁니다. */
   --color-ink: #1c1917;
   --color-ink-soft: #57534e;
   --color-ink-muted: #78716c;
   --color-ink-faint: #a8a29e;
+
+  /* 오류 문구. 어두운 화면에서는 더 밝은 빨강으로 바뀝니다. */
+  --color-danger: #dc2626;
 
   /*
    * 배경: 아주 연한 회색.
@@ -110,9 +128,125 @@
     0 2px 6px rgba(28, 25, 23, 0.07), 0 12px 32px rgba(28, 25, 23, 0.13);
 }
 
+/*
+ * 어두운 화면 (다크 모드)
+ * ---------------------------------------------------------------------------
+ * 위 @theme 에서 정한 토큰의 "값만" 갈아끼웁니다. 화면을 그리는 코드는
+ * bg-surface / text-ink 처럼 역할 이름만 쓰고 있어서, 여기만 바꾸면 앱 전체가
+ * 함께 따라옵니다.
+ *
+ * 세 가지 상태를 지원합니다 (lib/display-settings.ts).
+ *   - 시스템(기본) : <html>에 표시 없음 → 폰의 다크 모드를 그대로 따릅니다.
+ *   - 밝게         : data-theme="light" → 폰이 어두워도 밝게 둡니다.
+ *   - 어둡게       : data-theme="dark"  → 폰이 밝아도 어둡게 둡니다.
+ *
+ * 아래 두 블록의 순서가 중요합니다. 미디어 쿼리 쪽에 :not([data-theme="light"])
+ * 을 달아, 원우가 "밝게"를 골랐으면 폰이 어두워도 이 규칙이 비켜서게 합니다.
+ *
+ * ★ 주황(brand)은 건드리지 않습니다.
+ *   오히려 어두운 바탕에서 #FF7210 이 제 색을 냅니다 — 흰 바탕에서는 대비가
+ *   2.7:1 로 기준에 못 미쳤는데(위 주석 참고), 어두운 바탕에서는 6:1 입니다.
+ */
+/*
+ * 어두운 화면의 값은 여기 한 번만 적습니다.
+ *
+ * 아래에서 이 값들을 실제 토큰에 옮겨 담는 블록이 두 번 나오는데(미디어 쿼리
+ * 하나, data-theme 하나), 거기에 색을 직접 적으면 둘이 조용히 어긋납니다.
+ * 색을 고칠 일이 있으면 이 블록만 고치세요.
+ */
+:root {
+  --dark-canvas: #121315;
+  --dark-surface: #1d1f22;
+  --dark-fill: #2a2d31;
+  --dark-line: #313438;
+
+  --dark-ink: #f0f1f2;
+  --dark-ink-soft: #c4c7cb;
+  --dark-ink-muted: #9aa0a6;
+  /*
+   * 옅은 글씨는 그대로 뒤집으면 너무 어두워 읽히지 않습니다.
+   * 카드 바탕 대비 4.2:1 이 나오는 밝기까지 올려 두었습니다.
+   */
+  --dark-ink-faint: #7b8189;
+
+  /* 어두운 바탕에서 #dc2626 은 탁하게 가라앉아 한 단계 밝게 씁니다. */
+  --dark-danger: #f87171;
+
+  /*
+   * 연한 주황 자리(배지·알림 상자·달력의 오늘). 밝은 화면에서는 크림색인데,
+   * 그 값을 그대로 두면 어두운 화면에서 눈부신 크림 판이 됩니다.
+   * 주황을 어둡게 눌러, 그 위의 brand-500 글씨가 5.4:1 로 읽히게 했습니다.
+   */
+  --dark-brand-50: #3a2313;
+  --dark-brand-100: #4d2e17;
+  /* 눌리지 않는 버튼(disabled) 바탕. 밝은 화면의 바랜 주황에 해당합니다. */
+  --dark-brand-200: #6b4620;
+
+  /*
+   * 어두운 화면에서는 검은 그림자가 보이지 않습니다.
+   * 카드는 바탕(canvas)보다 밝은 표면색(surface)으로 스스로 떠오르고,
+   * 그림자는 경계를 또렷하게 잡는 정도로만 남깁니다.
+   */
+  --dark-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.28);
+  --dark-shadow-float: 0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: var(--dark-canvas);
+    --color-surface: var(--dark-surface);
+    --color-fill: var(--dark-fill);
+    --color-line: var(--dark-line);
+    --color-ink: var(--dark-ink);
+    --color-ink-soft: var(--dark-ink-soft);
+    --color-ink-muted: var(--dark-ink-muted);
+    --color-ink-faint: var(--dark-ink-faint);
+    --color-danger: var(--dark-danger);
+    --color-brand-50: var(--dark-brand-50);
+    --color-brand-100: var(--dark-brand-100);
+    --color-brand-200: var(--dark-brand-200);
+    --shadow-card: var(--dark-shadow-card);
+    --shadow-float: var(--dark-shadow-float);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-canvas: var(--dark-canvas);
+  --color-surface: var(--dark-surface);
+  --color-fill: var(--dark-fill);
+  --color-line: var(--dark-line);
+  --color-ink: var(--dark-ink);
+  --color-ink-soft: var(--dark-ink-soft);
+  --color-ink-muted: var(--dark-ink-muted);
+  --color-ink-faint: var(--dark-ink-faint);
+  --color-danger: var(--dark-danger);
+  --color-brand-50: var(--dark-brand-50);
+  --color-brand-100: var(--dark-brand-100);
+  --color-brand-200: var(--dark-brand-200);
+  --shadow-card: var(--dark-shadow-card);
+  --shadow-float: var(--dark-shadow-float);
+}
+
 html {
   /* iOS에서 가로 방향 전환 시 글자 크기가 멋대로 커지는 것을 막습니다. */
   -webkit-text-size-adjust: 100%;
+
+  /*
+   * 브라우저가 기본으로 그리는 것들(입력칸 안쪽, 스크롤바, 자동완성 목록 등)도
+   * 지금 화면 밝기에 맞춰 그리라고 알려줍니다. 이게 없으면 어두운 화면에서
+   * 입력칸만 하얗게 튑니다.
+   */
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /*
@@ -140,23 +274,6 @@ html {
   zoom: 1.15;
 }
 
-/*
- * ★ 흑백 모드를 <html>에 거는 이유
- *
- * filter가 걸린 요소는 그 안의 position:fixed 자식들을 붙잡아, 화면이 아니라
- * 그 요소를 기준으로 자리잡게 만듭니다. 여기에 걸었다면 하단 탭바와 바텀시트가
- * 엉뚱한 곳으로 갔을 것입니다.
- *
- * 뿌리 요소(html)만은 그 규칙에서 빠집니다 — 명세에 적힌 예외입니다.
- * 그래서 body가 아니라 반드시 html에 걸어야 합니다.
- *
- * 색 토큰을 하나씩 회색으로 바꾸는 방법도 있지만, 그러면 원우들 프로필 사진과
- * 행사 사진은 색깔인 채로 남습니다. 이 한 줄이 사진까지 함께 걷어냅니다.
- */
-:root[data-mono="on"] {
-  filter: grayscale(1);
-}
-
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -182,10 +299,38 @@ body {
  *
  * 색은 먹색을 25%만 풀어 씁니다. 흰 카드 위에서도 회색 배경 위에서도
  * 같은 밝기로 앉도록, 고정 회색 대신 반투명을 씁니다.
+ * 어두운 화면에서는 검은 막대가 보이지 않으므로 흰색을 풀어 씁니다.
  */
+:root {
+  --scrollbar-thumb: rgba(28, 25, 23, 0.25);
+
+  /*
+   * 사진 위에 얹는 막의 바탕색 — R G B 세 숫자만 담습니다.
+   * 쓰는 쪽에서 rgb(var(--scrim) / 0.5) 처럼 농도를 붙여 씁니다.
+   *
+   * 두 곳이 씁니다: 로그인 화면의 도산 선생 사진 위, 그리고 하단 탭바 뒤.
+   * 값을 박아두면 어두운 화면에서 흰 막 위에 흰 글씨가 올라가 안 보입니다.
+   * 로그인 화면의 밝은 값이 canvas(#ECEDEE)가 아니라 따뜻한 크림색인 것은
+   * 사진과 결을 맞추려고 일부러 그렇게 둔 것입니다.
+   */
+  --scrim: 255 250 246;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+    --scrim: 18 19 21;
+  }
+}
+
+:root[data-theme="dark"] {
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrim: 18 19 21;
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(28, 25, 23, 0.25) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -199,7 +344,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   /* 안쪽 여백 2px을 둬서 막대가 실제로는 4px 굵기로 보이게 합니다. */
-  background-color: rgba(28, 25, 23, 0.25);
+  background-color: var(--scrollbar-thumb);
   background-clip: content-box;
   border: 2px solid transparent;
   border-radius: 999px;
@@ -238,13 +383,36 @@ button {
   }
 }
 
-/* 로딩 스켈레톤용 은은한 물결 애니메이션 (배경 회색에 맞춘 무채색) */
+/*
+ * 로딩 스켈레톤용 은은한 물결 애니메이션.
+ *
+ * 두 색을 토큰으로 빼둔 이유: 밝은 화면에서는 흰 카드보다 조금 어두워야
+ * 보이고, 어두운 화면에서는 반대로 조금 밝아야 보입니다. 값을 박아두면
+ * 어두운 화면에서 회색 판이 그대로 남아 눈에 띕니다.
+ */
+:root {
+  --skeleton-base: rgba(222, 225, 229, 0.7);
+  --skeleton-shine: rgba(240, 242, 244, 0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --skeleton-base: rgba(255, 255, 255, 0.05);
+    --skeleton-shine: rgba(255, 255, 255, 0.11);
+  }
+}
+
+:root[data-theme="dark"] {
+  --skeleton-base: rgba(255, 255, 255, 0.05);
+  --skeleton-shine: rgba(255, 255, 255, 0.11);
+}
+
 @utility skeleton {
   background: linear-gradient(
     90deg,
-    rgba(222, 225, 229, 0.7) 25%,
-    rgba(240, 242, 244, 0.95) 37%,
-    rgba(222, 225, 229, 0.7) 63%
+    var(--skeleton-base) 25%,
+    var(--skeleton-shine) 37%,
+    var(--skeleton-base) 63%
   );
   background-size: 400% 100%;
   animation: skeleton-wave 1.4s ease infinite;

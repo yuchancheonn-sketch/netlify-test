@@ -56,7 +56,7 @@ export default function StageGate({
  */
 export function SplashScreen() {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-white px-8">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-surface px-8">
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
@@ -81,15 +81,15 @@ export function SplashScreen() {
 function SetupNotice() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-canvas px-6">
-      <div className="w-full max-w-md rounded-3xl bg-white p-7 shadow-[var(--shadow-card)]">
+      <div className="w-full max-w-md rounded-3xl bg-surface p-7 shadow-[var(--shadow-card)]">
         <h1 className="text-[18px] font-bold text-ink">Firebase 설정이 필요해요</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">
           {APP_NAME} 앱을 실행하려면 프로젝트 루트에{" "}
-          <code className="rounded bg-stone-100 px-1.5 py-0.5 text-[13px]">.env.local</code>{" "}
+          <code className="rounded bg-fill px-1.5 py-0.5 text-[13px]">.env.local</code>{" "}
           파일을 만들고 Firebase 설정값을 넣어야 합니다.
         </p>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">
-          <code className="rounded bg-stone-100 px-1.5 py-0.5 text-[13px]">
+          <code className="rounded bg-fill px-1.5 py-0.5 text-[13px]">
             .env.local.example
           </code>{" "}
           파일을 복사해서 값을 채운 뒤 개발 서버를 다시 시작해 주세요. 자세한 절차는

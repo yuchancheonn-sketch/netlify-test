@@ -6,7 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import { CheckIcon } from "@/components/icons";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { TEXT_SCALES } from "@/lib/display-settings";
+import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
 import { useDisplaySettings } from "@/lib/use-display-settings";
@@ -19,7 +19,7 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
  */
 export default function SettingsPage() {
-  const { textScale, mono, setTextScale, setMono } = useDisplaySettings();
+  const { textScale, theme, setTextScale, setTheme } = useDisplaySettings();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -67,7 +67,7 @@ export default function SettingsPage() {
                   } ${
                     selected
                       ? "bg-brand-500 text-white"
-                      : "bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                      : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >
                   {label}
@@ -78,27 +78,28 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <SectionTitle>흑백 모드</SectionTitle>
+          <SectionTitle>화면</SectionTitle>
           {/*
-            켬/끔 두 칸. 위 글씨 크기와 같은 모양으로 두어, 설정 화면 안에서
+            세 칸. 위 글씨 크기와 같은 모양으로 두어, 설정 화면 안에서
             고르는 방식이 하나로 읽히게 했습니다.
+
+            "시스템"이 기본입니다 — 폰에서 다크 모드를 켜면 앱도 함께 어두워지고,
+            폰이 시간대에 따라 자동으로 바뀌면 앱도 따라 바뀝니다.
+            앱만 따로 두고 싶을 때만 밝게·어둡게를 고르면 됩니다.
           */}
           <div className="flex gap-2.5">
-            {[
-              { value: false, label: "끄기" },
-              { value: true, label: "켜기" },
-            ].map(({ value, label }) => {
-              const selected = mono === value;
+            {THEMES.map(({ value, label }) => {
+              const selected = theme === value;
               return (
                 <button
-                  key={label}
+                  key={value}
                   type="button"
-                  onClick={() => setMono(value)}
+                  onClick={() => setTheme(value)}
                   aria-pressed={selected}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-4 text-[17px] font-bold transition active:scale-[0.98] ${
                     selected
                       ? "bg-brand-500 text-white"
-                      : "bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                      : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >
                   {selected ? <CheckIcon className="h-[18px] w-[18px]" /> : null}
@@ -126,7 +127,7 @@ function permissionProblem(permission: PushPermission): string {
 }
 
 /**
- * 알림 켜기/끄기 — 글씨 크기·흑백 모드와 같은 모양의 두 칸입니다.
+ * 알림 켜기/끄기 — 글씨 크기·화면과 같은 모양의 두 칸입니다.
  *
  * 이 설정은 **기기마다 따로**입니다. 폰에서 켜도 태블릿에서는 따로 켜야 합니다.
  * 브라우저 권한이 기기 단위로 주어지기 때문입니다.
@@ -179,7 +180,7 @@ function PushSection({ uid }: { uid: string | undefined }) {
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-4 text-[17px] font-bold transition active:scale-[0.98] disabled:opacity-50 ${
                 selected
                   ? "bg-brand-500 text-white"
-                  : "bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                  : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
               }`}
             >
               {pending === value ? (
@@ -193,7 +194,7 @@ function PushSection({ uid }: { uid: string | undefined }) {
         })}
       </div>
       {message ? (
-        <p role="alert" className="mt-2.5 text-[13px] leading-relaxed text-red-600">
+        <p role="alert" className="mt-2.5 text-[13px] leading-relaxed text-danger">
           {message}
         </p>
       ) : null}

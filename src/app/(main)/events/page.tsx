@@ -41,7 +41,7 @@ export default function EventsPage() {
         /* 홈의 "모임 일정 전체 보기"로 들어오는 화면이라, 돌아갈 자리를 홈으로 못 박습니다. */
         backHref="/home"
         right={
-          <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
+          <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
             {(
               [
                 ["list", "목록"],
@@ -86,7 +86,7 @@ export default function EventsPage() {
               <section>
                 <SectionTitle>{formatMonthDay(selectedDate)}</SectionTitle>
                 {selectedEvents.length === 0 ? (
-                  <p className="rounded-2xl bg-white px-5 py-6 text-center text-[14px] text-ink-faint shadow-[var(--shadow-card)]">
+                  <p className="rounded-2xl bg-surface px-5 py-6 text-center text-[14px] text-ink-faint shadow-[var(--shadow-card)]">
                     이 날에는 일정이 없어요
                   </p>
                 ) : (
@@ -106,7 +106,7 @@ export default function EventsPage() {
             )}
           </div>
         ) : events.length === 0 ? (
-          <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
             <EmptyState
               icon={<CalendarIcon className="h-10 w-10" />}
               title="등록된 일정이 없어요"

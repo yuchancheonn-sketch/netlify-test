@@ -50,7 +50,7 @@ export default function PageHeader({
           type="button"
           onClick={() => (backHref ? router.push(backHref) : router.back())}
           aria-label="뒤로 가기"
-          className="-ml-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-stone-100"
+          className="-ml-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-fill"
         >
           <ChevronLeftIcon className="h-7 w-7" />
         </button>
@@ -132,7 +132,7 @@ function HeaderIconLink({
     <Link
       href={href}
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-stone-100 active:scale-95"
+      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-fill active:scale-95"
     >
       {children}
     </Link>

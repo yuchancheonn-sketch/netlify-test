@@ -71,7 +71,7 @@ export default function AdminPage() {
       <PageHeader title="운영진" eyebrow="가입 승인과 명단 관리" back />
 
       <div className="px-4 pb-8">
-        <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
+        <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {tabs.map(({ value, label }) => (
             <button
               key={value}
@@ -176,7 +176,7 @@ function PendingSection({
 
   if (pending.length === 0) {
     return (
-      <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<CheckIcon className="h-10 w-10" />}
           title="확인을 기다리는 계정이 없어요"
@@ -189,7 +189,7 @@ function PendingSection({
   return (
     <>
       {error ? (
-        <p role="alert" className="mb-3 text-[13px] font-medium text-red-600">
+        <p role="alert" className="mb-3 text-[13px] font-medium text-danger">
           {error}
         </p>
       ) : null}
@@ -198,7 +198,7 @@ function PendingSection({
         {pending.map((user) => (
           <li
             key={user.uid}
-            className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)]"
+            className="rounded-3xl bg-surface p-4 shadow-[var(--shadow-card)]"
           >
             <div className="flex items-center gap-3">
               <Avatar
@@ -234,7 +234,7 @@ function PendingSection({
                 type="button"
                 onClick={() => reject(user)}
                 disabled={busyUid === user.uid}
-                className="rounded-2xl bg-stone-100 px-5 py-3 text-[15px] font-bold text-ink-muted transition active:scale-[0.98] disabled:opacity-60"
+                className="rounded-2xl bg-fill px-5 py-3 text-[15px] font-bold text-ink-muted transition active:scale-[0.98] disabled:opacity-60"
               >
                 거절
               </button>
@@ -352,7 +352,7 @@ function RosterSection({
   return (
     <div className="flex flex-col gap-8">
       {/* 추가 폼 */}
-      <section className="rounded-3xl bg-white p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-3xl bg-surface p-5 shadow-[var(--shadow-card)]">
         <form onSubmit={handleAdd}>
           <FieldLabel htmlFor="roster-names" hint="여러 명은 줄바꿈으로">
             명단에 원우 추가
@@ -407,7 +407,7 @@ function RosterSection({
             </p>
           ) : null}
           {error ? (
-            <p role="alert" className="mt-2 text-center text-[13px] font-medium text-red-600">
+            <p role="alert" className="mt-2 text-center text-[13px] font-medium text-danger">
               {error}
             </p>
           ) : null}
@@ -425,7 +425,7 @@ function RosterSection({
         ) : roster.error ? (
           <ErrorState message={roster.error} />
         ) : roster.data.length === 0 ? (
-          <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
             <EmptyState
               icon={<UsersIcon className="h-10 w-10" />}
               title="아직 등록한 명단이 없어요"
@@ -439,7 +439,7 @@ function RosterSection({
               return (
                 <li
                   key={entry.id}
-                  className="rounded-2xl bg-white p-4 shadow-[var(--shadow-card)]"
+                  className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -459,7 +459,7 @@ function RosterSection({
                     <button
                       type="button"
                       onClick={() => handleRemove(entry)}
-                      className="shrink-0 rounded-full px-3 py-1.5 text-[13px] font-bold text-ink-faint active:bg-stone-100"
+                      className="shrink-0 rounded-full px-3 py-1.5 text-[13px] font-bold text-ink-faint active:bg-fill"
                     >
                       삭제
                     </button>
@@ -541,7 +541,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
 
   if (approved.length === 0) {
     return (
-      <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState title="승인된 원우가 아직 없어요" />
       </div>
     );
@@ -550,7 +550,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
   return (
     <>
       {error ? (
-        <p role="alert" className="mb-3 text-[13px] font-medium text-red-600">
+        <p role="alert" className="mb-3 text-[13px] font-medium text-danger">
           {error}
         </p>
       ) : null}
@@ -561,7 +561,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
           return (
             <li
               key={member.uid}
-              className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-[var(--shadow-card)]"
+              className="flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]"
             >
               <Avatar
                 src={member.photoURL}
@@ -585,7 +585,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                   className={`rounded-full px-3.5 py-2 text-[13px] font-bold transition disabled:opacity-45 ${
                     member.role === "admin"
                       ? "bg-brand-50 text-brand-500"
-                      : "bg-stone-100 text-ink-muted"
+                      : "bg-fill text-ink-muted"
                   }`}
                 >
                   {member.role === "admin" ? "운영진" : "원우"}
@@ -595,7 +595,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                     type="button"
                     onClick={() => blockMember(member)}
                     aria-label={`${member.nickname || member.name} 접근 막기`}
-                    className="rounded-full px-2.5 py-2 text-[13px] font-bold text-ink-faint transition active:bg-stone-100"
+                    className="rounded-full px-2.5 py-2 text-[13px] font-bold text-ink-faint transition active:bg-fill"
                   >
                     차단
                   </button>

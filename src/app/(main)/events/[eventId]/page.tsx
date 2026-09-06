@@ -106,7 +106,7 @@ export default function EventDetailPage() {
         </section>
 
         {event.description ? (
-          <section className="rounded-3xl bg-white p-5 shadow-[var(--shadow-card)]">
+          <section className="rounded-3xl bg-surface p-5 shadow-[var(--shadow-card)]">
             <h3 className="mb-2 text-[15px] font-bold text-ink">안내</h3>
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
               {event.description}
@@ -130,7 +130,7 @@ export default function EventDetailPage() {
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-3.5 text-[15px] font-bold transition active:scale-[0.98] disabled:opacity-60 ${
                     selected
                       ? "bg-brand-500 text-white"
-                      : "bg-white text-ink-soft shadow-[var(--shadow-card)]"
+                      : "bg-surface text-ink-soft shadow-[var(--shadow-card)]"
                   }`}
                 >
                   {selected ? <CheckIcon className="h-[18px] w-[18px]" /> : null}
@@ -140,7 +140,7 @@ export default function EventDetailPage() {
             })}
           </div>
           {actionError ? (
-            <p role="alert" className="mt-3 text-center text-[13px] font-medium text-red-600">
+            <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
               {actionError}
             </p>
           ) : null}
@@ -149,7 +149,7 @@ export default function EventDetailPage() {
         {/* 참석 인원 */}
         <section>
           <SectionTitle>현재 참석 인원 {attending.length}명</SectionTitle>
-          <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
             {rsvps.loading ? (
               <div className="p-5">
                 <Skeleton className="h-10 w-full" />
@@ -183,14 +183,14 @@ export default function EventDetailPage() {
           <section className="flex gap-3">
             <Link
               href={`/events/${eventId}/edit`}
-              className="flex-1 rounded-2xl bg-white py-3.5 text-center text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="flex-1 rounded-2xl bg-surface py-3.5 text-center text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               수정하기
             </Link>
             <button
               type="button"
               onClick={handleDelete}
-              className="flex-1 rounded-2xl bg-white py-3.5 text-[15px] font-bold text-red-600 shadow-[var(--shadow-card)]"
+              className="flex-1 rounded-2xl bg-surface py-3.5 text-[15px] font-bold text-danger shadow-[var(--shadow-card)]"
             >
               삭제하기
             </button>

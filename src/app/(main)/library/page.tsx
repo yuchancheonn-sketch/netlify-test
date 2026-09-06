@@ -46,7 +46,7 @@ export default function LibraryPage() {
       <PageHeader title="자료" right={<HeaderActions />} />
 
       <div className="px-4 pb-8">
-        <div className="flex rounded-full bg-white p-1 shadow-[var(--shadow-card)]">
+        <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {SUBTABS.map(({ value, label }) => (
             <button
               key={value}
@@ -130,7 +130,7 @@ function VideoList() {
 
   if (error) {
     return (
-      <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <ErrorState message={error} />
         <div className="px-6 pb-6 text-center">
           <a
@@ -148,7 +148,7 @@ function VideoList() {
 
   if (videos.length === 0) {
     return (
-      <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<span className="text-[40px]">🎬</span>}
           title="아직 올라온 영상이 없어요"
@@ -163,7 +163,7 @@ function VideoList() {
       <ul className="flex flex-col gap-5">
         {videos.map((video) => (
           <li key={video.id}>
-            <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
               {playingId === video.id ? (
                 <iframe
                   src={embedUrl(video.id)}
@@ -223,7 +223,7 @@ function VideoList() {
         href="https://www.youtube.com/@dosanacademy"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-white py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
+        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
       >
         도산아카데미 유튜브 채널 열기 ↗
       </a>
@@ -254,7 +254,7 @@ function AlbumList() {
   return (
     <>
       {albums.length === 0 ? (
-        <div className="rounded-3xl bg-white shadow-[var(--shadow-card)]">
+        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
             title="아직 앨범이 없어요"
@@ -271,7 +271,7 @@ function AlbumList() {
             <li key={album.id}>
               <Link
                 href={`/albums/${album.id}`}
-                className="block overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] transition active:scale-[0.98]"
+                className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
               >
                 <div className="aspect-[4/3] w-full bg-brand-50">
                   {album.coverImageUrl ? (
@@ -308,7 +308,7 @@ function AlbumList() {
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
         >
           <PlusIcon className="h-5 w-5" />
           앨범 만들기
@@ -405,7 +405,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl bg-stone-100 px-6 py-4 text-[15px] font-bold text-ink-muted"
+            className="rounded-2xl bg-fill px-6 py-4 text-[15px] font-bold text-ink-muted"
           >
             취소
           </button>

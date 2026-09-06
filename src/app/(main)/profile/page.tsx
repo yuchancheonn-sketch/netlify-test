@@ -62,7 +62,7 @@ export default function ProfilePage() {
       <ProfileForm mode="edit" onSaved={handleSaved} />
 
       <div className="px-4 pb-10">
-        <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl bg-surface p-5 shadow-[var(--shadow-card)]">
           <dl className="flex items-center justify-between text-[14px]">
             <dt className="text-ink-faint">소속</dt>
             <dd className="font-bold text-ink">{profile?.cohort || COHORT}</dd>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
         {isAdmin ? (
           <Link
             href="/admin"
-            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            className="mt-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             <span className="text-[15px] font-bold text-ink">운영진 화면</span>
             <span className="flex items-center gap-1 text-[13px] text-ink-faint">

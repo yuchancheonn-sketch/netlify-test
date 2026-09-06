@@ -81,12 +81,16 @@ function BottomTabBarScrim() {
         style={{ WebkitMaskImage: fade, maskImage: fade }}
       />
 
-      {/* 흰 기운. 반투명하게만 얹어, 뒤가 아예 안 보이지는 않게 둡니다. */}
+      {/*
+        바탕 기운. 반투명하게만 얹어, 뒤가 아예 안 보이지는 않게 둡니다.
+        색은 globals.css의 --scrim 을 따릅니다 — 흰색으로 박아두면
+        어두운 화면에서 탭바 뒤만 뿌옇게 밝아집니다.
+      */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.5))",
+            "linear-gradient(to bottom, rgb(var(--scrim) / 0), rgb(var(--scrim) / 0.5))",
         }}
       />
     </div>
