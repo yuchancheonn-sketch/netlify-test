@@ -7,7 +7,6 @@ import {
   persistentMultipleTabManager,
   type Firestore,
 } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
 /**
@@ -80,7 +79,13 @@ function createDb(): Firestore {
 
 export const auth = getAuth(app);
 export const db = createDb();
-export const storage = getStorage(app);
+/*
+ * Firebase Storage는 쓰지 않습니다 — 이 프로젝트는 무료 요금제라 Storage가
+ * 막혀 있어서, 프로필 사진은 문서 안 data URL로, 나머지 사진은 Cloudinary로
+ * 갑니다. 예전에는 여기서 getStorage()를 불러 export 해두었는데 아무도 쓰지
+ * 않으면서 firebase/storage 뭉치(개발 모드 기준 136KB)만 매 화면에 딸려
+ * 왔습니다. 다시 쓸 일이 생기면 그때 여기에 되살리면 됩니다.
+ */
 
 /** Google 로그인 제공자. 매번 계정을 고를 수 있도록 prompt를 지정합니다. */
 export const googleProvider = new GoogleAuthProvider();
