@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
    */
   allowedDevOrigins: ["192.168.*.*", "172.*.*.*", "10.*.*.*"],
 
+  /**
+   * 개발 서버가 화면 오른쪽 아래에 띄우는 검은 동그라미(N 표시)를 끕니다.
+   *
+   * 빌드 상태나 라우트 정보를 보여주는 Next.js 개발자 도구 버튼인데,
+   * 폰으로 화면을 확인할 때 하단 탭바 위에 겹쳐 보여 방해가 됩니다.
+   * 배포본에는 원래 나오지 않으므로, 이 설정은 개발 중 눈에만 영향을 줍니다.
+   */
+  devIndicators: false,
+
   images: {
     /**
      * 프로필 사진은 Google 계정(lh3.googleusercontent.com) 또는
