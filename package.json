@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:phone": "next dev -H 0.0.0.0",
+    "dev:reset": "node -e \"require('fs').rmSync('.next/dev',{recursive:true,force:true})\"",
+    "preview:phone": "next build && next start -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
