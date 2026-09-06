@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useMySessionNotes, useSessions } from "@/lib/hooks";
+import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
   COURSE_TOTAL_SESSIONS,
   SESSION_INSTRUCTOR_MAX_LENGTH,
@@ -166,6 +167,8 @@ function SessionEditSheet({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || saving) return;
@@ -233,78 +236,92 @@ function SessionEditSheet({
       aria-label={`${week}주차 수업 기록`}
       onClick={onClose}
     >
-      <form
-        onSubmit={handleSubmit}
+      {/* 손잡이를 스크롤 밖에 따로 두는 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
+      <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-canvas sm:rounded-[16px]"
+        style={sheetStyle}
       >
-        <h2 className="text-[19px] font-bold text-ink">{week}주차 수업</h2>
-        <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-muted">
-          주제와 강사는 원우 모두에게 보이고, 느낀점은 나만 봅니다.
-        </p>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="session-topic">수업 주제</FieldLabel>
-          <input
-            id="session-topic"
-            value={topic}
-            onChange={(changed) => setTopic(changed.target.value)}
-            placeholder="예) 애기애타의 뜻과 오늘의 리더십"
-            maxLength={SESSION_TOPIC_MAX_LENGTH}
-            className={inputClassName}
-          />
+        <div
+          {...handleTouchHandlers}
+          aria-hidden="true"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
+        >
+          <div className="h-1.5 w-10 rounded-full bg-stone-300" />
         </div>
 
-        <div className="mb-5">
-          <FieldLabel htmlFor="session-instructor">강사</FieldLabel>
-          <input
-            id="session-instructor"
-            value={instructor}
-            onChange={(changed) => setInstructor(changed.target.value)}
-            placeholder="예) 홍길동"
-            maxLength={SESSION_INSTRUCTOR_MAX_LENGTH}
-            className={inputClassName}
-          />
-        </div>
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+        >
+          <h2 className="text-[19px] font-bold text-ink">{week}주차 수업</h2>
+          <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-muted">
+            주제와 강사는 원우 모두에게 보이고, 느낀점은 나만 봅니다.
+          </p>
 
-        <div className="mb-6">
-          <FieldLabel
-            htmlFor="session-note"
-            hint={`${myNote.length} / ${SESSION_NOTE_MAX_LENGTH}`}
-          >
-            느낀점 (나만 봅니다)
-          </FieldLabel>
-          <textarea
-            id="session-note"
-            value={myNote}
-            onChange={(changed) => setMyNote(changed.target.value)}
-            placeholder="수업에서 마음에 남은 것을 적어보세요."
-            maxLength={SESSION_NOTE_MAX_LENGTH}
-            rows={6}
-            className={`${inputClassName} resize-none leading-relaxed`}
-          />
-        </div>
+          <div className="mb-5">
+            <FieldLabel htmlFor="session-topic">수업 주제</FieldLabel>
+            <input
+              id="session-topic"
+              value={topic}
+              onChange={(changed) => setTopic(changed.target.value)}
+              placeholder="예) 애기애타의 뜻과 오늘의 리더십"
+              maxLength={SESSION_TOPIC_MAX_LENGTH}
+              className={inputClassName}
+            />
+          </div>
 
-        {error ? <FieldError>{error}</FieldError> : null}
+          <div className="mb-5">
+            <FieldLabel htmlFor="session-instructor">강사</FieldLabel>
+            <input
+              id="session-instructor"
+              value={instructor}
+              onChange={(changed) => setInstructor(changed.target.value)}
+              placeholder="예) 홍길동"
+              maxLength={SESSION_INSTRUCTOR_MAX_LENGTH}
+              className={inputClassName}
+            />
+          </div>
 
-        <div className="mt-6 flex gap-3">
-          {/*
-            shrink-0과 whitespace-nowrap이 둘 다 필요합니다.
-            옆의 저장하기가 폭을 다 가져가려 해서, 그냥 두면 취소 칸이 눌려
-            "취/소"로 줄바꿈됩니다.
-          */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-2xl bg-stone-100 px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
-          >
-            취소
-          </button>
-          <PrimaryButton type="submit" size="sm" loading={saving}>
-            저장하기
-          </PrimaryButton>
-        </div>
-      </form>
+          <div className="mb-6">
+            <FieldLabel
+              htmlFor="session-note"
+              hint={`${myNote.length} / ${SESSION_NOTE_MAX_LENGTH}`}
+            >
+              느낀점 (나만 봅니다)
+            </FieldLabel>
+            <textarea
+              id="session-note"
+              value={myNote}
+              onChange={(changed) => setMyNote(changed.target.value)}
+              placeholder="수업에서 마음에 남은 것을 적어보세요."
+              maxLength={SESSION_NOTE_MAX_LENGTH}
+              rows={6}
+              className={`${inputClassName} resize-none leading-relaxed`}
+            />
+          </div>
+
+          {error ? <FieldError>{error}</FieldError> : null}
+
+          <div className="mt-6 flex gap-3">
+            {/*
+              shrink-0과 whitespace-nowrap이 둘 다 필요합니다.
+              옆의 저장하기가 폭을 다 가져가려 해서, 그냥 두면 취소 칸이 눌려
+              "취/소"로 줄바꿈됩니다.
+            */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-2xl bg-stone-100 px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+            >
+              취소
+            </button>
+            <PrimaryButton type="submit" size="sm" loading={saving}>
+              저장하기
+            </PrimaryButton>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
