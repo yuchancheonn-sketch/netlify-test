@@ -49,12 +49,17 @@ export async function sendPushToUsers({
    * 띄우기 때문에(제목·아이콘·tag를 우리가 정한 대로), 브라우저가 멋대로
    * 띄우는 기본 알림과 겹치지 않습니다.
    */
+  /*
+   * fcmOptions.link 는 일부러 쓰지 않습니다. FCM은 그 값이 https 로 시작하는
+   * 온전한 주소이기를 요구해서 "/chat/main" 같은 앱 안 주소를 넣으면 발송
+   * 자체가 거절당합니다. 게다가 data만 보내는 알림에는 쓰이지도 않습니다 —
+   * 누르면 어디로 갈지는 서비스워커의 notificationclick 이 data.url 로 정합니다.
+   */
   const response = await messaging.sendEachForMulticast({
     tokens,
     data: { title, body: trimmedBody, url, tag },
     webpush: {
       headers: { Urgency: "high", TTL: "1800" },
-      fcmOptions: { link: url },
     },
   });
 

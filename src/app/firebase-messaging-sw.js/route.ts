@@ -41,15 +41,21 @@ const messaging = firebase.messaging();
  */
 messaging.onBackgroundMessage((payload) => {
   const d = (payload && payload.data) || {};
-  const title = d.title || "애기애타 10기";
-  self.registration.showNotification(title, {
+  const options = {
     body: d.body || "",
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: d.tag || undefined,
-    renotify: true,
     data: { url: d.url || "/" },
-  });
+  };
+  /*
+   * 같은 방의 알림은 tag로 묶어 한 칸에 겹칩니다. renotify는 tag가 있을 때만
+   * 붙입니다 — tag 없이 renotify를 주면 크롬이 오류를 내고 알림이 아예 안 뜹니다.
+   */
+  if (d.tag) {
+    options.tag = d.tag;
+    options.renotify = true;
+  }
+  self.registration.showNotification(d.title || "애기애타 10기", options);
 });
 
 /* 알림을 누르면 이미 열린 앱 창을 그 화면으로 옮기고, 없으면 새로 엽니다. */
