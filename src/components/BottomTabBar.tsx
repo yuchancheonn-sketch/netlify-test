@@ -153,6 +153,16 @@ const PILL_GRAB_SCALE = 1.1;
 /** 커졌다 작아지는 데 걸리는 시간과 가락. */
 const POP_TRANSITION = "180ms cubic-bezier(0.22, 1, 0.36, 1)";
 
+/**
+ * 알약이 한 자리에서 다른 자리로 미끄러지는 데 걸리는 시간과 가락.
+ * 끌다 손을 뗀 뒤 제자리를 찾아갈 때와, 탭을 눌러 옮겨갈 때 둘 다 씁니다 —
+ * 어느 쪽으로 옮기든 같은 속도로 움직여야 같은 알약으로 보입니다.
+ *
+ * "동작 줄이기"를 켠 원우에게는 globals.css가 모든 전환 시간을 0으로 만들어
+ * 여기서 따로 살필 것이 없습니다.
+ */
+const SLIDE_TRANSITION = "220ms cubic-bezier(0.22, 1, 0.36, 1)";
+
 export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -163,6 +173,22 @@ export default function BottomTabBar() {
   const [drag, setDrag] = useState<PillDrag | null>(null);
   /** 끌고 난 직후의 손뗌이 링크 이동으로 이어지지 않도록 막는 표시 */
   const draggedRef = useRef(false);
+
+  /*
+   * 알약이 다음 자리로 미끄러져 갈지, 그냥 그 자리에 나타날지.
+   *
+   * ★ 왜 늘 미끄러지게 두지 않는가
+   *   알약의 자리는 left(주소에서 나오는 값)와 translate(손가락을 따라가는 값)
+   *   둘로 나뉘어 있습니다. 끌다가 손을 떼면 translate가 알약을 새 탭 자리까지
+   *   데려다 놓고, 주소가 따라온 순간 left가 그 자리로 바뀌면서 translate가
+   *   0으로 돌아갑니다 — 두 값이 같은 프레임에 서로를 상쇄해서 화면은 꿈쩍도
+   *   하지 않습니다. 그런데 left에 전환이 걸려 있으면 상쇄가 깨집니다.
+   *   translate만 즉시 0이 되고 left는 천천히 따라가서, 알약이 한 칸 뒤로
+   *   튀었다가 다시 미끄러져 옵니다.
+   *
+   *   그래서 left의 전환은 탭을 눌러 옮겨갈 때만 켜고, 끌어서 옮길 때는 끕니다.
+   */
+  const [slide, setSlide] = useState(false);
 
   // 앨범 상세처럼 하위 화면에 들어가 있어도 그 탭이 켜져 보이도록 접두사로 비교합니다.
   const activeIndex = TABS.findIndex(
@@ -204,6 +230,9 @@ export default function BottomTabBar() {
    */
   if (drag && drag.target !== null && drag.target === activeIndex) {
     setDrag(null);
+    // 이 프레임에 left가 새 자리로 건너뜁니다. 위 설명대로, 여기서는 전환이 없어야
+    // translate가 0으로 돌아가는 것과 정확히 상쇄됩니다.
+    if (slide) setSlide(false);
   }
 
   /** 탭 한 칸의 픽셀 폭 */
@@ -386,11 +415,14 @@ export default function BottomTabBar() {
             translate: drag?.dx ? `${drag.dx}px` : undefined,
             scale: holding ? String(grabScale) : "1",
             /*
-              이동은 손을 뗀 뒤 제자리를 찾아갈 때만 부드럽게 하고,
+              끌어서 옮길 때는 translate가, 눌러서 옮길 때는 left가 알약을
+              나릅니다. 그때그때 나르는 쪽에만 전환을 걸어야 합니다 —
+              둘 다 켜두면 손을 떼는 순간 서로 어긋나 알약이 튑니다(위 slide 설명).
               크기는 언제나 부드럽게 합니다.
             */
             transition: [
-              drag?.settling ? "translate 220ms cubic-bezier(0.22, 1, 0.36, 1)" : null,
+              drag?.settling ? `translate ${SLIDE_TRANSITION}` : null,
+              !drag && slide ? `left ${SLIDE_TRANSITION}` : null,
               `scale ${POP_TRANSITION}`,
             ]
               .filter(Boolean)
@@ -436,6 +468,8 @@ export default function BottomTabBar() {
                     event.preventDefault();
                     return;
                   }
+                  // 눌러서 옮기는 것이니 알약은 순간이동하지 말고 미끄러져 갑니다.
+                  setSlide(true);
                   // 인스타그램처럼, 지금 보고 있는 탭을 한 번 더 누르면 맨 위로 올라갑니다.
                   // 앨범 상세 같은 하위 화면에서는 그대로 두어, 원래대로 탭의
                   // 첫 화면으로 돌아가게 합니다.
