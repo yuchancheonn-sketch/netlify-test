@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import {
   DEFAULT_DISPLAY_SETTINGS,
+  THEME_BASE_KEY,
   THEME_KEY,
   TEXT_SCALE_KEY,
   type DisplaySettings,
@@ -55,9 +56,35 @@ function serverSnapshot(): Snapshot {
   return SERVER_SNAPSHOT;
 }
 
-function invalidate() {
+export function invalidateDisplaySettings() {
   current = null;
   for (const listener of listeners) listener();
+}
+
+/**
+ * 폰 설정이 바뀌었을 때 — 앱에만 걸어둔 고정을 풀고 폰을 다시 따라갑니다.
+ *
+ * 폰이 곧 주인입니다. 앱에서 고른 라이트·다크는 "폰이 지금 이럴 때, 이 앱만은
+ * 이렇게" 라는 뜻이지, 영영 폰을 무시하겠다는 뜻이 아닙니다. 그래서 폰이
+ * 바뀌면 그 고름은 지난 이야기가 되고, 표시를 지워 CSS가 폰을 따라가게 합니다.
+ *
+ * 설정 화면이 열려 있지 않아도 동작해야 해서, 앱 껍데기(ThemeSync)가
+ * 이걸 부릅니다.
+ */
+export function followSystemTheme(): void {
+  try {
+    localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(THEME_BASE_KEY);
+  } catch {
+    // 저장소를 못 써도 아래에서 표시는 지웁니다.
+  }
+  document.documentElement.removeAttribute("data-theme");
+  invalidateDisplaySettings();
+}
+
+/** 지금 폰이 다크 모드인지 — 고를 때 함께 적어두는 값입니다. */
+function systemTheme(): ResolvedTheme {
+  return prefersDark().matches ? "dark" : "light";
 }
 
 function subscribe(listener: () => void): () => void {
@@ -72,11 +99,11 @@ function subscribe(listener: () => void): () => void {
    * 바뀌면 다시 읽게 합니다.
    */
   const query = prefersDark();
-  query.addEventListener("change", invalidate);
+  query.addEventListener("change", invalidateDisplaySettings);
 
   return () => {
     listeners.delete(listener);
-    query.removeEventListener("change", invalidate);
+    query.removeEventListener("change", invalidateDisplaySettings);
   };
 }
 
@@ -103,19 +130,21 @@ export function useDisplaySettings() {
     else root.setAttribute("data-text-scale", textScale);
 
     save(TEXT_SCALE_KEY, textScale);
-    invalidate();
+    invalidateDisplaySettings();
   }
 
   /**
-   * 라이트·다크 중 하나로 고정합니다.
+   * 라이트·다크 중 하나를 고릅니다.
    *
-   * 되돌리는 칸("시스템")은 화면에 두지 않았습니다. 한 번 고르면 그때부터
-   * 이 기기에서는 그 밝기로 고정됩니다.
+   * 되돌리는 칸("시스템")은 화면에 두지 않았습니다. 대신 **폰 설정이 바뀌면
+   * 저절로 풀립니다** — 그래서 고를 때의 폰 상태를 함께 적어 둡니다.
+   * (자세한 이유는 display-settings.ts의 THEME_BASE_KEY에)
    */
   function setTheme(theme: ResolvedTheme) {
     document.documentElement.setAttribute("data-theme", theme);
     save(THEME_KEY, theme);
-    invalidate();
+    save(THEME_BASE_KEY, systemTheme());
+    invalidateDisplaySettings();
   }
 
   return { ...settings, setTextScale, setTheme };

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
+import ThemeSync from "@/components/ThemeSync";
 import { AuthProvider } from "@/lib/auth-context";
 import { APP_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
 import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
@@ -90,6 +91,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           우리가 쓴 글이라 밖에서 들어온 값이 섞이지 않습니다.
         */}
         <script dangerouslySetInnerHTML={{ __html: DISPLAY_SETTINGS_SCRIPT }} />
+        {/* 앱을 켜 둔 채로 폰의 다크 모드가 바뀌면 그때도 따라가게 합니다. */}
+        <ThemeSync />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

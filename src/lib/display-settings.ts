@@ -17,6 +17,18 @@
 export const TEXT_SCALE_KEY = "agikaeta:text-scale";
 export const THEME_KEY = "agikaeta:theme";
 
+/**
+ * 라이트·다크를 고를 때 **폰이 어느 쪽이었는지**를 함께 적어 둡니다.
+ *
+ * 이게 없으면 한 번 고른 뒤로는 폰을 영영 따라가지 못합니다. 폰에서 다크
+ * 모드를 켜도 앱만 밝은 채로 남아, 원우는 "왜 이 앱만 안 바뀌지" 하게 됩니다.
+ *
+ * 그래서 **폰 설정이 바뀌면 앱에만 걸어둔 고정을 풉니다.** 고를 때의 폰
+ * 상태와 지금 폰 상태가 다르면, 그 고름은 지난 이야기로 보고 버립니다.
+ * 폰이 그대로인 동안에는 고른 대로 유지됩니다.
+ */
+export const THEME_BASE_KEY = "agikaeta:theme-base";
+
 export type TextScale = "small" | "normal" | "large";
 
 /**
@@ -85,7 +97,19 @@ try {
   var r = document.documentElement;
   var s = localStorage.getItem(${JSON.stringify(TEXT_SCALE_KEY)});
   if (s === "small" || s === "large") r.setAttribute("data-text-scale", s);
+
   var t = localStorage.getItem(${JSON.stringify(THEME_KEY)});
+  var was = localStorage.getItem(${JSON.stringify(THEME_BASE_KEY)});
+  var now = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  /*
+   * 앱을 닫아둔 사이에 폰 설정이 바뀌었으면, 앱에만 걸어둔 고정을 풉니다.
+   * 그러면 아래에서 표시를 달지 않게 되고, CSS가 폰을 그대로 따라갑니다.
+   */
+  if (t && was !== now) {
+    localStorage.removeItem(${JSON.stringify(THEME_KEY)});
+    localStorage.removeItem(${JSON.stringify(THEME_BASE_KEY)});
+    t = null;
+  }
   if (t === "light" || t === "dark") r.setAttribute("data-theme", t);
 } catch (e) {}
 `;
