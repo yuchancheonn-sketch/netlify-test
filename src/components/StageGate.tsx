@@ -58,10 +58,10 @@ export function SplashScreen() {
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-surface px-8">
       {/*
-        원본이 700×700이라 화면에 그리는 125px의 다섯 배가 넘습니다.
+        원본이 700×700이라 화면에 그리는 140px의 다섯 배입니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
 
-        w-[125px] h-auto로 크기를 다시 잡아, 나중에 정사각형이 아닌 그림으로
+        w-[140px] h-auto로 크기를 다시 잡아, 나중에 정사각형이 아닌 그림으로
         바뀌더라도 눌리거나 늘어나지 않고 비율을 지킵니다.
       */}
       <Image
@@ -70,7 +70,7 @@ export function SplashScreen() {
         width={700}
         height={700}
         priority
-        className="animate-splash-in h-auto w-[125px]"
+        className="animate-splash-in h-auto w-[140px]"
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
