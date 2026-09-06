@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { CheckIcon } from "@/components/icons";
 import { SectionTitle } from "@/components/ui";
 import { TEXT_SCALES } from "@/lib/display-settings";
 import { useDisplaySettings } from "@/lib/use-display-settings";
+import { useSwipeBack } from "@/lib/use-swipe-back";
 
 /**
  * 설정 화면 — 눈에 편한 대로 화면을 맞추는 곳.
@@ -14,9 +16,22 @@ import { useDisplaySettings } from "@/lib/use-display-settings";
  */
 export default function SettingsPage() {
   const { textScale, mono, setTextScale, setMono } = useDisplaySettings();
+  const router = useRouter();
+
+  /*
+   * 오른쪽으로 밀어서 앞 화면으로 — 내 프로필 화면과 같은 손짓입니다.
+   * router.back()을 쓰는 이유도 같습니다: 이 화면은 어느 탭에서든 제목 줄의
+   * 톱니 아이콘으로 들어오므로, 갈 곳을 하나로 못 박으면 원우가 있던 탭이
+   * 아니라 엉뚱한 탭으로 나가게 됩니다.
+   */
+  const swipe = useSwipeBack({ onCommit: () => router.back() });
 
   return (
-    <>
+    <div
+      className="bg-canvas"
+      {...swipe.handlers}
+      style={{ ...swipe.touchAction, ...swipe.slideStyle }}
+    >
       <PageHeader title="설정" back />
 
       <div className="flex flex-col gap-7 px-4 pb-10">
@@ -87,6 +102,6 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
-    </>
+    </div>
   );
 }
