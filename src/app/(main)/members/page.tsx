@@ -338,11 +338,16 @@ function MemberRow({
       </button>
 
       {/* 원우 누구나 서로 채워줄 수 있어서, 내 칸이라고 달리 보이지 않습니다. */}
+      {/*
+        테두리 색을 글씨와 같은 --color-ink-muted로 둡니다. 예전에는 텍스트만
+        이 색이고 테두리는 stone-200이었는데, 그건 화면 색을 따라가지 않는
+        고정 팔레트라 어두운 화면에서 흰 테두리처럼 도드라졌습니다.
+      */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-stone-200 px-2.5 py-1.5 text-[12px] font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-1.5 text-[12px] font-bold text-ink-muted transition active:scale-95"
       >
         ✎ 수정
       </button>
