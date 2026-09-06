@@ -14,7 +14,7 @@
 
 import { doc, deleteDoc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getToken, deleteToken } from "firebase/messaging";
-import { db, getMessagingIfSupported } from "@/lib/firebase";
+import { auth, db, getMessagingIfSupported } from "@/lib/firebase";
 
 const SW_URL = "/firebase-messaging-sw.js";
 const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
@@ -26,6 +26,38 @@ const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
  * 한 번 허용한 권한이 "default"로 돌아가지는 않기 때문입니다.
  */
 const PUSH_KEY = "agikaeta:push";
+
+/**
+ * "이 일이 생겼으니 관련된 사람들에게 알림을 보내달라"고 서버에 부탁합니다.
+ *
+ * Cloud Functions(유료 요금제 필요)를 쓰지 않으므로, 일을 벌인 쪽이 직접
+ * 서버 창구를 두드립니다. 남의 이름으로 부를 수 없도록 로그인 토큰을 함께
+ * 보내고, 받는 사람이 누구인지는 서버가 원본 문서를 보고 정합니다.
+ *
+ * 실패해도 아무것도 하지 않습니다. 알림이 한 번 안 온 것뿐이라
+ * 원우에게 오류를 띄울 만한 일이 아닙니다.
+ */
+export async function requestPush(
+  path: "chat" | "event",
+  payload: Record<string, string>,
+): Promise<void> {
+  try {
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) return;
+    await fetch(`/api/push/${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(payload),
+      // 보내자마자 화면을 옮겨도 요청이 끊기지 않게 합니다.
+      keepalive: true,
+    });
+  } catch {
+    // 조용히 넘어갑니다.
+  }
+}
 
 /** 이 기기에서 알림을 켤 수 있는지 (브라우저가 필요한 기능을 갖췄는지) */
 export function isPushSupported(): boolean {

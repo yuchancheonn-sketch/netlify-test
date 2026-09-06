@@ -151,5 +151,12 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
+
+    /*
+     * pushLog — "이 일정 알림은 이미 보냈다"는 표시만 남기는 자리입니다.
+     * 일부러 규칙을 적지 않았습니다. 서버(Admin SDK)만 쓰는 곳이고,
+     * Admin SDK는 규칙을 건너뛰기 때문입니다. 규칙에 없는 컬렉션은
+     * 클라이언트에게 닫혀 있으므로, 적지 않은 것이 곧 "아무도 못 봄"입니다.
+     */
   }
 }

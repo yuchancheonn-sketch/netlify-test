@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
+import { requestPush } from "@/lib/push";
 import type { EventDoc } from "@/lib/types";
 
 /**
@@ -73,7 +74,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
         ? doc(db, "events", event.id)
         : doc(collection(db, "events"));
 
-      await commitWrite(
+      const result = await commitWrite(
         event
           ? updateDoc(target, payload)
           : setDoc(target, {
@@ -82,6 +83,17 @@ export default function EventForm({ event }: { event?: EventDoc }) {
               createdAt: serverTimestamp(),
             }),
       );
+
+      /*
+       * 새로 올린 일정만 원우들 폰에 알립니다. 수정할 때는 부르지 않습니다 —
+       * 오탈자 하나 고칠 때마다 마흔 명 폰이 울리면 안 됩니다.
+       *
+       * "saved"일 때만 부르는 이유: "queued"는 아직 서버에 안 올라갔다는
+       * 뜻이라, 서버가 그 일정을 찾지 못합니다. 그때는 알림만 건너뜁니다.
+       */
+      if (!event && result === "saved") {
+        void requestPush("event", { eventId: target.id });
+      }
       router.replace(`/events/${target.id}`);
     } catch (caught) {
       setSaveError(saveErrorMessage(caught, "일정 등록은 운영진만 할 수 있어요."));
