@@ -126,6 +126,17 @@ const PILL_BLEED = 3;
 const TRACK_INSET = BAR_PADDING + PILL_BLEED;
 
 /**
+ * 회색 알약을 가운데보다 아래로 내리는 길이(px).
+ *
+ * 아이콘과 글씨를 합친 덩어리가 pt-1.5/pb-2.5 때문에 수학적 한가운데보다
+ * 2px 위에 섭니다. 알약만 정확히 가운데 있으면 그 어긋남이 눈에 걸려서,
+ * 알약도 조금 따라 내립니다. 위 여백에 더하고 아래 여백에서 빼므로
+ * 알약 높이는 그대로이고 자리만 내려갑니다.
+ * 아래 여백이 BAR_PADDING - 이 값이므로 4보다 크게 두면 안 됩니다.
+ */
+const PILL_DROP = 1;
+
+/**
  * 알약을 짚고 있는 동안 커지는 배율. 쉬고 있을 때의 크기는 그대로입니다.
  *
  * 손끝에 붙잡힌 것이 커지면 "지금 이걸 쥐고 있다"가 눈으로 보입니다.
@@ -368,8 +379,8 @@ export default function BottomTabBar() {
           aria-hidden="true"
           className="pointer-events-none absolute rounded-full bg-ink/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.35),0_1px_2px_rgba(17,20,24,0.07)] backdrop-blur-xl backdrop-saturate-200"
           style={{
-            top: BAR_PADDING,
-            bottom: BAR_PADDING,
+            top: BAR_PADDING + PILL_DROP,
+            bottom: BAR_PADDING - PILL_DROP,
             left: `calc(${BAR_PADDING}px + ${pillIndex} * ${slotCss})`,
             width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
             translate: drag?.dx ? `${drag.dx}px` : undefined,
