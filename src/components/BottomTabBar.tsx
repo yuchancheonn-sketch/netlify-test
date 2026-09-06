@@ -143,6 +143,32 @@ export default function BottomTabBar() {
   );
 
   /*
+   * 어느 탭에도 속하지 않는 화면 — 설정·내 프로필·운영진 화면입니다.
+   *
+   * 이 셋은 탭이 아니라 제목 줄의 아이콘으로 들어갑니다. 그래서 어느 탭에서
+   * 들어왔는지에 따라 제자리가 달라져, /events처럼 특정 탭의 owns에 적어둘 수가
+   * 없습니다. 그렇다고 두면 activeIndex가 -1이 되어 회색 알약이 통째로
+   * 사라졌습니다 — 앱의 어디에 서 있는지 알 수 없어지고, 알약이 나타났다
+   * 사라지는 것 자체가 눈에 걸립니다.
+   *
+   * 그래서 마지막으로 머물던 탭을 기억해 두고, 그 자리에 알약을 남겨 둡니다.
+   * 설정에서 나오면 원래 있던 탭으로 돌아가므로(router.back) 알약이 가리키는
+   * 곳과 실제로 돌아갈 곳이 같습니다.
+   *
+   * 기억은 효과가 아니라 렌더 중에 맞춥니다. 아래 drag를 놓아주는 자리와 같은
+   * 방식입니다 — 주소가 바뀌는 순간과 알약이 옮겨가는 순간이 한 프레임이라도
+   * 어긋나면 알약이 눈에 띄게 튑니다. (ref에 적어두는 방법도 있지만, 렌더 중에
+   * ref를 읽는 것은 이 저장소의 린트가 막습니다.)
+   */
+  const [lastTabIndex, setLastTabIndex] = useState(0);
+  if (activeIndex >= 0 && activeIndex !== lastTabIndex) {
+    setLastTabIndex(activeIndex);
+  }
+
+  /** 알약이 앉을 자리. 탭 밖 화면에서는 마지막으로 머물던 탭입니다. */
+  const pillIndex = activeIndex >= 0 ? activeIndex : lastTabIndex;
+
+  /*
    * 주소가 목적지까지 따라왔으면 직접 잡고 있던 자리를 놓아줍니다.
    * 이 시점에 알약의 위치는 양쪽 계산이 똑같아서 화면은 꿈쩍도 하지 않습니다.
    * (효과가 아니라 렌더 중에 맞추는 이유는, 주소가 바뀌는 순간과 알약이 풀리는
@@ -161,7 +187,7 @@ export default function BottomTabBar() {
 
   function handleTouchStart(event: React.TouchEvent) {
     draggedRef.current = false;
-    if (activeIndex < 0 || event.touches.length !== 1) return;
+    if (event.touches.length !== 1) return;
 
     const list = listRef.current;
     const slot = slotWidth();
@@ -170,7 +196,7 @@ export default function BottomTabBar() {
     // 회색 알약을 짚었을 때만 끌기가 시작됩니다. 다른 탭을 누른 건 그냥 이동입니다.
     const touchX =
       event.touches[0].clientX - list.getBoundingClientRect().left - TRACK_INSET;
-    const pillStart = activeIndex * slot;
+    const pillStart = pillIndex * slot;
     if (touchX < pillStart || touchX > pillStart + slot) return;
 
     setDrag({ startX: event.touches[0].clientX, slot, dx: 0, settling: false, target: null });
@@ -180,8 +206,8 @@ export default function BottomTabBar() {
     if (!drag || drag.settling) return;
 
     // 왼쪽 끝 탭보다 왼쪽으로, 오른쪽 끝 탭보다 오른쪽으로는 나가지 않습니다.
-    const lowest = -activeIndex * drag.slot;
-    const highest = (TABS.length - 1 - activeIndex) * drag.slot;
+    const lowest = -pillIndex * drag.slot;
+    const highest = (TABS.length - 1 - pillIndex) * drag.slot;
     const dx = Math.min(highest, Math.max(lowest, event.touches[0].clientX - drag.startX));
 
     // 조금이라도 끌었으면 손을 뗄 때 링크가 열리지 않게 막아둡니다.
@@ -197,7 +223,7 @@ export default function BottomTabBar() {
      * 한 칸도 못 지났으면(반 칸쯤 끌다 말았으면) 아무 일 없이 제자리로 돌아갑니다.
      */
     const passed = passedSlots(drag.dx, drag.slot);
-    const target = activeIndex + passed;
+    const target = pillIndex + passed;
 
     if (passed !== 0 && TABS[target]) {
       // 그 탭 자리에 세워두고 이동합니다. 주소가 따라오면 위에서 풀어줍니다.
@@ -219,9 +245,9 @@ export default function BottomTabBar() {
     drag && drag.slot
       ? Math.min(
           TABS.length - 1,
-          Math.max(0, activeIndex + passedSlots(drag.dx, drag.slot)),
+          Math.max(0, pillIndex + passedSlots(drag.dx, drag.slot)),
         )
-      : activeIndex;
+      : pillIndex;
 
   /** 알약 한 칸의 폭을 CSS로 적은 것 (좌우로 들여둔 7px씩을 뺀 나머지를 나눕니다) */
   const slotCss = `((100% - ${TRACK_INSET * 2}px) / ${TABS.length})`;
@@ -288,22 +314,24 @@ export default function BottomTabBar() {
           바로 나오는 값이라 애니메이션 없이 즉시 자리를 잡아야 하고,
           transform만 손가락을 따라오거나 부드럽게 제자리로 돌아갑니다.
         */}
-        {activeIndex >= 0 ? (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute rounded-full bg-ink/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.35),0_1px_2px_rgba(17,20,24,0.07)] backdrop-blur-xl backdrop-saturate-200"
-            style={{
-              top: BAR_PADDING,
-              bottom: BAR_PADDING,
-              left: `calc(${BAR_PADDING}px + ${activeIndex} * ${slotCss})`,
-              width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
-              transform: drag?.dx ? `translateX(${drag.dx}px)` : undefined,
-              transition: drag?.settling
-                ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
-                : undefined,
-            }}
-          />
-        ) : null}
+        {/*
+          설정·내 프로필처럼 탭 밖 화면에서도 알약은 그대로 남습니다.
+          자리는 마지막으로 머물던 탭입니다(pillIndex).
+        */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute rounded-full bg-ink/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.35),0_1px_2px_rgba(17,20,24,0.07)] backdrop-blur-xl backdrop-saturate-200"
+          style={{
+            top: BAR_PADDING,
+            bottom: BAR_PADDING,
+            left: `calc(${BAR_PADDING}px + ${pillIndex} * ${slotCss})`,
+            width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
+            transform: drag?.dx ? `translateX(${drag.dx}px)` : undefined,
+            transition: drag?.settling
+              ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+              : undefined,
+          }}
+        />
 
         {TABS.map(({ href, label, Icon }, index) => {
           const active = index === activeIndex;
