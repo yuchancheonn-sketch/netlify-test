@@ -338,10 +338,10 @@ export default function BottomTabBar() {
      * 화면 맨 아래에 붙이지 않고 조금 띄워야 알약으로 보이므로,
      * 아이폰 홈 바(safe-area) 위로 한 뼘 더 올려 둡니다.
      *
-     * ★ 띄우는 값(아래 -2px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
+     * ★ 띄우는 값(아래 -4px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
      *   흐림 층(BottomTabBarScrim)의 높이와 본문 아래 여백이 이 값에서 나옵니다.
      *
-     * ★ 음수라 알약의 아래 끝 2px은 화면 밖으로 나가 잘립니다.
+     * ★ 음수라 알약의 아래 끝 4px은 화면 밖으로 나가 잘립니다.
      *   홈 바가 있는 아이폰에서는 safe-area가 더해져 잘리지 않지만,
      *   safe-area가 0인 브라우저·안드로이드에서는 둥근 아래 모서리가
      *   그만큼 깎여 보입니다. 더 내리면 더 잘립니다.
@@ -354,7 +354,7 @@ export default function BottomTabBar() {
     <nav
       aria-label="주요 메뉴"
       className="fixed inset-x-0 z-30 px-5"
-      style={{ bottom: "calc(-2px + env(safe-area-inset-bottom))" }}
+      style={{ bottom: "calc(-4px + env(safe-area-inset-bottom))" }}
     >
       {/*
         알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다.
