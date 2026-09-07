@@ -32,8 +32,19 @@ export default function SettingsPage() {
   const swipe = useSwipeBack({ onCommit: () => router.back() });
 
   return (
+    /*
+      min-h-full: 손짓을 받는 상자가 화면 아래까지 내려와 있어야 합니다.
+      이 화면은 내용이 짧아서, 높이를 주지 않으면 상자가 마지막 칸("화면")에서
+      끝납니다. 그 아래 빈 자리는 상자 밖이라 거기서 시작한 손짓은 아무 데도
+      닿지 않습니다 — 원우 눈에는 "여기서는 넘기기가 안 되네"로 보입니다.
+
+      dvh가 아니라 full(=부모 높이의 100%)인 것이 중요합니다. MainShell의
+      <main>이 이미 탭바 자리만큼 아래 여백을 두고 있어서, 여기에 화면 높이를
+      또 못 박으면 그 둘이 더해져 내용이 짧아도 화면이 괜히 스크롤됩니다.
+      부모의 안쪽 높이에 맞추면 그 여백을 빼고 딱 맞습니다.
+    */
     <div
-      className="bg-canvas"
+      className="min-h-full bg-canvas"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >

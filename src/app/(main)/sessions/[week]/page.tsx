@@ -70,8 +70,13 @@ export default function SessionPage({
   }
 
   return (
+    /*
+      min-h-full: 아직 영상도 느낀점도 없는 주차는 내용이 짧습니다. 높이를
+      주지 않으면 손짓을 받는 상자가 거기서 끝나, 그 아래 빈 자리에서 시작한
+      넘기기가 먹지 않습니다. (dvh가 아닌 이유는 설정·프로필 화면의 주석 참고)
+    */
     <div
-      className="bg-canvas"
+      className="min-h-full bg-canvas"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >

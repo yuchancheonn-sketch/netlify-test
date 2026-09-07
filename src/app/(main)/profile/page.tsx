@@ -39,12 +39,18 @@ export default function ProfilePage() {
       없어서, 통째로 transform을 걸어도 자리가 틀어질 것이 없습니다.
 
       바탕색은 body와 같은 canvas라, 밀려나 드러나는 자리도 색이 이어집니다.
-      min-h-dvh는 일부러 주지 않습니다 — MainShell이 이미 탭바 자리만큼 아래
-      여백을 두고 있어서, 여기에 화면 높이를 또 못 박으면 그 둘이 더해져
-      내용이 짧아도 화면이 괜히 스크롤됩니다.
+
+      min-h-full: 내용이 짧을 때도 상자가 화면 아래까지 내려와 있어야 합니다.
+      높이를 주지 않으면 상자가 마지막 칸에서 끝나고, 그 아래 빈 자리에서
+      시작한 손짓은 상자 밖이라 아무 데도 닿지 않습니다.
+
+      dvh가 아니라 full(=부모 높이의 100%)인 것이 중요합니다. MainShell이
+      이미 탭바 자리만큼 아래 여백을 두고 있어서, 여기에 화면 높이를 또 못
+      박으면 그 둘이 더해져 내용이 짧아도 화면이 괜히 스크롤됩니다.
+      부모의 안쪽 높이에 맞추면 그 여백을 빼고 딱 맞습니다.
     */
     <div
-      className="bg-canvas"
+      className="min-h-full bg-canvas"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >
