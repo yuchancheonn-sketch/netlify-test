@@ -14,7 +14,6 @@ import Avatar from "@/components/Avatar";
 import PageHeader from "@/components/PageHeader";
 import { CheckIcon, PlusIcon, UsersIcon } from "@/components/icons";
 import {
-  Badge,
   EmptyState,
   ErrorState,
   FieldLabel,
@@ -38,16 +37,18 @@ type Tab = "pending" | "roster" | "members";
 
 export default function AdminPage() {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<Tab>("roster");
+  // 고르기 전에는 null. 기다리는 사람이 있으면 그 탭에서 시작합니다.
+  const [tab, setTab] = useState<Tab | null>(null);
   const users = useAllUsers();
   const roster = useRoster();
 
   const pending = users.data.filter((user) => user.status === "pending");
   const approved = users.data.filter((user) => user.status === "approved");
+  const activeTab: Tab = tab ?? (pending.length > 0 ? "pending" : "roster");
 
   /*
-   * 초대 코드가 맞으면 기다림 없이 바로 입장하므로 보통 승인 대기는 비어 있습니다.
-   * 운영진이 누군가를 다시 막았을 때만 이 탭이 나타납니다.
+   * 새로 로그인한 사람은 모두 여기로 옵니다. 확인해 주기 전까지는 앱의 자료가
+   * 하나도 보이지 않습니다(firestore.rules). 기다리는 사람이 없을 때만 탭이 사라집니다.
    */
   const tabs: { value: Tab; label: string }[] = [
     ...(pending.length > 0
@@ -77,11 +78,11 @@ export default function AdminPage() {
               key={value}
               type="button"
               onClick={() => setTab(value)}
-              aria-pressed={tab === value}
+              aria-pressed={activeTab === value}
               /* 위 8px + 아래 12px. 합(20px)이 py-2.5와 같아 알약 높이는
                  그대로이고 글씨만 2px 위에 앉습니다. 다른 서브탭과 같은 방식. */
               className={`flex-1 rounded-full pt-2 pb-3 text-[13px] font-bold transition ${
-                tab === value ? "bg-brand-500 text-white" : "text-ink-muted"
+                activeTab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >
               {label}
@@ -97,10 +98,10 @@ export default function AdminPage() {
               <Skeleton className="h-20 rounded-3xl" />
               <Skeleton className="h-20 rounded-3xl" />
             </div>
-          ) : tab === "pending" && pending.length > 0 ? (
+          ) : activeTab === "pending" && pending.length > 0 ? (
             // 마지막 한 명을 확인해주면 이 탭이 사라지므로 명단 탭으로 자연스럽게 넘어갑니다.
             <PendingSection pending={pending} roster={roster.data} />
-          ) : tab === "members" ? (
+          ) : activeTab === "members" ? (
             <MembersSection approved={approved} />
           ) : (
             <RosterSection roster={roster} approved={approved} />
@@ -155,7 +156,7 @@ function PendingSection({
   async function reject(user: UserDoc) {
     if (
       !window.confirm(
-        `${user.name || user.email} 님의 계정을 완전히 지울까요?\n본인은 초대 코드부터 다시 시작하게 됩니다.`,
+        `${user.name || user.email} 님의 계정을 완전히 지울까요?\n확인해주지 않으면 어차피 앱에 들어올 수 없습니다.`,
       )
     ) {
       return;
@@ -180,7 +181,7 @@ function PendingSection({
         <EmptyState
           icon={<CheckIcon className="h-10 w-10" />}
           title="확인을 기다리는 계정이 없어요"
-          description="초대 코드가 맞으면 바로 입장하기 때문에, 운영진이 막아둔 계정만 여기에 표시됩니다."
+          description="새로 로그인한 사람이 여기에 표시됩니다. 확인해주기 전까지는 앱의 자료가 보이지 않아요."
         />
       </div>
     );
@@ -213,7 +214,6 @@ function PendingSection({
                 </p>
                 <p className="truncate text-[13px] text-ink-faint">{user.email}</p>
               </div>
-              <Badge tone="neutral">코드 {user.inviteCode}</Badge>
             </div>
 
             <div className="mt-3 flex gap-2.5">
@@ -518,7 +518,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
 
   /**
    * 계정 접근을 다시 막습니다.
-   * 초대 코드만 맞으면 바로 입장하는 구조라, 잘못 들어온 사람을 정리하는
+   * 잘못 확인해준 사람이나 예전에 들어와 있던 계정을 정리하는
    * 마지막 안전장치입니다. status를 pending으로 되돌리면 그 순간부터
    * 원우 명단·채팅·사진 등 모든 데이터가 보이지 않습니다.
    */
