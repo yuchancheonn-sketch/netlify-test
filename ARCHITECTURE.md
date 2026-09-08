@@ -288,9 +288,7 @@ useUnreadChatCount  전부 합쳐 탭바 배지로
                                         │
 원우들이 그 칸을 채움 ─────────────────▶ roster에 company·position·phone 저장
                                         │
-홍길동이 Google 로그인 ────────────────▶ users/{uid} 생성 (status: pending)
-                                        │
-운영진이 확인 대기에서 눌러줌 ─────────▶ status: approved  ← 여기부터 자료가 보임
+홍길동이 Google 로그인 ────────────────▶ users/{uid} 생성 (status: approved)
                                         │
 프로필에 이름 "홍길동" 저장 ───────────▶ linkRosterEntry()          lib/roster-link.ts
                                         ├─ roster 전체를 훑어 공백 무시하고 이름 대조

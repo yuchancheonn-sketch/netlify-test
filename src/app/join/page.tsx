@@ -11,14 +11,13 @@ import { COHORT } from "@/lib/constants";
 /**
  * 처음 로그인한 사람의 계정 문서를 만드는 화면.
  *
- * 사용자가 할 일은 없습니다. 문서를 만든 뒤 곧바로 다음 화면으로 넘어갑니다.
+ * 지금은 Google 로그인만 하면 바로 들어올 수 있어서, 사용자가 할 일이 없습니다.
+ * 그래서 화면을 보여주지 않고 문서를 만든 뒤 곧바로 프로필 설정으로 넘어갑니다.
  * (실패했을 때 다시 시도할 자리가 필요해서 화면 자체는 남겨두었습니다.)
  *
- * 계정은 **승인 대기(pending) 상태로** 만들어집니다. 구글 계정만 있으면 누구나
- * 로그인할 수 있으므로, 로그인은 "이 사람이 누구인지"까지만 알려줄 뿐
- * "10기 원우인지"는 알려주지 않기 때문입니다. 그 판단은 운영진이 합니다.
- * 여기서 status를 'approved'로 넣으면 규칙(firestore.rules)이 거부합니다 —
- * 화면 코드를 고쳐 통과시키는 길을 아예 막아두려고 두 곳에 함께 적었습니다.
+ * 운영진 권한(role)은 여기서 줄 수 없습니다. 규칙이 'member'만 허용합니다.
+ * 나중에 초대 코드를 다시 쓰고 싶어지면, 이 화면에 코드 입력칸을 두고
+ * firestore.rules 의 isValidInviteCode() 검사를 create 규칙에 되살리면 됩니다.
  */
 export default function JoinPage() {
   return (
@@ -60,8 +59,7 @@ function SignUpScreen() {
           introduction: "",
           introVideoUrl: "",
           role: "member",
-          // 운영진이 확인해줄 때까지 대기. 규칙도 이 값만 허용합니다.
-          status: "pending",
+          status: "approved",
           cohort: COHORT,
           // 초대 코드는 쓰지 않지만, 나중에 되살릴 때를 위해 칸은 남겨둡니다.
           inviteCode: "",

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import SegmentedControl from "@/components/SegmentedControl";
+import { ChevronRightIcon } from "@/components/icons";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
@@ -17,10 +19,12 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  *
  * 여기서 고른 값은 이 기기에만 남습니다(localStorage). 다른 기기에서 열면
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
+ *
+ * 맨 아래 운영진 화면으로 가는 문만 예외입니다. 운영진에게만 보입니다.
  */
 export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
 
   /*
@@ -77,6 +81,23 @@ export default function SettingsPage() {
           */}
           <SegmentedControl options={THEMES} value={resolved} onChange={setTheme} />
         </section>
+
+        {/*
+          운영진에게만 보이는 줄. 원우 눈에는 이 자리가 아예 없습니다.
+
+          제목(SectionTitle) 없이 칸 하나만 둡니다 — 위의 세 칸은 "무엇을
+          고를지" 정하는 자리라 이름이 필요하지만, 이건 눌러서 넘어가는
+          문이라 칸에 적힌 이름이 곧 제목입니다.
+        */}
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            className="flex items-center justify-between rounded-2xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          >
+            <span className="text-[17px] font-bold text-ink">운영진 화면</span>
+            <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+          </Link>
+        ) : null}
       </div>
     </div>
   );

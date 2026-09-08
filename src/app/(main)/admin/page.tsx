@@ -37,7 +37,7 @@ type Tab = "pending" | "roster" | "members";
 
 export default function AdminPage() {
   const { isAdmin } = useAuth();
-  // 고르기 전에는 null. 기다리는 사람이 있으면 그 탭에서 시작합니다.
+  // 고르기 전에는 null. 막아둔 사람이 있으면 그 탭에서 시작합니다.
   const [tab, setTab] = useState<Tab | null>(null);
   const users = useAllUsers();
   const roster = useRoster();
@@ -47,8 +47,8 @@ export default function AdminPage() {
   const activeTab: Tab = tab ?? (pending.length > 0 ? "pending" : "roster");
 
   /*
-   * 새로 로그인한 사람은 모두 여기로 옵니다. 확인해 주기 전까지는 앱의 자료가
-   * 하나도 보이지 않습니다(firestore.rules). 기다리는 사람이 없을 때만 탭이 사라집니다.
+   * 로그인하면 기다림 없이 바로 입장하므로 보통 이 탭은 비어 있습니다.
+   * 운영진이 누군가를 차단했을 때만 나타납니다.
    */
   const tabs: { value: Tab; label: string }[] = [
     ...(pending.length > 0
@@ -156,7 +156,7 @@ function PendingSection({
   async function reject(user: UserDoc) {
     if (
       !window.confirm(
-        `${user.name || user.email} 님의 계정을 완전히 지울까요?\n확인해주지 않으면 어차피 앱에 들어올 수 없습니다.`,
+        `${user.name || user.email} 님의 계정을 완전히 지울까요?\n지우지 않아도 차단된 동안에는 아무것도 볼 수 없습니다.`,
       )
     ) {
       return;
@@ -180,8 +180,8 @@ function PendingSection({
       <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<CheckIcon className="h-10 w-10" />}
-          title="확인을 기다리는 계정이 없어요"
-          description="새로 로그인한 사람이 여기에 표시됩니다. 확인해주기 전까지는 앱의 자료가 보이지 않아요."
+          title="막아둔 계정이 없어요"
+          description="로그인하면 바로 입장하기 때문에, 운영진이 차단한 계정만 여기에 표시됩니다."
         />
       </div>
     );
