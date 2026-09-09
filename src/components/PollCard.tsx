@@ -78,7 +78,7 @@ export default function PollCard() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-500 bg-surface py-4 text-[15px] font-bold text-brand-500 transition active:scale-[0.99] ${
+        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-brand-500 bg-surface py-4 text-[15px] font-bold text-brand-500 transition active:scale-[0.99] ${
           open.length > 0 ? "mt-5" : ""
         }`}
       >
