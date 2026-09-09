@@ -251,15 +251,34 @@ function FileList() {
 /**
  * 파일 한 칸 — 미리보기 그림, 이름, 올린 사람·크기.
  *
- * 칸을 누르면 내려받고, 올린 본인과 운영진에게는 오른쪽 위에 ⋯ 단추가
- * 붙어 이름 바꾸기·지우기를 할 수 있습니다. 행사 사진 앨범 칸과 같은 짜임새라
- * 자료 탭 안에서 두 서브탭이 한 몸으로 읽힙니다.
+ * **칸을 누르면 열어서 봅니다.** 내려받기는 오른쪽 위 ⋯ 단추 안에 있고,
+ * 올린 본인과 운영진에게는 거기에 이름 바꾸기·지우기가 함께 붙습니다.
+ * 행사 사진 앨범 칸과 같은 짜임새라 두 서브탭이 한 몸으로 읽힙니다.
  */
 function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const thumbnail = fileThumbnailUrl(file.url);
+
+  /*
+   * 브라우저가 그대로 열어 보여줄 수 있는 파일인지 (PDF·사진).
+   *
+   * 미리보기 그림을 만들 수 있다는 것은 Cloudinary가 image로 담았다는 뜻이고,
+   * 그런 파일은 주소를 그냥 열면 화면에 그려집니다. 한글·엑셀 같은 raw 파일은
+   * 열어봐야 볼 것이 없으므로 곧바로 내려받게 합니다.
+   */
+  const viewable = thumbnail !== null;
+
+  /*
+   * ★ 누르면 가는 곳에 fl_attachment를 붙이면 안 됩니다.
+   *
+   *   그 주소는 Content-Disposition: attachment를 달고 내려옵니다. 아이폰은
+   *   앱 안에서 열린 브라우저에서 첨부 파일을 그리지 못해 **흰 화면만** 뜹니다.
+   *   (2026-09-09에 실제로 그랬습니다.) 썸네일을 누르는 사람은 내려받으려는
+   *   것이 아니라 보려는 것이므로, 볼 수 있는 파일은 그냥 주소로 엽니다.
+   */
+  const openUrl = viewable ? file.url : downloadUrl(file.url);
 
   async function handleDelete() {
     setMenuOpen(false);
@@ -276,7 +295,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   return (
     <li className="relative">
       <a
-        href={downloadUrl(file.url)}
+        href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
@@ -316,31 +335,51 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         </div>
       </a>
 
-      {/* 이름 바꾸기·지우기는 올린 본인과 운영진만. 보안 규칙도 같이 막습니다. */}
-      {canManage ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-label={`${file.name} 관리`}
-            className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/45 text-[15px]! leading-none font-bold text-white backdrop-blur-sm transition active:scale-95"
-          >
-            ⋯
-          </button>
+      {/*
+        ⋯ 단추는 **모두에게** 보입니다. 안에 "받기"가 들어 있기 때문입니다.
+        칸을 누르는 것은 "열어 보기"이고, 내려받기는 따로 고르는 일입니다 —
+        둘을 한 동작에 묶었더니 아이폰에서 흰 화면이 떴습니다(위 openUrl 설명).
+        이름 바꾸기·지우기는 올린 본인과 운영진에게만 덧붙습니다.
+      */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((open) => !open)}
+        aria-label={`${file.name} 더보기`}
+        className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/45 text-[15px]! leading-none font-bold text-white backdrop-blur-sm transition active:scale-95"
+      >
+        ⋯
+      </button>
 
-          {menuOpen ? (
-            <>
-              {/* 밖을 누르면 닫힙니다. */}
-              <span
-                aria-hidden="true"
-                className="fixed inset-0 z-30"
-                onPointerDown={() => setMenuOpen(false)}
-              />
-              {/*
-                채팅 말풍선의 수정·삭제 박스와 같은 모양입니다.
-                앱 안에서 "이 하나에 대해 뭘 할지" 고르는 자리는 늘 이 생김새입니다.
-              */}
-              <div className="absolute top-9 right-1.5 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
+      {menuOpen ? (
+        <>
+          {/* 밖을 누르면 닫힙니다. */}
+          <span
+            aria-hidden="true"
+            className="fixed inset-0 z-30"
+            onPointerDown={() => setMenuOpen(false)}
+          />
+          {/*
+            채팅 말풍선의 수정·삭제 박스와 같은 모양입니다.
+            앱 안에서 "이 하나에 대해 뭘 할지" 고르는 자리는 늘 이 생김새입니다.
+          */}
+          <div className="absolute top-9 right-1.5 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
+            {/*
+              여기는 fl_attachment가 붙은 주소가 맞습니다. 내려받겠다고 고른
+              것이니, 브라우저가 열어 보이지 말고 파일로 저장해야 합니다.
+            */}
+            <a
+              href={downloadUrl(file.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2 text-[13px] font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
+            >
+              받기
+            </a>
+
+            {canManage ? (
+              <>
+                <span className="h-px bg-white/15" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={() => {
@@ -360,9 +399,9 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
                 >
                   지우기
                 </button>
-              </div>
-            </>
-          ) : null}
+              </>
+            ) : null}
+          </div>
         </>
       ) : null}
 
