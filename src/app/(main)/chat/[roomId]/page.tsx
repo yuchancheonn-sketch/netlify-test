@@ -244,6 +244,16 @@ export default function ChatRoomPage({
     inputRef.current?.focus();
   }
 
+  /**
+   * 고치기 전의 원래 내용. "메시지 수정 중" 칸에 작게 띄웁니다.
+   *
+   * 따로 들고 있지 않고 목록에서 그때그때 찾습니다. 원본은 저장을 누르기
+   * 전까지 Firestore에 그대로 있으므로, 베껴 두면 두 벌이 되어 어긋날 뿐입니다.
+   */
+  const editingOriginal = editingId
+    ? (messages.find((message) => message.id === editingId)?.text ?? null)
+    : null;
+
   /** 고치기를 그만둡니다. 쓰던 내용은 버립니다 — 원래 메시지는 그대로입니다. */
   function cancelEdit() {
     setEditingId(null);
@@ -434,13 +444,26 @@ export default function ChatRoomPage({
         */}
         {editingId ? (
           <div className="mx-auto mb-2 flex w-full max-w-[560px] items-center gap-2 rounded-2xl bg-canvas px-3.5 py-2">
-            <p className="min-w-0 flex-1 text-[13px] font-bold text-ink-muted">
-              메시지 수정 중
-            </p>
+            {/* min-w-0이 있어야 아래 truncate가 듣습니다. 없으면 칸이 글자만큼 늘어납니다. */}
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-ink-muted">메시지 수정 중</p>
+              {/*
+                고치기 전의 내용. 입력칸에는 이미 고치는 중인 글이 들어 있어서,
+                원래 뭐라고 썼는지는 여기서만 볼 수 있습니다.
+                길면 한 줄로 자릅니다 — 원본을 다 보여주는 자리가 아니라
+                "무엇을 고치는 중인지" 알려주는 자리입니다.
+              */}
+              {editingOriginal ? (
+                <p className="mt-0.5 truncate text-[12px] text-ink-faint">
+                  {editingOriginal}
+                </p>
+              ) : null}
+            </div>
+            {/* 크기 뒤의 !는 위 삭제 박스와 같은 이유입니다 (globals.css의 button 규칙). */}
             <button
               type="button"
               onClick={cancelEdit}
-              className="shrink-0 text-[13px] font-bold text-ink-faint transition active:text-brand-500"
+              className="shrink-0 text-[13px]! font-bold text-ink-faint transition active:text-brand-500"
             >
               취소
             </button>
@@ -707,11 +730,23 @@ function MessageRow({
                 지우기만 빨갛습니다. 되돌릴 수 없는 쪽이 하나뿐이라야
                 빨강이 "조심"이라는 뜻을 유지합니다.
               */}
+              {/*
+                ★ 글씨 크기 뒤의 !는 꼭 필요합니다.
+
+                globals.css의 `button { font-size: 16px }`는 레이어 밖에 있고,
+                Tailwind의 text-* 는 @layer utilities 안에 있습니다. 레이어 밖
+                규칙은 선택자가 아무리 헐거워도 레이어 안 규칙을 이기므로,
+                그냥 text-[13px]로 두면 조용히 16px로 그려집니다.
+                (그 규칙은 아이폰에서 입력칸을 눌렀을 때 화면이 확대되지 않게
+                 막는 것이라 없앨 수 없습니다.)
+
+                두 단추가 같은 크기로 보이려면 둘 다 이렇게 못 박아야 합니다.
+              */}
               <div className="absolute right-0 bottom-full z-40 mb-1.5 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="px-3.5 py-2 text-[13px] font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
                 >
                   수정
                 </button>
@@ -719,7 +754,7 @@ function MessageRow({
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="px-3.5 py-2 text-[13px] font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D]"
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D]"
                 >
                   전체에서 삭제
                 </button>
