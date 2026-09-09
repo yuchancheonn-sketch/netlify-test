@@ -186,12 +186,25 @@ service cloud.firestore {
        * 남의 표를 읽는 것은 열어 둡니다. 결과를 세려면 필요하고, 애초에
        * 누가 무엇을 골랐는지 서로 아는 작은 모임의 투표입니다.
        */
+      /*
+       * ★ 지우기를 따로 적어야 합니다.
+       *
+       *   예전에는 write 하나로 묶고 `request.method == 'delete'`로 갈랐는데,
+       *   **Firestore 규칙에는 request.method라는 것이 없습니다.** 그러면 파일
+       *   전체가 문법 오류가 되어 콘솔이 게시를 거부하고, 옛 규칙이 그대로
+       *   남습니다. 파일만 고치고 게시가 안 된 줄 모르면 "규칙은 올렸는데
+       *   권한 오류가 난다"가 됩니다. (2026-09-09에 실제로 그랬습니다.)
+       *
+       *   지우기에는 request.resource가 없습니다(없앨 문서라 새 내용이 없음).
+       *   그래서 create·update와 조건이 다를 수밖에 없고, 나눠 적는 것이
+       *   원래 맞는 방식입니다.
+       */
       match /votes/{uid} {
         allow read: if isMember();
-        allow write: if isMember()
-                     && request.auth.uid == uid
-                     && (request.method == 'delete'
-                         || request.resource.data.uid == request.auth.uid);
+        allow create, update: if isMember()
+                              && request.auth.uid == uid
+                              && request.resource.data.uid == request.auth.uid;
+        allow delete: if isMember() && request.auth.uid == uid;
       }
 
       /*
