@@ -47,7 +47,13 @@ export default function PollCard() {
   if (loading) return null;
 
   return (
-    <section className="mt-8">
+    /*
+      위아래 여백을 따로 주지 않습니다.
+      홈의 바깥 상자가 gap-5(20px)로 칸 사이를 정하고 있어서, 여기서 mt-를
+      더하면 그만큼 혼자 더 벌어집니다. "모임 일정 전체 보기"와 "오늘의 도산"
+      사이가 곧 그 20px이고, 투표도 같은 간격으로 섭니다.
+    */
+    <section>
       {open.length > 0 ? (
         <div className="flex flex-col gap-3">
           {open.map((poll) => (
@@ -72,8 +78,8 @@ export default function PollCard() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-500 bg-surface py-4 text-[15px] font-bold text-brand-500 transition active:scale-[0.99] ${
-          open.length > 0 ? "mt-3" : ""
+        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-500 bg-surface py-4 text-[15px] font-bold text-brand-500 transition active:scale-[0.99] ${
+          open.length > 0 ? "mt-5" : ""
         }`}
       >
         <PlusIcon className="h-5 w-5" />
