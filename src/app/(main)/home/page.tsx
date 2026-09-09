@@ -91,6 +91,9 @@ export default function HomePage() {
           </Link>
         )}
 
+        {/* 투표 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다. */}
+        <PollCard />
+
         {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>
           {/*
@@ -116,9 +119,6 @@ export default function HomePage() {
             </p>
           </div>
         </section>
-
-        {/* 투표 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다. */}
-        <PollCard />
 
         {/* 주차별 수업 기록 — 한 줄을 누르면 그 주 화면으로 넘어갑니다. */}
         <SessionList />
