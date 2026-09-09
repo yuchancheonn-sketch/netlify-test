@@ -148,6 +148,54 @@ service cloud.firestore {
     }
 
     /*
+     * 홈 화면의 투표.
+     *
+     * **여는 것은 원우 누구나** 할 수 있습니다. 일정 등록과 달리 운영진으로
+     * 좁히지 않았습니다 — 모임 날짜를 고르거나 안건에 찬반을 묻는 일은
+     * 원우회 임원 누구에게나 생깁니다.
+     *
+     * 닫고 지우는 것은 연 사람과 운영진만. 남이 연 투표를 도중에 닫아버리면
+     * 결과가 뒤집히기 때문입니다.
+     */
+    match /polls/{pollId} {
+      allow read: if isMember();
+      allow create: if isMember()
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow delete: if isMember()
+                    && (resource.data.createdBy == request.auth.uid || isAdmin());
+
+      /*
+       * 고칠 수 있는 것은 closed 하나뿐입니다.
+       *
+       * 표가 들어온 뒤에 물음이나 고를 것을 바꾸면, 사람들이 실제로 무엇에
+       * 답했는지 알 수 없게 됩니다. 그건 결과를 조용히 조작하는 것과 같아서
+       * 아예 막습니다. 물음을 잘못 적었으면 지우고 새로 엽니다.
+       */
+      allow update: if isMember()
+                    && (resource.data.createdBy == request.auth.uid || isAdmin())
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['closed']);
+
+      /*
+       * 표 — 문서 id가 곧 투표한 사람의 uid입니다.
+       *
+       * 그래서 문서를 읽지 않고 id만 보고 본인인지 가릴 수 있고(1:1 방 id와
+       * 같은 수법), **한 사람이 두 표를 넣을 길이 없습니다.** 다시 고르면
+       * 같은 문서를 덮어씁니다.
+       *
+       * 남의 표를 읽는 것은 열어 둡니다. 결과를 세려면 필요하고, 애초에
+       * 누가 무엇을 골랐는지 서로 아는 작은 모임의 투표입니다.
+       */
+      match /votes/{uid} {
+        allow read: if isMember();
+        allow write: if isMember()
+                     && request.auth.uid == uid
+                     && (request.method == 'delete'
+                         || request.resource.data.uid == request.auth.uid);
+      }
+    }
+
+    /*
      * 자료 탭에 올리는 문서 파일 (PDF·한글·엑셀 등).
      *
      * 올리는 것은 원우 누구나. 지우는 것과 이름을 바꾸는 것은

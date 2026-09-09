@@ -123,6 +123,18 @@ export const PHOTO_MAX_DIMENSION = 2560;
  */
 export const MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024;
 
+/**
+ * 투표 (홈 화면 카드).
+ *
+ * 고를 것은 두 개부터 네 개까지입니다. 하나면 물어볼 것이 없고, 다섯 개가
+ * 넘어가면 폰 화면에서 글씨가 줄바꿈되며 칸 높이가 제각각이 됩니다.
+ * 물음은 카드 안 네모에 두 줄로 들어갈 만큼만 받습니다.
+ */
+export const POLL_QUESTION_MAX_LENGTH = 60;
+export const POLL_OPTION_MAX_LENGTH = 20;
+export const POLL_MIN_OPTIONS = 2;
+export const POLL_MAX_OPTIONS = 4;
+
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;
 

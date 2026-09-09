@@ -23,6 +23,8 @@ import type {
   MessageDoc,
   PhotoAlbumDoc,
   PhotoDoc,
+  PollDoc,
+  PollVoteDoc,
   RosterDoc,
   RsvpDoc,
   SessionCommentDoc,
@@ -375,6 +377,64 @@ export function useAlbumPhotos(albumId: string): ListState<PhotoDoc> {
       () => setState({ data: [], loading: false, error: "사진을 불러오지 못했어요." }),
     );
   }, [albumId]);
+
+  return state;
+}
+
+/**
+ * 투표 목록 (최근에 연 것이 위로).
+ *
+ * 열린 것만 걸러 받지 않고 전부 받아 화면에서 가릅니다.
+ * `where("closed","==",false)`와 `orderBy("createdAt")`를 함께 걸면 복합 색인을
+ * 따로 만들어 올려야 하는데, 투표는 많아야 몇십 개라 그럴 값어치가 없습니다.
+ */
+export function usePolls(): ListState<PollDoc> {
+  const [state, setState] = useState<ListState<PollDoc>>(EMPTY);
+
+  useEffect(() => {
+    const pollsQuery = query(collection(db, "polls"), orderBy("createdAt", "desc"));
+    return onSnapshot(
+      pollsQuery,
+      (snapshot) => {
+        const polls = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as PollDoc,
+        );
+        setState({ data: polls, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "투표를 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/**
+ * 한 투표에 들어온 표 전부.
+ *
+ * 문서 하나가 표 하나라 원우 수만큼 읽습니다(쉰 명이면 쉰 건). 개수를 투표
+ * 문서에 세어 두면 한 건으로 줄지만, 그 숫자는 브라우저가 올리는 값이라
+ * 아무나 늘릴 수 있습니다. 규칙으로 "1만큼만 늘었는지"를 확인할 방법이 없어
+ * 표를 그대로 세는 쪽을 골랐습니다. 내가 어디에 넣었는지도 이걸로 압니다.
+ */
+export function usePollVotes(pollId: string): ListState<PollVoteDoc> {
+  const [state, setState] = useState<ListState<PollVoteDoc>>(EMPTY);
+
+  useEffect(() => {
+    /*
+     * 여기서 "투표가 없으면" 같은 분기를 두지 마세요.
+     * effect 안에서 곧바로 setState를 하면 이 저장소의 린트가 빌드를 막습니다
+     * (react-hooks/set-state-in-effect). 이 훅은 늘 투표 하나에 붙으므로
+     * pollId는 반드시 있고, 그래서 분기가 필요 없습니다.
+     */
+    return onSnapshot(
+      collection(db, "polls", pollId, "votes"),
+      (snapshot) => {
+        const votes = snapshot.docs.map((document) => document.data() as PollVoteDoc);
+        setState({ data: votes, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "표를 불러오지 못했어요." }),
+    );
+  }, [pollId]);
 
   return state;
 }

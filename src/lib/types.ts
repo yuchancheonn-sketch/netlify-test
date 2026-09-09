@@ -148,6 +148,45 @@ export interface PhotoDoc {
 }
 
 /**
+ * polls/{pollId} — 원우 누구나 열 수 있는 투표.
+ *
+ * 운영진 전용이 아닙니다. 모임 날짜를 고르거나 안건에 찬반을 묻는 일은
+ * 원우회 임원 누구에게나 생기는 일이라, 일정 등록과 달리 문을 열어 두었습니다.
+ */
+export interface PollDoc {
+  id: string;
+  /** 물어보는 것. 홈 카드의 네모 안에 그대로 들어갑니다. */
+  question: string;
+  /** 고를 수 있는 것들 (2~4개). 표는 이 배열의 자리(index)로 셉니다. */
+  options: string[];
+  createdBy: string;
+  createdByName: string;
+  createdAt: Timestamp | null;
+  /**
+   * 닫힌 투표인지.
+   *
+   * 닫으면 결과만 남고 더는 고칠 수 없습니다. 지우지 않고 닫는 길을 둔 것은,
+   * 지나간 투표의 결과가 남아 있어야 나중에 "그때 뭘로 정했더라"를 볼 수 있어서입니다.
+   * 홈 카드에는 열려 있는 것만 올라옵니다.
+   */
+  closed: boolean;
+}
+
+/**
+ * polls/{pollId}/votes/{uid} — 한 사람이 한 표.
+ *
+ * 문서 id가 곧 투표한 사람의 uid입니다. 그래서 **한 사람이 두 표를 넣을 수
+ * 없습니다** — 다시 고르면 같은 문서를 덮어씁니다. 규칙에서 문서를 읽지 않고
+ * id만 보고 본인인지 가릴 수 있는 것도 같은 이유입니다(1:1 방 id와 같은 수법).
+ */
+export interface PollVoteDoc {
+  uid: string;
+  /** options 배열에서 고른 자리 */
+  optionIndex: number;
+  votedAt: Timestamp | null;
+}
+
+/**
  * files/{fileId} — 자료 탭에 올리는 문서 파일 (PDF·한글·엑셀 등).
  *
  * 행사 사진(photoAlbums)과 나눠 둔 이유는 쓰임새가 달라서입니다. 사진은
