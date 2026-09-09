@@ -396,18 +396,22 @@ function MemberRow({
         이름 한 글자라, 네 글자 직위(정무특보)가 붙었을 때 마지막까지 모자라던
         자리였습니다. 무엇을 하는 단추인지는 글씨와 aria-label로 충분합니다.
 
-        ★ 키울 자리는 **세로**입니다.
-          이 줄에서 이름과 폭을 다투는 것은 가로뿐이라, 높이는 아무것도
-          밀어내지 않고 얼마든지 키울 수 있습니다. 손끝이 닿는 느낌은
-          높이에서 더 많이 오므로 py를 두 배로 올렸습니다(py-1 → py-2).
-          가로는 글씨 한 단(12→13px)과 여백 한 단(px-2 → px-2.5)만 늘렸고,
-          그만큼은 아래 직위 배지를 좁혀 벌충했습니다.
+        ★ 크기는 가로와 세로를 따로 봅니다.
+
+          가로만 이름과 자리를 다툽니다. 그래서 글씨(13px)와 좌우 여백
+          (px-2.5)은 넉넉히 두되, 늘어난 만큼은 아래 직위 배지를 한 단
+          좁혀 벌충했습니다.
+
+          세로는 아무것도 밀어내지 않지만, 그렇다고 키울 이유도 아닙니다.
+          한때 py-2까지 올렸다가 단추가 카드 안에서 혼자 두툼해 보여
+          py-1로 되돌렸습니다. 이 줄에서 눈에 먼저 들어와야 하는 것은
+          이름이고, 수정은 그 다음입니다.
       */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-2 text-[13px]! font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-1 text-[13px]! font-bold text-ink-muted transition active:scale-95"
       >
         수정
       </button>
