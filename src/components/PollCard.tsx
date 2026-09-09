@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
-import { PlusIcon } from "@/components/icons";
+import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { usePollOpinions, usePolls, usePollVotes } from "@/lib/hooks";
 import {
@@ -201,39 +201,36 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
                   onClick={() => setPicked(index)}
                   aria-pressed={on}
                   /*
-                    고른 상자만 테두리가 두꺼워지고 주황이 됩니다.
-                    테두리 두께를 늘리지 않고 색만 바꾸면, 밝은 화면에서
-                    골랐는지 아닌지가 잘 구분되지 않습니다.
+                    고른 상자만 테두리가 빨개집니다.
+
+                    이 앱에서 빨강은 원래 "지우기·되돌릴 수 없음"이었지만,
+                    투표만은 예외로 둡니다. 종이 투표용지에 기표하는 그 빨강이라
+                    원우들에게는 오히려 이쪽이 곧바로 읽힙니다. 대신 빨강은
+                    **고른 것을 표시할 때만** 쓰고, 마감·지우기 같은 단추에는
+                    쓰지 않아 뜻이 섞이지 않게 합니다.
                   */
                   className={`flex items-center justify-between gap-2 rounded-2xl border-2 px-4 py-4 text-left transition active:scale-[0.98] ${
-                    on
-                      ? "border-brand-500 bg-brand-50"
-                      : "border-line bg-surface"
+                    on ? "border-red-500 bg-red-50" : "border-line bg-surface"
                   }`}
                 >
-                  <span
-                    className={`min-w-0 text-[15px] font-bold ${
-                      on ? "text-brand-500" : "text-ink"
-                    }`}
-                  >
-                    {option}
-                  </span>
                   {/*
-                    동그라미 하나로 고름/안 고름을 표시합니다.
-                    선관위 화면은 큰 기호를 쓰지만, 그건 찬성·반대 둘뿐일 때
-                    이야기입니다. 고를 것이 늘어나면 기호마다 뜻을 새로 정해야
-                    하므로, 어디에나 통하는 동그라미로 둡니다.
+                    글씨는 고르든 안 고르든 진한 먹색입니다.
+                    선관위 화면도 그렇습니다 — 빨강은 도장과 테두리가 맡고,
+                    무엇을 고르는지(찬성·반대)는 늘 또렷하게 읽혀야 합니다.
                   */}
-                  <span
-                    aria-hidden="true"
-                    className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 ${
-                      on ? "border-brand-500" : "border-ink-faint"
+                  <span className="min-w-0 text-[15px] font-bold text-ink">{option}</span>
+
+                  {/*
+                    기표 도장. 안 고른 자리에도 흐리게 남겨 둡니다 —
+                    "여기 찍으면 된다"는 자리가 미리 보여야 무엇을 하는
+                    화면인지 한눈에 압니다. 선관위 화면과 같은 방식입니다.
+                  */}
+                  <VoteStampIcon
+                    className={`h-[34px] w-[34px] shrink-0 ${
+                      on ? "text-red-500" : "text-line"
                     }`}
-                  >
-                    {on ? (
-                      <span className="h-[11px] w-[11px] rounded-full bg-brand-500" />
-                    ) : null}
-                  </span>
+                    strokeWidth={on ? 2.4 : 2}
+                  />
                 </button>
               );
             })}
@@ -500,17 +497,21 @@ function PollResult({
           <div
             key={index}
             className={`rounded-2xl border-2 px-4 py-3 ${
-              on ? "border-brand-500 bg-brand-50" : "border-line"
+              on ? "border-red-500 bg-red-50" : "border-line"
             }`}
           >
-            <div className="flex items-baseline justify-between gap-2">
-              <span
-                className={`min-w-0 truncate text-[15px] font-bold ${
-                  on ? "text-brand-500" : "text-ink"
-                }`}
-              >
-                {option}
-                {on ? " ✓" : ""}
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className="min-w-0 truncate text-[15px] font-bold text-ink">
+                  {option}
+                </span>
+                {/* 내가 찍은 자리에만 도장이 남습니다. 고를 때와 같은 표시입니다. */}
+                {on ? (
+                  <VoteStampIcon
+                    className="h-[20px] w-[20px] shrink-0 text-red-500"
+                    strokeWidth={2.4}
+                  />
+                ) : null}
               </span>
               <span className="shrink-0 text-[13px] font-bold text-ink-muted tabular-nums">
                 {counts[index]}표 · {percent}%
@@ -523,7 +524,7 @@ function PollResult({
             */}
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-fill">
               <div
-                className={`h-full rounded-full ${on ? "bg-brand-500" : "bg-ink-faint"}`}
+                className={`h-full rounded-full ${on ? "bg-red-500" : "bg-ink-faint"}`}
                 style={{ width: `${percent}%` }}
               />
             </div>

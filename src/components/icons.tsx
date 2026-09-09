@@ -21,6 +21,43 @@ function base(className?: string) {
   return className ?? "h-6 w-6";
 }
 
+/**
+ * 투표 기표 도장 — 동그라미 안에 卜.
+ *
+ * 우리나라 선거에서 쓰는 기표용구가 찍어내는 그 모양입니다. 동그라미 안에
+ * 「卜」(점 복) 한 글자가 들어 있고, 세로획과 그 가운데에서 오른쪽 아래로
+ * 뻗는 삐침으로 이루어집니다.
+ *
+ * ★ 글자(卜)를 텍스트로 쓰지 않고 선으로 그립니다.
+ *   폰마다 깔린 글꼴이 달라 卜의 굵기와 자리가 제각각이 되고, 동그라미와
+ *   가운데를 맞추는 일도 글꼴에 맡겨야 합니다. 선으로 그리면 어느 기기에서나
+ *   같은 모양이고, 다른 아이콘들처럼 굵기와 색을 바깥에서 정할 수 있습니다.
+ *
+ * strokeWidth를 크게 주면 실제 도장처럼 두툼해집니다 (기본 1.8은 다른
+ * 아이콘과 맞춘 값이라, 투표 화면에서는 2.2쯤을 넘겨 씁니다).
+ */
+export function VoteStampIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" stroke="currentColor" strokeWidth={strokeWidth} />
+      {/* 卜의 세로획. 동그라미 안에서 위아래로 시원하게 지나갑니다. */}
+      <path
+        d="M10.1 5.6v12.8"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      {/* 卜의 삐침. 세로획 가운데에서 오른쪽 아래로 뻗습니다. */}
+      <path
+        d="M10.1 12.2 16.4 18"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function HomeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
