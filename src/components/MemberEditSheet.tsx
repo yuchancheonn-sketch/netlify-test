@@ -310,6 +310,19 @@ export default function MemberEditSheet({
                   {role}
                 </option>
               ))}
+
+              {/*
+                목록에 없는 직위가 이미 저장돼 있으면 그 값도 함께 보여줍니다.
+
+                직위 목록은 기수마다 바뀝니다(2026-09-09에 통째로 갈았습니다).
+                그때 예전 직위를 달고 있던 원우의 항목을 열면, select에 맞는
+                option이 없어 빈칸으로 보이고 저장을 누르는 순간 직위가
+                **조용히 지워집니다.** 고치려던 것은 휴대폰 번호였는데 직위가
+                날아가는 식입니다. 그래서 저장된 값을 한 줄 얹어 둡니다.
+              */}
+              {councilRole && !(COUNCIL_ROLES as readonly string[]).includes(councilRole) ? (
+                <option value={councilRole}>{councilRole} (예전 직위)</option>
+              ) : null}
             </select>
           </div>
 
