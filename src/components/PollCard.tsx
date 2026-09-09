@@ -59,11 +59,20 @@ export default function PollCard() {
       {/*
         투표 만들기는 원우 누구나. 열린 투표가 없을 때는 이 단추가 곧 안내가
         되므로 따로 빈 화면을 두지 않습니다.
+
+        ★ 여기만 테두리를 두른 단추입니다.
+          자료 탭의 "앨범 만들기"·"파일 올리기", 수첩의 "원우 추가하기"는
+          테두리 없는 흰 카드인데, 이 단추는 주황 테두리를 두릅니다.
+
+          바탕은 흰색을 박지 않고 bg-surface를 씁니다. 어두운 화면에서는
+          이 토큰이 어두운 바탕으로 바뀌므로, 흰색으로 박아두면 거기서만
+          이 단추가 하얗게 튑니다. 테두리와 글씨의 주황은 양쪽 화면에서
+          모두 또렷해 그대로 둡니다.
       */}
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
+        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-500 bg-surface py-4 text-[15px] font-bold text-brand-500 transition active:scale-[0.99] ${
           open.length > 0 ? "mt-3" : ""
         }`}
       >
