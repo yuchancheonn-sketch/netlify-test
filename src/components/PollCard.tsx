@@ -740,11 +740,17 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl bg-fill px-6 py-4 text-[15px] font-bold text-ink-muted"
+              /*
+                shrink-0과 whitespace-nowrap이 꼭 필요합니다.
+                옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
+                0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
+              */
+              className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
             >
               취소
             </button>
-            <PrimaryButton type="submit" loading={saving}>
+            {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
+            <PrimaryButton type="submit" loading={saving} size="sm">
               만들기
             </PrimaryButton>
           </div>
