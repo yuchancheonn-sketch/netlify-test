@@ -274,8 +274,14 @@ function MemberRow({
   const affiliation = affiliationLine(entry);
 
   return (
-    /* gap-4 = 썸네일과 이름 사이 16px. 이 값이 이름 줄의 왼쪽 자리를 정합니다. */
-    <div className="flex items-center gap-4 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
+    /*
+     * gap-3 = 썸네일과 이름 사이 12px. 이 값이 이름 줄의 왼쪽 자리를 정합니다.
+     *
+     * 예전에는 gap-4(16px)였습니다. 썸네일 폭(112px)은 16:9를 지켜야 해서
+     * 줄일 수 없으므로, 네 글자 직위(정무특보)가 붙어도 이름이 안 잘리게 할
+     * 자리를 여기서 8px(양옆 두 칸) 냈습니다.
+     */
+    <div className="flex items-center gap-3 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
@@ -320,15 +326,27 @@ function MemberRow({
         onClick={onOpen}
         className="min-w-0 flex-1 py-1 text-left transition active:opacity-70"
       >
-        <div className="flex items-baseline gap-1.5">
+        {/*
+          ★ 이름은 절대 자르지 않습니다.
+
+          예전에는 이름에 truncate가 걸려 있어서, 자리가 모자라면 이름부터
+          잘렸습니다. 수첩에서 가장 먼저 읽혀야 하는 것이 이름인데 "정무특보"
+          같은 네 글자 직위가 붙으면 이름이 두세 글자만 남았습니다.
+
+          지금은 순서를 뒤집었습니다 — 이름은 shrink-0으로 제 폭을 지키고,
+          자리가 정말 모자라면 이 줄의 overflow-hidden이 **오른쪽 끝(배지)부터**
+          잘라냅니다. 배지는 없어도 누구인지 알 수 있지만 이름은 그렇지 않습니다.
+        */}
+        <div className="flex items-baseline gap-1.5 overflow-hidden">
           <span className="shrink-0 text-[17px] font-bold text-ink tabular-nums">
             {number}.
           </span>
-          <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
+          <span className="shrink-0 whitespace-nowrap text-[17px] font-bold text-ink">
+            {entry.name}
+          </span>
           {/*
             목록에서는 짧은 이름으로 답니다 (문화·홍보위원장 → 문화·홍보).
-            배지는 안 줄어들고 이름이 먼저 잘리는 자리라, 긴 직위를 그대로
-            두면 이름이 두세 글자만 남습니다. 상세 화면에서는 전체를 보여줍니다.
+            상세 화면에서는 전체를 보여줍니다.
           */}
           {entry.councilRole ? (
             <span className="shrink-0">
@@ -357,13 +375,28 @@ function MemberRow({
         이 색이고 테두리는 stone-200이었는데, 그건 화면 색을 따라가지 않는
         고정 팔레트라 어두운 화면에서 흰 테두리처럼 도드라졌습니다.
       */}
+      {/*
+        ★ 글씨 크기 뒤의 !가 꼭 필요합니다.
+
+        globals.css의 `button { font-size: 16px }`는 레이어 밖에 있어서
+        @layer utilities 안의 text-[12px]를 이깁니다. 그래서 이 단추는
+        12px이 아니라 **16px로 그려지고 있었고**, 의도보다 20px 가까이
+        넓어져 이름이 설 자리를 빼앗고 있었습니다.
+        (그 규칙은 아이폰에서 입력칸을 눌렀을 때 화면이 확대되는 것을
+         막는 것이라 없앨 수 없습니다.)
+
+        여백도 함께 좁혔고(px-2.5 → px-2, py-1.5 → py-1), 앞에 붙어 있던
+        연필 기호(✎)도 뺐습니다. 기호 하나가 16px인데 그게 곧 이름 한 글자라,
+        네 글자 직위(정무특보)가 붙었을 때 마지막까지 모자라던 자리였습니다.
+        무엇을 하는 단추인지는 글씨와 aria-label로 충분히 알 수 있습니다.
+      */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-1.5 text-[12px] font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-ink-muted px-2 py-1 text-[12px]! font-bold text-ink-muted transition active:scale-95"
       >
-        ✎ 수정
+        수정
       </button>
     </div>
   );
