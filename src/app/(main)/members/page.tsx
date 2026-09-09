@@ -337,7 +337,18 @@ function MemberRow({
           자리가 정말 모자라면 이 줄의 overflow-hidden이 **오른쪽 끝(배지)부터**
           잘라냅니다. 배지는 없어도 누구인지 알 수 있지만 이름은 그렇지 않습니다.
         */}
-        <div className="flex items-baseline gap-1.5 overflow-hidden">
+        {/*
+          ★ items-baseline이 아니라 items-center입니다.
+
+          baseline으로 맞추면 직위 배지가 이름보다 한 단 내려앉아 보입니다.
+          배지 글씨(11px)와 이름(17px)은 글자 아랫선이 서로 다른 높이에
+          있는데, 그 선을 억지로 맞추면 배지 상자가 통째로 아래로 밀려
+          이름과 다른 층에 있는 것처럼 읽힙니다.
+          가운데로 맞추면 배지가 이름 줄 한가운데에 서서 같은 층이 됩니다.
+
+          번호와 이름은 둘 다 17px이라 어느 쪽으로 맞추든 똑같이 보입니다.
+        */}
+        <div className="flex items-center gap-1.5 overflow-hidden">
           <span className="shrink-0 text-[17px] font-bold text-ink tabular-nums">
             {number}.
           </span>
@@ -354,9 +365,16 @@ function MemberRow({
               좁혀(11px, px-2) 8px을 벌었고, 그 자리를 수정 단추를 키우는 데
               썼습니다. 상세 화면은 배지가 이름 아래 줄에 혼자 서므로
               거기서는 공용 Badge를 그대로 씁니다.
+
+              ★ 높이를 22px로 못 박습니다.
+              여백(py)으로 높이를 만들면 글씨 크기에 따라 값이 흔들려서
+              이름 줄(17px 글씨의 줄 높이 ≈ 20px)과 미묘하게 어긋납니다.
+              22px로 정해 두면 이름 줄보다 아주 조금 높아 나란히 선 것으로
+              읽힙니다. leading-none은 글씨가 제 줄 높이만큼 상자를 밀어
+              올리지 못하게 막아, 22px이 그대로 지켜지게 합니다.
           */}
           {entry.councilRole ? (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-500">
+            <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-brand-50 px-2 text-[11px] leading-none font-bold text-brand-500">
               {shortCouncilRole(entry.councilRole)}
             </span>
           ) : null}
