@@ -347,10 +347,17 @@ function MemberRow({
           {/*
             목록에서는 짧은 이름으로 답니다 (문화·홍보위원장 → 문화·홍보).
             상세 화면에서는 전체를 보여줍니다.
+
+            ★ 공용 Badge를 쓰지 않고 여기만 따로 그립니다.
+              공용 Badge는 12px에 px-2.5인데, 이 줄은 이름·직위·수정 단추가
+              폭을 다투는 자리라 그 크기가 이름을 밀어냅니다. 한 단씩만
+              좁혀(11px, px-2) 8px을 벌었고, 그 자리를 수정 단추를 키우는 데
+              썼습니다. 상세 화면은 배지가 이름 아래 줄에 혼자 서므로
+              거기서는 공용 Badge를 그대로 씁니다.
           */}
           {entry.councilRole ? (
-            <span className="shrink-0">
-              <Badge>{shortCouncilRole(entry.councilRole)}</Badge>
+            <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-500">
+              {shortCouncilRole(entry.councilRole)}
             </span>
           ) : null}
         </div>
@@ -385,16 +392,22 @@ function MemberRow({
         (그 규칙은 아이폰에서 입력칸을 눌렀을 때 화면이 확대되는 것을
          막는 것이라 없앨 수 없습니다.)
 
-        여백도 함께 좁혔고(px-2.5 → px-2, py-1.5 → py-1), 앞에 붙어 있던
-        연필 기호(✎)도 뺐습니다. 기호 하나가 16px인데 그게 곧 이름 한 글자라,
-        네 글자 직위(정무특보)가 붙었을 때 마지막까지 모자라던 자리였습니다.
-        무엇을 하는 단추인지는 글씨와 aria-label로 충분히 알 수 있습니다.
+        앞에 붙어 있던 연필 기호(✎)는 뺐습니다. 기호 하나가 16px인데 그게 곧
+        이름 한 글자라, 네 글자 직위(정무특보)가 붙었을 때 마지막까지 모자라던
+        자리였습니다. 무엇을 하는 단추인지는 글씨와 aria-label로 충분합니다.
+
+        ★ 키울 자리는 **세로**입니다.
+          이 줄에서 이름과 폭을 다투는 것은 가로뿐이라, 높이는 아무것도
+          밀어내지 않고 얼마든지 키울 수 있습니다. 손끝이 닿는 느낌은
+          높이에서 더 많이 오므로 py를 두 배로 올렸습니다(py-1 → py-2).
+          가로는 글씨 한 단(12→13px)과 여백 한 단(px-2 → px-2.5)만 늘렸고,
+          그만큼은 아래 직위 배지를 좁혀 벌충했습니다.
       */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-ink-muted px-2 py-1 text-[12px]! font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-2 text-[13px]! font-bold text-ink-muted transition active:scale-95"
       >
         수정
       </button>
