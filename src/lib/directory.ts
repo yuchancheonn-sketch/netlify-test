@@ -133,3 +133,26 @@ export function entryMatches(entry: DirectoryEntry, needle: string): boolean {
 export function affiliationLine(entry: DirectoryEntry): string {
   return [entry.company, entry.position].filter(Boolean).join(" · ");
 }
+
+/**
+ * 목록 줄에 다는 직위 배지에 쓸 짧은 이름. "문화·홍보위원장" → "문화·홍보"
+ *
+ * 목록에서는 배지가 이름과 한 줄에 서고, 배지는 줄어들지 않아서 **이름 쪽이
+ * 먼저 잘립니다.** 직위 이름이 길어지면(2026-09-09에 위원장 자리가 여럿
+ * 생겼습니다) 작은 폰에서 이름이 두세 글자만 남습니다. 수첩에서 가장 먼저
+ * 읽혀야 하는 것은 이름이므로, 목록에서만 꼬리를 뗍니다.
+ *
+ * **상세 화면에서는 그대로 다 보여줍니다** — 거기는 배지가 이름 아래 줄에
+ * 혼자 서므로 길어도 아무것도 밀어내지 않습니다.
+ *
+ * ★ "부위원장"은 떼지 않습니다.
+ *   꼬리를 떼면 "부" 한 글자만 남아 무슨 자리인지 알 수 없습니다.
+ *   그래서 떼고 남는 것이 두 글자가 안 되면 원래 이름을 그대로 씁니다.
+ *   (운영위원장 → 운영, 재정위원장 → 재정, 대외협력위원장 → 대외협력)
+ */
+export function shortCouncilRole(role: string): string {
+  const TAIL = "위원장";
+  if (!role.endsWith(TAIL)) return role;
+  const head = role.slice(0, -TAIL.length);
+  return head.length >= 2 ? head : role;
+}

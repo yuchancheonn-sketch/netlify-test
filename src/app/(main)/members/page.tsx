@@ -14,6 +14,7 @@ import {
   affiliationLine,
   buildDirectory,
   entryMatches,
+  shortCouncilRole,
   type DirectoryEntry,
 } from "@/lib/directory";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
@@ -197,14 +198,22 @@ export default function MembersPage() {
             </ul>
           )}
 
-          {/* 아직 가입하지 않은 원우 올리기 */}
+          {/*
+            아직 가입하지 않은 원우 올리기.
+
+            자료 탭의 "앨범 만들기"·"파일 올리기"와 **똑같은 모양**입니다.
+            셋 다 "목록 아래에서 새로 하나 더하기"라는 같은 일을 하므로,
+            생김새가 다르면 다른 종류의 단추처럼 읽힙니다.
+            (예전에는 여기만 테두리만 두른 회색 단추였습니다.)
+            한쪽을 고치면 나머지 둘도 같이 맞춰 주세요.
+          */}
           {!busy && !error ? (
             <button
               type="button"
               onClick={() => setEditing({ entry: null })}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-ink-soft py-2.5 text-[14px] font-bold text-ink-soft transition active:scale-[0.99]"
+              className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
-              <PlusIcon className="h-4 w-4" />
+              <PlusIcon className="h-5 w-5" />
               원우 추가하기
             </button>
           ) : null}
@@ -316,9 +325,14 @@ function MemberRow({
             {number}.
           </span>
           <span className="truncate text-[17px] font-bold text-ink">{entry.name}</span>
+          {/*
+            목록에서는 짧은 이름으로 답니다 (문화·홍보위원장 → 문화·홍보).
+            배지는 안 줄어들고 이름이 먼저 잘리는 자리라, 긴 직위를 그대로
+            두면 이름이 두세 글자만 남습니다. 상세 화면에서는 전체를 보여줍니다.
+          */}
           {entry.councilRole ? (
             <span className="shrink-0">
-              <Badge>{entry.councilRole}</Badge>
+              <Badge>{shortCouncilRole(entry.councilRole)}</Badge>
             </span>
           ) : null}
         </div>
