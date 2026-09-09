@@ -19,6 +19,7 @@ import type {
   ChatReadDoc,
   ChatRoomDoc,
   EventDoc,
+  FileDoc,
   MessageDoc,
   PhotoAlbumDoc,
   PhotoDoc,
@@ -374,6 +375,32 @@ export function useAlbumPhotos(albumId: string): ListState<PhotoDoc> {
       () => setState({ data: [], loading: false, error: "사진을 불러오지 못했어요." }),
     );
   }, [albumId]);
+
+  return state;
+}
+
+/**
+ * 자료 탭에 올라온 문서 파일 (최근에 올린 것이 위로).
+ *
+ * 정렬을 Firestore에 맡깁니다. 이 컬렉션은 한 갈래뿐이라 색인이 저절로 생기고,
+ * 앨범 목록(useAlbums)이 eventDate로 정렬하는 것과 같은 경우입니다.
+ */
+export function useFiles(): ListState<FileDoc> {
+  const [state, setState] = useState<ListState<FileDoc>>(EMPTY);
+
+  useEffect(() => {
+    const filesQuery = query(collection(db, "files"), orderBy("uploadedAt", "desc"));
+    return onSnapshot(
+      filesQuery,
+      (snapshot) => {
+        const files = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as FileDoc,
+        );
+        setState({ data: files, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "자료를 불러오지 못했어요." }),
+    );
+  }, []);
 
   return state;
 }

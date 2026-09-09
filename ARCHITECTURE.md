@@ -130,7 +130,11 @@
 
 ## 5. 화면 지도
 
-하단 탭 5개 — **홈 / 원우 / 자료 / 채팅 / 소식** ([BottomTabBar.tsx](src/components/BottomTabBar.tsx))
+하단 탭 5개 — **홈 / 원우 / 소식 / 채팅 / 자료** ([BottomTabBar.tsx](src/components/BottomTabBar.tsx))
+
+> 2026-09-09에 소식과 자료의 자리를 맞바꿨습니다. 경계는 **받아오는 것 / 올리는 것**입니다.
+> 소식 탭은 도산아카데미가 만들어 내려주는 것(복습 영상·소식), 자료 탭은 원우가 직접
+> 올리는 것(행사 사진·파일)입니다. 복습 영상은 원래 자료 탭에 있었습니다.
 
 | 주소 | 화면 | 하는 일 | 읽는 곳 |
 |---|---|---|---|
@@ -139,12 +143,12 @@
 | `/events/[id]` | 모임 상세 | 참석/불참/미정 응답 + 참석자 얼굴 | `events/{id}/rsvps` |
 | `/events/new`, `/[id]/edit` | 일정 등록·수정 | **운영진만**. 새 일정만 알림 발송 | — |
 | `/members` | 원우수첩 | 가입자+미가입 명단 합친 가나다순. **누구나 남의 칸 수정** | `users` + `roster` |
-| `/library` | 자료 (영상/사진) | 복습 영상 = 유튜브, 행사 사진 = 앨범 | `/api/videos`, `photoAlbums` |
+| `/library` | 자료 (사진/파일) | 행사 사진 = 앨범, 파일 = 원우가 올린 문서 | `photoAlbums`, `files` |
 | `/albums/[id]` | 앨범 | 사진 올리기(여러 장)·좋아요·전체화면 뷰어 | `photoAlbums/{id}/photos` |
 | `/sessions/[week]` | 주차별 수업 | 1·2교시 영상 + 느낀점 댓글(1단 답글) | `sessions/{week}` |
 | `/chat` | 채팅 목록 | 단체방 고정 + 1:1 최근순, 안 읽은 배지 | `chatRooms` |
 | `/chat/[roomId]` | 대화방 | 탭바 감춤, 밀어서 뒤로가기 | `chatRooms/{id}/messages` |
-| `/news` | 소식 | 도산아카데미 공지 → 누르면 원문으로 | `/api/dosan` |
+| `/news` | 소식 (영상/소식) | 복습 영상 = 유튜브, 소식 = 도산아카데미 공지 | `/api/videos`, `/api/dosan` |
 | `/profile` | 내 프로필 | 프로필 편집 + 로그아웃 + 운영진 화면 입구 | `users/{uid}` |
 | `/settings` | 설정 | 알림 · 글씨 크기 · 화면 밝기 (**기기마다 따로**) | localStorage |
 | `/admin` | 운영진 화면 | 가입 승인 · 명단 관리 · 권한 부여 | `users`, `roster` |
@@ -164,6 +168,7 @@
 | `sessions/{week}/comments/{id}` | 자동 | 느낀점. `parentId`(1단 답글), `period` | 읽기 자유 / **쓰기는 본인 이름만**, 수정 금지, 삭제는 본인 것만 |
 | `photoAlbums/{id}` | 자동 | 앨범 제목·행사일·대표사진·장수 | 로그인하면 누구나 |
 | `photoAlbums/{id}/photos/{id}` | 자동 | Cloudinary 주소·크기·좋아요 배열 | 로그인하면 누구나 |
+| `files/{id}` | 자동 | 자료 탭 문서 파일 — 이름·Cloudinary 주소·크기·올린 사람 | 읽기·올리기는 누구나 / **지우기는 올린 본인과 운영진만**, 수정 불가 |
 | `chatRooms/{roomId}` | `main` 또는 `uidA__uidB` | 종류·제목·`memberUids`·마지막 메시지 미리보기 | **방에 낀 사람만** |
 | `chatRooms/{roomId}/messages/{id}` | 자동 | 보낸이·본문·시각 | 방에 낀 사람만. **수정·삭제 불가** |
 | `chatReads/{uid}` | 본인 uid | 방별 마지막으로 본 시각 | **본인만** |

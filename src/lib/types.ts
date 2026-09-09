@@ -147,6 +147,32 @@ export interface PhotoDoc {
   likes: string[];
 }
 
+/**
+ * files/{fileId} — 자료 탭에 올리는 문서 파일 (PDF·한글·엑셀 등).
+ *
+ * 행사 사진(photoAlbums)과 나눠 둔 이유는 쓰임새가 달라서입니다. 사진은
+ * 행사별로 묶어 보고, 파일은 최근에 올라온 것부터 훑어 내려받습니다.
+ * 실물은 둘 다 Cloudinary에 있고 Firestore에는 주소만 담습니다.
+ */
+export interface FileDoc {
+  id: string;
+  /** 올린 사람이 쓰던 원래 파일 이름. 화면에 그대로 보여줍니다. */
+  name: string;
+  /** Cloudinary 주소 */
+  url: string;
+  /** Cloudinary 안에서의 식별자. 나중에 보관소를 정리할 때 씁니다. */
+  publicId: string;
+  /**
+   * 확장자 (pdf, hwp, xlsx …).
+   * Cloudinary가 알려주지 않는 파일도 있어서, 그럴 때는 파일 이름에서 뽑습니다.
+   */
+  format: string;
+  bytes: number;
+  uploadedBy: string;
+  uploadedByName: string;
+  uploadedAt: Timestamp | null;
+}
+
 /** chatRooms/{roomId}/messages/{messageId} */
 export interface MessageDoc {
   id: string;

@@ -84,6 +84,80 @@ export function uploadImage(
   });
 }
 
+export interface UploadedFile {
+  url: string;
+  publicId: string;
+  /** 확장자. Cloudinary가 안 알려주면 파일 이름에서 뽑습니다. */
+  format: string;
+  bytes: number;
+}
+
+/** 파일 이름 끝의 확장자. 없으면 빈 글자. */
+function extensionOf(fileName: string): string {
+  const dot = fileName.lastIndexOf(".");
+  return dot > 0 ? fileName.slice(dot + 1).toLowerCase() : "";
+}
+
+/**
+ * 문서 파일 한 개를 올립니다 (PDF·한글·엑셀 등).
+ *
+ * ★ 사진과 주소가 다릅니다 — `/auto/upload`입니다.
+ *   사진은 `/image/upload`로 올리는데, 그 길로 PDF나 한글 파일을 보내면
+ *   Cloudinary가 "이미지가 아니다"라며 거절합니다. auto는 받은 것을 보고
+ *   사진이면 image로, 아니면 raw로 알아서 갈라 담습니다.
+ *
+ * ★ Cloudinary 콘솔에서 업로드 프리셋의 resource type을 'auto'로 두어야 합니다.
+ *   'image'로 묶여 있으면 이 길로 보내도 문서 파일이 거절당합니다.
+ *   (이것만은 앱에서 못 하고 사람이 콘솔에서 해야 합니다.)
+ */
+export function uploadFile(
+  file: File,
+  onProgress?: (ratio: number) => void,
+): Promise<UploadedFile> {
+  if (!isCloudinaryConfigured) {
+    return Promise.reject(new Error("자료 보관소 설정이 아직 안 되어 있어요."));
+  }
+
+  const form = new FormData();
+  form.append("file", file, file.name);
+  form.append("upload_preset", UPLOAD_PRESET as string);
+
+  return new Promise<UploadedFile>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
+    };
+
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300) {
+        /*
+         * 가장 흔한 실패는 업로드 프리셋이 'image'로 묶여 있는 경우입니다.
+         * 영어 원문을 그대로 보여주면 무슨 말인지 알 수 없어서 갈아 끼웁니다.
+         */
+        reject(new Error("파일을 올리지 못했어요. 보관소 설정을 확인해 주세요."));
+        return;
+      }
+      try {
+        const data = JSON.parse(request.responseText);
+        resolve({
+          url: data.secure_url as string,
+          publicId: data.public_id as string,
+          format: (data.format as string) || extensionOf(file.name),
+          bytes: data.bytes as number,
+        });
+      } catch {
+        reject(new Error("파일을 올리지 못했어요."));
+      }
+    };
+
+    request.onerror = () => reject(new Error("네트워크 문제로 파일을 올리지 못했어요."));
+    request.ontimeout = () => reject(new Error("업로드가 너무 오래 걸려요. 다시 시도해 주세요."));
+    request.send(form);
+  });
+}
+
 /**
  * 목록에 쓸 작은 이미지 주소를 만듭니다.
  * Cloudinary는 주소 중간에 변환 옵션을 끼워 넣으면 그 크기로 잘라서 내려줍니다.

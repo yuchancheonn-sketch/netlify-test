@@ -114,6 +114,15 @@ export const MAX_PROFILE_PHOTO_BYTES = 40_000;
  */
 export const PHOTO_MAX_DIMENSION = 2560;
 
+/**
+ * 자료 탭에 올릴 수 있는 파일 한 개의 최대 크기(바이트).
+ *
+ * Cloudinary 무료 플랜에서 서명 없는 업로드(unsigned)의 상한이 10MB입니다.
+ * 넘으면 Cloudinary가 거절하는데, 그 오류 문구는 영어라 알아보기 어렵습니다.
+ * 그래서 올리기 전에 여기서 먼저 걸러 우리 말로 알려줍니다.
+ */
+export const MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024;
+
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;
 

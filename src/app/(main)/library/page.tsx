@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { PlusIcon } from "@/components/icons";
 import {
@@ -17,29 +23,36 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { thumbnailUrl } from "@/lib/cloudinary";
-import { formatDotDate, todayString } from "@/lib/format";
-import { useAlbums } from "@/lib/hooks";
 import {
-  embedUrl,
-  videoThumbnailUrl,
-  watchUrl,
-  type VideoItem,
-} from "@/lib/youtube";
+  downloadUrl,
+  isCloudinaryConfigured,
+  thumbnailUrl,
+  uploadFile,
+} from "@/lib/cloudinary";
+import { formatDotDate, todayString } from "@/lib/format";
+import { useAlbums, useFiles } from "@/lib/hooks";
+import { MAX_UPLOAD_FILE_BYTES } from "@/lib/constants";
+import type { FileDoc } from "@/lib/types";
 
 /**
- * 자료 탭 — "복습 영상"과 "행사 사진"을 서브탭으로 묶습니다.
- * 복습 영상은 도산아카데미 유튜브 채널(@dosanacademy)에서 그대로 가져옵니다.
+ * 자료 탭 — **원우가 직접 올리는 것**을 모읍니다.
+ *
+ *  - 행사 사진: 행사별 앨범으로 묶어서 (photoAlbums)
+ *  - 파일: PDF·한글·엑셀 등을 최근 올린 순으로 (files)
+ *
+ * 도산아카데미가 만들어 내려주는 것(복습 영상·소식)은 소식 탭(/news)에 있습니다.
+ * **받아오는 것과 올리는 것**을 탭으로 갈라 둔 것이 이 둘의 경계입니다.
+ * (복습 영상은 예전에 이 탭에 있었지만 2026-09-09에 소식 탭으로 옮겼습니다.)
  */
 const SUBTABS = [
-  { value: "videos", label: "복습 영상" },
   { value: "photos", label: "행사 사진" },
+  { value: "files", label: "파일" },
 ] as const;
 
 type Subtab = (typeof SUBTABS)[number]["value"];
 
 export default function LibraryPage() {
-  const [subtab, setSubtab] = useState<Subtab>("videos");
+  const [subtab, setSubtab] = useState<Subtab>("photos");
 
   return (
     <>
@@ -69,165 +82,218 @@ export default function LibraryPage() {
         </div>
 
         <div className="mt-5">
-          {subtab === "videos" ? <VideoList /> : <AlbumList />}
+          {subtab === "photos" ? <AlbumList /> : <FileList />}
         </div>
       </div>
     </>
   );
 }
 
+/** 파일 크기를 사람이 읽는 단위로. 1KB 미만은 "1KB"로 올려 적습니다. */
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+}
+
 /**
- * 도산아카데미 유튜브 영상 목록.
+ * 원우가 올린 문서 파일 목록 (PDF·한글·엑셀 등).
  *
- * 우리 앱 서버(/api/videos)가 채널에서 받아온 목록을 그대로 큰 그림으로 깝니다.
- * 그림을 누르면 그 자리에서 바로 재생되고, 유튜브에서 퍼가기를 막아둔 영상은
- * 아래 링크로 유튜브에 넘어가 볼 수 있습니다.
+ * 사진과 달리 앨범으로 묶지 않고 최근 올린 것부터 한 줄씩 늘어놓습니다.
+ * 실물은 Cloudinary에 있고 Firestore에는 주소만 담습니다 — 사진과 같은 구조입니다.
+ *
+ * ★ 지우면 목록에서만 사라지고 Cloudinary의 실물은 남습니다.
+ *   지우려면 서명이 필요한데 그 비밀 키를 브라우저에 둘 수는 없습니다.
+ *   무료 보관 용량이 25GB라 한동안은 문제가 되지 않지만, 언젠가 콘솔에서
+ *   한 번 정리해야 합니다. (행사 사진도 똑같습니다.)
  */
-function VideoList() {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  /** 지금 재생 중인 영상 (한 번에 하나만 틉니다) */
-  const [playingId, setPlayingId] = useState<string | null>(null);
+function FileList() {
+  const { user, profile, isAdmin } = useAuth();
+  const { data: files, loading, error } = useFiles();
+  const [uploading, setUploading] = useState(false);
+  /** 0~1. 여러 개를 올릴 때는 지금 올리는 한 개의 진행률입니다. */
+  const [progress, setProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
+  async function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(event.target.files ?? []);
+    /*
+     * 같은 파일을 다시 고를 수 있도록 입력칸을 비웁니다.
+     * 안 비우면 값이 그대로라 change가 안 일어나서, 올리다 실패한 파일을
+     * 다시 고르는 것이 먹히지 않습니다.
+     */
+    event.target.value = "";
+    if (picked.length === 0 || !user || uploading) return;
 
-    async function load() {
-      try {
-        const response = await fetch("/api/videos");
-        const data = (await response.json()) as {
-          items?: VideoItem[];
-          error?: string;
-        };
-        if (!alive) return;
-        if (!response.ok || data.error) setError(data.error ?? "영상을 불러오지 못했어요.");
-        else setVideos(data.items ?? []);
-      } catch {
-        if (alive) setError("영상을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
-      } finally {
-        if (alive) setLoading(false);
-      }
+    const tooBig = picked.find((file) => file.size > MAX_UPLOAD_FILE_BYTES);
+    if (tooBig) {
+      setUploadError(
+        `"${tooBig.name}"이 너무 커요. 한 개에 ${formatBytes(MAX_UPLOAD_FILE_BYTES)}까지 올릴 수 있어요.`,
+      );
+      return;
     }
 
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, []);
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      for (const file of picked) {
+        setProgress(0);
+        const uploaded = await uploadFile(file, setProgress);
+        await addDoc(collection(db, "files"), {
+          name: file.name,
+          url: uploaded.url,
+          publicId: uploaded.publicId,
+          format: uploaded.format,
+          bytes: uploaded.bytes,
+          uploadedBy: user.uid,
+          uploadedByName: profile?.name || profile?.nickname || "원우",
+          uploadedAt: serverTimestamp(),
+        });
+      }
+    } catch (caught) {
+      setUploadError(
+        caught instanceof Error ? caught.message : "파일을 올리지 못했어요.",
+      );
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  }
 
   if (loading) {
     return (
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-2">
         {[0, 1, 2].map((key) => (
           <li key={key}>
-            <Skeleton className="aspect-video rounded-2xl" />
+            <Skeleton className="h-[68px] rounded-2xl" />
           </li>
         ))}
       </ul>
     );
   }
 
-  if (error) {
-    return (
-      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-        <ErrorState message={error} />
-        <div className="px-6 pb-6 text-center">
-          <a
-            href="https://www.youtube.com/@dosanacademy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[13px] font-bold text-brand-500"
-          >
-            도산아카데미 유튜브 열기 ↗
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  if (videos.length === 0) {
-    return (
-      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-        <EmptyState
-          icon={<span className="text-[40px]">🎬</span>}
-          title="아직 올라온 영상이 없어요"
-          description="도산아카데미 유튜브에 영상이 올라오면 여기에 바로 보입니다."
-        />
-      </div>
-    );
-  }
+  if (error) return <ErrorState message={error} />;
 
   return (
     <>
-      <ul className="flex flex-col gap-5">
-        {videos.map((video) => (
-          <li key={video.id}>
-            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
-              {playingId === video.id ? (
-                <iframe
-                  src={embedUrl(video.id)}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="aspect-video w-full bg-black"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setPlayingId(video.id)}
-                  aria-label={`${video.title} 재생`}
-                  className="relative block aspect-video w-full bg-black transition active:scale-[0.99]"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={videoThumbnailUrl(video.id)}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/55 text-[26px] text-white">
-                      ▶
-                    </span>
-                  </span>
-                </button>
-              )}
+      {!isCloudinaryConfigured ? (
+        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+          <EmptyState
+            icon={<span className="text-[40px]">📁</span>}
+            title="자료 보관소 설정이 아직 안 되어 있어요"
+            description="운영진이 Cloudinary 설정을 마치면 파일을 올릴 수 있습니다."
+          />
+        </div>
+      ) : files.length === 0 ? (
+        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+          <EmptyState
+            icon={<span className="text-[40px]">📁</span>}
+            title="아직 올라온 파일이 없어요"
+            description="아래 '파일 올리기'로 강의 자료나 문서를 나눠 보세요."
+          />
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {files.map((file) => (
+            <FileRow
+              key={file.id}
+              file={file}
+              canDelete={file.uploadedBy === user?.uid || isAdmin}
+            />
+          ))}
+        </ul>
+      )}
 
-              <div className="px-4 py-3.5">
-                <p className="text-[15px] leading-snug font-bold text-ink">{video.title}</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  {video.date ? (
-                    <span className="text-[12px] text-ink-faint">
-                      {formatDotDate(video.date)}
-                    </span>
-                  ) : (
-                    <span />
-                  )}
-                  <a
-                    href={watchUrl(video.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-[12px] font-bold text-brand-500"
-                  >
-                    유튜브에서 보기 ↗
-                  </a>
-                </div>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {/* 파일 올리기는 원우 누구나. 사진 앨범 만들기와 달리 운영진만이 아닙니다. */}
+      {isCloudinaryConfigured ? (
+        <>
+          <label
+            className={`mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
+              uploading ? "text-ink-faint" : "text-brand-500"
+            }`}
+          >
+            {uploading ? (
+              `올리는 중… ${Math.round(progress * 100)}%`
+            ) : (
+              <>
+                <PlusIcon className="h-5 w-5" />
+                파일 올리기
+              </>
+            )}
+            <input
+              type="file"
+              multiple
+              disabled={uploading}
+              onChange={handlePick}
+              className="hidden"
+            />
+          </label>
+
+          <p className="mt-2 text-center text-[12px] text-ink-faint">
+            한 개에 {formatBytes(MAX_UPLOAD_FILE_BYTES)}까지
+          </p>
+        </>
+      ) : null}
+
+      {uploadError ? (
+        <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
+          {uploadError}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+/** 파일 목록 한 줄 — 확장자 배지, 이름, 올린 사람·크기, 내려받기 */
+function FileRow({ file, canDelete }: { file: FileDoc; canDelete: boolean }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (deleting) return;
+    if (!window.confirm(`"${file.name}"을 목록에서 지울까요?`)) return;
+    setDeleting(true);
+    try {
+      await deleteDoc(doc(db, "files", file.id));
+    } catch {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <li className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2.5 shadow-[var(--shadow-card)]">
+      {/* 확장자를 그대로 배지로. 아이콘을 종류마다 만들지 않아도 무엇인지 압니다. */}
+      <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl bg-brand-50 text-[11px] font-bold text-brand-500 uppercase">
+        {file.format ? file.format.slice(0, 4) : "파일"}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-bold text-ink">{file.name}</p>
+        <p className="mt-0.5 truncate text-[12px] text-ink-faint">
+          {file.uploadedByName} · {formatBytes(file.bytes)}
+        </p>
+      </div>
 
       <a
-        href="https://www.youtube.com/@dosanacademy"
+        href={downloadUrl(file.url)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
+        className="shrink-0 rounded-full px-2.5 py-1.5 text-[13px] font-bold text-brand-500 active:bg-fill"
       >
-        도산아카데미 유튜브 채널 열기 ↗
+        받기
       </a>
-    </>
+
+      {/* 지우기는 올린 본인과 운영진만. 보안 규칙도 같이 막습니다. */}
+      {canDelete ? (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="shrink-0 rounded-full px-2 py-1.5 text-[13px]! font-bold text-ink-faint transition active:text-danger disabled:opacity-50"
+        >
+          지우기
+        </button>
+      ) : null}
+    </li>
   );
 }
 

@@ -147,6 +147,24 @@ service cloud.firestore {
       }
     }
 
+    /*
+     * 자료 탭에 올리는 문서 파일 (PDF·한글·엑셀 등).
+     *
+     * 올리는 것은 원우 누구나. 지우는 것은 **올린 본인과 운영진만** 됩니다.
+     * 사진·수첩과 달리 여기만 지우기를 좁힌 이유는, 남이 올린 자료가 조용히
+     * 사라지면 되돌릴 길이 없어서입니다 (Cloudinary의 실물까지는 앱이 못 지우고
+     * 문서만 사라지므로, 목록에서 없어지면 아무도 다시 찾지 못합니다).
+     * 고치기는 막습니다 — 파일을 바꾸려면 새로 올리고 옛것을 지웁니다.
+     */
+    match /files/{fileId} {
+      allow read: if isMember();
+      allow create: if isMember()
+                    && request.resource.data.uploadedBy == request.auth.uid;
+      allow delete: if isMember()
+                    && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      allow update: if false;
+    }
+
     // 주차별 수업의 주제·강사·영상. 원우수첩처럼 누구나 채웁니다.
     match /sessions/{week} {
       allow read, write: if isMember();

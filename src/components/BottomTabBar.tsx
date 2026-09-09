@@ -39,9 +39,17 @@ const TABS = [
    */
   { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events"] },
   { href: "/members", label: "원우", Icon: UsersIcon, owns: [] },
-  { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
-  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
+  /*
+   * 2026-09-09에 소식과 자료의 자리를 맞바꿨습니다.
+   *
+   * 소식(도산아카데미 RSS)은 거의 안 열어보는데 엄지가 가장 잘 닿는 자리를
+   * 쓰고 있었고, 자주 여는 행사 사진은 자료 탭 안쪽에 들어 있었습니다.
+   * 지금은 받아오는 것(소식·복습 영상)이 가운데, 원우가 직접 올리는 것
+   * (행사 사진·파일)이 맨 끝입니다.
+   */
   { href: "/news", label: "소식", Icon: MegaphoneIcon, owns: [] },
+  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
+  { href: "/library", label: "자료", Icon: LibraryIcon, owns: ["/albums"] },
 ] as const;
 
 /** 지금 보고 있는 주소가 이 탭에 속하는지. 하위 화면(/events/3 등)까지 포함합니다. */
