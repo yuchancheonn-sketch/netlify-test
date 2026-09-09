@@ -159,6 +159,33 @@ export function uploadFile(
 }
 
 /**
+ * 자료 탭 파일 목록에 깔 미리보기 그림. 만들 수 없는 파일이면 null.
+ *
+ * ★ 되는 것과 안 되는 것이 주소로 갈립니다.
+ *   Cloudinary는 올라온 것을 보고 image와 raw로 나눠 담습니다(/auto/upload).
+ *   **PDF와 사진은 image**로 들어가고, 그러면 첫 장을 그림으로 구워 줍니다.
+ *   한글·엑셀·워드·압축 파일은 raw라 그림을 만들 방법이 없어 null입니다
+ *   (화면에서는 확장자 배지를 대신 깝니다).
+ *
+ * pg_1은 "첫 장만". 없으면 여러 장짜리 PDF에서 엉뚱한 장이 나올 수 있습니다.
+ * c_fit은 잘라내지 않고 상자 안에 통째로 넣습니다 — 문서는 가장자리가 잘리면
+ * 무슨 문서인지 알아보기 어렵습니다(사진 썸네일이 쓰는 c_fill과 다른 점입니다).
+ * f_jpg로 못 박는 이유는, 문서 첫 장은 흰 바탕이 대부분이라 png보다 훨씬 가볍기
+ * 때문입니다.
+ *
+ * ※ 원본 PDF 자체를 내려받는 것은 **계정 설정에 따라 막혀 있을 수 있습니다**
+ *   (Cloudinary 무료 플랜은 기본이 차단이고 401이 납니다). 그때도 여기서 만든
+ *   변환본은 정상으로 내려옵니다 — 막히는 것은 원본 전송뿐입니다.
+ */
+export function fileThumbnailUrl(url: string, size = 500): string | null {
+  if (!url.includes("/image/upload/")) return null;
+  return url.replace(
+    "/image/upload/",
+    `/image/upload/c_fit,w_${size},h_${size},pg_1,q_auto,f_jpg/`,
+  );
+}
+
+/**
  * 목록에 쓸 작은 이미지 주소를 만듭니다.
  * Cloudinary는 주소 중간에 변환 옵션을 끼워 넣으면 그 크기로 잘라서 내려줍니다.
  * 원본을 그대로 받지 않으므로 목록이 훨씬 빨리 뜨고 데이터도 아낍니다.

@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { PlusIcon } from "@/components/icons";
@@ -25,6 +26,7 @@ import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import {
   downloadUrl,
+  fileThumbnailUrl,
   isCloudinaryConfigured,
   thumbnailUrl,
   uploadFile,
@@ -161,11 +163,12 @@ function FileList() {
   }
 
   if (loading) {
+    // 행사 사진 앨범과 같은 2열 자리표시입니다.
     return (
-      <ul className="flex flex-col gap-2">
-        {[0, 1, 2].map((key) => (
+      <ul className="grid grid-cols-2 gap-3">
+        {[0, 1, 2, 3].map((key) => (
           <li key={key}>
-            <Skeleton className="h-[68px] rounded-2xl" />
+            <Skeleton className="aspect-[4/3] rounded-2xl" />
           </li>
         ))}
       </ul>
@@ -193,12 +196,13 @@ function FileList() {
           />
         </div>
       ) : (
-        <ul className="flex flex-col gap-2">
+        /* 행사 사진 앨범과 같은 2열 격자 */
+        <ul className="grid grid-cols-2 gap-3">
           {files.map((file) => (
-            <FileRow
+            <FileCard
               key={file.id}
               file={file}
-              canDelete={file.uploadedBy === user?.uid || isAdmin}
+              canManage={file.uploadedBy === user?.uid || isAdmin}
             />
           ))}
         </ul>
@@ -244,11 +248,21 @@ function FileList() {
   );
 }
 
-/** 파일 목록 한 줄 — 확장자 배지, 이름, 올린 사람·크기, 내려받기 */
-function FileRow({ file, canDelete }: { file: FileDoc; canDelete: boolean }) {
+/**
+ * 파일 한 칸 — 미리보기 그림, 이름, 올린 사람·크기.
+ *
+ * 칸을 누르면 내려받고, 올린 본인과 운영진에게는 오른쪽 위에 ⋯ 단추가
+ * 붙어 이름 바꾸기·지우기를 할 수 있습니다. 행사 사진 앨범 칸과 같은 짜임새라
+ * 자료 탭 안에서 두 서브탭이 한 몸으로 읽힙니다.
+ */
+function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const thumbnail = fileThumbnailUrl(file.url);
 
   async function handleDelete() {
+    setMenuOpen(false);
     if (deleting) return;
     if (!window.confirm(`"${file.name}"을 목록에서 지울까요?`)) return;
     setDeleting(true);
@@ -260,40 +274,186 @@ function FileRow({ file, canDelete }: { file: FileDoc; canDelete: boolean }) {
   }
 
   return (
-    <li className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2.5 shadow-[var(--shadow-card)]">
-      {/* 확장자를 그대로 배지로. 아이콘을 종류마다 만들지 않아도 무엇인지 압니다. */}
-      <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl bg-brand-50 text-[11px] font-bold text-brand-500 uppercase">
-        {file.format ? file.format.slice(0, 4) : "파일"}
-      </span>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-bold text-ink">{file.name}</p>
-        <p className="mt-0.5 truncate text-[12px] text-ink-faint">
-          {file.uploadedByName} · {formatBytes(file.bytes)}
-        </p>
-      </div>
-
+    <li className="relative">
       <a
         href={downloadUrl(file.url)}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 rounded-full px-2.5 py-1.5 text-[13px] font-bold text-brand-500 active:bg-fill"
+        className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
       >
-        받기
+        <div className="flex aspect-[4/3] w-full items-center justify-center bg-canvas">
+          {thumbnail ? (
+            /*
+              문서는 c_fit으로 통째로 담아 왔으므로(lib/cloudinary.ts) 여기서도
+              object-contain으로 둡니다. object-cover로 채우면 첫 장의 제목이
+              잘려 나가 무슨 문서인지 알아볼 수 없습니다.
+            */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={thumbnail}
+              alt={`${file.name} 미리보기`}
+              loading="lazy"
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            /*
+              그림을 만들 수 없는 파일(한글·엑셀·워드·압축)은 확장자를 크게 답니다.
+              종류마다 아이콘을 그리지 않아도 무엇인지 한눈에 압니다.
+            */
+            <span className="text-[15px] font-bold tracking-wide text-brand-300 uppercase">
+              {file.format ? file.format.slice(0, 5) : "파일"}
+            </span>
+          )}
+        </div>
+
+        <div className="px-3 py-2.5">
+          <p className="line-clamp-2 text-[14px] leading-snug font-bold text-ink">
+            {file.name}
+          </p>
+          <p className="mt-1 truncate text-[12px] text-ink-faint">
+            {file.uploadedByName} · {formatBytes(file.bytes)}
+          </p>
+        </div>
       </a>
 
-      {/* 지우기는 올린 본인과 운영진만. 보안 규칙도 같이 막습니다. */}
-      {canDelete ? (
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting}
-          className="shrink-0 rounded-full px-2 py-1.5 text-[13px]! font-bold text-ink-faint transition active:text-danger disabled:opacity-50"
-        >
-          지우기
-        </button>
+      {/* 이름 바꾸기·지우기는 올린 본인과 운영진만. 보안 규칙도 같이 막습니다. */}
+      {canManage ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={`${file.name} 관리`}
+            className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/45 text-[15px]! leading-none font-bold text-white backdrop-blur-sm transition active:scale-95"
+          >
+            ⋯
+          </button>
+
+          {menuOpen ? (
+            <>
+              {/* 밖을 누르면 닫힙니다. */}
+              <span
+                aria-hidden="true"
+                className="fixed inset-0 z-30"
+                onPointerDown={() => setMenuOpen(false)}
+              />
+              {/*
+                채팅 말풍선의 수정·삭제 박스와 같은 모양입니다.
+                앱 안에서 "이 하나에 대해 뭘 할지" 고르는 자리는 늘 이 생김새입니다.
+              */}
+              <div className="absolute top-9 right-1.5 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setRenaming(true);
+                  }}
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
+                >
+                  이름 바꾸기
+                </button>
+                <span className="h-px bg-white/15" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D] disabled:opacity-50"
+                >
+                  지우기
+                </button>
+              </div>
+            </>
+          ) : null}
+        </>
+      ) : null}
+
+      {renaming ? (
+        <FileRenameSheet file={file} onClose={() => setRenaming(false)} />
       ) : null}
     </li>
+  );
+}
+
+/**
+ * 파일 이름을 바꾸는 바텀시트.
+ *
+ * 바꾸는 것은 **화면에 보이는 이름뿐**입니다. Cloudinary에 올라간 실물의
+ * 이름은 그대로입니다 — 그걸 바꾸려면 서명이 필요한데 그 비밀 키를 브라우저에
+ * 둘 수 없습니다. 내려받으면 원래 올린 이름으로 저장되는 이유입니다.
+ */
+function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void }) {
+  const [name, setName] = useState(file.name);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("이름을 입력해 주세요.");
+      return;
+    }
+    if (trimmed === file.name) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await commitWrite(updateDoc(doc(db, "files", file.id), { name: trimmed }));
+      onClose();
+    } catch (caught) {
+      setError(saveErrorMessage(caught, "이름을 바꾸지 못했어요."));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="파일 이름 바꾸기"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+      >
+        <h2 className="mb-6 text-[20px] font-bold text-ink">파일 이름 바꾸기</h2>
+
+        <div className="mb-6">
+          <FieldLabel htmlFor="file-name">이름</FieldLabel>
+          <input
+            id="file-name"
+            value={name}
+            onChange={(changed) => {
+              setName(changed.target.value);
+              setError(null);
+            }}
+            placeholder="예) 3회차 강의자료"
+            className={inputClassName}
+          />
+        </div>
+
+        {error ? <FieldError>{error}</FieldError> : null}
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl bg-fill px-6 py-4 text-[15px] font-bold text-ink-muted"
+          >
+            취소
+          </button>
+          <PrimaryButton type="submit" loading={saving}>
+            저장
+          </PrimaryButton>
+        </div>
+      </form>
+    </div>
   );
 }
 
