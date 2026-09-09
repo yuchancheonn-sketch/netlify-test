@@ -19,9 +19,9 @@ import {
   useApprovedMembers,
   useChatReadTimes,
   useMyChatRooms,
-  useUnreadCounts,
+  useUnreadRooms,
 } from "@/lib/hooks";
-import { COHORT, UNREAD_BADGE_MAX } from "@/lib/constants";
+import { COHORT } from "@/lib/constants";
 import type { ChatRoomDoc, UserDoc } from "@/lib/types";
 
 /**
@@ -36,7 +36,7 @@ export default function ChatListPage() {
 
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
-  const unreadCounts = useUnreadCounts(uid, readMillis, loaded);
+  const unreadRooms = useUnreadRooms(uid, rooms, readMillis, loaded);
 
   const memberByUid = useMemo(() => {
     const map = new Map<string, UserDoc>();
@@ -112,7 +112,7 @@ export default function ChatListPage() {
                     }
                     /* 단체방 이름 옆에 몇 명인지 — 1:1은 둘뿐이라 적지 않습니다. */
                     memberCount={room.kind === "group" ? members.length : undefined}
-                    unread={unreadCounts[room.id] ?? 0}
+                    unread={unreadRooms[room.id] ?? false}
                   />
                 </li>
               ))}
@@ -136,12 +136,12 @@ export default function ChatListPage() {
 }
 
 /**
- * 목록 한 줄 — 사진, 이름(+인원), 마지막 메시지, 시각, 안 읽은 개수.
+ * 목록 한 줄 — 사진, 이름(+인원), 마지막 메시지, 시각, 새 메시지 점.
  *
  * 방마다 흰 카드를 하나씩 두릅니다. 다른 탭의 카드들과 같은 결입니다.
  *
  * 안은 카톡 대화 목록의 짜임새를 따릅니다 — 사진은 모서리 둥근 네모,
- * 이름 옆에 인원, 시각과 안 읽은 개수는 오른쪽에 위아래로. 시각을 이름 옆에
+ * 이름 옆에 인원, 시각과 새 메시지 점은 오른쪽에 위아래로. 시각을 이름 옆에
  * 두면 이름이 길 때 시각이 밀려나기 때문입니다.
  */
 function ChatRoomRow({
@@ -157,7 +157,8 @@ function ChatRoomRow({
   other?: UserDoc;
   /** 단체방 이름 옆에 적을 인원 수. 1:1이면 없습니다. */
   memberCount?: number;
-  unread: number;
+  /** 이 방에 안 읽은 새 메시지가 있는지. 몇 개인지는 세지 않습니다. */
+  unread: boolean;
 }) {
   const preview = previewText(room);
   const isGroup = room.kind === "group";
@@ -223,10 +224,15 @@ function ChatRoomRow({
           </time>
         ) : null}
 
-        {unread > 0 ? (
-          <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white tabular-nums">
-            {unread > UNREAD_BADGE_MAX ? `${UNREAD_BADGE_MAX}+` : unread}
-            <span className="sr-only">개 안 읽음</span>
+        {/*
+          새 메시지가 있으면 빨간 점 하나. 개수는 세지 않습니다 (useUnreadRooms).
+          시각과 세로로 나란히 서므로, 점만 있는 줄에서도 자리가 흔들리지 않게
+          점을 22px 높이 안에 가운데로 담습니다 — 숫자 배지가 있던 자리입니다.
+        */}
+        {unread ? (
+          <span className="flex h-[22px] items-center">
+            <span aria-hidden="true" className="h-[10px] w-[10px] rounded-full bg-red-500" />
+            <span className="sr-only">새 메시지 있음</span>
           </span>
         ) : null}
       </div>

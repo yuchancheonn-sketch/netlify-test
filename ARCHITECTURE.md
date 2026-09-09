@@ -188,7 +188,7 @@
 | [auth-context.tsx](src/lib/auth-context.tsx) | 로그인 상태 + 내 프로필 구독 → `stage` 하나로 압축. 로그인 실패 코드를 한국어로 번역. 팝업이 막히면 리디렉트로 재시도 |
 | [types.ts](src/lib/types.ts) | 모든 Firestore 문서 모양. **옛 필드를 왜 안 지웠는지**가 주석에 남아 있음 |
 | [constants.ts](src/lib/constants.ts) | 앱 이름·기수·기간·색·글자 제한·타임아웃. 기수가 바뀌면 여기만 고침 |
-| [hooks.ts](src/lib/hooks.ts) | **데이터 구독 전부.** `useApprovedMembers` `useEvents` `useSessions` `useMessages` `useMyChatRooms` `useUnreadCounts` … 정렬은 색인을 안 만들려고 대부분 앱에서 함 |
+| [hooks.ts](src/lib/hooks.ts) | **데이터 구독 전부.** `useApprovedMembers` `useEvents` `useSessions` `useMessages` `useMyChatRooms` `useUnreadRooms` … 정렬은 색인을 안 만들려고 대부분 앱에서 함 |
 | [firestore-commit.ts](src/lib/firestore-commit.ts) | `commitWrite()` — 저장을 **2.5초까지만** 기다리고 `"queued"`로 넘어감. 오프라인 캐시 때문에 약속이 영영 안 풀리는 문제의 해법 |
 | [directory.ts](src/lib/directory.ts) | `users` + `roster`를 **이름 가나다순 한 권**으로 합침. 본인이 채운 값이 명단 값보다 우선 |
 | [roster-link.ts](src/lib/roster-link.ts) | 프로필 저장 시 같은 이름 명단을 찾아 `linkedUid`로 못 박고 정보를 옮겨 담음 (directory.ts가 눈속임이면 이쪽이 실제 통합) |
@@ -260,26 +260,28 @@
 
 한편 **다른 원우 화면에서는** `useMessages`의 `onSnapshot`이 즉시 새 메시지를 받아 그립니다. 알림과 화면 갱신은 완전히 별개 경로입니다.
 
-### 8-2. 안 읽은 개수 배지
+### 8-2. 새 메시지 빨간 점
 
-이 앱에서 제일 까다로운 부분입니다.
+**개수를 세지 않습니다.** 인스타그램처럼 점 하나만 띄웁니다.
 
 ```
-useMyChatRooms      내가 낀 방 목록
+useMyChatRooms      내가 낀 방 목록 (lastMessageAt·lastMessageSenderId가 여기 실려 옴)
     ↓
 useChatReadTimes    chatReads/{uid} 구독 → 방별 "마지막으로 본 시각"
     │  ★ serverTimestamps: "estimate"  ─ 없으면 서버 도착 전까지 null로 보여
-    │     배지가 안 사라짐
+    │     점이 안 꺼짐
     │  ★ 기록 없는 방은 지금 시각으로 기준을 잡되 requested Set으로 화면당 한 번만
     │     (2026-09-05, 이 되먹임으로 Firestore 무료 한도를 태웠음)
     ↓
-useUnreadCounts     방마다 createdAt > 본 시각 인 메시지를 최대 99개까지만 구독
-    │               내가 보낸 건 제외
+useUnreadRooms      lastMessageAt > 본 시각 이고 내가 보낸 게 아니면 점을 켬
+    │               ★ 질의를 걸지 않습니다 — 추가 읽기 0건
     ↓
-useUnreadChatCount  전부 합쳐 탭바 배지로
+useHasUnreadChat    하나라도 켜졌으면 탭바에 점
 ```
 
-읽음 기록은 **8초에 한 번만**(`MARK_READ_GAP`) 씁니다. 메시지마다 쓰면 단체방 40명 × 메시지 1통 = 쓰기 40건이 나가고, 그 기록이 바뀔 때마다 안읽음 구독이 전부 끊겼다 붙습니다.
+**예전에는 방마다 "본 시각 이후의 메시지" 질의를 하나씩 걸어 개수를 셌습니다.** 그런데 Firestore는 결과가 0건인 질의에도 읽기 1건을 물리고, 보안 규칙의 `isMember()`가 구독마다 내 문서를 한 번 더 읽습니다. 다 읽은 방도 값을 내는 셈이라 **방 하나당 두 건 × 방 개수**가 화면을 열 때마다 나갔습니다. 기수를 늘리면 여기에 사람 수가 곱해집니다. 지금은 이미 구독 중인 방 목록과 읽음 기록을 견주기만 하므로 추가 읽기가 없습니다. 잃은 것은 숫자뿐입니다.
+
+읽음 기록은 **8초에 한 번만**(`MARK_READ_GAP`) 씁니다. 메시지마다 쓰면 단체방 40명 × 메시지 1통 = 쓰기 40건이 나갑니다.
 
 ### 8-3. 원우수첩 — 가입자와 미가입자가 한 줄로 합쳐지는 과정
 

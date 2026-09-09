@@ -11,8 +11,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
-import { useUnreadChatCount } from "@/lib/hooks";
-import { UNREAD_BADGE_MAX } from "@/lib/constants";
+import { useHasUnreadChat } from "@/lib/hooks";
 
 /**
  * 하단 탭 5개 (기획서 A안).
@@ -167,7 +166,7 @@ export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  const unreadChatCount = useUnreadChatCount(user?.uid);
+  const hasUnreadChat = useHasUnreadChat(user?.uid);
 
   const listRef = useRef<HTMLUListElement>(null);
   const [drag, setDrag] = useState<PillDrag | null>(null);
@@ -442,11 +441,12 @@ export default function BottomTabBar() {
           // 탭의 첫 화면에 이미 서 있는지 (하위 화면에 들어와 있는 것과 구분합니다)
           const atTabRoot = pathname === href;
           /*
-           * 안 읽은 개수 배지는 채팅에만 답니다. 모든 방을 통틀어 센 개수입니다.
+           * 새 메시지 표시는 채팅에만 답니다. 개수가 아니라 빨간 점 하나입니다
+           * (인스타그램과 같은 방식). 어느 방이든 안 읽은 것이 있으면 켜집니다.
            * 대화방 안에서는 탭바 자체가 없으므로(MainShell) 여기서 가릴 일은 없고,
            * 채팅 목록에서는 어느 방이 안 읽혔는지 줄마다 따로 표시됩니다.
            */
-          const badge = href === "/chat" ? unreadChatCount : 0;
+          const showDot = href === "/chat" && hasUnreadChat;
           /*
            * 회색 알약이 덮은 탭은 아이콘과 글씨가 브랜드 주황이 되고 아이콘 속까지
            * 꽉 찹니다. 알약을 끌면 색이 알약을 따라 옮겨 다닙니다.
@@ -491,13 +491,18 @@ export default function BottomTabBar() {
                     filled={covered}
                   />
 
-                  {badge > 0 ? (
+                  {/*
+                    아이콘 오른쪽 위에 얹는 빨간 점.
+
+                    둘레의 흰 테는 점을 아이콘에서 떼어놓는 역할입니다 —
+                    테가 없으면 아이콘 선과 붙어 한 덩어리로 보입니다.
+                    (숫자 배지였을 때부터 같은 이유로 두르고 있었습니다.)
+                  */}
+                  {showDot ? (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-1 left-[calc(50%+6px)] flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums"
-                    >
-                      {badge > UNREAD_BADGE_MAX ? `${UNREAD_BADGE_MAX}+` : badge}
-                    </span>
+                      className="absolute -top-0.5 left-[calc(50%+5px)] h-[9px] w-[9px] rounded-full border-2 border-white bg-red-500"
+                    />
                   ) : null}
                 </span>
                 {/*
@@ -511,10 +516,8 @@ export default function BottomTabBar() {
                   }`}
                 >
                   {label}
-                  {/* 배지 숫자는 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
-                  {badge > 0 ? (
-                    <span className="sr-only">, 안 읽은 메시지 {badge}개</span>
-                  ) : null}
+                  {/* 빨간 점은 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
+                  {showDot ? <span className="sr-only">, 새 메시지 있음</span> : null}
                 </span>
               </Link>
             </li>

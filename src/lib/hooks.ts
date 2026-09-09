@@ -8,13 +8,12 @@ import {
   onSnapshot,
   orderBy,
   query,
-  Timestamp,
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
 import { emptyGroupRoom, toChatRoom } from "@/lib/chat-rooms";
-import { MAIN_CHAT_ROOM_ID, UNREAD_BADGE_MAX } from "@/lib/constants";
+import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
 import { todayString } from "@/lib/format";
 import type {
   ChatReadDoc,
@@ -538,7 +537,7 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
   /*
    * 기록이 없는 방은 지금 시각으로 기준을 잡아 둡니다.
    * serverTimestamp()가 서버에 닿기 전까지는 값이 null로 보이므로,
-   * 그동안은 아래 useUnreadCounts가 그 방을 세지 않습니다.
+   * 그동안은 아래 useUnreadRooms가 그 방의 점을 켜지 않습니다.
    *
    * ★ requested가 없으면 안 됩니다 — 여기서 무한 되먹임이 생깁니다.
    *   쓰기를 보내면 서버에 닿기 전에도 그 값이 담긴 스냅샷이 곧바로 돌아오는데,
@@ -570,85 +569,64 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
 }
 
 /**
- * 방마다 아직 안 읽은 메시지 개수.
+ * 방마다 새 메시지가 왔는지 (안 읽음 여부).
  *
- * 내가 보낸 메시지는 세지 않고, 방마다 UNREAD_BADGE_MAX개까지만 셉니다.
- * 마지막으로 본 시각 이후의 메시지만 받아오므로 다 읽은 방은 0건을 구독합니다.
+ * ★ 개수를 세지 않습니다. 인스타그램처럼 빨간 점 하나만 띄웁니다.
+ *
+ * 개수를 세려면 방마다 "마지막으로 본 시각 이후의 메시지" 질의를 하나씩
+ * 걸어야 했습니다. 그런데 Firestore는 **결과가 0건인 질의에도 읽기 1건을
+ * 물립니다.** 다 읽어서 셀 것이 없는 방도 값을 내는 셈이라, 앱을 열 때마다
+ * 방 개수만큼 읽기가 나갔습니다. 보안 규칙의 isMember()가 구독마다 내
+ * 문서를 한 번 더 읽으므로 실제로는 방 하나당 두 건이었습니다.
+ * 방이 서른 개면 화면을 열 때마다 아흔 건입니다 — 기수를 늘리면 이 값에
+ * 사람 수가 곱해집니다.
+ *
+ * 여기서는 질의를 아예 걸지 않습니다. 방 문서에 이미 마지막 메시지의
+ * 시각과 보낸 사람이 적혀 있고(lastMessageAt·lastMessageSenderId), 방 목록과
+ * 읽음 기록은 어차피 구독 중입니다. 그 둘을 견주기만 하므로 **추가 읽기가
+ * 0건**입니다. 잃는 것은 숫자뿐입니다.
  */
-export function useUnreadCounts(
+export function useUnreadRooms(
   uid: string | undefined,
+  rooms: ChatRoomDoc[],
   readMillis: Record<string, number>,
   loaded: boolean,
-): Record<string, number> {
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  /*
-   * 방 목록과 기준 시각을 한 줄로 묶어 둡니다.
-   * 객체를 그대로 의존성에 넣으면 렌더마다 새 객체라 구독이 계속 끊겼다 붙습니다.
-   */
-  const signature = Object.entries(readMillis)
-    .map(([roomId, millis]) => `${roomId}:${millis}`)
-    .sort()
-    .join("|");
+): Record<string, boolean> {
+  return useMemo(() => {
+    const map: Record<string, boolean> = {};
+    if (!uid || !loaded) return map;
 
-  useEffect(() => {
-    if (!uid || !loaded || !signature) return;
-
-    const unsubscribes = signature.split("|").map((pair) => {
-      const cut = pair.lastIndexOf(":");
-      const roomId = pair.slice(0, cut);
-      const since = Number(pair.slice(cut + 1));
+    for (const room of rooms) {
+      const lastAt = room.lastMessageAt?.toMillis() ?? 0;
+      const since = readMillis[room.id] ?? 0;
 
       /*
-       * 기준 시각이 아직 정해지지 않은 방(0)은 셀 수가 없습니다.
-       * 그냥 넘어가면 직전에 세어둔 숫자가 배지에 그대로 남으므로, 0으로
-       * 지우고 넘어갑니다. 모르는 채로 옛 숫자를 띄우는 것보다 낫습니다.
+       * 점을 켜는 조건은 넷입니다.
+       *  · 한 마디라도 오간 방이어야 합니다 (lastAt).
+       *  · 기준 시각이 잡혀 있어야 합니다 (since). 아직 안 잡힌 방은
+       *    useChatReadTimes가 지금 시각으로 남기는 중이므로, 그때까지는
+       *    읽은 것으로 봅니다. 안 그러면 처음 들어온 사람에게 모든 방이
+       *    빨갛게 켜집니다.
+       *  · 마지막 메시지가 그 기준보다 뒤에 왔어야 합니다.
+       *  · 그 메시지를 내가 보낸 것이 아니어야 합니다. 내가 마지막으로
+       *    말한 방에 점이 켜지면 안 됩니다.
        */
-      if (!since) {
-        setCounts((previous) =>
-          previous[roomId] === 0 ? previous : { ...previous, [roomId]: 0 },
-        );
-        return () => {};
-      }
-
-      const unreadQuery = query(
-        collection(db, "chatRooms", roomId, "messages"),
-        where("createdAt", ">", Timestamp.fromMillis(since)),
-        orderBy("createdAt", "desc"),
-        limit(UNREAD_BADGE_MAX + 1),
-      );
-
-      return onSnapshot(
-        unreadQuery,
-        (snapshot) => {
-          const fromOthers = snapshot.docs.filter(
-            (document) => (document.data() as MessageDoc).senderId !== uid,
-          );
-          setCounts((previous) =>
-            previous[roomId] === fromOthers.length
-              ? previous
-              : { ...previous, [roomId]: fromOthers.length },
-          );
-        },
-        () => setCounts((previous) => ({ ...previous, [roomId]: 0 })),
-      );
-    });
-
-    return () => unsubscribes.forEach((stop) => stop());
-  }, [uid, loaded, signature]);
-
-  return counts;
+      map[room.id] =
+        lastAt > 0 && since > 0 && lastAt > since && room.lastMessageSenderId !== uid;
+    }
+    return map;
+  }, [uid, rooms, readMillis, loaded]);
 }
 
 /**
- * 하단 탭 배지에 띄울, 모든 방을 통틀어 안 읽은 메시지 개수.
- * 배지 하나만 필요한 곳(탭바)에서 씁니다.
+ * 하단 탭에 빨간 점을 띄울지 — 어느 방이든 새 메시지가 있으면 참.
+ * 점 하나만 필요한 곳(탭바)에서 씁니다.
  */
-export function useUnreadChatCount(uid?: string): number {
+export function useHasUnreadChat(uid?: string): boolean {
   const { data: rooms } = useMyChatRooms(uid);
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
-  const counts = useUnreadCounts(uid, readMillis, loaded);
+  const unread = useUnreadRooms(uid, rooms, readMillis, loaded);
 
-  // 나갔거나 사라진 방의 옛 개수가 남아 더해지지 않도록 지금 목록만 훑습니다.
-  return roomIds.reduce((total, roomId) => total + (counts[roomId] ?? 0), 0);
+  return rooms.some((room) => unread[room.id]);
 }
