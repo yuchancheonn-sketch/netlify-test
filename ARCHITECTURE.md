@@ -222,7 +222,6 @@
 | [MainShell.tsx](src/components/MainShell.tsx) | 폭 560px 가운데 정렬, 탭바 자리 여백, **대화방에서는 탭바 숨김**, 탭바 아래 흐림 층 |
 | [BottomTabBar.tsx](src/components/BottomTabBar.tsx) | 알약 탭바. 같은 탭 다시 누르면 맨 위로, 손가락으로 알약 끌기, 채팅 안읽음 배지 |
 | [PageHeader.tsx](src/components/PageHeader.tsx) | 제목 줄 + 뒤로가기 + 오른쪽 프로필·설정 아이콘. `safe-area-inset-top` 직접 챙김 |
-| [PortraitGuard.tsx](src/components/PortraitGuard.tsx) | 폰을 눕히면 덮음. **진짜 잠그는 게 아님** — 잠글 방법이 없어서 CSS로 덮음 |
 | [ThemeSync.tsx](src/components/ThemeSync.tsx) | 앱을 켜 둔 채 폰 다크모드가 바뀌면 따라감 |
 | [PushSync.tsx](src/components/PushSync.tsx) / [PushPermissionPrompt.tsx](src/components/PushPermissionPrompt.tsx) | 토큰 갱신 / 첫 기기에 딱 한 번 묻기 (**아이폰은 손가락 누른 그 순간에 물어야** 창이 뜸) |
 | [ProfileForm.tsx](src/components/ProfileForm.tsx) | 온보딩·프로필 편집 공용. 사진 축소 → data URL, 저장 시 roster 연결 |

@@ -40,11 +40,12 @@ export default function PageHeader({
      * 위 여백은 최소한만 둡니다. 브라우저에서는 6px,
      * 홈 화면에 추가한 앱에서는 노치·상태바 높이를 더해 제목이 가리지 않게 합니다.
      * (viewport-fit: cover 라서 안전 영역을 직접 챙겨야 합니다.)
+     *
+     * ★ 그 값이 인라인 style이 아니라 globals.css의 .page-header에 있습니다.
+     *   세로가 짧을 때(눕힌 폰·자판이 올라온 화면) 제목을 한 단 줄이는데,
+     *   인라인 style로 두면 그 media query가 위 여백을 이기지 못합니다.
      */
-    <header
-      className="flex items-start gap-3 px-4 pb-3"
-      style={{ paddingTop: "calc(6px + env(safe-area-inset-top))" }}
-    >
+    <header className="page-header flex items-start gap-3 px-4 pb-3">
       {showBack ? (
         <button
           type="button"

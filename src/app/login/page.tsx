@@ -83,7 +83,7 @@ function LoginScreen() {
         만큼만 남깁니다. 여백이 작을수록 문구와 버튼이 아래로 내려갑니다.
       */}
       <div
-        className="relative flex min-h-dvh w-full flex-col px-7 pt-14"
+        className="login-screen relative flex min-h-dvh w-full flex-col px-7 pt-14"
         style={{ paddingBottom: "calc(36px + env(safe-area-inset-bottom))" }}
       >
         {/* 앱 아이콘 + 이름 */}

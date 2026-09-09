@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
-import PortraitGuard from "@/components/PortraitGuard";
 import ThemeSync from "@/components/ThemeSync";
 import { AuthProvider } from "@/lib/auth-context";
 import { APP_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
@@ -95,11 +94,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* 앱을 켜 둔 채로 폰의 다크 모드가 바뀌면 그때도 따라가게 합니다. */}
         <ThemeSync />
         <AuthProvider>{children}</AuthProvider>
-        {/*
-          폰을 가로로 눕혔을 때 덮는 화면. 로그인·가입 화면까지 모두 덮어야 해서
-          MainShell이 아니라 여기 둡니다.
-        */}
-        <PortraitGuard />
       </body>
     </html>
   );
