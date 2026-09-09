@@ -214,9 +214,38 @@ service cloud.firestore {
                       && isRoomMember(roomId)
                       && request.resource.data.senderId == request.auth.uid;
 
-        // 보낸 말은 고치거나 지울 수 없습니다.
-        // (지우기가 필요해지면 본인 것만 지우도록 여기를 열면 됩니다.)
-        allow update, delete: if false;
+        /*
+         * 지우기는 본인 것만. 남의 말은 운영진도 지울 수 없습니다.
+         *
+         * resource.data는 "지금 저장돼 있는 문서"라, 여기서 senderId를 보는 것은
+         * 곧 보낸 사람 본인인지 확인하는 것입니다. 방 안에 있다는 것만으로는
+         * 모자랍니다 — 그러면 1:1 상대가 내 말을 지울 수 있습니다.
+         */
+        allow delete: if isMember()
+                      && isRoomMember(roomId)
+                      && resource.data.senderId == request.auth.uid;
+
+        /*
+         * 고치기도 본인 것만. 다만 지우기보다 조건이 깁니다.
+         *
+         * 고치기는 "하지도 않은 말을 한 것처럼" 만들 수 있어서, 아무 칸이나
+         * 열어주면 안 됩니다. 세 가지를 못 박습니다.
+         *  1) hasOnly — 바꿀 수 있는 칸은 text와 editedAt **둘뿐**입니다.
+         *     senderId를 바꿔 남이 한 말로 떠넘기거나, createdAt을 당겨
+         *     대화 순서를 뒤집는 길이 여기서 막힙니다.
+         *  2) editedAt이 반드시 들어와야 합니다 — 고친 흔적을 지운 채로는
+         *     못 고칩니다. 화면의 "수정됨" 표시가 이 값에서 나옵니다.
+         *  3) text는 비어 있으면 안 됩니다. 빈 말풍선은 지운 것과 같은데,
+         *     지우기는 지우기로 해야 목록 미리보기까지 제대로 정리됩니다.
+         */
+        allow update: if isMember()
+                      && isRoomMember(roomId)
+                      && resource.data.senderId == request.auth.uid
+                      && request.resource.data.diff(resource.data)
+                           .affectedKeys().hasOnly(['text', 'editedAt'])
+                      && request.resource.data.editedAt == request.time
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
       }
     }
 

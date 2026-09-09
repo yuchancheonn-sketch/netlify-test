@@ -11,9 +11,11 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { requestPush } from "@/lib/push";
@@ -22,7 +24,7 @@ import {
   MAIN_CHAT_ROOM_ID,
   MAIN_CHAT_ROOM_TITLE,
 } from "@/lib/constants";
-import type { ChatRoomDoc, UserDoc } from "@/lib/types";
+import type { ChatRoomDoc, MessageDoc, UserDoc } from "@/lib/types";
 
 /** 1:1 방 id에서 두 사람의 uid를 잇는 글자. uid에는 쓰이지 않는 모양으로 골랐습니다. */
 const DIRECT_SEPARATOR = "__";
@@ -201,4 +203,97 @@ export async function sendChatMessage({
 
   // 이 방의 다른 원우들 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
   void requestPush("chat", { roomId, text });
+}
+
+/**
+ * 내가 보낸 메시지의 내용을 고칩니다.
+ *
+ * ★ 고친 흔적을 반드시 남깁니다 (editedAt). 흔적 없이 고칠 수 있으면
+ *   하지도 않은 말을 한 것처럼 만들 수 있어, 오간 대화가 증거가 되지 못합니다.
+ *   화면에서는 말풍선에 "수정됨"으로 나타납니다.
+ *
+ * ★ 보낸 사람과 보낸 시각은 건드리지 않습니다. 보안 규칙도 그 둘이 그대로인지
+ *   확인하고, 바뀐 칸이 text·editedAt뿐일 때만 통과시킵니다.
+ *
+ * 고친 메시지가 방의 마지막 말이면 채팅 목록 미리보기도 함께 고칩니다.
+ * 시각(lastMessageAt)은 그대로 둡니다 — 고친 것이지 새로 보낸 것이 아니므로,
+ * 방이 목록 맨 위로 다시 올라오면 안 됩니다.
+ */
+export async function editChatMessage({
+  roomId,
+  messageId,
+  text,
+  isLast,
+}: {
+  roomId: string;
+  messageId: string;
+  text: string;
+  /** 이게 방의 마지막 메시지인지 (맞으면 목록 미리보기도 고칩니다) */
+  isLast: boolean;
+}): Promise<void> {
+  await updateDoc(doc(db, "chatRooms", roomId, "messages", messageId), {
+    text,
+    editedAt: serverTimestamp(),
+  });
+
+  if (!isLast) return;
+
+  await setDoc(doc(db, "chatRooms", roomId), { lastMessageText: text }, { merge: true });
+}
+
+/**
+ * 내가 보낸 메시지를 지웁니다. 문서를 통째로 지우므로 모두의 화면에서 사라집니다.
+ *
+ * ★ 남의 메시지는 지울 수 없습니다. 화면에서 버튼을 감추는 것과 별개로
+ *   보안 규칙이 senderId를 보고 막습니다.
+ *
+ * ★ 이미 나간 푸시 알림은 되돌리지 못합니다.
+ *   알림은 보낼 때 상대 폰으로 이미 건너간 것이라, 지워도 잠금화면에 뜬 알림은
+ *   그대로 남습니다. 눌러서 들어오면 그 메시지가 없을 뿐입니다. 카톡도 같습니다.
+ *
+ * 마지막 메시지를 지울 때는 방 문서의 미리보기도 함께 고쳐야 합니다.
+ * 안 그러면 채팅 목록에 지운 말이 계속 걸려 있습니다. 바로 앞 메시지는
+ * 화면이 이미 들고 있으므로(useMessages), 그걸 넘겨받아 씁니다 —
+ * 앞 메시지를 찾겠다고 Firestore에 다시 물으면 읽기가 한 건 더 나갑니다.
+ */
+export async function deleteChatMessage({
+  roomId,
+  messageId,
+  isLast,
+  previous,
+}: {
+  roomId: string;
+  messageId: string;
+  /** 이게 방의 마지막 메시지인지 (맞으면 아래 previous로 미리보기를 되돌립니다) */
+  isLast: boolean;
+  /** 바로 앞 메시지. 지우는 것이 방의 유일한 메시지였으면 null */
+  previous: MessageDoc | null;
+}): Promise<void> {
+  await deleteDoc(doc(db, "chatRooms", roomId, "messages", messageId));
+
+  if (!isLast) return;
+
+  /*
+   * 앞 메시지가 없으면(방의 마지막 한 마디였으면) 미리보기를 비웁니다.
+   * lastMessageAt이 null이 되면 1:1 방은 채팅 목록에서 빠집니다 —
+   * 방은 첫 메시지를 보낼 때 생긴다는 규칙과 짝이 맞습니다.
+   */
+  const preview: Record<string, unknown> = {
+    lastMessageText: previous?.text ?? "",
+    lastMessageSenderId: previous?.senderId ?? "",
+  };
+
+  /*
+   * 시각은 값이 확실할 때만 적습니다.
+   *
+   * 앞 메시지를 방금 보냈다면 서버 시각이 아직 도착하지 않아 createdAt이
+   * 비어 있습니다. 그걸 그대로 쓰면 "메시지가 없는 방"이 되어 목록에서
+   * 사라집니다. 그럴 때는 시각만 손대지 않고 둡니다 — 다음 메시지가 오면
+   * 어차피 제 값으로 덮입니다.
+   */
+  if (!previous || previous.createdAt) {
+    preview.lastMessageAt = previous?.createdAt ?? null;
+  }
+
+  await setDoc(doc(db, "chatRooms", roomId), preview, { merge: true });
 }

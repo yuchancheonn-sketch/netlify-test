@@ -173,6 +173,14 @@ export interface MessageDoc {
   text: string;
   imageUrl: string | null;
   createdAt: Timestamp | null;
+  /**
+   * 마지막으로 고친 시각. 한 번도 안 고쳤으면 없습니다.
+   *
+   * 있기만 하면 말풍선에 "수정됨"을 붙입니다. 고친 흔적을 남기지 않으면
+   * 하지도 않은 말을 한 것처럼 만들 수 있어서, 값 자체보다 **있다는 사실**이
+   * 중요합니다. 언제 고쳤는지까지 보여주지는 않습니다.
+   */
+  editedAt?: Timestamp | null;
 }
 
 /**
