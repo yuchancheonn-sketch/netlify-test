@@ -173,8 +173,13 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
         카드 바탕과 같은 흰색 위에 테두리만 둘러, 물음이 카드 안의 또 다른
         판처럼 보이게 합니다.
       */}
-      <div className="rounded-2xl border border-line px-4 py-4 text-center">
-        <p className="text-[16px] leading-relaxed font-bold whitespace-pre-wrap text-ink">
+      {/*
+        물음이 이 카드에서 가장 큰 글씨입니다 (19px — 카드 제목 "투표"보다도 큽니다).
+        답하기 전에 읽어야 하는 단 하나가 이것이라, 제목이나 선택지에 눌리면
+        안 됩니다. 선관위 화면도 물음만 크게 띄웁니다.
+      */}
+      <div className="rounded-2xl border border-line px-4 py-5 text-center">
+        <p className="text-[19px] leading-relaxed font-bold whitespace-pre-wrap text-ink">
           {poll.question}
         </p>
       </div>
@@ -377,8 +382,13 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-line px-4 py-4 text-center">
-        <p className="text-[16px] leading-relaxed font-bold whitespace-pre-wrap text-ink">
+      {/*
+        물음이 이 카드에서 가장 큰 글씨입니다 (19px — 카드 제목 "투표"보다도 큽니다).
+        답하기 전에 읽어야 하는 단 하나가 이것이라, 제목이나 선택지에 눌리면
+        안 됩니다. 선관위 화면도 물음만 크게 띄웁니다.
+      */}
+      <div className="rounded-2xl border border-line px-4 py-5 text-center">
+        <p className="text-[19px] leading-relaxed font-bold whitespace-pre-wrap text-ink">
           {poll.question}
         </p>
       </div>
