@@ -135,6 +135,14 @@ export const POLL_OPTION_MAX_LENGTH = 20;
 export const POLL_MIN_OPTIONS = 2;
 export const POLL_MAX_OPTIONS = 4;
 
+/**
+ * 익명 의견 한 줄의 최대 글자 수.
+ *
+ * 느낀점(1000자)보다 훨씬 짧게 둡니다. 의견 모으기는 여러 사람의 말을
+ * 한 화면에 죽 늘어놓고 훑는 자리라, 한 사람이 길게 쓰면 나머지가 묻힙니다.
+ */
+export const OPINION_MAX_LENGTH = 200;
+
 /** 한줄 소개 최대 글자 수 */
 export const BIO_MAX_LENGTH = 50;
 

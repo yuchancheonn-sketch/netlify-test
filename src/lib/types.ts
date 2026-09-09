@@ -155,6 +155,14 @@ export interface PhotoDoc {
  */
 export interface PollDoc {
   id: string;
+  /**
+   * 무엇을 모으는 자리인지.
+   *  - vote: 고를 것을 미리 정해 두고 표를 셉니다.
+   *  - opinion: 정해진 답 없이 글을 **익명으로** 모읍니다.
+   *
+   * 이 칸이 없는 옛 문서는 vote로 봅니다 (투표가 먼저 있었습니다).
+   */
+  kind?: "vote" | "opinion";
   /** 물어보는 것. 홈 카드의 네모 안에 그대로 들어갑니다. */
   question: string;
   /** 고를 수 있는 것들 (2~4개). 표는 이 배열의 자리(index)로 셉니다. */
@@ -184,6 +192,31 @@ export interface PollVoteDoc {
   /** options 배열에서 고른 자리 */
   optionIndex: number;
   votedAt: Timestamp | null;
+}
+
+/**
+ * polls/{pollId}/opinions/{자동id} — 익명으로 모은 의견 한 줄.
+ *
+ * ★ 누가 썼는지 **아무 데도 적지 않습니다.** uid도 이름도 없고, 문서 id마저
+ *   자동으로 만든 값이라 여기서 사람을 되짚을 길이 없습니다. 운영진이 콘솔을
+ *   열어도 마찬가지입니다.
+ *
+ *   표(votes)와 정반대인 점이 여기입니다. 표는 문서 id가 곧 uid라 누가 무엇을
+ *   골랐는지 서로 압니다 — 작은 모임의 투표라 그렇게 두었습니다. 하지만 의견은
+ *   이름이 붙는 순간 하고 싶은 말을 못 하게 되므로 반대로 설계했습니다.
+ *
+ *   보안 규칙이 text와 createdAt 말고는 **어떤 칸도 못 넣게** 막고 있어서,
+ *   이 익명성은 약속이 아니라 구조로 지켜집니다. 앱을 고쳐 uid를 몰래 끼워
+ *   넣으려 해도 규칙이 그 쓰기를 거절합니다.
+ *
+ * 대신 잃는 것도 분명합니다 — 내가 쓴 글을 나중에 골라 지울 수 없습니다.
+ * 어느 것이 내 것인지 앱도 모르기 때문입니다. 지우는 것은 의견을 모은 사람과
+ * 운영진만 할 수 있습니다.
+ */
+export interface OpinionDoc {
+  id: string;
+  text: string;
+  createdAt: Timestamp | null;
 }
 
 /**

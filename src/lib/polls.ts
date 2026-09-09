@@ -10,6 +10,7 @@
  */
 
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -25,17 +26,21 @@ import type { PollDoc, UserDoc } from "@/lib/types";
  * 저장이 늦어도 화면이 곧바로 그 투표를 가리킬 수 있습니다.
  */
 export async function createPoll({
+  kind,
   question,
   options,
   author,
 }: {
+  kind: "vote" | "opinion";
   question: string;
+  /** 의견 모으기면 빈 배열입니다. */
   options: string[];
   author: { uid: string; profile: UserDoc | null };
 }): Promise<string> {
   const reference = doc(collection(db, "polls"));
 
   await setDoc(reference, {
+    kind,
     question,
     options,
     createdBy: author.uid,
@@ -45,6 +50,40 @@ export async function createPoll({
   });
 
   return reference.id;
+}
+
+/**
+ * 익명 의견 한 줄을 남깁니다.
+ *
+ * ★ 누가 썼는지 **적지 않습니다.** 여기서 uid나 이름을 함께 보내면 익명이
+ *   아니게 되고, 보안 규칙이 그 쓰기를 거절합니다(text·createdAt 외에는
+ *   어떤 칸도 못 넣게 막아 두었습니다). 그래서 익명성이 약속이 아니라
+ *   구조로 지켜집니다.
+ *
+ * 문서 id도 자동으로 만듭니다. 표(votes)처럼 uid를 id로 쓰면 목록만 훑어도
+ * 누가 무엇을 썼는지 다 드러납니다.
+ */
+export async function addOpinion({
+  pollId,
+  text,
+}: {
+  pollId: string;
+  text: string;
+}): Promise<void> {
+  await addDoc(collection(db, "polls", pollId, "opinions"), {
+    text,
+    createdAt: serverTimestamp(),
+  });
+}
+
+/**
+ * 의견 한 줄을 지웁니다. 모은 사람과 운영진만 할 수 있습니다.
+ *
+ * 내가 쓴 것만 골라 지우는 길은 없습니다 — 어느 것이 내 것인지 앱도 모르는
+ * 것이 익명의 값이기 때문입니다.
+ */
+export async function deleteOpinion(pollId: string, opinionId: string): Promise<void> {
+  await deleteDoc(doc(db, "polls", pollId, "opinions", opinionId));
 }
 
 /**

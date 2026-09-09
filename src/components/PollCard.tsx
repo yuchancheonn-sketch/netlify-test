@@ -4,17 +4,21 @@ import { useState } from "react";
 import { FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
 import { PlusIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
-import { usePolls, usePollVotes } from "@/lib/hooks";
+import { usePollOpinions, usePolls, usePollVotes } from "@/lib/hooks";
 import {
+  addOpinion,
   castVote,
   closePoll,
   countVotes,
   createPoll,
+  deleteOpinion,
   deletePoll,
   votePercent,
 } from "@/lib/polls";
 import { saveErrorMessage } from "@/lib/firestore-commit";
+import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
+  OPINION_MAX_LENGTH,
   POLL_MAX_OPTIONS,
   POLL_MIN_OPTIONS,
   POLL_OPTION_MAX_LENGTH,
@@ -91,8 +95,18 @@ export default function PollCard() {
   );
 }
 
-/** 투표 하나 — 고르는 중이거나, 이미 넣었으면 결과. */
+/** 투표든 의견 모으기든, 한 칸을 그립니다. */
 function OnePoll({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
+  // kind가 없는 옛 문서는 투표입니다 (투표가 먼저 있었습니다).
+  return poll.kind === "opinion" ? (
+    <OpinionBoard poll={poll} myUid={myUid} />
+  ) : (
+    <VoteBoard poll={poll} myUid={myUid} />
+  );
+}
+
+/** 투표 하나 — 고르는 중이거나, 이미 넣었으면 결과. */
+function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const { isAdmin } = useAuth();
   const { data: votes } = usePollVotes(poll.id);
 
@@ -298,6 +312,174 @@ function OnePoll({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   );
 }
 
+/**
+ * 의견 모으기 하나 — 익명으로 글을 받아 모아 보여줍니다.
+ *
+ * 투표와 짜임새는 같습니다(물음 네모 → 답하는 자리 → 만든 사람). 다른 점은
+ * 정해진 답이 없다는 것, 그리고 **누가 썼는지 어디에도 남지 않는다**는 것입니다.
+ */
+function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
+  const { isAdmin } = useAuth();
+  const { data: opinions } = usePollOpinions(poll.id);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const canManage = poll.createdBy === myUid || isAdmin;
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text || saving) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      await addOpinion({ pollId: poll.id, text });
+      setDraft("");
+    } catch (caught) {
+      setError(saveErrorMessage(caught, "의견을 남기지 못했어요."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteOpinion(opinionId: string) {
+    if (!window.confirm("이 의견을 지울까요?")) return;
+    try {
+      await deleteOpinion(poll.id, opinionId);
+    } catch {
+      setError("의견을 지우지 못했어요.");
+    }
+  }
+
+  async function handleClose() {
+    if (!window.confirm("의견 모으기를 닫을까요?\n모인 의견은 남지만 더는 못 받아요."))
+      return;
+    try {
+      await closePoll(poll.id);
+    } catch {
+      setError("닫지 못했어요.");
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("이것을 지울까요?\n모인 의견도 함께 사라집니다.")) return;
+    try {
+      await deletePoll(poll.id);
+    } catch {
+      setError("지우지 못했어요.");
+    }
+  }
+
+  return (
+    <div className="rounded-3xl bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card)]">
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <h2 className="text-[18px] font-bold text-ink">의견 모으기</h2>
+        <span className="shrink-0 text-[12px] font-medium text-ink-faint">
+          {opinions.length}개
+        </span>
+      </div>
+
+      <div className="rounded-2xl border border-line px-4 py-4 text-center">
+        <p className="text-[16px] leading-relaxed font-bold whitespace-pre-wrap text-ink">
+          {poll.question}
+        </p>
+      </div>
+
+      {/*
+        익명이라는 사실을 쓰기 전에 알려줍니다.
+        이 안내가 없으면 이름이 붙는 줄 알고 하고 싶은 말을 못 합니다 —
+        그 마음을 없애는 것이 이 기능의 전부입니다.
+      */}
+      <p className="mt-3 text-center text-[12px] leading-relaxed text-ink-faint">
+        익명으로 올라갑니다. 누가 썼는지는 운영진도 알 수 없어요.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-2">
+        <textarea
+          value={draft}
+          onChange={(event) => {
+            setDraft(event.target.value.slice(0, OPINION_MAX_LENGTH));
+            setError(null);
+          }}
+          rows={3}
+          placeholder="생각을 자유롭게 적어 주세요"
+          className={`${inputClassName} resize-none`}
+        />
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <span className="text-[12px] text-ink-faint tabular-nums">
+            {draft.length}/{OPINION_MAX_LENGTH}
+          </span>
+          <button
+            type="submit"
+            disabled={!draft.trim() || saving}
+            className="rounded-xl bg-brand-500 px-4 py-2 text-[14px]! font-bold text-white transition active:scale-95 disabled:bg-brand-200"
+          >
+            {saving ? "올리는 중…" : "의견 남기기"}
+          </button>
+        </div>
+      </form>
+
+      {opinions.length > 0 ? (
+        <ul className="mt-4 flex flex-col gap-2">
+          {opinions.map((opinion) => (
+            <li
+              key={opinion.id}
+              className="flex items-start gap-2 rounded-2xl bg-canvas px-4 py-3"
+            >
+              <p className="min-w-0 flex-1 text-[14px] leading-relaxed whitespace-pre-wrap text-ink">
+                {opinion.text}
+              </p>
+              {/* 지우기는 모은 사람과 운영진만. 본인 것만 고를 길은 없습니다. */}
+              {canManage ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteOpinion(opinion.id)}
+                  aria-label="이 의견 지우기"
+                  className="shrink-0 text-[12px]! font-bold text-ink-faint active:text-danger"
+                >
+                  지우기
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-3">
+        <span className="min-w-0 truncate text-[12px] text-ink-faint">
+          {poll.createdByName}님이 만듦
+        </span>
+        {canManage ? (
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="text-[12px]! font-bold text-ink-faint"
+            >
+              마감
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-[12px]! font-bold text-ink-faint active:text-danger"
+            >
+              지우기
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /** 표를 넣은 뒤 보이는 결과 — 자리마다 막대와 표 수. */
 function PollResult({
   poll,
@@ -353,9 +535,11 @@ function PollResult({
   );
 }
 
-/** 새 투표를 여는 바텀시트 */
+/** 새로 여는 바텀시트 — 투표와 의견 모으기 둘 중 하나를 고릅니다. */
 function PollCreateSheet({ onClose }: { onClose: () => void }) {
   const { user, profile } = useAuth();
+  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
+  const [kind, setKind] = useState<"vote" | "opinion">("vote");
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
   const [options, setOptions] = useState<string[]>(["찬성", "반대"]);
@@ -381,20 +565,26 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
-    if (trimmedOptions.length < POLL_MIN_OPTIONS) {
-      setError(`고를 것을 ${POLL_MIN_OPTIONS}개 이상 적어 주세요.`);
-      return;
-    }
-    if (new Set(trimmedOptions).size !== trimmedOptions.length) {
-      setError("고를 것에 같은 말이 두 번 들어 있어요.");
-      return;
+    // 고를 것은 투표에만 필요합니다. 의견 모으기는 정해진 답이 없습니다.
+    const trimmedOptions =
+      kind === "vote" ? options.map((option) => option.trim()).filter(Boolean) : [];
+
+    if (kind === "vote") {
+      if (trimmedOptions.length < POLL_MIN_OPTIONS) {
+        setError(`고를 것을 ${POLL_MIN_OPTIONS}개 이상 적어 주세요.`);
+        return;
+      }
+      if (new Set(trimmedOptions).size !== trimmedOptions.length) {
+        setError("고를 것에 같은 말이 두 번 들어 있어요.");
+        return;
+      }
     }
 
     setSaving(true);
     setError(null);
     try {
       await createPoll({
+        kind,
         question: trimmedQuestion,
         options: trimmedOptions,
         author: { uid: user.uid, profile },
@@ -414,83 +604,152 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
       aria-label="새 투표 만들기"
       onClick={onClose}
     >
-      <form
-        onSubmit={handleSubmit}
+      {/*
+        손잡이와 내용을 감싸는 바깥 상자. 원우 추가하기 시트와 같은 짜임새입니다 —
+        손잡이는 스크롤 바깥에 두고 안쪽 <form>만 따로 스크롤합니다.
+        손잡이까지 스크롤 안에 있으면 내용을 내렸을 때 손이 안 닿습니다.
+      */}
+      <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-canvas sm:rounded-[16px]"
+        style={sheetStyle}
       >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">새 투표 만들기</h2>
-
-        <div className="mb-5">
-          <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>
-          <input
-            id="poll-question"
-            value={question}
-            onChange={(changed) => {
-              setQuestion(changed.target.value.slice(0, POLL_QUESTION_MAX_LENGTH));
-              setError(null);
-            }}
-            placeholder="예) 수료식 날짜를 언제로 할까요?"
-            className={inputClassName}
-          />
+        {/* 손잡이 바 — 끌어내려 닫을 수 있습니다. */}
+        <div
+          {...handleTouchHandlers}
+          aria-hidden="true"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
+        >
+          <div className="h-1.5 w-10 rounded-full bg-line" />
         </div>
 
-        <div className="mb-5">
-          <FieldLabel htmlFor="poll-option-0">고를 것</FieldLabel>
-          <div className="flex flex-col gap-2">
-            {options.map((option, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  id={`poll-option-${index}`}
-                  value={option}
-                  onChange={(changed) => setOption(index, changed.target.value)}
-                  placeholder={`${index + 1}번`}
-                  className={inputClassName}
-                />
-                {/* 두 개까지는 지울 수 없습니다 — 하나만 남으면 물어볼 것이 없습니다. */}
-                {options.length > POLL_MIN_OPTIONS ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setOptions((previous) => previous.filter((_, at) => at !== index))
-                    }
-                    aria-label={`${index + 1}번 지우기`}
-                    className="shrink-0 rounded-full px-2 py-2 text-[13px]! font-bold text-ink-faint active:text-danger"
-                  >
-                    지우기
-                  </button>
-                ) : null}
-              </div>
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+        >
+          <h2 className="mb-5 text-[19px] font-bold text-ink">새로 만들기</h2>
+
+          {/*
+            무엇을 만들지 먼저 고릅니다. 자료 탭·원우수첩의 서브탭과 같은
+            알약 고르개라, 앱 안에서 "둘 중 하나 고르기"는 늘 같은 모양입니다.
+          */}
+          <div className="mb-5 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
+            {(
+              [
+                { value: "vote", label: "투표" },
+                { value: "opinion", label: "의견 모으기" },
+              ] as const
+            ).map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setKind(value);
+                  setError(null);
+                }}
+                aria-pressed={kind === value}
+                className={`flex-1 rounded-full pt-1 pb-2 text-[14px]! font-bold transition ${
+                  kind === value ? "bg-brand-500 text-white" : "text-ink-muted"
+                }`}
+              >
+                {label}
+              </button>
             ))}
           </div>
 
-          {options.length < POLL_MAX_OPTIONS ? (
+          <div className="mb-5">
+            <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>
+            <input
+              id="poll-question"
+              value={question}
+              onChange={(changed) => {
+                setQuestion(changed.target.value.slice(0, POLL_QUESTION_MAX_LENGTH));
+                setError(null);
+              }}
+              placeholder={
+                kind === "vote"
+                  ? "예) 수료식 날짜를 언제로 할까요?"
+                  : "예) 남은 기간에 바라는 점이 있나요?"
+              }
+              className={inputClassName}
+            />
+          </div>
+
+          {kind === "vote" ? (
+            <div className="mb-5">
+              <FieldLabel htmlFor="poll-option-0">고를 것</FieldLabel>
+              <div className="flex flex-col gap-2">
+                {options.map((option, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      id={`poll-option-${index}`}
+                      value={option}
+                      onChange={(changed) => setOption(index, changed.target.value)}
+                      placeholder={`${index + 1}번`}
+                      className={inputClassName}
+                    />
+                    {/* 두 개까지는 지울 수 없습니다 — 하나만 남으면 물어볼 것이 없습니다. */}
+                    {options.length > POLL_MIN_OPTIONS ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOptions((previous) =>
+                            previous.filter((_, at) => at !== index),
+                          )
+                        }
+                        aria-label={`${index + 1}번 지우기`}
+                        className="shrink-0 rounded-full px-2 py-2 text-[13px]! font-bold text-ink-faint active:text-danger"
+                      >
+                        지우기
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+
+              {options.length < POLL_MAX_OPTIONS ? (
+                <button
+                  type="button"
+                  onClick={() => setOptions((previous) => [...previous, ""])}
+                  className="mt-2 flex items-center gap-1 text-[13px]! font-bold text-brand-500"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  고를 것 추가
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            /*
+              의견 모으기에는 고를 것이 없습니다. 대신 익명이라는 사실을
+              만드는 사람에게 먼저 알려줍니다 — 모아 놓고 "누가 썼는지 보자"가
+              안 되는 것을 나중에 알면 곤란합니다.
+            */
+            <div className="mb-5 rounded-2xl bg-surface px-4 py-4 shadow-[var(--shadow-card)]">
+              <p className="text-[13px] leading-relaxed text-ink-muted">
+                고를 것 없이 원우들이 글로 답합니다.
+                <br />
+                <b className="font-bold text-ink">누가 썼는지는 아무 데도 남지 않습니다.</b>{" "}
+                만든 사람도, 운영진도, 나중에 확인할 수 없어요.
+              </p>
+            </div>
+          )}
+
+          {error ? <FieldError>{error}</FieldError> : null}
+
+          <div className="mt-6 flex gap-3">
             <button
               type="button"
-              onClick={() => setOptions((previous) => [...previous, ""])}
-              className="mt-2 flex items-center gap-1 text-[13px]! font-bold text-brand-500"
+              onClick={onClose}
+              className="rounded-2xl bg-fill px-6 py-4 text-[15px] font-bold text-ink-muted"
             >
-              <PlusIcon className="h-4 w-4" />
-              고를 것 추가
+              취소
             </button>
-          ) : null}
-        </div>
-
-        {error ? <FieldError>{error}</FieldError> : null}
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-2xl bg-fill px-6 py-4 text-[15px] font-bold text-ink-muted"
-          >
-            취소
-          </button>
-          <PrimaryButton type="submit" loading={saving}>
-            만들기
-          </PrimaryButton>
-        </div>
-      </form>
+            <PrimaryButton type="submit" loading={saving}>
+              만들기
+            </PrimaryButton>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

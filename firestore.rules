@@ -193,6 +193,35 @@ service cloud.firestore {
                      && (request.method == 'delete'
                          || request.resource.data.uid == request.auth.uid);
       }
+
+      /*
+       * 익명 의견 — 표와 정반대로 설계했습니다.
+       *
+       * ★★ hasOnly(['text','createdAt'])가 이 기능의 핵심입니다.
+       *   이 한 줄이 **uid나 이름을 끼워 넣는 쓰기를 거절**합니다. 그래서
+       *   익명이 "그렇게 하기로 했다"는 약속이 아니라, 앱을 고쳐도 뚫을 수
+       *   없는 구조가 됩니다. 문서 id도 자동 생성이라(앱에서 addDoc) 목록을
+       *   훑어도 사람을 되짚을 수 없습니다.
+       *   이 줄을 지우면 익명은 그 순간 사라집니다.
+       *
+       * 고치기는 막습니다. 익명 글이 조용히 바뀌면 누가 무슨 말을 했는지
+       * 아무도 확인할 수 없습니다.
+       *
+       * 지우기는 의견을 모은 사람과 운영진만. 본인 것만 지우는 길은 만들 수
+       * 없습니다 — 누가 썼는지 아무 데도 안 적혀 있기 때문입니다.
+       */
+      match /opinions/{opinionId} {
+        allow read: if isMember();
+        allow create: if isMember()
+                      && request.resource.data.keys().hasOnly(['text', 'createdAt'])
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
+        allow update: if false;
+        allow delete: if isMember()
+                      && (isAdmin()
+                          || get(/databases/$(database)/documents/polls/$(pollId))
+                               .data.createdBy == request.auth.uid);
+      }
     }
 
     /*

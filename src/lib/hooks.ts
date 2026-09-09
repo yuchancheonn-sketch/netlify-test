@@ -21,6 +21,7 @@ import type {
   EventDoc,
   FileDoc,
   MessageDoc,
+  OpinionDoc,
   PhotoAlbumDoc,
   PhotoDoc,
   PollDoc,
@@ -433,6 +434,35 @@ export function usePollVotes(pollId: string): ListState<PollVoteDoc> {
         setState({ data: votes, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "표를 불러오지 못했어요." }),
+    );
+  }, [pollId]);
+
+  return state;
+}
+
+/**
+ * 익명으로 모인 의견 (먼저 쓴 것이 위로).
+ *
+ * 문서에 쓴 사람이 없으므로 "내 의견"을 골라낼 수 없습니다. 그것이 이
+ * 기능의 값이라 일부러 그렇게 두었습니다(types.ts의 OpinionDoc 참고).
+ */
+export function usePollOpinions(pollId: string): ListState<OpinionDoc> {
+  const [state, setState] = useState<ListState<OpinionDoc>>(EMPTY);
+
+  useEffect(() => {
+    const opinionsQuery = query(
+      collection(db, "polls", pollId, "opinions"),
+      orderBy("createdAt", "asc"),
+    );
+    return onSnapshot(
+      opinionsQuery,
+      (snapshot) => {
+        const opinions = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as OpinionDoc,
+        );
+        setState({ data: opinions, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "의견을 불러오지 못했어요." }),
     );
   }, [pollId]);
 
