@@ -213,9 +213,14 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
                     원우들에게는 오히려 이쪽이 곧바로 읽힙니다. 대신 빨강은
                     **고른 것을 표시할 때만** 쓰고, 마감·지우기 같은 단추에는
                     쓰지 않아 뜻이 섞이지 않게 합니다.
+
+                    ★ 바탕은 칠하지 않습니다.
+                      테두리와 도장이 이미 빨간데 연한 빨강까지 깔면 한 가지를
+                      세 번 말하는 셈이고, 칸 안의 글씨도 그만큼 탁해집니다.
+                      바탕은 고르든 안 고르든 흰색 그대로입니다.
                   */
-                  className={`flex items-center justify-between gap-2 rounded-2xl border-2 px-4 py-4 text-left transition active:scale-[0.98] ${
-                    on ? "border-red-500 bg-red-50" : "border-line bg-surface"
+                  className={`flex items-center justify-between gap-2 rounded-2xl border-2 bg-surface px-4 py-4 text-left transition active:scale-[0.98] ${
+                    on ? "border-red-500" : "border-line"
                   }`}
                 >
                   {/*
@@ -506,8 +511,9 @@ function PollResult({
         return (
           <div
             key={index}
+            /* 고를 때와 같습니다 — 테두리와 도장만 빨갛고 바탕은 안 칠합니다. */
             className={`rounded-2xl border-2 px-4 py-3 ${
-              on ? "border-red-500 bg-red-50" : "border-line"
+              on ? "border-red-500" : "border-line"
             }`}
           >
             <div className="flex items-center justify-between gap-2">
