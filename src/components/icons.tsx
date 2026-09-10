@@ -310,6 +310,22 @@ export function ChevronUpDownIcon({ className, strokeWidth = 2 }: IconProps) {
   );
 }
 
+/** 원 안의 아래 화살표 — 제목 옆 기수 고르기(CohortPicker)의 "눌러서 고르기" 표시 */
+export function ChevronDownCircleIcon({ className, strokeWidth = 2 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="12" r="9.25" stroke="currentColor" strokeWidth={strokeWidth} />
+      <path
+        d="m8.5 10.5 3.5 3.5 3.5-3.5"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CameraIcon({ className, strokeWidth = 1.8 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
