@@ -286,6 +286,13 @@ export default function ProfileForm({
           updatedAt: serverTimestamp(),
         }),
       );
+      /*
+       * 원우 지도에 적힌 이름·기수도 따라 고칩니다(기수를 바꾸면 그 기수 지도로 옮겨 갑니다).
+       * 지역을 등록한 적이 없으면 문서가 없어 실패하는데, 그건 고칠 것이 없다는 뜻이라 흘려보냅니다.
+       */
+      void updateDoc(doc(db, "memberRegions", user.uid), { name, cohort: form.cohort }).catch(
+        () => {},
+      );
       onSaved?.();
     } catch (caught) {
       // permission-denied면 보안 규칙을 아직 콘솔에 올리지 않은 것입니다.

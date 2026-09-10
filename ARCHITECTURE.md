@@ -138,7 +138,7 @@
 
 | 주소 | 화면 | 하는 일 | 읽는 곳 |
 |---|---|---|---|
-| `/home` | 홈 | D-day 카드 + 오늘의 도산 + 수업 기록 10줄 | `events`, `sessions` |
+| `/home` | 홈 | OX 퀴즈 + D-day 카드 + 오늘의 도산 + **원우 지도** + 수업 기록 10줄 + 도산아카데미 정보 | `events`, `sessions`, `memberRegions` |
 | `/events` | 모임 (목록/캘린더 전환) | 지난 일정은 **화면에서만** 감춤 | `events` |
 | `/events/[id]` | 모임 상세 | 참석/불참/미정 응답 + 참석자 얼굴 | `events/{id}/rsvps` |
 | `/events/new`, `/[id]/edit` | 일정 등록·수정 | **운영진만**. 새 일정만 알림 발송 | — |
@@ -161,6 +161,7 @@
 | 컬렉션 | 문서 id | 담는 것 | 규칙 |
 |---|---|---|---|
 | `users/{uid}` | 로그인 uid | 이름·별칭·회사·직책·휴대폰·원우회 직위·소개·소개영상·**프로필 사진(data URL)**·role·status | 로그인하면 누구나 읽기/쓰기 |
+| `memberRegions/{uid}` | 본인 uid | 원우 지도 — **시·도 이름만**(`region`)·기수·이름. 좌표는 폰에서 시·도로 바꾼 뒤 버려서 저장 안 함. 홈이 무거운 `users`를 안 읽게 따로 뺌 | 읽기는 누구나 / **쓰기·지우기는 본인만**(운영진 지우기 가능), `hasOnly`로 칸 고정 |
 | `roster/{id}` | 자동 | 아직 가입 안 한 원우 이름 + 미리 채워둔 정보 + `linkedUid` | 로그인하면 누구나 |
 | `events/{id}` | 자동 | 제목·날짜·시각·장소·설명 | 로그인하면 누구나 |
 | `events/{id}/rsvps/{uid}` | 응답자 uid | attending / notAttending / undecided | 로그인하면 누구나 |
@@ -378,6 +379,7 @@ EventForm(운영진) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
 | 채팅 | **잠김.** `uid in roomId.split('__')` — 1:1 방의 두 사람만 (단체방 `'main'` 통과는 2026-09-10에 지움). 메시지는 `senderId == uid` 검사, 수정·삭제는 본인 것만 |
 | 채팅 목록 조회(list) | 문서 id로는 검증이 불가능해서 **`memberUids` 기준**. 앱의 질의(`array-contains`)와 짝이 맞아야 통과 — **앱 질의를 바꾸면 규칙도 같이 고쳐야 함** |
 | 읽음 기록 | 본인만 |
+| `memberRegions` | 읽기는 원우 누구나 / **쓰기·지우기는 본인만**(지우기는 운영진도). `hasOnly(['uid','region','cohort','name','updatedAt'])`로 좌표 같은 칸을 못 끼움 |
 | `pushTokens` | 본인 것 하나만. **list는 아무에게도 안 엶** (열면 누가 어떤 기기 쓰는지 다 보이고 남의 알림을 끊을 수 있음) |
 | `pushLog` | **규칙에 안 적음 = 클라이언트 전면 차단.** Admin SDK만 접근 |
 

@@ -108,6 +108,28 @@ export interface RosterDoc {
   updatedAt?: Timestamp | null;
 }
 
+/**
+ * memberRegions/{uid} — 원우 지도(홈)에 찍히는 "사는 시·도" 한 줄.
+ *
+ * ★ 정확한 위치(위도·경도)는 어디에도 저장하지 않습니다. 폰이 위치를 한 번 읽어
+ *   그 자리에서 시·도를 가려낸 뒤 좌표는 버리고, 여기에는 "부산" 같은 이름만 남습니다.
+ *
+ * users 문서에 두지 않고 따로 뺀 이유: 홈은 원우 목록(users)을 읽지 않습니다.
+ * users 문서에는 프로필 사진이 통째로 들어 있어, 홈을 열 때마다 전원의 사진을
+ * 내려받게 되면 무료 전송량이 가장 먼저 바닥납니다. 여기는 한 줄짜리라 가볍습니다.
+ * 문서 id가 곧 본인 uid라, 본인만 쓰고 지울 수 있습니다(보안 규칙).
+ */
+export interface MemberRegionDoc {
+  uid: string;
+  /** "서울" … "제주", 또는 "해외" — lib/regions.ts의 REGION_KEYS */
+  region: string;
+  /** 지도를 기수별로 거르려고 함께 적어 둡니다. 프로필에서 기수를 바꾸면 따라 고칩니다. */
+  cohort: string;
+  /** 지역을 눌렀을 때 보이는 이름. 프로필에서 이름을 바꾸면 따라 고칩니다. */
+  name: string;
+  updatedAt: Timestamp | null;
+}
+
 /** events/{eventId} */
 export interface EventDoc {
   id: string;
