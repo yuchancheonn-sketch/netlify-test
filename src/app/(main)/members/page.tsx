@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
+import { ChatIcon, ChevronLeftIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
+import { COHORTS, cohortOf } from "@/lib/cohort";
 import {
   affiliationLine,
   buildDirectory,
@@ -39,12 +40,20 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
 /** 수정 시트가 열려 있는 상태. entry가 null이면 새 이름 추가입니다. */
 type Editing = { entry: DirectoryEntry | null } | null;
 
+/** 제목 옆 기수 고르기에서 "전체"를 뜻하는 값. 기수 값("10기")과 겹치지 않습니다. */
+const ALL_COHORTS = "all";
+
 export default function MembersPage() {
   const { data: members, loading, error } = useApprovedMembers();
   const roster = useRoster();
   const { profile } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  /**
+   * 지금 펼쳐 둔 수첩. 원우수첩은 기수마다 따로 한 권이라, 처음에는 내 기수를 엽니다.
+   * StageGate가 프로필을 확인한 뒤에만 이 화면을 그리므로 profile은 이미 와 있습니다.
+   */
+  const [cohort, setCohort] = useState<string>(() => cohortOf(profile?.cohort));
   const [selected, setSelected] = useState<DirectoryEntry | null>(null);
   /** 사진만 크게 보기 */
   const [enlarged, setEnlarged] = useState<DirectoryEntry | null>(null);
@@ -58,23 +67,30 @@ export default function MembersPage() {
     [members, roster.data],
   );
 
+  /** 고른 기수의 수첩 한 권. "전체"면 모든 기수를 이름 가나다순 한 목록으로 */
+  const book = useMemo(
+    () =>
+      cohort === ALL_COHORTS ? entries : entries.filter((entry) => entry.cohort === cohort),
+    [entries, cohort],
+  );
+
   /**
    * 수첩 번호. 검색이나 필터를 걸어도 번호가 흔들리지 않도록
-   * 전체 명단에서의 자리를 그대로 씁니다.
+   * 펼친 수첩 한 권에서의 자리를 그대로 씁니다. 기수를 바꾸면 1번부터 다시 셉니다.
    */
   const numberOf = useMemo(() => {
     const map = new Map<string, number>();
-    entries.forEach((entry, index) => map.set(entry.key, index + 1));
+    book.forEach((entry, index) => map.set(entry.key, index + 1));
     return map;
-  }, [entries]);
+  }, [book]);
 
   const visible = useMemo(() => {
     const needle = keyword.trim().toLowerCase();
-    return entries.filter((entry) => {
+    return book.filter((entry) => {
       if (filter !== "all" && entry.memberType !== filter) return false;
       return entryMatches(entry, needle);
     });
-  }, [entries, keyword, filter]);
+  }, [book, keyword, filter]);
 
   function openEntry(entry: DirectoryEntry, playVideo = false) {
     setAutoPlay(playVideo);
@@ -85,7 +101,15 @@ export default function MembersPage() {
 
   return (
     <>
-      <PageHeader title="원우수첩" right={<HeaderActions />} />
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2">
+            원우수첩
+            <CohortPicker value={cohort} onChange={setCohort} />
+          </span>
+        }
+        right={<HeaderActions />}
+      />
 
       <div className="px-4">
         {/* 검색 */}
@@ -170,12 +194,12 @@ export default function MembersPage() {
               <EmptyState
                 icon={<UsersIcon className="h-10 w-10" />}
                 title={
-                  entries.length === 0
+                  book.length === 0
                     ? "아직 수첩이 비어 있어요"
                     : "조건에 맞는 원우가 없어요"
                 }
                 description={
-                  entries.length === 0
+                  book.length === 0
                     ? "아래 원우 추가하기로 우리 기수 원우를 한 명씩 채워보세요."
                     : "검색어나 필터를 바꿔보세요."
                 }
@@ -188,6 +212,7 @@ export default function MembersPage() {
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
+                    showCohort={cohort === ALL_COHORTS}
                     onOpen={() => openEntry(entry)}
                     onOpenVideo={() => openEntry(entry, true)}
                     onEnlargePhoto={() => setEnlarged(entry)}
@@ -241,7 +266,8 @@ export default function MembersPage() {
       {editing ? (
         <MemberEditSheet
           entry={editing.entry}
-          existingNames={entries.map((item) => item.name)}
+          existing={entries}
+          defaultCohort={cohort === ALL_COHORTS ? cohortOf(profile?.cohort) : cohort}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -257,6 +283,7 @@ export default function MembersPage() {
 function MemberRow({
   entry,
   number,
+  showCohort,
   onOpen,
   onOpenVideo,
   onEnlargePhoto,
@@ -264,6 +291,8 @@ function MemberRow({
 }: {
   entry: DirectoryEntry;
   number: number;
+  /** "전체" 수첩일 때만 — 여러 기수가 섞여 있어 누가 몇 기인지 붙여 줍니다. */
+  showCohort: boolean;
   onOpen: () => void;
   onOpenVideo: () => void;
   onEnlargePhoto: () => void;
@@ -390,6 +419,10 @@ function MemberRow({
             affiliation ? "font-medium text-brand-500" : "text-ink-muted"
           }`}
         >
+          {/* "전체" 수첩에서만 앞에 기수를 붙입니다. 한 기수 수첩에서는 다 같은 값이라 자리만 먹습니다. */}
+          {showCohort ? (
+            <span className="font-bold text-ink-soft">{entry.cohort} · </span>
+          ) : null}
           {affiliation || entry.bio || "아직 정보가 입력 안 됐어요"}
         </p>
       </button>
@@ -539,7 +572,8 @@ function MemberDetailSheet({
             {entry.nickname && entry.nickname !== entry.name ? (
               <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
             ) : null}
-            <div className="mt-3">
+            <div className="mt-3 flex items-center gap-1.5">
+              <Badge tone="neutral">{entry.cohort}</Badge>
               <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
                 {MEMBER_TYPE_LABEL[entry.memberType]}
               </Badge>
@@ -700,6 +734,45 @@ function MemberDetailSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * 제목 옆 기수 고르기. "원우수첩 10기 ⌄"처럼 제목과 한 줄에 글씨로만 보입니다.
+ *
+ * 보이는 것은 글씨와 화살표뿐이고, 그 위에 투명한 <select>를 통째로 덮어 두었습니다.
+ * 누르면 폰이 제 고르기 창(아이폰은 휠, 안드로이드는 목록)을 띄웁니다.
+ * 드롭다운을 직접 그리면 바깥 누르기·스크롤·뒤로 가기를 전부 챙겨야 하는데,
+ * 기기 것을 빌리면 그럴 일이 없습니다.
+ *
+ * ★ select의 글씨 크기는 제목(22px)을 물려받습니다. 16px보다 작으면
+ *   아이폰이 누르는 순간 화면을 확대합니다. 투명해도 똑같이 확대되니 줄이지 마세요.
+ */
+function CohortPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  return (
+    <span className="relative inline-flex items-center gap-0.5 text-brand-500">
+      {value === ALL_COHORTS ? "전체" : value}
+      <ChevronLeftIcon className="h-5 w-5 -rotate-90" strokeWidth={2.5} />
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label="기수 고르기"
+        className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+      >
+        {COHORTS.map((cohort) => (
+          <option key={cohort} value={cohort}>
+            {cohort}
+          </option>
+        ))}
+        <option value={ALL_COHORTS}>전체</option>
+      </select>
+    </span>
   );
 }
 

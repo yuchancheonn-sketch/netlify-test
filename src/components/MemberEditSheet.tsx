@@ -16,6 +16,7 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { COHORTS } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
@@ -49,19 +50,23 @@ const SELECT_ARROW_STYLE = {
  */
 export default function MemberEditSheet({
   entry,
-  existingNames,
+  existing,
+  defaultCohort,
   onClose,
 }: {
   /** null이면 새 이름 추가 */
   entry: DirectoryEntry | null;
-  /** 이미 수첩에 있는 이름들. 같은 사람을 두 번 올리지 않도록 막는 데 씁니다. */
-  existingNames: string[];
+  /** 이미 수첩에 있는 사람들(모든 기수). 같은 사람을 두 번 올리지 않도록 막는 데 씁니다. */
+  existing: { name: string; cohort: string }[];
+  /** 새로 올릴 때 미리 골라 둘 기수 — 보고 있던 수첩의 기수입니다. */
+  defaultCohort: string;
   onClose: () => void;
 }) {
   const { profile } = useAuth();
   const isMine = entry?.member?.uid === profile?.uid && !!entry?.member;
 
   const [name, setName] = useState(entry?.name ?? "");
+  const [cohort, setCohort] = useState(entry?.cohort ?? defaultCohort);
   const [memberType, setMemberType] = useState<MemberType>(entry?.memberType ?? "general");
   const [company, setCompany] = useState(entry?.company ?? "");
   const [position, setPosition] = useState(entry?.position ?? "");
@@ -97,9 +102,13 @@ export default function MemberEditSheet({
      * 수첩에 한 사람이 두 칸으로 서게 됩니다.
      */
     if (!entry) {
-      const already = new Set(existingNames.map((value) => value.replace(/\s+/g, "")));
-      if (already.has(name.replace(/\s+/g, ""))) {
-        setNameError("이미 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.");
+      // 기수가 다르면 이름이 같아도 다른 사람입니다. 같은 기수 안에서만 막습니다.
+      const typed = name.replace(/\s+/g, "");
+      const taken = existing.some(
+        (person) => person.cohort === cohort && person.name.replace(/\s+/g, "") === typed,
+      );
+      if (taken) {
+        setNameError(`이미 ${cohort} 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.`);
         return;
       }
     }
@@ -127,6 +136,7 @@ export default function MemberEditSheet({
     };
     const fields = {
       name: name.trim(),
+      cohort,
       memberType,
       company: company.trim(),
       position: position.trim(),
@@ -226,6 +236,27 @@ export default function MemberEditSheet({
               className={inputClassName}
             />
             {nameError ? <FieldError>{nameError}</FieldError> : null}
+          </div>
+
+          {/* 기수 — 바꾸면 이 원우가 그 기수의 수첩으로 옮겨 갑니다. */}
+          <div className="mb-5">
+            <FieldLabel htmlFor="edit-cohort">기수</FieldLabel>
+            <select
+              id="edit-cohort"
+              value={cohort}
+              onChange={(event) => {
+                setCohort(event.target.value);
+                setNameError(null);
+              }}
+              className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+              style={SELECT_ARROW_STYLE}
+            >
+              {COHORTS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="mb-5">

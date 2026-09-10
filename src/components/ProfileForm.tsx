@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { cropToSquareDataUrl } from "@/lib/image";
+import { COHORTS, cohortOf } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
   BIO_MAX_LENGTH,
@@ -45,6 +46,8 @@ function daysInMonth(month: number): number {
 
 interface FormState {
   name: string;
+  /** "10기"처럼. 최초 설정에서는 비워 두어 원우가 꼭 직접 고르게 합니다. */
+  cohort: string;
   nickname: string;
   photoURL: string | null;
   month: string;
@@ -82,6 +85,8 @@ export default function ProfileForm({
     const [month = "", day = ""] = (profile?.birthdayMonthDay ?? "").split("-");
     return {
       name: profile?.name || user?.displayName || "",
+      // 구분처럼 최초 설정에서는 비워 둡니다. 가입 직후 문서에 적힌 값을 그대로 믿지 않습니다.
+      cohort: profile?.profileCompleted ? cohortOf(profile.cohort) : "",
       nickname: profile?.nickname ?? "",
       photoURL: profile?.photoURL ?? user?.photoURL ?? null,
       month: month ? String(Number(month)) : "",
@@ -162,7 +167,13 @@ export default function ProfileForm({
     else if (form.name.trim().length > 20) next.name = "이름은 20자까지 넣을 수 있어요.";
 
     /*
-     * 이름만 있으면 시작할 수 있습니다.
+     * 원우수첩이 기수마다 따로라, 기수를 모르면 어느 수첩에 넣을지 정할 수 없습니다.
+     * 그래서 이름과 함께 기수만은 꼭 고르게 합니다.
+     */
+    if (!form.cohort) next.cohort = "기수를 골라 주세요.";
+
+    /*
+     * 이름과 기수만 있으면 시작할 수 있습니다.
      * 별칭·생일·구분·회사 같은 나머지는 나중에 프로필에서 채워도 되고,
      * 원우수첩에서 다른 원우가 대신 채워줄 수도 있습니다.
      */
@@ -227,7 +238,7 @@ export default function ProfileForm({
        */
       let carried = null;
       try {
-        carried = await linkRosterEntry(user.uid, name);
+        carried = await linkRosterEntry(user.uid, name, form.cohort);
       } catch {
         carried = null;
       }
@@ -236,6 +247,7 @@ export default function ProfileForm({
       await commitWrite(
         updateDoc(doc(db, "users", user.uid), {
           name,
+          cohort: form.cohort,
           nickname: form.nickname.trim(),
           photoURL: form.photoURL,
           // 생일을 안 골랐으면 빈 값으로 둡니다. 수첩에는 "생일 미입력"으로 보입니다.
@@ -324,6 +336,28 @@ export default function ProfileForm({
           className={inputClassName}
         />
         {errors.name ? <FieldError>{errors.name}</FieldError> : null}
+      </div>
+
+      {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}
+      <div className="mb-6">
+        <FieldLabel htmlFor="cohort">기수</FieldLabel>
+        <select
+          id="cohort"
+          value={form.cohort}
+          onChange={(event) => update("cohort", event.target.value)}
+          className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+          style={SELECT_ARROW_STYLE}
+        >
+          <option value="" disabled>
+            기수를 골라 주세요
+          </option>
+          {COHORTS.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+        {errors.cohort ? <FieldError>{errors.cohort}</FieldError> : null}
       </div>
 
       {/* 별칭 */}
@@ -498,7 +532,7 @@ export default function ProfileForm({
           <FieldError>{errors.phone}</FieldError>
         ) : (
           <p className="mt-2 text-[12px] text-ink-faint">
-            10기 원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
+            원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
           </p>
         )}
       </div>

@@ -7,8 +7,11 @@
  *
  * 화면에서는 둘을 구분하지 않고 이름 가나다순 한 목록으로 보여주기 때문에,
  * 여기서 같은 모양(DirectoryEntry)으로 맞춰 둡니다.
+ *
+ * 여기서는 모든 기수를 한 권에 담아 돌려줍니다. 기수별로 가르는 것은 화면 몫입니다.
  */
 
+import { cohortOf } from "@/lib/cohort";
 import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 
 export interface DirectoryEntry {
@@ -19,6 +22,8 @@ export interface DirectoryEntry {
   roster: RosterDoc | null;
   name: string;
   nickname: string;
+  /** "10기"처럼. 비어 있던 예전 값은 10기로 채워져 있습니다. */
+  cohort: string;
   memberType: MemberType;
   company: string;
   position: string;
@@ -38,6 +43,14 @@ function normalizeName(name: string): string {
   return name.replace(/\s+/g, "");
 }
 
+/**
+ * 같은 사람인지 가리는 열쇠 — 기수와 이름을 함께 봅니다.
+ * 기수가 여럿이라 3기 홍길동과 10기 홍길동은 다른 사람일 수 있습니다.
+ */
+function personKey(cohort: string | null | undefined, name: string): string {
+  return `${cohortOf(cohort)}:${normalizeName(name)}`;
+}
+
 /** 가입한 원우 문서를 수첩 항목으로 */
 function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry {
   /*
@@ -51,6 +64,7 @@ function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry 
     roster: matched,
     name: member.name || member.nickname,
     nickname: member.nickname ?? "",
+    cohort: cohortOf(member.cohort),
     memberType: member.memberType,
     company: member.company || matched?.company || "",
     position: member.position || matched?.position || "",
@@ -74,6 +88,7 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
     roster: entry,
     name: entry.name,
     nickname: "",
+    cohort: cohortOf(entry.cohort),
     memberType: entry.memberType,
     company: entry.company ?? "",
     position: entry.position ?? "",
@@ -91,24 +106,27 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
 /**
  * 가입한 원우 + 아직 가입 전인 이름을 이름 가나다순 한 권으로 묶습니다.
  *
- * 운영진이 계정을 연결(linkedUid)해 두지 않았더라도 이름이 같으면 같은 사람으로 보고
- * 한 줄로 합칩니다. 그래야 본인이 가입한 뒤에도 수첩에 두 번 나오지 않습니다.
+ * 운영진이 계정을 연결(linkedUid)해 두지 않았더라도 기수와 이름이 같으면
+ * 같은 사람으로 보고 한 줄로 합칩니다. 그래야 본인이 가입한 뒤에도 수첩에
+ * 두 번 나오지 않습니다.
  */
 export function buildDirectory(
   members: UserDoc[],
   roster: RosterDoc[],
 ): DirectoryEntry[] {
   const rosterByUid = new Map<string, RosterDoc>();
-  const rosterByName = new Map<string, RosterDoc>();
+  const rosterByPerson = new Map<string, RosterDoc>();
   for (const entry of roster) {
     if (entry.linkedUid) rosterByUid.set(entry.linkedUid, entry);
-    else rosterByName.set(normalizeName(entry.name), entry);
+    else rosterByPerson.set(personKey(entry.cohort, entry.name), entry);
   }
 
   const usedRosterIds = new Set<string>();
   const entries: DirectoryEntry[] = members.map((member) => {
     const matched =
-      rosterByUid.get(member.uid) ?? rosterByName.get(normalizeName(member.name)) ?? null;
+      rosterByUid.get(member.uid) ??
+      rosterByPerson.get(personKey(member.cohort, member.name)) ??
+      null;
     if (matched) usedRosterIds.add(matched.id);
     return fromMember(member, matched);
   });

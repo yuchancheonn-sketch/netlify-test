@@ -7,16 +7,20 @@
  *   - 방금 가입한 "홍길동"
  * 두 칸이 나란히 생깁니다.
  *
- * 그래서 프로필을 저장하는 순간 같은 이름의 명단 항목을 찾아
+ * 그래서 프로필을 저장하는 순간 같은 기수·같은 이름의 명단 항목을 찾아
  *   1) linkedUid에 계정을 적어 "이 사람이 그 사람"임을 못박고
  *   2) 명단에 미리 적어둔 회사·직책·휴대폰을 본인 문서로 옮겨 담습니다.
  *      (본인이 직접 채운 값이 있으면 그것을 우선합니다)
  *
- * 화면 쪽(lib/directory.ts)에서도 이름이 같으면 한 줄로 합쳐 보여주지만,
+ * 기수까지 맞춰 보는 이유: 수첩이 기수마다 따로라, 3기 홍길동이 가입하면서
+ * 10기 명단의 홍길동을 가져가 버리면 안 됩니다.
+ *
+ * 화면 쪽(lib/directory.ts)에서도 기수와 이름이 같으면 한 줄로 합쳐 보여주지만,
  * 그건 눈속임일 뿐이고 이 연결이 실제로 두 칸을 하나로 만듭니다.
  */
 
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import { cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import type { RosterDoc } from "@/lib/types";
 
@@ -35,7 +39,7 @@ export interface RosterCarryOver {
 }
 
 /**
- * 같은 이름의 명단 항목을 찾아 계정과 이어붙이고, 미리 적혀 있던 정보를 돌려줍니다.
+ * 같은 기수·같은 이름의 명단 항목을 찾아 계정과 이어붙이고, 미리 적혀 있던 정보를 돌려줍니다.
  *
  * 찾지 못하면 null을 돌려줍니다. 이미 이 계정과 이어져 있으면 정보만 돌려줍니다.
  * 실패해도 프로필 저장 자체를 막지 않도록, 부르는 쪽에서 감싸 주세요.
@@ -43,6 +47,7 @@ export interface RosterCarryOver {
 export async function linkRosterEntry(
   uid: string,
   name: string,
+  cohort: string,
 ): Promise<RosterCarryOver | null> {
   const target = normalize(name);
   if (!target) return null;
@@ -52,6 +57,7 @@ export async function linkRosterEntry(
   const match = snapshot.docs.find((document) => {
     const entry = document.data() as RosterDoc;
     if (normalize(entry.name ?? "") !== target) return false;
+    if (cohortOf(entry.cohort) !== cohortOf(cohort)) return false;
     // 아직 아무와도 이어지지 않았거나, 이미 내 것으로 이어진 항목만 가져갑니다.
     return !entry.linkedUid || entry.linkedUid === uid;
   });

@@ -6,7 +6,6 @@ import StageGate, { SplashScreen } from "@/components/StageGate";
 import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
-import { COHORT } from "@/lib/constants";
 
 /**
  * 처음 로그인한 사람의 계정 문서를 만드는 화면.
@@ -60,7 +59,8 @@ function SignUpScreen() {
           introVideoUrl: "",
           role: "member",
           status: "approved",
-          cohort: COHORT,
+          // 기수는 비워 둡니다. 바로 다음 최초 프로필 설정에서 원우가 꼭 고릅니다.
+          cohort: "",
           // 초대 코드는 쓰지 않지만, 나중에 되살릴 때를 위해 칸은 남겨둡니다.
           inviteCode: "",
           profileCompleted: false,

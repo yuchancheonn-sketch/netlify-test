@@ -44,6 +44,10 @@ export interface UserDoc {
   introVideoUrl: string;
   role: UserRole;
   status: UserStatus;
+  /**
+   * 기수 ("1기" ~ "10기"). 최초 프로필 설정에서 꼭 고르고, 내 프로필에서 바꿉니다.
+   * 가입 직후에는 빈 문자열이고, 읽을 때는 lib/cohort.ts의 cohortOf를 거칩니다.
+   */
   cohort: string;
   /** 가입할 때 사용한 초대 코드 (보안 규칙 검증용) */
   inviteCode: string;
@@ -71,6 +75,11 @@ export interface UserDoc {
 export interface RosterDoc {
   id: string;
   name: string;
+  /**
+   * 기수 ("10기"). 기수 고르기를 넣기 전에 올라온 명단에는 이 칸이 없고,
+   * 그건 모두 10기로 봅니다 — lib/cohort.ts의 cohortOf.
+   */
+  cohort?: string;
   memberType: MemberType;
   /** 연결된 실제 계정의 uid. 아직 가입 전이면 null */
   linkedUid: string | null;

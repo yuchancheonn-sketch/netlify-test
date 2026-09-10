@@ -6,7 +6,6 @@ import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
 import { useAuth } from "@/lib/auth-context";
 import { useSwipeBack } from "@/lib/use-swipe-back";
-import { COHORT } from "@/lib/constants";
 
 export default function ProfilePage() {
   const { logOut, isAdmin, profile } = useAuth();
@@ -67,11 +66,8 @@ export default function ProfilePage() {
 
       <div className="px-4 pb-10">
         <div className="rounded-2xl bg-surface p-5 shadow-[var(--shadow-card)]">
+          {/* 기수는 위 폼에서 고치므로 여기에 다시 적지 않습니다. */}
           <dl className="flex items-center justify-between text-[14px]">
-            <dt className="text-ink-faint">소속</dt>
-            <dd className="font-bold text-ink">{profile?.cohort || COHORT}</dd>
-          </dl>
-          <dl className="mt-3 flex items-center justify-between text-[14px]">
             <dt className="text-ink-faint">권한</dt>
             <dd className="font-bold text-ink">{isAdmin ? "운영진" : "원우"}</dd>
           </dl>
