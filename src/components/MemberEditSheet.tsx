@@ -22,7 +22,7 @@ import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
   COMPANY_MAX_LENGTH,
-  COUNCIL_ROLES,
+  COUNCIL_ROLE_MAX_LENGTH,
   POSITION_MAX_LENGTH,
 } from "@/lib/constants";
 import type { DirectoryEntry } from "@/lib/directory";
@@ -161,7 +161,7 @@ export default function MemberEditSheet({
       company: company.trim(),
       position: position.trim(),
       phone: phone.trim() ? formatPhone(phone) : "",
-      councilRole,
+      councilRole: councilRole.trim(),
       introVideoUrl: introVideoUrl.trim(),
     };
 
@@ -347,33 +347,20 @@ export default function MemberEditSheet({
             <FieldLabel htmlFor="edit-council" hint="선택">
               원우회 직위
             </FieldLabel>
-            <select
+            {/*
+              기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다 (2026-09-11).
+              목록이던 때는 목록에 없는 예전 직위가 빈칸으로 보이다가 저장하면 조용히
+              지워지는 문제가 있어 따로 한 줄을 얹어 두었는데, 직접 적으니 그럴 일이 없습니다.
+            */}
+            <input
               id="edit-council"
               value={councilRole}
-              onChange={(event) => setCouncilRole(event.target.value)}
-              className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-              style={SELECT_ARROW_STYLE}
-            >
-              <option value="">직위 없음</option>
-              {COUNCIL_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-
-              {/*
-                목록에 없는 직위가 이미 저장돼 있으면 그 값도 함께 보여줍니다.
-
-                직위 목록은 기수마다 바뀝니다(2026-09-09에 통째로 갈았습니다).
-                그때 예전 직위를 달고 있던 원우의 항목을 열면, select에 맞는
-                option이 없어 빈칸으로 보이고 저장을 누르는 순간 직위가
-                **조용히 지워집니다.** 고치려던 것은 휴대폰 번호였는데 직위가
-                날아가는 식입니다. 그래서 저장된 값을 한 줄 얹어 둡니다.
-              */}
-              {councilRole && !(COUNCIL_ROLES as readonly string[]).includes(councilRole) ? (
-                <option value={councilRole}>{councilRole} (예전 직위)</option>
-              ) : null}
-            </select>
+              onChange={(event) =>
+                setCouncilRole(event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
+              }
+              placeholder="예) 회장 / 총무 / 문화위원장"
+              className={inputClassName}
+            />
           </div>
 
           {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}

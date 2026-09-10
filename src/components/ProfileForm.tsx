@@ -19,7 +19,7 @@ import { COHORTS, cohortOf } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
   COMPANY_MAX_LENGTH,
-  COUNCIL_ROLES,
+  COUNCIL_ROLE_MAX_LENGTH,
   INTRODUCTION_MAX_LENGTH,
   MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
@@ -274,7 +274,7 @@ export default function ProfileForm({
           company: form.company.trim() || carried?.company || "",
           position: form.position.trim() || carried?.position || "",
           phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
-          councilRole: form.councilRole || carried?.councilRole || "",
+          councilRole: form.councilRole.trim() || carried?.councilRole || "",
           // 예전 한 줄 소개는 위에서 자기소개로 옮겨 담았으니 지웁니다.
           bio: deleteField(),
           introduction: form.introduction.trim(),
@@ -552,25 +552,23 @@ export default function ProfileForm({
         )}
       </div>
 
-      {/* 원우회 직위 — 고르면 원우수첩 이름 옆에 배지로 붙습니다. */}
+      {/*
+        원우회 직위 — 적으면 원우수첩 이름 옆에 배지로 붙습니다.
+        기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다.
+      */}
       <div className="mb-6">
         <FieldLabel htmlFor="councilRole" hint="선택">
           원우회 직위
         </FieldLabel>
-        <select
+        <input
           id="councilRole"
           value={form.councilRole}
-          onChange={(event) => update("councilRole", event.target.value)}
-          className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-          style={SELECT_ARROW_STYLE}
-        >
-          <option value="">직위 없음</option>
-          {COUNCIL_ROLES.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+          onChange={(event) =>
+            update("councilRole", event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
+          }
+          placeholder="예) 회장 / 총무 / 문화위원장"
+          className={inputClassName}
+        />
       </div>
 
       {/* 자기소개 — 원우 소개 상세에서 전문이 보입니다. */}
