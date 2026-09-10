@@ -8,6 +8,7 @@ import PollCard from "@/components/PollCard";
 import SessionList from "@/components/SessionList";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
+import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
@@ -146,6 +147,9 @@ export default function HomePage() {
 
         {/* 주차별 수업 기록 — 한 줄을 누르면 그 주 화면으로 넘어갑니다. */}
         <SessionList />
+
+        {/* 맨 아래 — 과정을 여는 도산아카데미의 기관 정보. 다른 앱의 사업자 정보 자리입니다. */}
+        <DosanAcademyFooter />
       </div>
     </>
   );
