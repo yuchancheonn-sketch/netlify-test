@@ -160,12 +160,12 @@ export default function MembersPage() {
                 onClick={() => setFilter(value)}
                 aria-pressed={active}
                 /*
-                  위 6px(pt-1.5) + 아래 10px(pb-2.5).
-                  두 값의 합(16px)이 py-2(8+8)와 같아서 칸 높이는 그대로이고,
+                  위 8px(pt-2) + 아래 12px(pb-3). (2026-09-11에 위아래 2px씩 키웠습니다)
+                  두 값의 합(20px)이 py-2.5(10+10)와 같아서 칸 높이는 그대로이고,
                   두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
                   높이를 건드리지 않고 글씨만 올리려면 이렇게 합을 지켜야 합니다.
                 */
-                className={`flex flex-1 items-center justify-center rounded-lg px-3 pt-1.5 pb-2.5 text-[13px] font-bold transition ${
+                className={`flex flex-1 items-center justify-center rounded-lg px-3 pt-2 pb-3 text-[13px] font-bold transition ${
                   active ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
