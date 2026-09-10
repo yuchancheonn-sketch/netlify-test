@@ -32,8 +32,11 @@ export default function HomeShortcuts() {
   const [creating, setCreating] = useState<"vote" | "opinion" | null>(null);
 
   return (
-    /* 위아래 여백은 4px(py-1) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 12px입니다. */
-    <section className="rounded-3xl bg-surface px-2 py-1 shadow-[var(--shadow-card)]">
+    /*
+      위아래 여백은 6px(py-1.5) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 14px입니다.
+      (4px로 줄였다가 조금 답답해 보여 2px씩 되돌렸습니다.)
+    */
+    <section className="rounded-3xl bg-surface px-2 py-1.5 shadow-[var(--shadow-card)]">
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
