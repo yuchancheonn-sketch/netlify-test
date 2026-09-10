@@ -154,12 +154,13 @@ export default function MembersPage() {
                 onClick={() => setFilter(value)}
                 aria-pressed={active}
                 /*
-                  위 8px(pt-2) + 아래 12px(pb-3). (2026-09-11에 위아래 2px씩 키웠습니다)
-                  두 값의 합(20px)이 py-2.5(10+10)와 같아서 알약 높이는 그대로이고,
+                  위 7.5px + 아래 11.5px. (2026-09-11에 2px씩 키웠다가 1px을 도로 줄였습니다 —
+                  위아래를 0.5px씩 깎아 차이 4px을 지켰습니다)
+                  두 값의 합(19px)이 위아래 9.5px씩과 같아서 알약 높이는 그대로이고,
                   두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
                   높이를 건드리지 않고 글씨만 올리려면 이렇게 합을 지켜야 합니다.
                 */
-                className={`flex flex-1 items-center justify-center rounded-full px-3 pt-2 pb-3 text-[13px] font-bold transition ${
+                className={`flex flex-1 items-center justify-center rounded-full px-3 pt-[7.5px] pb-[11.5px] text-[13px] font-bold transition ${
                   active ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
