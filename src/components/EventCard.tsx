@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, ClockIcon, PeopleCountIcon, PinIcon } from "@/components/icons";
 import {
+  daysUntil,
   ddayLabel,
   formatDotDate,
   formatMonthDay,
@@ -99,8 +101,9 @@ export function EventHeroCard({
 }
 
 /**
- * 홈 맨 위의 다가오는 모임 — 왼쪽에 D-day를 크게, 옆에 두 줄(이름 / 장소·시간),
- * 오른쪽 끝에 ">"(모임 일정 전체 보기).
+ * 홈 맨 위의 다가오는 모임 — 흰 카드 왼쪽에 둘레가 차오르는 D-day 원, 옆에 두 줄
+ * (이름 / 장소·시간), 오른쪽 끝에 ">"(모임 일정 전체 보기).
+ * 처음엔 주황 카드였다가 같은 날 흰 카드로 바꿨습니다 — 주황은 원의 채워진 둘레에만 씁니다.
  *
  * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
  * 위의 EventHeroCard에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
@@ -119,29 +122,118 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
     .join(" · ");
 
   return (
-    <div className="flex items-stretch rounded-3xl bg-brand-500 text-white shadow-[var(--shadow-float)]">
+    <div className="flex items-stretch rounded-3xl bg-surface text-ink shadow-[var(--shadow-card)]">
       <Link
         href={`/events/${event.id}`}
-        className="flex min-w-0 flex-1 items-center gap-4 py-5 pl-5 transition active:opacity-80"
+        className="flex min-w-0 flex-1 items-center gap-4 py-4 pl-4 transition active:opacity-80"
       >
-        <span className="min-w-[64px] shrink-0 text-center text-[28px] leading-none font-black tracking-tight">
-          {ddayLabel(event.date)}
-        </span>
+        <DdayRing date={event.date} />
         <span className="min-w-0">
           <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
           {details ? (
-            <span className="mt-1.5 block truncate text-[14px] font-medium">{details}</span>
+            <span className="mt-1.5 block truncate text-[14px] font-medium text-ink-muted">
+              {details}
+            </span>
           ) : null}
         </span>
       </Link>
       <Link
         href="/events"
         aria-label="모임 일정 전체 보기"
-        className="flex shrink-0 items-center pr-4 pl-3 transition active:opacity-60"
+        className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint transition active:opacity-60"
       >
         <ChevronRightIcon className="h-7 w-7" strokeWidth={2.2} />
       </Link>
     </div>
+  );
+}
+
+/** 둘레가 이만큼 전부터 채워지기 시작합니다(일). D-14 이전은 빈 둘레, D-DAY는 꽉 찬 둘레. */
+const DDAY_RING_DAYS = 14;
+/** 원 지름과 둘레 두께(px) — 나만의닥터 화면을 재어 옮긴 값 (아래 설명) */
+const RING_SIZE = 48;
+const RING_STROKE = 4;
+
+/**
+ * 흰 원 안의 D-day. 둘레는 모임이 다가올수록 회색에서 주황으로 채워집니다.
+ * 나만의닥터 "다음 주사일" 카드의 원을 따랐습니다 (2026-09-11).
+ *
+ * ★ 크기는 나만의닥터 화면(아이폰 3배 스크린샷)을 픽셀로 재어 3으로 나눴습니다 —
+ *   원 지름 144px → 48px, 둘레 두께 12px → 4px, "D-1" 글자 높이 29px → 약 10px
+ *   (이 앱 글꼴로 13px). "D-DAY"는 다섯 글자라 원 안(40px)에 들도록 11px로 줄입니다.
+ *   카드가 흰색(surface)이라 회색 둘레는 line 토큰, 글씨는 ink 토큰으로 화면을 따라갑니다.
+ *
+ * ★ 얼마나 채울지는 "2주 전부터"로 고정했습니다. 일정을 올린 날을 기준으로 삼으면
+ *   하루 전에 올린 번개는 D-1에도 빈 원이라, 같은 D-숫자가 일정마다 다르게 보입니다.
+ *
+ * 처음 그려질 때 빈 둘레에서 제자리까지 한 번 차오릅니다(animate — 기수 고르기
+ * 목록과 같은 방식). "움직임 줄이기"를 켠 폰에서는 건너뜁니다.
+ */
+function DdayRing({ date }: { date: string }) {
+  const label = ddayLabel(date);
+  const days = daysUntil(date) ?? DDAY_RING_DAYS;
+  const progress = Math.min(1, Math.max(0, (DDAY_RING_DAYS - days) / DDAY_RING_DAYS));
+  const center = RING_SIZE / 2;
+  const radius = (RING_SIZE - RING_STROKE) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - progress);
+
+  const ringRef = useCallback(
+    (node: SVGCircleElement | null) => {
+      if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      node.animate([{ strokeDashoffset: circumference }, { strokeDashoffset: offset }], {
+        duration: 800,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      });
+    },
+    [circumference, offset],
+  );
+
+  // "D-5"·"D-12"는 13px, 다섯 글자인 "D-DAY"만 원 안에 들어가게 11px.
+  const fontSize = label.length <= 4 ? 13 : 11;
+
+  return (
+    <span
+      className="relative flex shrink-0 items-center justify-center rounded-full"
+      style={{ width: RING_SIZE, height: RING_SIZE }}
+    >
+      {/* -rotate-90: SVG 원은 3시 방향에서 시작하므로 12시에서 시계 방향으로 차오르게 돌립니다. */}
+      <svg
+        viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+        className="absolute inset-0 h-full w-full -rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke="var(--color-line)"
+          strokeWidth={RING_STROKE}
+        />
+        {/* 하나도 안 찼을 때 그리면 둥근 끝(round cap)이 점 하나로 남습니다. */}
+        {progress > 0 ? (
+          <circle
+            ref={ringRef}
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke="var(--color-brand-500)"
+            strokeWidth={RING_STROKE}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+          />
+        ) : null}
+      </svg>
+      <span
+        className="relative leading-none font-bold tracking-tight text-ink"
+        style={{ fontSize }}
+      >
+        {label}
+      </span>
+    </span>
   );
 }
 

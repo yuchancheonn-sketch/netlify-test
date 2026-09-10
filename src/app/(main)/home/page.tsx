@@ -63,7 +63,7 @@ export default function HomePage() {
         */}
         <section>
           {upcoming.loading ? (
-            <Skeleton className="h-[88px] rounded-3xl" />
+            <Skeleton className="h-[80px] rounded-3xl" />
           ) : nextEvent ? (
             <EventDdayCard event={nextEvent} />
           ) : (
