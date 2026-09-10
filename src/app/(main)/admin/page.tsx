@@ -23,6 +23,7 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { COHORTS, cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
 import { useAllUsers, useRoster } from "@/lib/hooks";
@@ -31,6 +32,12 @@ import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   general: "일반 원우",
   youth: "대학생 원우",
+};
+
+/** 선택 상자에 쓰는 화살표 배경 (프로필·수첩 수정 시트와 같은 모양) */
+const SELECT_ARROW_STYLE = {
+  backgroundImage:
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
 };
 
 type Tab = "pending" | "roster" | "members";
@@ -257,8 +264,10 @@ function RosterSection({
   roster: { data: RosterDoc[]; loading: boolean; error: string | null };
   approved: UserDoc[];
 }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [names, setNames] = useState("");
+  /** 붙여넣은 이름들이 들어갈 기수. 처음에는 운영진 본인의 기수로 둡니다. */
+  const [cohort, setCohort] = useState<string>(() => cohortOf(profile?.cohort));
   const [memberType, setMemberType] = useState<MemberType>("general");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -279,9 +288,15 @@ function RosterSection({
     [names],
   );
 
+  /** 고른 기수의 명단에 이미 있는 이름. 기수가 다르면 같은 이름이어도 새로 넣습니다. */
   const existingNames = useMemo(
-    () => new Set(roster.data.map((entry) => entry.name)),
-    [roster.data],
+    () =>
+      new Set(
+        roster.data
+          .filter((entry) => cohortOf(entry.cohort) === cohort)
+          .map((entry) => entry.name),
+      ),
+    [roster.data, cohort],
   );
   const newNames = parsedNames.filter((name) => !existingNames.has(name));
 
@@ -297,6 +312,7 @@ function RosterSection({
         await commitWrite(
           addDoc(collection(db, "roster"), {
             name: newNames[0],
+            cohort,
             memberType,
             linkedUid: null,
             note: "",
@@ -310,6 +326,7 @@ function RosterSection({
         for (const name of newNames) {
           batch.set(doc(collection(db, "roster")), {
             name,
+            cohort,
             memberType,
             linkedUid: null,
             note: "",
@@ -369,6 +386,24 @@ function RosterSection({
             className={`${inputClassName} resize-none leading-relaxed`}
           />
 
+          {/* 붙여넣은 이름이 모두 이 기수의 수첩으로 들어갑니다. */}
+          <select
+            aria-label="추가할 원우의 기수"
+            value={cohort}
+            onChange={(changed) => {
+              setCohort(changed.target.value);
+              setAdded(null);
+            }}
+            className={`${inputClassName} mt-3 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+            style={SELECT_ARROW_STYLE}
+          >
+            {COHORTS.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+
           <div className="mt-3 flex gap-2">
             {(Object.keys(MEMBER_TYPE_LABEL) as MemberType[]).map((value) => (
               <button
@@ -398,7 +433,7 @@ function RosterSection({
 
           {parsedNames.length > newNames.length ? (
             <p className="mt-2 text-center text-[12px] text-ink-faint">
-              이미 명단에 있는 {parsedNames.length - newNames.length}명은 건너뜁니다
+              이미 {cohort} 명단에 있는 {parsedNames.length - newNames.length}명은 건너뜁니다
             </p>
           ) : null}
           {added ? (
@@ -452,7 +487,7 @@ function RosterSection({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px] font-bold text-ink">{entry.name}</p>
                       <p className="text-[12px] text-ink-faint">
-                        {MEMBER_TYPE_LABEL[entry.memberType]} ·{" "}
+                        {cohortOf(entry.cohort)} · {MEMBER_TYPE_LABEL[entry.memberType]} ·{" "}
                         {linked ? `가입 완료 (${linked.nickname || linked.name})` : "아직 가입 전"}
                       </p>
                     </div>
