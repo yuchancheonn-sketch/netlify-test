@@ -55,7 +55,7 @@ messaging.onBackgroundMessage((payload) => {
     options.tag = d.tag;
     options.renotify = true;
   }
-  self.registration.showNotification(d.title || "애기애타 10기", options);
+  self.registration.showNotification(d.title || "애기애타", options);
 });
 
 /* 알림을 누르면 이미 열린 앱 창을 그 화면으로 옮기고, 없으면 새로 엽니다. */

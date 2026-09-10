@@ -5,7 +5,7 @@
  */
 
 /** 앱 이름 (홈 화면 아이콘·로그인 화면·PWA manifest에 함께 쓰입니다) */
-export const APP_NAME = "애기애타 10기";
+export const APP_NAME = "애기애타";
 
 /** 홈 화면에 추가했을 때 아이콘 아래 표시될 짧은 이름 (12자 이내 권장) */
 export const APP_SHORT_NAME = "애기애타";
