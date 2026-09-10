@@ -3,7 +3,7 @@ import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import ThemeSync from "@/components/ThemeSync";
 import { AuthProvider } from "@/lib/auth-context";
-import { APP_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
+import { APP_NAME, APP_SHORT_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
 import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
 
 /**
@@ -35,7 +35,8 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   appleWebApp: {
     capable: true,
-    title: APP_NAME,
+    // 아이폰 홈 화면 아이콘 아래 이름 — manifest의 short_name과 맞춥니다.
+    title: APP_SHORT_NAME,
     statusBarStyle: "default",
   },
   icons: {

@@ -8,7 +8,7 @@
 export const APP_NAME = "애기애타 10기";
 
 /** 홈 화면에 추가했을 때 아이콘 아래 표시될 짧은 이름 (12자 이내 권장) */
-export const APP_SHORT_NAME = "애기애타10";
+export const APP_SHORT_NAME = "애기애타";
 
 /** 과정 공식 명칭 (포스터 기준) */
 export const COURSE_FULL_NAME = "2026 도산 애기애타 리더십 과정";
