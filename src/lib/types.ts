@@ -36,9 +36,12 @@ export interface UserDoc {
   phone: string;
   /** 원우회 직위. 고르지 않았으면 빈 문자열 */
   councilRole: string;
-  /** 카드에 미리보기로 뜨는 한 줄 소개 */
-  bio: string;
-  /** 상세에서 보이는 긴 자기소개 (본인이 직접 씁니다) */
+  /**
+   * 예전 한 줄 소개 — 이제 입력칸이 없습니다. 먼저 써 둔 원우의 문서에만 남아 있고,
+   * 자기소개가 비어 있으면 대신 보여줍니다. 본인이 프로필을 저장하면 지워집니다.
+   */
+  bio?: string;
+  /** 상세에서 보이는 자기소개 (본인이 직접 씁니다) */
   introduction: string;
   /** 본인 소개 영상 주소 (유튜브·비메오). 없으면 빈 문자열 */
   introVideoUrl: string;
@@ -96,6 +99,7 @@ export interface RosterDoc {
   position?: string;
   phone?: string;
   councilRole?: string;
+  /** 예전 한 줄 소개 — 이제 입력칸이 없고, 상세에서 자기소개 자리에 보여줍니다. */
   bio?: string;
   /** 입학식 자기소개 영상처럼, 계정이 없어도 걸어둘 수 있는 소개 영상 */
   introVideoUrl?: string;

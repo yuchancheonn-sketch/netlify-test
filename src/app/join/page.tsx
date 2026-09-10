@@ -54,7 +54,6 @@ function SignUpScreen() {
           position: "",
           phone: "",
           councilRole: "",
-          bio: "",
           introduction: "",
           introVideoUrl: "",
           role: "member",

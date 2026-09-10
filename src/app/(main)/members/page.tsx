@@ -408,7 +408,7 @@ function MemberRow({
         </div>
         {/*
           회사·직책일 때만 주황으로 띄웁니다.
-          같은 자리에 한 줄 소개나 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는
+          같은 자리에 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는
           강조할 내용이 아니라 회색 그대로 둡니다.
           흰 바탕의 주황은 대비가 약해서 굵기를 한 단계 올려 읽기 쉽게 했습니다.
         */}
@@ -421,7 +421,7 @@ function MemberRow({
           {showCohort ? (
             <span className="font-bold text-ink-soft">{entry.cohort} · </span>
           ) : null}
-          {affiliation || entry.bio || "아직 정보가 입력 안 됐어요"}
+          {affiliation || "아직 정보가 입력 안 됐어요"}
         </p>
       </button>
 
@@ -649,44 +649,41 @@ function MemberDetailSheet({
             </a>
           ) : null}
 
-          <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
-            {entry.company ? (
-              <div className="flex items-start justify-between gap-4">
-                <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
-                <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
-              </div>
-            ) : null}
-            {entry.position ? (
-              <div className="flex items-center justify-between gap-4">
-                <dt className="text-[14px] text-ink-faint">직책</dt>
-                <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
-              </div>
-            ) : null}
-            {entry.phone ? (
-              <div className="flex items-center justify-between gap-4">
-                <dt className="text-[14px] text-ink-faint">휴대폰</dt>
-                <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
-              </div>
-            ) : null}
-            {member ? (
-              <div className="flex items-center justify-between gap-4">
-                <dt className="text-[14px] text-ink-faint">생일</dt>
-                <dd className="text-[15px] font-bold text-ink">
-                  {formatBirthday(
-                    member.birthdayMonthDay,
-                    member.birthdayYear,
-                    member.birthdayYearPublic,
-                  )}
-                </dd>
-              </div>
-            ) : null}
-            <div className="flex items-start justify-between gap-4">
-              <dt className="shrink-0 text-[14px] text-ink-faint">한 줄 소개</dt>
-              <dd className="text-right text-[15px] leading-relaxed text-ink">
-                {entry.bio || "아직 소개가 없어요"}
-              </dd>
-            </div>
-          </dl>
+          {/* 한 줄 소개 줄을 없애서 적힌 것이 하나도 없을 수 있습니다. 그땐 빈 상자를 그리지 않습니다. */}
+          {entry.company || entry.position || entry.phone || member ? (
+            <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
+              {entry.company ? (
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
+                  <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
+                </div>
+              ) : null}
+              {entry.position ? (
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-[14px] text-ink-faint">직책</dt>
+                  <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
+                </div>
+              ) : null}
+              {entry.phone ? (
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-[14px] text-ink-faint">휴대폰</dt>
+                  <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
+                </div>
+              ) : null}
+              {member ? (
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-[14px] text-ink-faint">생일</dt>
+                  <dd className="text-[15px] font-bold text-ink">
+                    {formatBirthday(
+                      member.birthdayMonthDay,
+                      member.birthdayYear,
+                      member.birthdayYearPublic,
+                    )}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
 
           {/* 본인이 쓴 자기소개 전문 */}
           {entry.introduction ? (

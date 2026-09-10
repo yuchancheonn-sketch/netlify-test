@@ -21,7 +21,6 @@ import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
-  BIO_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLES,
   POSITION_MAX_LENGTH,
@@ -72,7 +71,6 @@ export default function MemberEditSheet({
   const [position, setPosition] = useState(entry?.position ?? "");
   const [phone, setPhone] = useState(entry?.phone ?? "");
   const [councilRole, setCouncilRole] = useState(entry?.councilRole ?? "");
-  const [bio, setBio] = useState(entry?.bio ?? "");
   const [introVideoUrl, setIntroVideoUrl] = useState(entry?.introVideoUrl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -142,7 +140,6 @@ export default function MemberEditSheet({
       position: position.trim(),
       phone: phone.trim() ? formatPhone(phone) : "",
       councilRole,
-      bio: bio.trim(),
       introVideoUrl: introVideoUrl.trim(),
     };
 
@@ -219,7 +216,7 @@ export default function MemberEditSheet({
             {!entry
               ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
               : isMine
-                ? "내 항목이에요. 사진과 긴 자기소개는 내 프로필에서 바꿀 수 있어요."
+                ? "내 항목이에요. 사진과 자기소개는 내 프로필에서 바꿀 수 있어요."
                 : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
           </p>
 
@@ -355,19 +352,6 @@ export default function MemberEditSheet({
                 <option value={councilRole}>{councilRole} (예전 직위)</option>
               ) : null}
             </select>
-          </div>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-bio" hint="선택">
-              한 줄 소개
-            </FieldLabel>
-            <input
-              id="edit-bio"
-              value={bio}
-              onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
-              placeholder="예) 마케팅 일을 해요 / 서울 거주"
-              className={inputClassName}
-            />
           </div>
 
           {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}

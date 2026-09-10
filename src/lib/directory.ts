@@ -29,7 +29,6 @@ export interface DirectoryEntry {
   position: string;
   phone: string;
   councilRole: string;
-  bio: string;
   photoURL: string | null;
   introduction: string;
   introVideoUrl: string;
@@ -70,9 +69,9 @@ function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry 
     position: member.position || matched?.position || "",
     phone: member.phone || matched?.phone || "",
     councilRole: member.councilRole || matched?.councilRole || "",
-    bio: member.bio || matched?.bio || "",
     photoURL: member.photoURL ?? null,
-    introduction: member.introduction ?? "",
+    // 한 줄 소개는 없앴습니다. 예전에 써 둔 것은 자기소개가 비어 있을 때 대신 보여줍니다.
+    introduction: member.introduction || member.bio || matched?.bio || "",
     introVideoUrl: member.introVideoUrl || matched?.introVideoUrl || "",
     updatedBy: member.updatedBy ?? "",
     updatedByName: member.updatedByName ?? "",
@@ -94,9 +93,8 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
     position: entry.position ?? "",
     phone: entry.phone ?? "",
     councilRole: entry.councilRole ?? "",
-    bio: entry.bio ?? "",
     photoURL: null,
-    introduction: "",
+    introduction: entry.bio ?? "",
     introVideoUrl: entry.introVideoUrl ?? "",
     updatedBy: entry.updatedBy ?? "",
     updatedByName: entry.updatedByName ?? "",

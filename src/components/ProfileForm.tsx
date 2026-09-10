@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import { CameraIcon } from "@/components/icons";
 import {
@@ -18,7 +18,6 @@ import { cropToSquareDataUrl } from "@/lib/image";
 import { COHORTS, cohortOf } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
-  BIO_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLES,
   INTRODUCTION_MAX_LENGTH,
@@ -60,7 +59,6 @@ interface FormState {
   position: string;
   phone: string;
   councilRole: string;
-  bio: string;
   introduction: string;
   introVideoUrl: string;
 }
@@ -99,8 +97,8 @@ export default function ProfileForm({
       position: profile?.position ?? "",
       phone: profile?.phone ?? "",
       councilRole: profile?.councilRole ?? "",
-      bio: profile?.bio ?? "",
-      introduction: profile?.introduction ?? "",
+      // 한 줄 소개는 없앴습니다. 예전에 써 둔 한 줄 소개는 자기소개 칸으로 옮겨 보여줍니다.
+      introduction: profile?.introduction || profile?.bio || "",
       introVideoUrl: profile?.introVideoUrl ?? "",
     };
   }, [profile, user]);
@@ -205,9 +203,6 @@ export default function ProfileForm({
       next.phone = "휴대폰 번호를 다시 확인해 주세요.";
     }
 
-    if (form.bio.length > BIO_MAX_LENGTH)
-      next.bio = `한 줄 소개는 ${BIO_MAX_LENGTH}자까지 쓸 수 있어요.`;
-
     if (form.introduction.length > INTRODUCTION_MAX_LENGTH)
       next.introduction = `자기소개는 ${INTRODUCTION_MAX_LENGTH}자까지 쓸 수 있어요.`;
 
@@ -263,7 +258,8 @@ export default function ProfileForm({
           position: form.position.trim() || carried?.position || "",
           phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
           councilRole: form.councilRole || carried?.councilRole || "",
-          bio: form.bio.trim(),
+          // 예전 한 줄 소개는 위에서 자기소개로 옮겨 담았으니 지웁니다.
+          bio: deleteField(),
           introduction: form.introduction.trim(),
           introVideoUrl: form.introVideoUrl.trim() || carried?.introVideoUrl || "",
           profileCompleted: true,
@@ -558,24 +554,16 @@ export default function ProfileForm({
         </select>
       </div>
 
-      {/* 한 줄 소개 */}
-      <div className="mb-8">
-        <FieldLabel htmlFor="bio" hint="선택">
-          한 줄 소개
-        </FieldLabel>
-        <input
-          id="bio"
-          value={form.bio}
-          onChange={(event) => update("bio", event.target.value.slice(0, BIO_MAX_LENGTH))}
-          placeholder="예) 마케팅 일을 해요 / 서울 거주"
-          className={inputClassName}
-        />
-        {errors.bio ? <FieldError>{errors.bio}</FieldError> : null}
-      </div>
-
       {/* 자기소개 — 원우 소개 상세에서 전문이 보입니다. */}
       <div className="mb-6">
-        <FieldLabel htmlFor="introduction" hint="선택">
+        <FieldLabel
+          htmlFor="introduction"
+          hint={
+            <span className="tabular-nums">
+              선택 · {form.introduction.length}/{INTRODUCTION_MAX_LENGTH}자
+            </span>
+          }
+        >
           자기소개
         </FieldLabel>
         <textarea

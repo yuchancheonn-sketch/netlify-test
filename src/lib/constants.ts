@@ -137,11 +137,8 @@ export const POLL_MAX_OPTIONS = 4;
  */
 export const OPINION_MAX_LENGTH = 200;
 
-/** 한줄 소개 최대 글자 수 */
-export const BIO_MAX_LENGTH = 50;
-
 /**
- * 긴 자기소개 최대 글자 수.
+ * 자기소개 최대 글자 수.
  * 원우 소개 목록을 열 때 모든 원우의 문서를 함께 받아오므로,
  * 너무 길면 목록이 무거워집니다. 40명 기준 500자면 약 40KB입니다.
  */
