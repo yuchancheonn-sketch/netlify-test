@@ -90,12 +90,12 @@ export default function LibraryPage() {
               onClick={() => setSubtab(value)}
               aria-pressed={subtab === value}
               /*
-                위 6px(pt-1.5) + 아래 10px(pb-2.5).
-                두 값의 합(16px)이 py-2(8+8)와 같아서 칸 높이는 그대로이고,
+                위 4px(pt-1) + 아래 8px(pb-2).
+                두 값의 합(12px)이 py-1.5(6+6)와 같아서 칸 높이는 그대로이고,
                 두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
                 원우수첩의 서브탭과 같은 방식입니다.
               */
-              className={`flex-1 rounded-lg pt-1.5 pb-2.5 text-[14px] font-bold transition ${
+              className={`flex-1 rounded-lg pt-1 pb-2 text-[14px] font-bold transition ${
                 subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >

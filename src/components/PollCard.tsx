@@ -671,7 +671,7 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
                   setError(null);
                 }}
                 aria-pressed={kind === value}
-                className={`flex-1 rounded-lg pt-1.5 pb-2.5 text-[14px]! font-bold transition ${
+                className={`flex-1 rounded-lg pt-1 pb-2 text-[14px]! font-bold transition ${
                   kind === value ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
