@@ -534,15 +534,24 @@ function PollResult({
 }
 
 /**
- * 새로 여는 바텀시트 — 투표와 의견 모으기 둘 중 하나를 고릅니다.
- * 홈 바로가기(HomeShortcuts)의 "투표 만들기"가 엽니다.
+ * 새로 여는 바텀시트 — 투표 하나 또는 의견 모으기 하나를 만듭니다.
+ *
+ * 홈 바로가기(HomeShortcuts)의 "투표 만들기"·"의견 모으기"가 각자 엽니다.
+ * 예전에는 한 단추로 열고 시트 맨 위 알약 고르개에서 둘 중 하나를 골랐는데,
+ * 2026-09-11에 바로가기를 둘로 나누면서 무엇을 만들지는 누른 칸이 정합니다(kind).
  */
-export function PollCreateSheet({ onClose }: { onClose: () => void }) {
+export function PollCreateSheet({
+  kind,
+  onClose,
+}: {
+  kind: "vote" | "opinion";
+  onClose: () => void;
+}) {
   const { user, profile } = useAuth();
   /** 새 투표가 올라갈 기수 — 지금 홈에 보이는 기수입니다. */
   const { cohort } = useViewCohort();
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
-  const [kind, setKind] = useState<"vote" | "opinion">("vote");
+  const title = kind === "vote" ? "투표 만들기" : "의견 모으기";
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
   const [options, setOptions] = useState<string[]>(["찬성", "반대"]);
@@ -595,7 +604,12 @@ export function PollCreateSheet({ onClose }: { onClose: () => void }) {
       });
       onClose();
     } catch (caught) {
-      setError(saveErrorMessage(caught, "투표를 만들지 못했어요."));
+      setError(
+        saveErrorMessage(
+          caught,
+          kind === "vote" ? "투표를 만들지 못했어요." : "의견 모으기를 만들지 못했어요.",
+        ),
+      );
       setSaving(false);
     }
   }
@@ -605,7 +619,7 @@ export function PollCreateSheet({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label="새 투표 만들기"
+      aria-label={title}
       onClick={onClose}
     >
       {/*
@@ -631,35 +645,8 @@ export function PollCreateSheet({ onClose }: { onClose: () => void }) {
           onSubmit={handleSubmit}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
         >
-          <h2 className="mb-5 text-[19px] font-bold text-ink">새로 만들기</h2>
-
-          {/*
-            무엇을 만들지 먼저 고릅니다. 자료 탭·원우수첩의 서브탭과 같은
-            알약 고르개라, 앱 안에서 "둘 중 하나 고르기"는 늘 같은 모양입니다.
-          */}
-          <div className="mb-5 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
-            {(
-              [
-                { value: "vote", label: "투표" },
-                { value: "opinion", label: "의견 모으기" },
-              ] as const
-            ).map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  setKind(value);
-                  setError(null);
-                }}
-                aria-pressed={kind === value}
-                className={`flex-1 rounded-full pt-1 pb-2 text-[14px]! font-bold transition ${
-                  kind === value ? "bg-brand-500 text-white" : "text-ink-muted"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          {/* 무엇을 만들지는 홈 바로가기에서 이미 골랐으므로 제목이 곧 그 이름입니다. */}
+          <h2 className="mb-5 text-[19px] font-bold text-ink">{title}</h2>
 
           <div className="mb-5">
             <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>

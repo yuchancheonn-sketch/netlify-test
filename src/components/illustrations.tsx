@@ -46,6 +46,25 @@ export function BallotBoxIllustration({ className }: { className?: string }) {
   );
 }
 
+/** 의견 모으기 — 겹쳐 놓인 말풍선 두 개 (뒤는 적어 둔 글, 앞은 쓰는 중인 "…") */
+export function OpinionIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+      {/* 뒤 말풍선 — 연한 살구색에 글줄 두 줄 */}
+      <rect x="4" y="7" width="27" height="20" rx="7" fill={PEACH_LIGHT} />
+      <path d="M9.5 25.5 7.5 32l7.5-5.5z" fill={PEACH_LIGHT} />
+      <rect x="10" y="13" width="14" height="2.6" rx="1.3" fill={PEACH} />
+      <rect x="10" y="18.5" width="9" height="2.6" rx="1.3" fill={PEACH} />
+      {/* 앞 말풍선 — 주황에 흰 점 세 개 */}
+      <rect x="16" y="17" width="28" height="20" rx="7" fill={ORANGE} />
+      <path d="M38.5 35.5 40.5 42l-7.5-5.5z" fill={ORANGE} />
+      <circle cx="23.5" cy="27" r="2.3" fill="#FFFFFF" />
+      <circle cx="30" cy="27" r="2.3" fill="#FFFFFF" />
+      <circle cx="36.5" cy="27" r="2.3" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
 /** 원우 지도 — 세 번 접은 지도 위에 꽂힌 위치 핀 */
 export function MapIllustration({ className }: { className?: string }) {
   return (
