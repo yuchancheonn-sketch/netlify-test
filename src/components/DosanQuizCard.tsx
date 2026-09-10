@@ -91,9 +91,10 @@ export default function DosanQuizCard() {
           ) : null}
         </div>
 
+        {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
         <p className="mt-4 flex gap-2 text-[17px] leading-relaxed font-medium text-ink">
           <span className="shrink-0 font-bold text-brand-500">Q.</span>
-          <span>{quiz.question}</span>
+          <span className="break-keep">{quiz.question}</span>
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
@@ -214,7 +215,7 @@ function ExplanationScreen({
         <p className={`text-[15px] font-bold ${correct ? "text-brand-500" : "text-danger"}`}>
           {correct ? "정답이에요!" : "아쉽게 틀렸어요"}
         </p>
-        <h3 className="mt-2 text-[24px] leading-snug font-bold tracking-tight text-ink">
+        <h3 className="mt-2 text-[24px] leading-snug font-bold tracking-tight break-keep text-ink">
           {quiz.question}
         </h3>
 
@@ -231,7 +232,7 @@ function ExplanationScreen({
           </div>
         </dl>
 
-        <div className="mt-6 flex flex-col gap-4 text-[16px] leading-[1.8] text-ink-soft">
+        <div className="mt-6 flex flex-col gap-4 text-[16px] leading-[1.8] break-keep text-ink-soft">
           {quiz.explanation.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
