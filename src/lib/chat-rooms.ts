@@ -3,9 +3,8 @@
 /**
  * 대화방을 다루는 규칙 모음.
  *
- * 방은 두 종류입니다.
- *  - 단체방(group) — 10기 전체가 함께 쓰는 방 하나. id는 늘 "main".
- *  - 1:1 방(direct) — 원우 두 명만의 대화.
+ * 방은 원우 두 명만의 1:1 방(direct) 한 종류입니다.
+ * 단체방("main")은 2026-09-10에 없앴습니다 — 카톡 단톡방으로 대신합니다.
  */
 
 import {
@@ -19,11 +18,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { requestPush } from "@/lib/push";
-import {
-  CHAT_PREVIEW_MAX_LENGTH,
-  MAIN_CHAT_ROOM_ID,
-  MAIN_CHAT_ROOM_TITLE,
-} from "@/lib/constants";
+import { CHAT_PREVIEW_MAX_LENGTH } from "@/lib/constants";
 import type { ChatRoomDoc, MessageDoc, UserDoc } from "@/lib/types";
 
 /** 1:1 방 id에서 두 사람의 uid를 잇는 글자. uid에는 쓰이지 않는 모양으로 골랐습니다. */
@@ -40,29 +35,15 @@ export function directRoomId(a: string, b: string): string {
   return [a, b].sort().join(DIRECT_SEPARATOR);
 }
 
-/** 1:1 방에서 나 말고 상대의 uid. 단체방이거나 내가 낀 방이 아니면 null */
+/**
+ * 1:1 방에서 나 말고 상대의 uid.
+ * 1:1 방 모양이 아니거나(예전 단체방 "main" 등) 내가 낀 방이 아니면 null
+ */
 export function otherUidOf(roomId: string, myUid: string): string | null {
-  if (roomId === MAIN_CHAT_ROOM_ID) return null;
   const uids = roomId.split(DIRECT_SEPARATOR);
-  if (uids.length !== 2) return null;
+  if (uids.length !== 2 || !uids.includes(myUid)) return null;
   const other = uids.find((uid) => uid !== myUid);
   return other ?? null;
-}
-
-/**
- * 아직 문서가 없어도 단체방은 늘 목록에 있어야 하므로,
- * 문서가 없을 때 대신 쓸 기본 모습을 만들어 둡니다.
- */
-export function emptyGroupRoom(): ChatRoomDoc {
-  return {
-    id: MAIN_CHAT_ROOM_ID,
-    kind: "group",
-    title: MAIN_CHAT_ROOM_TITLE,
-    memberUids: [],
-    lastMessageText: "",
-    lastMessageSenderId: "",
-    lastMessageAt: null,
-  };
 }
 
 /**
@@ -73,10 +54,9 @@ export function emptyGroupRoom(): ChatRoomDoc {
  * 읽어 들이는 이 자리에서 빠진 칸을 채웁니다.
  */
 export function toChatRoom(id: string, data: Record<string, unknown>): ChatRoomDoc {
-  const isGroup = id === MAIN_CHAT_ROOM_ID;
   return {
     id,
-    kind: data.kind === "direct" ? "direct" : isGroup ? "group" : "direct",
+    kind: data.kind === "group" ? "group" : "direct",
     title: typeof data.title === "string" ? data.title : "",
     memberUids: Array.isArray(data.memberUids) ? (data.memberUids as string[]) : [],
     lastMessageText:
@@ -87,13 +67,12 @@ export function toChatRoom(id: string, data: Record<string, unknown>): ChatRoomD
   };
 }
 
-/** 채팅 목록에 보여줄 방 이름. 1:1 방은 상대 이름을 씁니다. */
+/** 채팅 목록에 보여줄 방 이름 — 상대 원우의 이름입니다. */
 export function roomTitle(
   room: ChatRoomDoc,
   myUid: string,
   nameByUid: Map<string, string>,
 ): string {
-  if (room.kind === "group") return room.title || MAIN_CHAT_ROOM_TITLE;
   const other = otherUidOf(room.id, myUid);
   return (other && nameByUid.get(other)) || "원우";
 }
@@ -120,36 +99,11 @@ export function ensureDirectRoom(myUid: string, otherId: string): string {
 }
 
 /**
- * 단체방의 memberUids를 지금의 원우 명단과 맞춥니다.
- *
- * 원우가 새로 가입 승인되어도 자동으로 단체방에 들어와야 하므로, 채팅
- * 목록을 열 때마다 실제 명단과 다르면 이 함수로 다시 맞춰 씁니다.
- */
-export async function syncGroupRoomMembers(uids: string[]): Promise<void> {
-  await setDoc(
-    doc(db, "chatRooms", MAIN_CHAT_ROOM_ID),
-    {
-      kind: "group",
-      title: MAIN_CHAT_ROOM_TITLE,
-      memberUids: uids,
-    },
-    { merge: true },
-  );
-}
-
-/** 두 배열이 순서와 상관없이 같은 uid들을 담고 있는지 */
-export function sameMembers(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  const sorted = [...b].sort();
-  return [...a].sort().every((uid, index) => uid === sorted[index]);
-}
-
-/**
  * 메시지를 보냅니다.
  *
  * 메시지를 넣는 것과 방의 마지막 메시지를 갱신하는 것을 함께 합니다.
- * 방 문서는 merge로 쓰기 때문에, 단체방처럼 문서가 아직 없던 방도
- * 첫 메시지를 보내는 순간 저절로 만들어집니다.
+ * 방 문서는 merge로 쓰기 때문에, 아직 문서가 없던 방도 첫 메시지를
+ * 보내는 순간 저절로 만들어집니다.
  */
 export async function sendChatMessage({
   roomId,
@@ -160,6 +114,11 @@ export async function sendChatMessage({
   sender: { uid: string; profile: UserDoc | null };
   text: string;
 }): Promise<void> {
+  // 1:1 방 모양이 아니면 보내지 않습니다. (보안 규칙도 막습니다)
+  if (!otherUidOf(roomId, sender.uid)) {
+    throw new Error("대화방을 찾지 못했어요.");
+  }
+
   const senderName = sender.profile?.name || sender.profile?.nickname || "원우";
 
   /*
@@ -179,21 +138,17 @@ export async function sendChatMessage({
     createdAt: serverTimestamp(),
   });
 
-  const isGroup = roomId === MAIN_CHAT_ROOM_ID;
   await setDoc(
     doc(db, "chatRooms", roomId),
     {
-      kind: isGroup ? "group" : "direct",
-      title: isGroup ? MAIN_CHAT_ROOM_TITLE : "",
+      kind: "direct",
+      title: "",
       /*
-        1:1 방은 이제 미리 만들어 두지 않으므로, 첫 메시지를 보내는 이 자리에서
+        1:1 방은 미리 만들어 두지 않으므로, 첫 메시지를 보내는 이 자리에서
         memberUids를 함께 적어야 상대의 채팅 목록에도 뜹니다. roomId 자체가
         두 uid를 정렬해 이은 값이라 다시 계산할 필요 없이 그대로 씁니다.
-        단체방의 memberUids는 여기서 건드리지 않습니다 — syncGroupRoomMembers가
-        원우 명단을 보고 따로 맞춥니다. 여기서 손대면 메시지를 보낼 때마다
-        그 값을 지워버립니다.
       */
-      ...(isGroup ? {} : { memberUids: roomId.split(DIRECT_SEPARATOR) }),
+      memberUids: roomId.split(DIRECT_SEPARATOR),
       lastMessageText: text,
       lastMessageSenderId: sender.uid,
       lastMessageAt: serverTimestamp(),
@@ -201,7 +156,7 @@ export async function sendChatMessage({
     { merge: true },
   );
 
-  // 이 방의 다른 원우들 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
+  // 상대 원우 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
   void requestPush("chat", { roomId, text });
 }
 

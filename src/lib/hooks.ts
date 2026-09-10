@@ -13,8 +13,7 @@ import {
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
 import { parseSessionDocId, sessionDocId } from "@/lib/cohort";
-import { emptyGroupRoom, toChatRoom } from "@/lib/chat-rooms";
-import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
+import { otherUidOf, toChatRoom } from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
 import type {
   ChatReadDoc,
@@ -562,15 +561,16 @@ export function useMessages(roomId: string, count: number) {
 }
 
 /**
- * 내가 들어가 있는 대화방 목록.
+ * 내가 들어가 있는 1:1 대화방 목록.
  *
- * 단체방은 늘 맨 위에 있고, 1:1 방은 memberUids에 내 uid가 들어 있는 것만
- * 가져옵니다. 정렬은 앱에서 합니다. Firestore에서 정렬까지 시키려면 색인을
- * 따로 만들어 올려야 하는데, 방이 수십 개뿐이라 그럴 값어치가 없습니다.
+ * memberUids에 내 uid가 들어 있는 방만 가져옵니다. 정렬은 앱에서 합니다.
+ * Firestore에서 정렬까지 시키려면 색인을 따로 만들어 올려야 하는데,
+ * 방이 수십 개뿐이라 그럴 값어치가 없습니다.
+ *
+ * (단체방은 2026-09-10에 없앴습니다 — 카톡 단톡방으로 대신합니다.)
  */
 export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
   const [directRooms, setDirectRooms] = useState<ChatRoomDoc[] | null>(null);
-  const [groupRoom, setGroupRoom] = useState<ChatRoomDoc | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // 1:1 방
@@ -592,25 +592,15 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
     );
   }, [uid]);
 
-  // 단체방. 아직 아무도 말을 안 걸어 문서가 없을 수 있어 기본 모습으로 대신합니다.
-  useEffect(() => {
-    return onSnapshot(
-      doc(db, "chatRooms", MAIN_CHAT_ROOM_ID),
-      (snapshot) => {
-        setGroupRoom(
-          snapshot.exists()
-            ? toChatRoom(snapshot.id, snapshot.data())
-            : emptyGroupRoom(),
-        );
-      },
-      () => setGroupRoom(emptyGroupRoom()),
-    );
-  }, []);
-
   const rooms = useMemo(() => {
-    const group = groupRoom ?? emptyGroupRoom();
-    const others = (directRooms ?? [])
-      .filter((room) => room.id !== MAIN_CHAT_ROOM_ID)
+    return (directRooms ?? [])
+      /*
+       * 1:1 방 모양의 id만 남깁니다.
+       *
+       * 예전 단체방 문서(chatRooms/main)가 Firestore에 남아 있으면, 그 문서의
+       * memberUids에 원우 전원이 들어 있어서 위 질의에 함께 걸려 옵니다.
+       */
+      .filter((room) => !!uid && otherUidOf(room.id, uid) !== null)
       /*
        * 메시지를 한 통도 안 보낸 방은 목록에 올리지 않습니다.
        * 방은 첫 메시지를 보낼 때 만들어지므로 보통은 이런 방이 없지만,
@@ -619,10 +609,9 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
       .filter((room) => room.lastMessageAt !== null)
       // 최근에 말이 오간 방이 위로 옵니다.
       .sort((a, b) => (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0));
-    return [group, ...others];
-  }, [groupRoom, directRooms]);
+  }, [uid, directRooms]);
 
-  return { data: rooms, loading: !groupRoom || (!!uid && directRooms === null), error };
+  return { data: rooms, loading: !!uid && directRooms === null, error };
 }
 
 /**
@@ -670,10 +659,7 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
   const readMillis = useMemo(() => {
     const map: Record<string, number> = {};
     for (const roomId of roomKey ? roomKey.split("|") : []) {
-      const at =
-        stored?.rooms?.[roomId] ??
-        // 방이 단체방 하나뿐이던 시절의 기록을 이어받습니다.
-        (roomId === MAIN_CHAT_ROOM_ID ? (stored?.lastReadAt ?? null) : null);
+      const at = stored?.rooms?.[roomId] ?? null;
       map[roomId] = at?.toMillis() ?? 0;
     }
     return map;
@@ -698,9 +684,7 @@ export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
   useEffect(() => {
     if (!uid || !loaded) return;
     for (const roomId of roomKey ? roomKey.split("|") : []) {
-      const known =
-        stored?.rooms?.[roomId] ??
-        (roomId === MAIN_CHAT_ROOM_ID ? (stored?.lastReadAt ?? null) : null);
+      const known = stored?.rooms?.[roomId] ?? null;
       if (known) continue;
 
       const key = `${uid}:${roomId}`;

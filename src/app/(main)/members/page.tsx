@@ -493,7 +493,7 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
       >
         <ChatIcon className="h-5 w-5" />
-        {name} 원우와 채팅
+        {name} 원우와 1:1 채팅
       </button>
     </div>
   );

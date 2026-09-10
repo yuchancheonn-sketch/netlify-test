@@ -146,7 +146,7 @@
 | `/library` | 자료 (사진/파일) | 행사 사진 = 앨범, 파일 = 원우가 올린 문서 | `photoAlbums`, `files` |
 | `/albums/[id]` | 앨범 | 사진 올리기(여러 장)·좋아요·전체화면 뷰어 | `photoAlbums/{id}/photos` |
 | `/sessions/[week]` | 주차별 수업 | 1·2교시 영상 + 느낀점 댓글(1단 답글) | `sessions/{week}` |
-| `/chat` | 채팅 목록 | 단체방 고정 + 1:1 최근순, 안 읽은 배지 | `chatRooms` |
+| `/chat` | 1:1 채팅 목록 (탭 이름은 "채팅") | 1:1 대화 최근순, 안 읽은 점. 단체방은 2026-09-10에 없앰(카톡 단톡방으로 대체) | `chatRooms` |
 | `/chat/[roomId]` | 대화방 | 탭바 감춤, 밀어서 뒤로가기 | `chatRooms/{id}/messages` |
 | `/news` | 소식 (영상/소식) | 복습 영상 = 유튜브, 소식 = 도산아카데미 공지 | `/api/videos`, `/api/dosan` |
 | `/profile` | 내 프로필 | 프로필 편집 + 로그아웃 + 운영진 화면 입구 | `users/{uid}` |
@@ -164,12 +164,12 @@
 | `roster/{id}` | 자동 | 아직 가입 안 한 원우 이름 + 미리 채워둔 정보 + `linkedUid` | 로그인하면 누구나 |
 | `events/{id}` | 자동 | 제목·날짜·시각·장소·설명 | 로그인하면 누구나 |
 | `events/{id}/rsvps/{uid}` | 응답자 uid | attending / notAttending / undecided | 로그인하면 누구나 |
-| `sessions/{week}` | `"1"`~`"11"` | 주제·강사·`videoUrl`(1교시)·`videoUrl2`(2교시)·`commentCount` | 로그인하면 누구나 |
+| `sessions/{id}` | 10기는 `"1"`~`"10"`, 다른 기수는 `"3기-5"` 꼴 (`sessionDocId`) | 주제·강사·`videoUrl`(1교시)·`videoUrl2`(2교시)·`commentCount` | 로그인하면 누구나 |
 | `sessions/{week}/comments/{id}` | 자동 | 느낀점. `parentId`(1단 답글), `period` | 읽기 자유 / **쓰기는 본인 이름만**, 수정 금지, 삭제는 본인 것만 |
 | `photoAlbums/{id}` | 자동 | 앨범 제목·행사일·대표사진·장수 | 로그인하면 누구나 |
 | `photoAlbums/{id}/photos/{id}` | 자동 | Cloudinary 주소·크기·좋아요 배열 | 로그인하면 누구나 |
 | `files/{id}` | 자동 | 자료 탭 문서 파일 — 이름·Cloudinary 주소·크기·올린 사람 | 읽기·올리기는 누구나 / **지우기는 올린 본인과 운영진만**, 수정 불가 |
-| `chatRooms/{roomId}` | `main` 또는 `uidA__uidB` | 종류·제목·`memberUids`·마지막 메시지 미리보기 | **방에 낀 사람만** |
+| `chatRooms/{roomId}` | `uidA__uidB` (없앤 단체방 `main` 문서가 남아 있을 수 있음 — 화면에서 거름) | 종류·제목·`memberUids`·마지막 메시지 미리보기 | **방에 낀 사람만** |
 | `chatRooms/{roomId}/messages/{id}` | 자동 | 보낸이·본문·시각 | 방에 낀 사람만. **수정·삭제 불가** |
 | `chatReads/{uid}` | 본인 uid | 방별 마지막으로 본 시각 | **본인만** |
 | `pushTokens/{FCM토큰}` | FCM 토큰 | 그 기기 주인 uid·userAgent | 본인 것 하나만. **list는 아무에게도 안 엶** |
@@ -197,7 +197,7 @@
 | [firestore-commit.ts](src/lib/firestore-commit.ts) | `commitWrite()` — 저장을 **2.5초까지만** 기다리고 `"queued"`로 넘어감. 오프라인 캐시 때문에 약속이 영영 안 풀리는 문제의 해법 |
 | [directory.ts](src/lib/directory.ts) | `users` + `roster`를 **이름 가나다순 한 권**으로 합침. 본인이 채운 값이 명단 값보다 우선 |
 | [roster-link.ts](src/lib/roster-link.ts) | 프로필 저장 시 같은 이름 명단을 찾아 `linkedUid`로 못 박고 정보를 옮겨 담음 (directory.ts가 눈속임이면 이쪽이 실제 통합) |
-| [chat-rooms.ts](src/lib/chat-rooms.ts) | 방 id 계산 · 메시지 전송 · 단체방 인원 동기화 · 미리보기 자르기 |
+| [chat-rooms.ts](src/lib/chat-rooms.ts) | 1:1 방 id 계산 · 메시지 전송 · 미리보기 자르기 |
 | [chat-read.ts](src/lib/chat-read.ts) | "이 방 지금 다 읽음" 기록 |
 | [session-comments.ts](src/lib/session-comments.ts) | 느낀점 쓰기/지우기 + `commentCount`를 `increment`로 조정 |
 | [sessions.ts](src/lib/sessions.ts) | 1·2교시 규칙 (옛 댓글은 1교시로 봄) |
@@ -250,7 +250,7 @@
             ▼
        POST /api/push/chat                          Netlify 서버
             ├─ verifyIdToken()                      진짜 그 사람이 맞는지
-            ├─ 받는 사람 추리기                      단체방=memberUids, 1:1=roomId.split("__")
+            ├─ 받는 사람 추리기                      roomId.split("__")의 상대 한 명
             ├─ 보낸 사람 이름은 users에서 직접 읽음  (클라이언트 말을 안 믿음)
             └─ sendPushToUsers()                    lib/push-server.ts
                  ├─ pushTokens where uid in [...]   30개씩 나눠서
@@ -285,7 +285,7 @@ useHasUnreadChat    하나라도 켜졌으면 탭바에 점
 
 **예전에는 방마다 "본 시각 이후의 메시지" 질의를 하나씩 걸어 개수를 셌습니다.** 그런데 Firestore는 결과가 0건인 질의에도 읽기 1건을 물리고, 보안 규칙의 `isMember()`가 구독마다 내 문서를 한 번 더 읽습니다. 다 읽은 방도 값을 내는 셈이라 **방 하나당 두 건 × 방 개수**가 화면을 열 때마다 나갔습니다. 기수를 늘리면 여기에 사람 수가 곱해집니다. 지금은 이미 구독 중인 방 목록과 읽음 기록을 견주기만 하므로 추가 읽기가 없습니다. 잃은 것은 숫자뿐입니다.
 
-읽음 기록은 **8초에 한 번만**(`MARK_READ_GAP`) 씁니다. 메시지마다 쓰면 단체방 40명 × 메시지 1통 = 쓰기 40건이 나갑니다.
+읽음 기록은 **8초에 한 번만**(`MARK_READ_GAP`) 씁니다. 메시지가 올 때마다 쓰면 쓰기가 메시지 수만큼 나가고, 그때마다 방 목록의 점 계산이 다시 돕니다.
 
 ### 8-3. 원우수첩 — 가입자와 미가입자가 한 줄로 합쳐지는 과정
 
@@ -316,7 +316,7 @@ EventForm(운영진) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
                      ├─ 결과가 "saved"일 때만  ─▶ POST /api/push/event
                      │     ├─ 올린 본인인지 확인 (createdBy)
                      │     ├─ pushLog/{event:id}.create()  ← 이미 있으면 중단 (중복 방지)
-                     │     ├─ users where status==approved .select()  ← uid만, 사진 안 딸려오게
+                     │     ├─ users where status==approved .select("cohort")  ← 그 일정 기수만, 사진 안 딸려오게
                      │     └─ sendPushToUsers()
                      └─ router.replace(/events/{id})
 ```
@@ -375,7 +375,7 @@ EventForm(운영진) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
 |---|---|
 | 수첩·명단·일정·참석·사진·수업 | **활짝 열림** — 로그인만 하면 누구나 읽고 씀 (휴대폰 번호 포함). 원우끼리 서로 채워주는 앱이라 일부러 이렇게 둠 |
 | 느낀점 댓글 | 읽기 자유. **쓸 땐 본인 이름만**, 수정 불가, 삭제는 본인 것만 |
-| 채팅 | **잠김.** `roomId == 'main' || uid in roomId.split('__')`. 메시지는 `senderId == uid` 검사, 수정·삭제 불가 |
+| 채팅 | **잠김.** `uid in roomId.split('__')` — 1:1 방의 두 사람만 (단체방 `'main'` 통과는 2026-09-10에 지움). 메시지는 `senderId == uid` 검사, 수정·삭제는 본인 것만 |
 | 채팅 목록 조회(list) | 문서 id로는 검증이 불가능해서 **`memberUids` 기준**. 앱의 질의(`array-contains`)와 짝이 맞아야 통과 — **앱 질의를 바꾸면 규칙도 같이 고쳐야 함** |
 | 읽음 기록 | 본인만 |
 | `pushTokens` | 본인 것 하나만. **list는 아무에게도 안 엶** (열면 누가 어떤 기기 쓰는지 다 보이고 남의 알림을 끊을 수 있음) |

@@ -16,13 +16,7 @@ import {
 import { formatClockTime, formatDateDivider, isSameDay } from "@/lib/format";
 import { useApprovedMembers, useMessages } from "@/lib/hooks";
 import { useSwipeBack } from "@/lib/use-swipe-back";
-import {
-  CHAT_PAGE_SIZE,
-  COHORT,
-  MAIN_CHAT_ROOM_ID,
-  MAIN_CHAT_ROOM_TITLE,
-  MARK_READ_GAP,
-} from "@/lib/constants";
+import { CHAT_PAGE_SIZE, MARK_READ_GAP } from "@/lib/constants";
 import type { MessageDoc } from "@/lib/types";
 
 /**
@@ -101,11 +95,17 @@ export default function ChatRoomPage({
     return map;
   }, [members]);
 
-  const isGroup = roomId === MAIN_CHAT_ROOM_ID;
   const otherId = uid ? otherUidOf(roomId, uid) : null;
-  const title = isGroup
-    ? MAIN_CHAT_ROOM_TITLE
-    : ((otherId && nameByUid.get(otherId)) ?? "원우");
+  const title = (otherId && nameByUid.get(otherId)) || "원우";
+
+  /*
+   * 1:1 방이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
+   * 단체방(/chat/main)을 없앴는데, 예전 알림이나 방문 기록에 그 주소가 남아
+   * 있을 수 있습니다. 보안 규칙도 그 방을 막아서, 두면 빈 화면만 뜹니다.
+   */
+  useEffect(() => {
+    if (uid && !otherId) router.replace("/chat");
+  }, [uid, otherId, router]);
 
   useEffect(() => {
     if (skipAutoScroll.current) {
@@ -345,9 +345,6 @@ export default function ChatRoomPage({
 
           <div className="min-w-0 flex-1 text-center">
             <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-            {isGroup ? (
-              <p className="text-[12px] text-ink-faint">{COHORT} 원우 모두</p>
-            ) : null}
           </div>
 
           {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
@@ -367,11 +364,7 @@ export default function ChatRoomPage({
             <EmptyState
               icon={<ChatIcon className="h-10 w-10" />}
               title="아직 대화가 없어요"
-              description={
-                isGroup
-                  ? "첫 인사를 남겨보세요. 모든 원우에게 보입니다."
-                  : `${title} 원우에게 첫 메시지를 보내보세요.`
-              }
+              description={`${title} 원우에게 첫 메시지를 보내보세요.`}
             />
           ) : (
             <>
@@ -403,8 +396,6 @@ export default function ChatRoomPage({
                     senderPhoto={
                       photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
                     }
-                    /* 1:1 방은 상대가 한 명뿐이라 이름을 반복해 적지 않습니다. */
-                    showNames={isGroup}
                     /* 고치기·지우기는 내 메시지에만. 남의 말은 보안 규칙도 막습니다. */
                     menuOpen={menuForId === message.id}
                     onOpenMenu={
@@ -617,7 +608,6 @@ function MessageRow({
   isMine,
   senderName,
   senderPhoto,
-  showNames,
   menuOpen,
   onOpenMenu,
   onCloseMenu,
@@ -629,7 +619,6 @@ function MessageRow({
   isMine: boolean;
   senderName: string;
   senderPhoto: string | null;
-  showNames: boolean;
   /** 이 말풍선 위에 수정·삭제 박스가 떠 있는지 */
   menuOpen: boolean;
   /** 꾸욱 눌렀을 때 할 일. 손댈 수 없는 메시지(남의 말)면 null */
@@ -657,12 +646,7 @@ function MessageRow({
         </p>
       ) : null}
 
-      {/* 왼쪽 여백은 사진 32px + 사이 간격 8px. 이름이 말풍선과 나란히 서도록. */}
-      {showSender && showNames ? (
-        <p className="mt-2 mb-1 pl-[40px] text-[12px] leading-[18px] font-medium text-ink">
-          {senderName}
-        </p>
-      ) : isBlockStart ? (
+      {isBlockStart ? (
         /*
           내 메시지 위와 1:1 대화에는 이름을 적지 않습니다. 그렇다고 이름 줄을
           통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보입니다.

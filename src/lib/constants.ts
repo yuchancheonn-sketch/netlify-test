@@ -62,12 +62,6 @@ export const SESSION_COMMENT_MAX_LENGTH = 1000;
  */
 export const WRITE_ACK_TIMEOUT = 2_500;
 
-/** 10기 전체가 쓰는 단체방 ID. 채팅 목록에서 늘 맨 위에 고정됩니다. */
-export const MAIN_CHAT_ROOM_ID = "main";
-
-/** 단체방 이름 (채팅 목록과 대화방 제목에 함께 쓰입니다) */
-export const MAIN_CHAT_ROOM_TITLE = `${COHORT} 단체방`;
-
 /** 채팅 목록의 미리보기에 보여줄 마지막 메시지 최대 길이 */
 export const CHAT_PREVIEW_MAX_LENGTH = 60;
 

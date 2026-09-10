@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatIcon, UsersIcon } from "@/components/icons";
+import { ChatIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import {
-  otherUidOf,
-  previewText,
-  roomTitle,
-  sameMembers,
-  syncGroupRoomMembers,
-} from "@/lib/chat-rooms";
+import { otherUidOf, previewText, roomTitle } from "@/lib/chat-rooms";
 import { formatChatListTime } from "@/lib/format";
 import {
   useApprovedMembers,
@@ -21,12 +15,12 @@ import {
   useMyChatRooms,
   useUnreadRooms,
 } from "@/lib/hooks";
-import { COHORT } from "@/lib/constants";
 import type { ChatRoomDoc, UserDoc } from "@/lib/types";
 
 /**
- * 채팅 탭 — 내가 들어가 있는 대화방 목록.
- * 10기 단체방이 늘 맨 위에 있고, 그 아래로 원우와의 1:1 대화가 최근 순으로 쌓입니다.
+ * 채팅 탭 — 원우와의 1:1 대화 목록. 최근에 말이 오간 방이 위로 옵니다.
+ *
+ * 단체방은 2026-09-10에 없앴습니다. 기수 전체 대화는 카톡 단톡방에서 합니다.
  */
 export default function ChatListPage() {
   const { user } = useAuth();
@@ -52,24 +46,6 @@ export default function ChatListPage() {
     return map;
   }, [members]);
 
-  /*
-   * 새로 가입 승인된 원우도 단체방에 저절로 들어와 있어야 합니다.
-   * 단체방 문서에는 memberUids를 손으로 관리하는 자리가 없으므로, 채팅
-   * 목록을 열 때마다 지금의 원우 명단과 다르면 이 자리에서 맞춰 씁니다.
-   * (누구든 먼저 채팅 탭을 열면 그 순간 모두에게 반영됩니다.)
-   */
-  const groupRoom = rooms.find((room) => room.kind === "group");
-  const syncedFor = useRef<string>("");
-  useEffect(() => {
-    if (!uid || !groupRoom || members.length === 0) return;
-    const approvedUids = members.map((member) => member.uid);
-    if (sameMembers(groupRoom.memberUids, approvedUids)) return;
-    const key = approvedUids.slice().sort().join(",");
-    if (syncedFor.current === key) return;
-    syncedFor.current = key;
-    void syncGroupRoomMembers(approvedUids);
-  }, [uid, groupRoom, members]);
-
   return (
     /*
      * 바탕은 다른 탭과 같은 연한 회색입니다.
@@ -82,7 +58,8 @@ export default function ChatListPage() {
      * 줄마다 카드를 두르지 않는 카톡식 배치는 그대로입니다.
      */
     <>
-      <PageHeader title="채팅" right={<HeaderActions />} />
+      {/* 하단 탭 이름은 "채팅" 그대로 두고, 화면 제목에서만 1:1임을 밝힙니다. */}
+      <PageHeader title="1:1 채팅" right={<HeaderActions />} />
 
       {/* 좌우 여백은 다른 탭과 같은 px-4로 맞춥니다. */}
       <div className="px-4 pb-8">
@@ -97,38 +74,28 @@ export default function ChatListPage() {
           </ul>
         ) : error ? (
           <ErrorState message={error} />
+        ) : rooms.length === 0 ? (
+          /* 대화가 하나도 없을 때만, 어디서 말을 걸 수 있는지 알려줍니다. */
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+            <EmptyState
+              icon={<ChatIcon className="h-10 w-10" />}
+              title="아직 1:1 대화가 없어요"
+              description="원우 탭에서 원우를 고른 뒤 '채팅'을 누르면 둘만의 대화가 시작됩니다."
+            />
+          </div>
         ) : (
-          <>
-            <ul className="flex flex-col gap-2">
-              {rooms.map((room) => (
-                <li key={room.id}>
-                  <ChatRoomRow
-                    room={room}
-                    title={roomTitle(room, uid ?? "", nameByUid)}
-                    other={
-                      room.kind === "direct"
-                        ? memberByUid.get(otherUidOf(room.id, uid ?? "") ?? "")
-                        : undefined
-                    }
-                    /* 단체방 이름 옆에 몇 명인지 — 1:1은 둘뿐이라 적지 않습니다. */
-                    memberCount={room.kind === "group" ? members.length : undefined}
-                    unread={unreadRooms[room.id] ?? false}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            {/* 1:1 방이 하나도 없을 때만, 어디서 말을 걸 수 있는지 알려줍니다. */}
-            {rooms.length === 1 ? (
-              <div className="mt-3 rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-                <EmptyState
-                  icon={<ChatIcon className="h-10 w-10" />}
-                  title="아직 1:1 대화가 없어요"
-                  description="원우 탭에서 원우를 고른 뒤 '채팅'을 누르면 둘만의 대화가 시작됩니다."
+          <ul className="flex flex-col gap-2">
+            {rooms.map((room) => (
+              <li key={room.id}>
+                <ChatRoomRow
+                  room={room}
+                  title={roomTitle(room, uid ?? "", nameByUid)}
+                  other={memberByUid.get(otherUidOf(room.id, uid ?? "") ?? "")}
+                  unread={unreadRooms[room.id] ?? false}
                 />
-              </div>
-            ) : null}
-          </>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </>
@@ -136,32 +103,28 @@ export default function ChatListPage() {
 }
 
 /**
- * 목록 한 줄 — 사진, 이름(+인원), 마지막 메시지, 시각, 새 메시지 점.
+ * 목록 한 줄 — 사진, 이름, 마지막 메시지, 시각, 새 메시지 점.
  *
  * 방마다 흰 카드를 하나씩 두릅니다. 다른 탭의 카드들과 같은 결입니다.
  *
  * 안은 카톡 대화 목록의 짜임새를 따릅니다 — 사진은 모서리 둥근 네모,
- * 이름 옆에 인원, 시각과 새 메시지 점은 오른쪽에 위아래로. 시각을 이름 옆에
- * 두면 이름이 길 때 시각이 밀려나기 때문입니다.
+ * 시각과 새 메시지 점은 오른쪽에 위아래로. 시각을 이름 옆에 두면
+ * 이름이 길 때 시각이 밀려나기 때문입니다.
  */
 function ChatRoomRow({
   room,
   title,
   other,
-  memberCount,
   unread,
 }: {
   room: ChatRoomDoc;
   title: string;
-  /** 1:1 방일 때 상대 원우. 단체방이면 없습니다. */
+  /** 상대 원우. 탈퇴 등으로 못 찾으면 없습니다. */
   other?: UserDoc;
-  /** 단체방 이름 옆에 적을 인원 수. 1:1이면 없습니다. */
-  memberCount?: number;
   /** 이 방에 안 읽은 새 메시지가 있는지. 몇 개인지는 세지 않습니다. */
   unread: boolean;
 }) {
   const preview = previewText(room);
-  const isGroup = room.kind === "group";
 
   return (
     <Link
@@ -176,44 +139,28 @@ function ChatRoomRow({
         위아래(py-2)와 좌우(px-3)를 다르게 준 이유: 사진을 키우면서도 칸
         높이는 78px 그대로 두려고 위아래만 8px로 좁혔습니다. 좌우까지 8px로
         좁히면 오른쪽 시각·안 읽은 배지가 카드 모서리에 바짝 붙습니다.
-        (아래 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
+        (위 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
       */
       className="flex items-center gap-3.5 rounded-3xl bg-surface px-3 py-2 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
-      {isGroup ? (
-        // 단체방은 사람 사진 대신 브랜드 색 아이콘을 씁니다.
-        // 아이콘도 사진과 같은 비율로 키웁니다(54:28 → 62:32).
-        <span className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-500">
-          <UsersIcon className="h-8 w-8" />
-        </span>
-      ) : (
-        /*
-          동그라미가 아니라 모서리 둥근 네모입니다. 뒤에 붙은 !는 Avatar가
-          기본으로 들고 있는 rounded-full을 확실히 이기기 위한 것입니다 —
-          같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가 만든 CSS
-          순서로 이깁니다.
-        */
-        <Avatar
-          src={other?.photoURL ?? null}
-          name={title}
-          seed={room.id}
-          size={62}
-          className="rounded-2xl!"
-        />
-      )}
+      {/*
+        동그라미가 아니라 모서리 둥근 네모입니다. 뒤에 붙은 !는 Avatar가
+        기본으로 들고 있는 rounded-full을 확실히 이기기 위한 것입니다 —
+        같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가 만든 CSS
+        순서로 이깁니다.
+      */}
+      <Avatar
+        src={other?.photoURL ?? null}
+        name={title}
+        seed={room.id}
+        size={62}
+        className="rounded-2xl!"
+      />
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-1.5">
-          <p className="truncate text-[16px] font-bold text-ink">{title}</p>
-          {memberCount ? (
-            <span className="shrink-0 text-[14px] font-medium text-ink-faint tabular-nums">
-              {memberCount}
-            </span>
-          ) : null}
-        </div>
+        <p className="truncate text-[16px] font-bold text-ink">{title}</p>
         <p className="mt-1 truncate text-[14px] text-ink-muted">
-          {preview ||
-            (isGroup ? `${COHORT} 원우 모두가 함께하는 방이에요.` : "대화를 시작해 보세요.")}
+          {preview || "대화를 시작해 보세요."}
         </p>
       </div>
 
