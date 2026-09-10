@@ -9,9 +9,13 @@ import {
 } from "@/components/illustrations";
 import { PollCreateSheet } from "@/components/PollCard";
 
-/** 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다. */
+/**
+ * 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다.
+ * py-2: 줄 사이를 좁히려고 위아래 12px에서 8px로 줄였습니다(2026-09-11). 아이콘 36px과 합쳐
+ * 한 칸 높이가 52px이라 누르기에는 넉넉합니다.
+ */
 const ITEM_CLASS_NAME =
-  "flex items-center gap-3 rounded-2xl px-3 py-3 text-left transition active:bg-fill";
+  "flex items-center gap-3 rounded-2xl px-3 py-2 text-left transition active:bg-fill";
 
 /**
  * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 원우 지도.
@@ -27,8 +31,9 @@ export default function HomeShortcuts() {
   const [creating, setCreating] = useState<"vote" | "opinion" | null>(null);
 
   return (
-    <section className="rounded-3xl bg-surface p-2 shadow-[var(--shadow-card)]">
-      <div className="grid grid-cols-2 gap-1">
+    /* 위아래 여백은 4px(py-1) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 12px입니다. */
+    <section className="rounded-3xl bg-surface px-2 py-1 shadow-[var(--shadow-card)]">
+      <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
           <BallotBoxIllustration className="h-9 w-9 shrink-0" />
