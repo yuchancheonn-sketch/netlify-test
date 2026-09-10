@@ -10,7 +10,7 @@ import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
-import MemberMapCard from "@/components/MemberMapCard";
+import HomeShortcuts from "@/components/HomeShortcuts";
 import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
@@ -85,6 +85,9 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* 바로가기 — 투표 만들기 · 원우 지도. 그림 아이콘과 이름을 2열로. */}
+        <HomeShortcuts />
+
         {/* 이후 일정 */}
         {laterEvents.length > 0 ? (
           <section>
@@ -139,9 +142,6 @@ export default function HomePage() {
             </p>
           </div>
         </section>
-
-        {/* 원우 지도 — 원우들이 등록한 시·도를 지도에 모아 봅니다. 보고 있는 기수만. */}
-        <MemberMapCard />
 
         {/* 주차별 수업 기록 — 한 줄을 누르면 그 주 화면으로 넘어갑니다. */}
         <SessionList />

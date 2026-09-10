@@ -50,50 +50,28 @@ export default function PollCard() {
   const { data: polls, loading } = usePolls();
   // 보고 있는 기수의 투표만 — 홈이 기수마다 따로입니다.
   const { cohort } = useViewCohort();
-  const [creating, setCreating] = useState(false);
 
   const open = polls.filter((poll) => !poll.closed && inCohort(poll, cohort));
 
-  // 불러오는 동안에는 자리만 비워 둡니다 — 잠깐 나타났다 사라지면 더 산만합니다.
-  if (loading) return null;
+  /*
+    불러오는 동안에도, 열린 투표가 없을 때도 자리를 아예 비웁니다.
+
+    "투표 만들기"는 2026-09-11부터 홈 바로가기(HomeShortcuts)에 있습니다. 예전엔
+    이 카드 아래에 그 단추가 따로 서 있어서, 열린 투표가 없으면 단추가 곧 이 자리였습니다.
+    이제 빈 section을 남기면 홈의 gap-5 간격만 한 칸 더 벌어지므로 null을 돌려줍니다.
+  */
+  if (loading || open.length === 0) return null;
 
   return (
     /*
       위아래 여백을 따로 주지 않습니다.
       홈의 바깥 상자가 gap-5(20px)로 칸 사이를 정하고 있어서, 여기서 mt-를
-      더하면 그만큼 혼자 더 벌어집니다. "모임 일정 전체 보기"와 "오늘의 도산"
-      사이가 곧 그 20px이고, 투표도 같은 간격으로 섭니다.
+      더하면 그만큼 혼자 더 벌어집니다.
     */
-    <section>
-      {open.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {open.map((poll) => (
-            <OnePoll key={poll.id} poll={poll} myUid={user?.uid} />
-          ))}
-        </div>
-      ) : null}
-
-      {/*
-        투표 만들기는 원우 누구나. 열린 투표가 없을 때는 이 단추가 곧 안내가
-        되므로 따로 빈 화면을 두지 않습니다.
-
-        생김새는 자료 탭의 "앨범 만들기"·"파일 올리기", 수첩의 "원우 추가하기"와
-        똑같습니다. 넷 다 "목록 아래에서 새로 하나 더하기"라는 같은 일을 하므로,
-        한쪽을 고치면 나머지도 같이 맞춰 주세요.
-        (한때 이 단추만 주황 테두리를 둘렀다가 도로 맞췄습니다.)
-      */}
-      <button
-        type="button"
-        onClick={() => setCreating(true)}
-        className={`flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
-          open.length > 0 ? "mt-5" : ""
-        }`}
-      >
-        <PlusIcon className="h-5 w-5" />
-        투표 만들기
-      </button>
-
-      {creating ? <PollCreateSheet onClose={() => setCreating(false)} /> : null}
+    <section className="flex flex-col gap-3">
+      {open.map((poll) => (
+        <OnePoll key={poll.id} poll={poll} myUid={user?.uid} />
+      ))}
     </section>
   );
 }
@@ -555,8 +533,11 @@ function PollResult({
   );
 }
 
-/** 새로 여는 바텀시트 — 투표와 의견 모으기 둘 중 하나를 고릅니다. */
-function PollCreateSheet({ onClose }: { onClose: () => void }) {
+/**
+ * 새로 여는 바텀시트 — 투표와 의견 모으기 둘 중 하나를 고릅니다.
+ * 홈 바로가기(HomeShortcuts)의 "투표 만들기"가 엽니다.
+ */
+export function PollCreateSheet({ onClose }: { onClose: () => void }) {
   const { user, profile } = useAuth();
   /** 새 투표가 올라갈 기수 — 지금 홈에 보이는 기수입니다. */
   const { cohort } = useViewCohort();

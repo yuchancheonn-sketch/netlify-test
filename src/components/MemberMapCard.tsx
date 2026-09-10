@@ -25,7 +25,8 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 const BUBBLE_RADIUS = 20;
 
 /**
- * 홈의 "원우 지도" — 원우들이 사는 시·도를 한 장의 지도에 모아 봅니다.
+ * 원우 지도 화면(/map)의 본문 — 원우들이 사는 시·도를 한 장의 지도에 모아 봅니다.
+ * (처음엔 홈에 카드째 있었다가, 같은 날 홈 바로가기 "원우 지도"로 들어오는 화면으로 옮겼습니다.)
  *
  *  - 원우가 많은 시·도일수록 진한 주황, 그 위에 인원 수 동그라미.
  *  - 시·도(지도나 아래 알약)를 누르면 거기 사는 원우 이름이 보입니다.
@@ -76,16 +77,14 @@ export default function MemberMapCard() {
   return (
     <>
       <section className="rounded-3xl bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card)]">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[18px] font-bold text-ink">원우 지도</h2>
-          {registered > 0 ? (
-            <span className="text-[13px] font-medium text-ink-muted">{registered}명 등록</span>
-          ) : null}
-        </div>
+        {/* 제목은 화면 머리("원우 지도")에 있어서, 카드 안에는 등록한 인원만 둡니다. */}
+        {registered > 0 ? (
+          <p className="text-right text-[13px] font-medium text-ink-muted">{registered}명 등록</p>
+        ) : null}
 
         <svg
           viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-          className="mx-auto mt-3 block h-auto w-full max-w-[340px]"
+          className="mx-auto mt-2 block h-auto w-full max-w-[340px]"
           role="img"
           aria-label={
             ranked.length > 0
@@ -299,6 +298,11 @@ function RegionSheet({ current, onClose }: { current: string | null; onClose: ()
       aria-modal="true"
       aria-label="내 지역 등록"
       onClick={onClose}
+      /*
+        원우 지도 화면은 오른쪽으로 밀면 홈으로 갑니다(use-swipe-back). 이 시트 위에서
+        시작한 손짓까지 그걸로 읽으면 시트를 쓰다가 화면이 밀려나므로 빼 둡니다.
+      */
+      data-no-swipe-back
     >
       {/* 손잡이는 스크롤 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
       <div
