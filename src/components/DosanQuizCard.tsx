@@ -75,9 +75,11 @@ export default function DosanQuizCard() {
     <>
       <section className="rounded-3xl bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between gap-2">
-          <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-[13px] font-bold text-brand-500">
-            오늘의 OX 퀴즈
-          </span>
+          {/*
+            제목은 "오늘의 도산" 카드의 제목과 같은 크기·굵기·색입니다(18px, 굵게, 검정).
+            처음엔 나만의닥터처럼 주황 바탕의 작은 이름표였는데 2026-09-11에 맞췄습니다.
+          */}
+          <h2 className="text-[18px] font-bold text-ink">오늘의 OX 퀴즈</h2>
           {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
           {answer ? (
             <button
