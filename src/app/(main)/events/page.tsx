@@ -57,8 +57,7 @@ export default function EventsPage() {
         /* 홈의 "모임 일정 전체 보기"로 들어오는 화면이라, 돌아갈 자리를 홈으로 못 박습니다. */
         backHref="/home"
         right={
-          /* 끝만 둥근 상자 고르개 — 모서리 값의 이유는 원우수첩 필터의 설명에. */
-          <div className="flex rounded-xl bg-surface p-1 shadow-[var(--shadow-card)]">
+          <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
             {(
               [
                 ["list", "목록"],
@@ -70,9 +69,9 @@ export default function EventsPage() {
                 type="button"
                 onClick={() => setView(mode)}
                 aria-pressed={view === mode}
-                /* 위 4px + 아래 8px. 합(12px)이 py-1.5와 같아 칸 높이는
+                /* 위 4px + 아래 8px. 합(12px)이 py-1.5와 같아 알약 높이는
                    그대로이고 글씨만 2px 위에 앉습니다. 다른 서브탭과 같은 방식. */
-                className={`rounded-lg px-3 pt-1 pb-2 text-[13px] font-bold transition ${
+                className={`rounded-full px-3 pt-1 pb-2 text-[13px] font-bold transition ${
                   view === mode ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
