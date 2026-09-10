@@ -9,6 +9,7 @@ import SessionList from "@/components/SessionList";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
+import DosanQuizCard from "@/components/DosanQuizCard";
 import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
@@ -53,6 +54,9 @@ export default function HomePage() {
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
       <div className="flex flex-col gap-5 px-4">
+        {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
+        <DosanQuizCard />
+
         {/* 다가오는 모임 */}
         <section>
           {upcoming.loading ? (

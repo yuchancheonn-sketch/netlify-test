@@ -379,6 +379,29 @@ export function CheckIcon({ className, strokeWidth = 2.2 }: IconProps) {
   );
 }
 
+/** OX 퀴즈의 O — 굵은 동그라미. */
+export function OMarkIcon({ className, strokeWidth = 2.6 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth={strokeWidth} />
+    </svg>
+  );
+}
+
+/** OX 퀴즈의 X. 전체 화면을 닫는 단추에도 가늘게 해서 씁니다. */
+export function XMarkIcon({ className, strokeWidth = 2.6 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function LockIcon({ className, strokeWidth = 1.8 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
