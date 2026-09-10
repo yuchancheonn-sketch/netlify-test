@@ -11,11 +11,12 @@ import { PollCreateSheet } from "@/components/PollCard";
 
 /**
  * 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다.
- * py-2: 줄 사이를 좁히려고 위아래 12px에서 8px로 줄였습니다(2026-09-11). 아이콘 36px과 합쳐
- * 한 칸 높이가 52px이라 누르기에는 넉넉합니다.
+ * py-2: 줄 사이를 좁히려고 위아래 12px에서 8px로 줄였습니다(2026-09-11).
+ * 아이콘 28px·글씨 15px — 처음 36px·16px에서 같은 날 한 단계 줄였습니다. 아이콘과 합쳐
+ * 한 칸 높이가 44px이라 손끝으로 누르기에는 여전히 충분합니다.
  */
 const ITEM_CLASS_NAME =
-  "flex items-center gap-3 rounded-2xl px-3 py-2 text-left transition active:bg-fill";
+  "flex items-center gap-2.5 rounded-2xl px-3 py-2 text-left transition active:bg-fill";
 
 /**
  * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 원우 지도.
@@ -36,18 +37,18 @@ export default function HomeShortcuts() {
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
-          <BallotBoxIllustration className="h-9 w-9 shrink-0" />
-          <span className="text-[16px]! font-medium text-ink">투표 만들기</span>
+          <BallotBoxIllustration className="h-7 w-7 shrink-0" />
+          <span className="text-[15px]! font-medium text-ink">투표 만들기</span>
         </button>
 
         <button type="button" onClick={() => setCreating("opinion")} className={ITEM_CLASS_NAME}>
-          <OpinionIllustration className="h-9 w-9 shrink-0" />
-          <span className="text-[16px]! font-medium text-ink">의견 모으기</span>
+          <OpinionIllustration className="h-7 w-7 shrink-0" />
+          <span className="text-[15px]! font-medium text-ink">의견 모으기</span>
         </button>
 
         <Link href="/map" className={ITEM_CLASS_NAME}>
-          <MapIllustration className="h-9 w-9 shrink-0" />
-          <span className="text-[16px] font-medium text-ink">원우 지도</span>
+          <MapIllustration className="h-7 w-7 shrink-0" />
+          <span className="text-[15px] font-medium text-ink">원우 지도</span>
         </Link>
       </div>
 
