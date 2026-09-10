@@ -654,9 +654,9 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
 
           {/*
             무엇을 만들지 먼저 고릅니다. 자료 탭·원우수첩의 서브탭과 같은
-            알약 고르개라, 앱 안에서 "둘 중 하나 고르기"는 늘 같은 모양입니다.
+            둥근 상자 고르개라, 앱 안에서 "둘 중 하나 고르기"는 늘 같은 모양입니다.
           */}
-          <div className="mb-5 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
+          <div className="mb-5 flex rounded-xl bg-surface p-1 shadow-[var(--shadow-card)]">
             {(
               [
                 { value: "vote", label: "투표" },
@@ -671,7 +671,7 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
                   setError(null);
                 }}
                 aria-pressed={kind === value}
-                className={`flex-1 rounded-full pt-1 pb-2 text-[14px]! font-bold transition ${
+                className={`flex-1 rounded-lg pt-1 pb-2 text-[14px]! font-bold transition ${
                   kind === value ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >

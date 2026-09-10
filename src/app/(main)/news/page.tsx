@@ -42,7 +42,8 @@ export default function NewsPage() {
       <PageHeader title="소식" right={<HeaderActions />} />
 
       <div className="px-4 pb-8">
-        <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
+        {/* 끝만 둥근 상자 고르개 — 모서리 값의 이유는 원우수첩 필터의 설명에. */}
+        <div className="flex rounded-xl bg-surface p-1 shadow-[var(--shadow-card)]">
           {SUBTABS.map(({ value, label }) => (
             <button
               key={value}
@@ -51,11 +52,11 @@ export default function NewsPage() {
               aria-pressed={subtab === value}
               /*
                 위 4px(pt-1) + 아래 8px(pb-2).
-                두 값의 합(12px)이 py-1.5(6+6)와 같아서 알약 높이는 그대로이고,
+                두 값의 합(12px)이 py-1.5(6+6)와 같아서 칸 높이는 그대로이고,
                 두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
                 원우수첩·자료 탭의 서브탭과 같은 방식입니다.
               */
-              className={`flex-1 rounded-full pt-1 pb-2 text-[14px] font-bold transition ${
+              className={`flex-1 rounded-lg pt-1 pb-2 text-[14px] font-bold transition ${
                 subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >

@@ -140,11 +140,17 @@ export default function MembersPage() {
 
         {/*
           필터 — 자료 탭의 서브탭과 같은 짜임새입니다.
-          흰 알약 하나 안에 셋을 담고, 고른 것만 주황 알약에 흰 글씨가 됩니다.
+          흰 상자 하나 안에 셋을 담고, 고른 것만 주황 상자에 흰 글씨가 됩니다.
           나머지는 배경 없이 흐린 글씨로만 두어 어디에 서 있는지 색 하나로 읽힙니다.
-          알약은 화면 폭을 꽉 채워 아래 원우 카드와 좌우 끝이 맞습니다.
+          상자는 화면 폭을 꽉 채워 아래 원우 카드와 좌우 끝이 맞습니다.
+
+          모서리는 알약(rounded-full)이 아니라 끝만 둥근 상자입니다 (2026-09-11).
+          바깥 12px(rounded-xl), 안쪽 8px(rounded-lg) — 안쪽이 바깥에서 여백(p-1, 4px)만큼
+          작아야 두 모서리가 나란히 돕니다. 이 고르개는 키가 40px 안팎이라, 설정 화면의
+          SegmentedControl(16px)만큼 둥글리면 도로 알약처럼 보여서 한 단계 줄였습니다.
+          자료·소식·모임·운영진·새로 만들기의 고르개도 모두 이 값을 따릅니다.
         */}
-        <div className="mt-3 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
+        <div className="mt-3 flex rounded-xl bg-surface p-1 shadow-[var(--shadow-card)]">
           {FILTERS.map(({ value, label }) => {
             const active = filter === value;
             return (
@@ -155,16 +161,16 @@ export default function MembersPage() {
                 aria-pressed={active}
                 /*
                   위 6px(pt-1.5) + 아래 10px(pb-2.5).
-                  두 값의 합(16px)이 py-2(8+8)와 같아서 알약 높이는 그대로이고,
+                  두 값의 합(16px)이 py-2(8+8)와 같아서 칸 높이는 그대로이고,
                   두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
                   높이를 건드리지 않고 글씨만 올리려면 이렇게 합을 지켜야 합니다.
                 */
-                className={`flex flex-1 items-center justify-center rounded-full px-3 pt-1.5 pb-2.5 text-[13px] font-bold transition ${
+                className={`flex flex-1 items-center justify-center rounded-lg px-3 pt-1.5 pb-2.5 text-[13px] font-bold transition ${
                   active ? "bg-brand-500 text-white" : "text-ink-muted"
                 }`}
               >
                 {/*
-                  글씨를 감싸서 알약 한가운데에 앉힙니다.
+                  글씨를 감싸서 칸 한가운데에 앉힙니다.
                   leading-none로 글줄 높이를 글자 크기와 같게 잘라내고 1px 올립니다 —
                   한글 폰트는 내림 부분(descender)이 커서, 상자 한가운데에 맞춰도
                   눈으로는 살짝 아래에 앉아 보입니다.
