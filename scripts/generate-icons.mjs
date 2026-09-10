@@ -288,10 +288,9 @@ function iconSvg(inset, { withWaves, square = false }) {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FFA353"/>
-      <stop offset="45%" stop-color="#FF7210"/>
-      <stop offset="100%" stop-color="#D95700"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF9A1F"/>
+      <stop offset="100%" stop-color="#FF6A00"/>
     </linearGradient>
     <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
