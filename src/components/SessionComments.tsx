@@ -13,6 +13,7 @@ import {
   rootCommentId,
 } from "@/lib/session-comments";
 import { commentPeriod } from "@/lib/sessions";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import { SESSION_COMMENT_MAX_LENGTH } from "@/lib/constants";
 import type { SessionCommentDoc, SessionPeriod, UserDoc } from "@/lib/types";
 
@@ -36,7 +37,8 @@ export default function SessionComments({
 }) {
   const { user, profile } = useAuth();
   const uid = user?.uid;
-  const { data: allComments, loading, error } = useSessionComments(week);
+  const { cohort } = useViewCohort();
+  const { data: allComments, loading, error } = useSessionComments(cohort, week);
   const { data: members } = useApprovedMembers();
 
   /** 지금 보고 있는 교시의 글만. 답글도 원 댓글과 같은 교시에 있습니다. */
@@ -178,6 +180,7 @@ function CommentRow({
   compact?: boolean;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const { cohort } = useViewCohort();
   const name = member?.name || comment.authorName || "원우";
   const mine = comment.authorId === myUid;
   // 서버 시각이 아직 안 온 방금 쓴 댓글은 지금 시각으로 보여줍니다.
@@ -188,7 +191,7 @@ function CommentRow({
     if (!window.confirm("이 느낀점을 지울까요?")) return;
     setDeleting(true);
     try {
-      await deleteSessionComment({ week, commentId: comment.id });
+      await deleteSessionComment({ cohort, week, commentId: comment.id });
     } catch {
       setDeleting(false);
     }
@@ -270,6 +273,7 @@ function CommentComposer({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const { cohort } = useViewCohort();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -283,6 +287,7 @@ function CommentComposer({
 
     try {
       await addSessionComment({
+        cohort,
         week,
         period,
         author: { uid, profile },

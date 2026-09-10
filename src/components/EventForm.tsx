@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { requestPush } from "@/lib/push";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import type { EventDoc } from "@/lib/types";
 
 /**
@@ -22,6 +23,11 @@ import type { EventDoc } from "@/lib/types";
 export default function EventForm({ event }: { event?: EventDoc }) {
   const router = useRouter();
   const { user } = useAuth();
+  /**
+   * 새 일정이 올라갈 기수 — 운영진이 홈·일정 화면에서 고른 기수입니다.
+   * 수정할 때는 원래 기수를 건드리지 않습니다.
+   */
+  const { cohort } = useViewCohort();
   const editing = Boolean(event);
 
   const [title, setTitle] = useState(event?.title ?? "");
@@ -79,6 +85,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
           ? updateDoc(target, payload)
           : setDoc(target, {
               ...payload,
+              cohort,
               createdBy: user.uid,
               createdAt: serverTimestamp(),
             }),

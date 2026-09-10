@@ -5,18 +5,21 @@ import Link from "next/link";
 import { ChevronRightIcon } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
 import { useSessions } from "@/lib/hooks";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import { COURSE_TOTAL_SESSIONS } from "@/lib/constants";
 import type { SessionDoc } from "@/lib/types";
 
 /**
- * 수업 기록 — 1주차부터 마지막 주차까지 한 줄씩.
+ * 수업 기록 — 1주차부터 마지막 주차까지 한 줄씩. 보고 있는 기수의 기록입니다.
  *
  * 한 줄을 누르면 그 주 화면(/sessions/{주차})으로 넘어갑니다. 예전에는
  * 바텀시트를 열었는데, 느낀점이 여럿이 주고받는 댓글이 되면서 시트로는
- * 좁아져 화면을 따로 뒀습니다.
+ * 좁아져 화면을 따로 뒀습니다. 주소에는 기수를 싣지 않습니다 — 그 화면도
+ * 같은 useViewCohort를 읽으므로 같은 기수가 열립니다.
  */
 export default function SessionList() {
-  const sessions = useSessions();
+  const { cohort } = useViewCohort();
+  const sessions = useSessions(cohort);
 
   const sessionByWeek = useMemo(() => {
     const map = new Map<number, SessionDoc>();

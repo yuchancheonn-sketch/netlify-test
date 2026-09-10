@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CohortPicker from "@/components/CohortPicker";
 import { EventListItem } from "@/components/EventCard";
 import MonthCalendar from "@/components/MonthCalendar";
 import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { inCohort } from "@/lib/cohort";
 import { formatMonthDay, todayString } from "@/lib/format";
 import { useEvents } from "@/lib/hooks";
+import { useViewCohort } from "@/lib/use-view-cohort";
 
 type ViewMode = "list" | "calendar";
 
 export default function EventsPage() {
   const { isAdmin } = useAuth();
   const { data: allEvents, loading, error } = useEvents();
+  // 홈과 같은 기수의 일정만. 운영진이 홈에서 고른 기수를 그대로 따릅니다.
+  const { cohort, canSwitch, setCohort } = useViewCohort();
   const [view, setView] = useState<ViewMode>("list");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -28,7 +33,9 @@ export default function EventsPage() {
    * Firebase 콘솔에서 지우는 편이 안전합니다.
    */
   const today = todayString();
-  const events = allEvents.filter((event) => event.date >= today);
+  const events = allEvents.filter(
+    (event) => event.date >= today && inCohort(event, cohort),
+  );
 
   const selectedEvents = selectedDate
     ? events.filter((event) => event.date === selectedDate)
@@ -37,7 +44,16 @@ export default function EventsPage() {
   return (
     <>
       <PageHeader
-        title="모임"
+        title={
+          canSwitch ? (
+            <span className="flex items-center gap-2">
+              모임
+              <CohortPicker value={cohort} onChange={setCohort} />
+            </span>
+          ) : (
+            "모임"
+          )
+        }
         /* 홈의 "모임 일정 전체 보기"로 들어오는 화면이라, 돌아갈 자리를 홈으로 못 박습니다. */
         backHref="/home"
         right={

@@ -1,36 +1,60 @@
 "use client";
 
 import Link from "next/link";
+import CohortPicker from "@/components/CohortPicker";
 import { EventHeroCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
 import SessionList from "@/components/SessionList";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
+import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
 import { quoteOfTheDay } from "@/lib/quotes";
+import { useViewCohort } from "@/lib/use-view-cohort";
 
 export default function HomePage() {
-  const events = useUpcomingEvents();
+  const upcoming = useUpcomingEvents();
+  /*
+   * 홈은 기수마다 따로입니다 — 일정·투표·수업 기록 모두 보고 있는 기수의 것만.
+   * 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서 바꿔 볼 수 있습니다.
+   * 투표와 수업 기록은 각자 같은 값(useViewCohort)을 읽습니다.
+   * (오늘의 도산은 모든 기수가 같은 말씀을 봅니다.)
+   */
+  const { cohort, canSwitch, setCohort } = useViewCohort();
+  const events = upcoming.data.filter((event) => inCohort(event, cohort));
   // 화면을 열 때의 날짜로 정합니다. 날짜가 바뀌면 다음에 열 때 새 말씀이 보입니다.
   const quote = quoteOfTheDay();
 
-  const [nextEvent, ...laterEvents] = events.data;
+  const [nextEvent, ...laterEvents] = events;
 
   return (
     <>
       {/*
         홈의 제목 자리는 앱 이름 하나로만 씁니다.
         글씨는 다른 탭 제목("원우수첩", "자료" …)과 크기·굵기까지 똑같습니다.
+        운영진에게만 이름 옆에 기수 고르기가 붙습니다.
       */}
-      <PageHeader title={APP_DEFINITION_TITLE} right={<HeaderActions />} />
+      <PageHeader
+        title={
+          canSwitch ? (
+            <span className="flex items-center gap-2">
+              {APP_DEFINITION_TITLE}
+              <CohortPicker value={cohort} onChange={setCohort} />
+            </span>
+          ) : (
+            APP_DEFINITION_TITLE
+          )
+        }
+        right={<HeaderActions />}
+      />
 
       {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
       <div className="flex flex-col gap-5 px-4">
         {/* 다가오는 모임 */}
         <section>
-          {events.loading ? (
+          {upcoming.loading ? (
             <Skeleton className="h-[150px] rounded-3xl" />
           ) : nextEvent ? (
             <EventHeroCard

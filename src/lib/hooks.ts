@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
+import { parseSessionDocId, sessionDocId } from "@/lib/cohort";
 import { emptyGroupRoom, toChatRoom } from "@/lib/chat-rooms";
 import { MAIN_CHAT_ROOM_ID } from "@/lib/constants";
 import { todayString } from "@/lib/format";
@@ -215,30 +216,53 @@ export function useRsvps(eventId: string): ListState<RsvpDoc> {
 }
 
 /**
- * 주차별 수업 정보 (주제·강사).
- * 원우 누구나 채우는 공용 기록이라, 모두가 같은 내용을 봅니다.
+ * 주차별 수업 정보 (주제·강사) — 한 기수 몫.
+ * 원우 누구나 채우는 공용 기록이라, 같은 기수는 모두가 같은 내용을 봅니다.
+ *
+ * 기수는 문서 id에 들어 있습니다(lib/cohort.ts의 sessionDocId). id로는 질의를
+ * 걸 수 없어 컬렉션을 통째로 받아 거릅니다. 기수 × 열 주라 많아야 백 건이고,
+ * 기수를 바꿔도 구독을 새로 걸지 않고 거르기만 다시 합니다.
  */
-export function useSessions(): ListState<SessionDoc> {
-  const [state, setState] = useState<ListState<SessionDoc>>(EMPTY);
+export function useSessions(cohort: string): ListState<SessionDoc> {
+  const [state, setState] = useState<ListState<{ cohort: string; session: SessionDoc }>>(
+    EMPTY,
+  );
 
   useEffect(() => {
     return onSnapshot(
       collection(db, "sessions"),
       (snapshot) => {
-        const sessions = snapshot.docs.map(
-          (document) => ({ ...document.data(), week: Number(document.id) }) as SessionDoc,
-        );
+        const sessions = snapshot.docs.flatMap((document) => {
+          const place = parseSessionDocId(document.id);
+          if (!place) return [];
+          return [
+            {
+              cohort: place.cohort,
+              session: { ...document.data(), week: place.week } as SessionDoc,
+            },
+          ];
+        });
         setState({ data: sessions, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "수업 기록을 불러오지 못했어요." }),
     );
   }, []);
 
-  return state;
+  return useMemo(
+    () => ({
+      loading: state.loading,
+      error: state.error,
+      data: state.data
+        .filter((item) => item.cohort === cohort)
+        .map((item) => item.session),
+    }),
+    [state, cohort],
+  );
 }
 
 /** 한 주차의 수업 정보. 그 주 화면에서만 씁니다. */
-export function useSession(week: number) {
+export function useSession(cohort: string, week: number) {
+  const sessionId = sessionDocId(cohort, week);
   const [state, setState] = useState<{
     data: SessionDoc | null;
     loading: boolean;
@@ -247,7 +271,7 @@ export function useSession(week: number) {
 
   useEffect(() => {
     return onSnapshot(
-      doc(db, "sessions", String(week)),
+      doc(db, "sessions", sessionId),
       (snapshot) =>
         setState({
           data: snapshot.exists()
@@ -259,7 +283,7 @@ export function useSession(week: number) {
       () =>
         setState({ data: null, loading: false, error: "수업 기록을 불러오지 못했어요." }),
     );
-  }, [week]);
+  }, [sessionId, week]);
 
   return state;
 }
@@ -271,12 +295,16 @@ export function useSession(week: number) {
  * 질의하면 원 댓글 수만큼 구독이 생겨서, 댓글이 스무 개면 구독도 스무 개가
  * 됩니다. 한 주에 달릴 댓글은 많아야 수십 개라 통째로 받는 편이 훨씬 쌉니다.
  */
-export function useSessionComments(week: number): ListState<SessionCommentDoc> {
+export function useSessionComments(
+  cohort: string,
+  week: number,
+): ListState<SessionCommentDoc> {
+  const sessionId = sessionDocId(cohort, week);
   const [state, setState] = useState<ListState<SessionCommentDoc>>(EMPTY);
 
   useEffect(() => {
     const commentsQuery = query(
-      collection(db, "sessions", String(week), "comments"),
+      collection(db, "sessions", sessionId, "comments"),
       orderBy("createdAt", "asc"),
     );
     return onSnapshot(
@@ -303,7 +331,7 @@ export function useSessionComments(week: number): ListState<SessionCommentDoc> {
       },
       () => setState({ data: [], loading: false, error: "댓글을 불러오지 못했어요." }),
     );
-  }, [week]);
+  }, [sessionId]);
 
   return state;
 }

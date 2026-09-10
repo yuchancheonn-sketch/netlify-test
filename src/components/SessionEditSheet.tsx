@@ -11,7 +11,9 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
+import { sessionDocId } from "@/lib/cohort";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import {
   SESSION_INSTRUCTOR_MAX_LENGTH,
@@ -35,6 +37,7 @@ export default function SessionEditSheet({
   onClose: () => void;
 }) {
   const { user, profile } = useAuth();
+  const { cohort } = useViewCohort();
   const [topic, setTopic] = useState(session?.topic ?? "");
   const [instructor, setInstructor] = useState(session?.instructor ?? "");
   /* 교시마다 영상이 하나씩입니다. 1교시가 videoUrl, 2교시가 videoUrl2입니다. */
@@ -62,7 +65,7 @@ export default function SessionEditSheet({
     try {
       await commitWrite(
         setDoc(
-          doc(db, "sessions", String(week)),
+          doc(db, "sessions", sessionDocId(cohort, week)),
           {
             week,
             topic: topic.trim(),

@@ -3,9 +3,11 @@
 /**
  * 수업 느낀점 댓글을 쓰고 지우는 일.
  *
- * 댓글은 sessions/{주차}/comments/{id} 에 담고, 그 주 문서의 commentCount를
+ * 댓글은 sessions/{문서}/comments/{id} 에 담고, 그 주 문서의 commentCount를
  * 함께 올리고 내립니다. 홈의 수업 기록 줄이 "댓글 3"을 보여주려면 그 값이
  * 필요한데, 없으면 홈을 열 때마다 열 주치 댓글을 전부 세어야 합니다.
+ *
+ * 수업 기록은 기수마다 따로라 문서 id에 기수가 들어갑니다 (lib/cohort.ts의 sessionDocId).
  */
 
 import {
@@ -17,6 +19,7 @@ import {
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
+import { sessionDocId } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import type { SessionCommentDoc, SessionPeriod, UserDoc } from "@/lib/types";
 
@@ -41,19 +44,23 @@ export function rootCommentId(
  * (주제를 아무도 안 적은 주에 댓글이 먼저 달릴 수 있습니다).
  */
 export async function addSessionComment({
+  cohort,
   week,
   period,
   author,
   text,
   parentId,
 }: {
+  cohort: string;
   week: number;
   period: SessionPeriod;
   author: { uid: string; profile: UserDoc | null };
   text: string;
   parentId: string | null;
 }): Promise<void> {
-  await addDoc(collection(db, "sessions", String(week), "comments"), {
+  const sessionId = sessionDocId(cohort, week);
+
+  await addDoc(collection(db, "sessions", sessionId, "comments"), {
     text,
     authorId: author.uid,
     authorName: author.profile?.name || author.profile?.nickname || "원우",
@@ -63,7 +70,7 @@ export async function addSessionComment({
   });
 
   await setDoc(
-    doc(db, "sessions", String(week)),
+    doc(db, "sessions", sessionId),
     { week, commentCount: increment(1) },
     { merge: true },
   );
@@ -74,15 +81,19 @@ export async function addSessionComment({
  * 화면에서 "지워진 댓글"로 자리만 지키고, 오간 답글은 읽을 수 있게 둡니다.
  */
 export async function deleteSessionComment({
+  cohort,
   week,
   commentId,
 }: {
+  cohort: string;
   week: number;
   commentId: string;
 }): Promise<void> {
-  await deleteDoc(doc(db, "sessions", String(week), "comments", commentId));
+  const sessionId = sessionDocId(cohort, week);
+
+  await deleteDoc(doc(db, "sessions", sessionId, "comments", commentId));
   await setDoc(
-    doc(db, "sessions", String(week)),
+    doc(db, "sessions", sessionId),
     { week, commentCount: increment(-1) },
     { merge: true },
   );

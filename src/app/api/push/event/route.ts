@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { sendPushToUsers } from "@/lib/push-server";
+import { cohortOf } from "@/lib/cohort";
 import { formatMonthDay, formatTime } from "@/lib/format";
 
 /**
@@ -54,13 +55,19 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, sent: 0, reason: "already-sent" });
   }
 
-  // 승인된 원우 전체. select()로 uid만 받아, 프로필 사진까지 딸려오지 않게 합니다.
+  /*
+   * 그 일정의 기수 원우만. 홈이 기수마다 따로라, 다른 기수의 일정 알림은 소음입니다.
+   * select("cohort")로 기수 칸만 받아 프로필 사진까지 딸려오지 않게 합니다.
+   * 기수 칸이 없는 예전 일정·계정은 10기로 봅니다 (lib/cohort.ts).
+   */
+  const eventCohort = cohortOf(eventSnap.get("cohort") as string | undefined);
   const membersSnap = await db
     .collection("users")
     .where("status", "==", "approved")
-    .select()
+    .select("cohort")
     .get();
   const recipientUids = membersSnap.docs
+    .filter((doc) => cohortOf(doc.get("cohort") as string | undefined) === eventCohort)
     .map((doc) => doc.id)
     .filter((uid) => uid !== senderUid);
   if (recipientUids.length === 0) return Response.json({ ok: true, sent: 0 });

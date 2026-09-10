@@ -116,6 +116,8 @@ export interface EventDoc {
   endTime: string;
   location: string;
   description: string;
+  /** 기수 ("10기"). 이 칸이 없는 예전 일정은 10기로 봅니다 — lib/cohort.ts */
+  cohort?: string;
   createdBy: string;
   createdAt: Timestamp | null;
 }
@@ -136,6 +138,8 @@ export interface PhotoAlbumDoc {
   /** 목록에 보여줄 대표 이미지. 첫 사진이 올라오면 자동으로 채워집니다. */
   coverImageUrl: string | null;
   photoCount: number;
+  /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
+  cohort?: string;
   createdBy: string;
   createdAt: Timestamp | null;
 }
@@ -176,6 +180,8 @@ export interface PollDoc {
   question: string;
   /** 고를 수 있는 것들 (2~4개). 표는 이 배열의 자리(index)로 셉니다. */
   options: string[];
+  /** 기수 ("10기"). 이 칸이 없는 예전 투표는 10기로 봅니다 — lib/cohort.ts */
+  cohort?: string;
   createdBy: string;
   createdByName: string;
   createdAt: Timestamp | null;
@@ -249,6 +255,8 @@ export interface FileDoc {
    */
   format: string;
   bytes: number;
+  /** 기수 ("10기"). 이 칸이 없는 예전 파일은 10기로 봅니다 — lib/cohort.ts */
+  cohort?: string;
   uploadedBy: string;
   uploadedByName: string;
   uploadedAt: Timestamp | null;

@@ -15,8 +15,10 @@ import {
   deletePoll,
   votePercent,
 } from "@/lib/polls";
+import { inCohort } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import {
   OPINION_MAX_LENGTH,
   POLL_MAX_OPTIONS,
@@ -46,9 +48,11 @@ import type { PollDoc } from "@/lib/types";
 export default function PollCard() {
   const { user } = useAuth();
   const { data: polls, loading } = usePolls();
+  // 보고 있는 기수의 투표만 — 홈이 기수마다 따로입니다.
+  const { cohort } = useViewCohort();
   const [creating, setCreating] = useState(false);
 
-  const open = polls.filter((poll) => !poll.closed);
+  const open = polls.filter((poll) => !poll.closed && inCohort(poll, cohort));
 
   // 불러오는 동안에는 자리만 비워 둡니다 — 잠깐 나타났다 사라지면 더 산만합니다.
   if (loading) return null;
@@ -554,6 +558,8 @@ function PollResult({
 /** 새로 여는 바텀시트 — 투표와 의견 모으기 둘 중 하나를 고릅니다. */
 function PollCreateSheet({ onClose }: { onClose: () => void }) {
   const { user, profile } = useAuth();
+  /** 새 투표가 올라갈 기수 — 지금 홈에 보이는 기수입니다. */
+  const { cohort } = useViewCohort();
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
   const [kind, setKind] = useState<"vote" | "opinion">("vote");
   const [question, setQuestion] = useState("");
@@ -600,6 +606,7 @@ function PollCreateSheet({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       await createPoll({
+        cohort,
         kind,
         question: trimmedQuestion,
         options: trimmedOptions,

@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
+import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { PlusIcon } from "@/components/icons";
 import {
@@ -22,6 +23,8 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { inCohort } from "@/lib/cohort";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import {
@@ -55,10 +58,27 @@ type Subtab = (typeof SUBTABS)[number]["value"];
 
 export default function LibraryPage() {
   const [subtab, setSubtab] = useState<Subtab>("photos");
+  /*
+   * 자료도 기수마다 따로입니다. 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서
+   * 바꿔 봅니다. 앨범 목록과 파일 목록은 각자 같은 값(useViewCohort)을 읽습니다.
+   */
+  const { cohort, canSwitch, setCohort } = useViewCohort();
 
   return (
     <>
-      <PageHeader title="자료" right={<HeaderActions />} />
+      <PageHeader
+        title={
+          canSwitch ? (
+            <span className="flex items-center gap-2">
+              자료
+              <CohortPicker value={cohort} onChange={setCohort} />
+            </span>
+          ) : (
+            "자료"
+          )
+        }
+        right={<HeaderActions />}
+      />
 
       <div className="px-4 pb-8">
         <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
@@ -110,7 +130,10 @@ function formatBytes(bytes: number): string {
  */
 function FileList() {
   const { user, profile, isAdmin } = useAuth();
-  const { data: files, loading, error } = useFiles();
+  const { data: allFiles, loading, error } = useFiles();
+  /** 보고 있는 기수의 파일만. 올릴 때도 이 기수로 적습니다. */
+  const { cohort } = useViewCohort();
+  const files = allFiles.filter((file) => inCohort(file, cohort));
   const [uploading, setUploading] = useState(false);
   /** 0~1. 여러 개를 올릴 때는 지금 올리는 한 개의 진행률입니다. */
   const [progress, setProgress] = useState(0);
@@ -147,6 +170,7 @@ function FileList() {
           publicId: uploaded.publicId,
           format: uploaded.format,
           bytes: uploaded.bytes,
+          cohort,
           uploadedBy: user.uid,
           uploadedByName: profile?.name || profile?.nickname || "원우",
           uploadedAt: serverTimestamp(),
@@ -505,7 +529,10 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
 /** 행사(앨범) 목록 */
 function AlbumList() {
   const { isAdmin } = useAuth();
-  const { data: albums, loading, error } = useAlbums();
+  const { data: allAlbums, loading, error } = useAlbums();
+  /** 보고 있는 기수의 앨범만. 만들 때도 이 기수로 적습니다. */
+  const { cohort } = useViewCohort();
+  const albums = allAlbums.filter((album) => inCohort(album, cohort));
   const [creating, setCreating] = useState(false);
 
   if (loading) {
@@ -594,6 +621,8 @@ function AlbumList() {
 /** 새 행사 앨범을 만드는 바텀시트 */
 function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
+  /** 새 앨범이 올라갈 기수 — 운영진이 자료 화면에서 고른 기수입니다. */
+  const { cohort } = useViewCohort();
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState(todayString());
   const [error, setError] = useState<string | null>(null);
@@ -617,6 +646,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           eventDate,
           coverImageUrl: null,
           photoCount: 0,
+          cohort,
           createdBy: user.uid,
           createdAt: serverTimestamp(),
         }),

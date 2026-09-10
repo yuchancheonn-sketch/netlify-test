@@ -11,6 +11,7 @@ import { LibraryIcon } from "@/components/icons";
 import { useSession } from "@/lib/hooks";
 import { SESSION_PERIODS, periodLabel, sessionVideoUrl } from "@/lib/sessions";
 import { useSwipeBack } from "@/lib/use-swipe-back";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import { COURSE_TOTAL_SESSIONS } from "@/lib/constants";
 import type { SessionPeriod } from "@/lib/types";
@@ -34,7 +35,9 @@ export default function SessionPage({
   const { week: weekParam } = use(params);
   const week = Number(weekParam);
   const router = useRouter();
-  const { data: session, loading } = useSession(week);
+  // 홈의 수업 기록 목록과 같은 기수의 그 주를 엽니다 (운영진이 고른 기수 포함).
+  const { cohort } = useViewCohort();
+  const { data: session, loading } = useSession(cohort, week);
   const [editing, setEditing] = useState(false);
   /*
    * 지금 보고 있는 교시. 영상도 느낀점도 이 값 하나를 따라 함께 바뀝니다.

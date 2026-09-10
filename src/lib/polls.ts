@@ -26,11 +26,14 @@ import type { PollDoc, UserDoc } from "@/lib/types";
  * 저장이 늦어도 화면이 곧바로 그 투표를 가리킬 수 있습니다.
  */
 export async function createPoll({
+  cohort,
   kind,
   question,
   options,
   author,
 }: {
+  /** 이 투표가 올라갈 기수의 홈 */
+  cohort: string;
   kind: "vote" | "opinion";
   question: string;
   /** 의견 모으기면 빈 배열입니다. */
@@ -40,6 +43,7 @@ export async function createPoll({
   const reference = doc(collection(db, "polls"));
 
   await setDoc(reference, {
+    cohort,
     kind,
     question,
     options,
