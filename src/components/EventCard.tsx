@@ -15,7 +15,8 @@ import type { EventDoc } from "@/lib/types";
 /**
  * 일정 하나를 크게 보여주는 주황 상자.
  *
- * 홈의 "주요 일정" 카드와 모임 상세 맨 위 상자가 같은 자리에 쓰입니다.
+ * 모임 상세 맨 위 상자에 쓰입니다. (홈의 "주요 일정" 카드도 이것이었지만
+ * 2026-09-11부터 홈은 아래의 한 줄짜리 EventDdayCard를 씁니다.)
  * 예전에는 둘을 따로 그려서 서로 갈라져 있었습니다 — 한쪽은 단색인데
  * 다른 쪽은 그라데이션, D-day가 한쪽은 맨 글씨인데 다른 쪽은 검은 알약,
  * 시간·장소가 한쪽은 가로로 눕고 다른 쪽은 세로로 섰습니다.
@@ -94,6 +95,53 @@ export function EventHeroCard({
     <Link href={href} className={`${box} transition active:scale-[0.99]`}>
       {inside}
     </Link>
+  );
+}
+
+/**
+ * 홈 맨 위의 다가오는 모임 — 왼쪽에 D-day를 크게, 옆에 두 줄(이름 / 장소·시간),
+ * 오른쪽 끝에 ">"(모임 일정 전체 보기).
+ *
+ * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
+ * 위의 EventHeroCard에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
+ * 상자를 따로 두었는데 이 한 장으로 합쳤습니다. 모임 상세 맨 위는 여전히 EventHeroCard입니다.
+ *
+ * ★ 누르는 곳이 둘입니다 — 카드 몸통은 이 모임 상세로, 오른쪽 ">"는 전체 일정으로.
+ *   링크 안에 링크를 넣을 수 없어 나란히 두 개를 세웠습니다. ">" 쪽은 카드 높이만큼
+ *   세로로 늘어나 손끝이 닿기 쉽습니다.
+ *
+ * ★ 둘째 줄은 시작 시간만 적습니다. "오후 6:30 ~ 오후 10:30"까지 넣으면 D-day와
+ *   ">" 사이의 좁은 폭에서 장소가 잘려 나갑니다. 끝나는 시간은 상세에서 봅니다.
+ */
+export function EventDdayCard({ event }: { event: EventDoc }) {
+  const details = [event.location, event.startTime ? formatTime(event.startTime) : ""]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <div className="flex items-stretch rounded-3xl bg-brand-500 text-white shadow-[var(--shadow-float)]">
+      <Link
+        href={`/events/${event.id}`}
+        className="flex min-w-0 flex-1 items-center gap-4 py-5 pl-5 transition active:opacity-80"
+      >
+        <span className="min-w-[64px] shrink-0 text-center text-[28px] leading-none font-black tracking-tight">
+          {ddayLabel(event.date)}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
+          {details ? (
+            <span className="mt-1.5 block truncate text-[14px] font-medium">{details}</span>
+          ) : null}
+        </span>
+      </Link>
+      <Link
+        href="/events"
+        aria-label="모임 일정 전체 보기"
+        className="flex shrink-0 items-center pr-4 pl-3 transition active:opacity-60"
+      >
+        <ChevronRightIcon className="h-7 w-7" strokeWidth={2.2} />
+      </Link>
+    </div>
   );
 }
 

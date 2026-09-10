@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import CohortPicker from "@/components/CohortPicker";
-import { EventHeroCard, EventListItem } from "@/components/EventCard";
+import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
 import SessionList from "@/components/SessionList";
@@ -57,24 +57,30 @@ export default function HomePage() {
         {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
         <DosanQuizCard />
 
-        {/* 다가오는 모임 */}
+        {/*
+          다가오는 모임 — D-day 한 줄. 오른쪽 ">"가 모임 일정 전체 보기로 갑니다
+          (예전의 따로 선 "모임 일정 전체 보기" 상자를 이 카드에 합쳤습니다).
+        */}
         <section>
           {upcoming.loading ? (
-            <Skeleton className="h-[150px] rounded-3xl" />
+            <Skeleton className="h-[88px] rounded-3xl" />
           ) : nextEvent ? (
-            <EventHeroCard
-              event={nextEvent}
-              caption="주요 일정"
-              href={`/events/${nextEvent.id}`}
-            />
+            <EventDdayCard event={nextEvent} />
           ) : (
-            <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+            /*
+              모임이 없어도 전체 일정 화면으로 갈 길은 남겨 둡니다 —
+              운영진의 "일정 등록" 단추가 그 화면에 있습니다.
+            */
+            <Link
+              href="/events"
+              className="block rounded-3xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            >
               <EmptyState
                 icon={<CalendarIcon className="h-9 w-9" />}
                 title="다가오는 모임이 아직 없어요"
                 description="운영진이 일정을 올리면 여기에 D-day로 표시됩니다."
               />
-            </div>
+            </Link>
           )}
         </section>
 
@@ -102,23 +108,7 @@ export default function HomePage() {
               ))}
             </ul>
           </section>
-        ) : (
-          /*
-            -mt-3으로 위 카드와의 간격을 20 → 8px로 좁힙니다.
-            (바깥 상자의 gap-5에서 12px을 도로 당겨오는 셈입니다.)
-            제목 없이 한 줄짜리 링크라 위 카드에 딸린 것처럼 붙는 편이 자연스럽습니다.
-          */
-          <Link
-            href="/events"
-            className="-mt-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-          >
-            <span className="flex items-center gap-2.5 text-[15px] font-bold text-ink">
-              <CalendarIcon className="h-[26px] w-[26px] text-brand-500" />
-              모임 일정 전체 보기
-            </span>
-            <ChevronRightIcon className="h-[26px] w-[26px] text-ink-faint" />
-          </Link>
-        )}
+        ) : null}
 
         {/* 투표 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다. */}
         <PollCard />
