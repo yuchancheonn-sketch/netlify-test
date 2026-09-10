@@ -2,7 +2,8 @@
  * 홈 화면에 하루 하나씩 띄우는 도산 안창호 선생의 말씀.
  *
  * 서버 없이 날짜만으로 고릅니다. 같은 날에는 모든 원우에게 같은 말씀이 보이고,
- * 자정이 지나면 다음 말씀으로 넘어갑니다. 39개를 한 바퀴(39일) 돌면 다시 처음으로.
+ * 자정이 지나면 다음 말씀으로 넘어갑니다. 순서는 무작위지만 39일 한 바퀴 안에서
+ * 같은 말씀이 두 번 나오지 않고, 이틀 연달아 같은 출처가 나오지도 않습니다.
  *
  * 출처는 흥사단이 공식으로 정리한 "도산의 말씀"(yka.or.kr)을 따랐습니다.
  * 그 자료에 실린 말씀만 담았고, 널리 떠돌지만 어디서 하신 말씀인지 확인되지
@@ -19,6 +20,7 @@ export interface Quote {
 
 /**
  * 흥사단 "도산의 말씀" 자료의 여섯 묶음, 39개를 자료에 실린 순서대로 담았습니다.
+ * (화면에 나오는 순서는 이 순서가 아닙니다 — 아래 quoteOfTheDay가 섞습니다.)
  * 문장을 줄이지 않고 원문 그대로 옮겼습니다 (2026-09-11, 운영진이 자료 화면을 캡처해 전달).
  * 홈 카드는 줄 수를 자르지 않아서, 긴 말씀이 뜨는 날은 카드가 그만큼 길어집니다.
  */
@@ -193,13 +195,80 @@ export const DOSAN_QUOTES: Quote[] = [
 ];
 
 /**
+ * 같은 씨앗을 넣으면 언제 어디서나 같은 수열을 내는 난수 (mulberry32).
+ * Math.random을 쓰면 원우마다, 열 때마다 말씀이 달라지므로 날짜를 씨앗으로 씁니다.
+ */
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * 한 바퀴(39일) 동안 보여줄 순서 — 말씀 번호의 목록. 바퀴마다 새로 섞습니다.
+ *
+ * 자료가 출처별로 묶여 있어서(흥사단우 13, 동포에게 13 …) 그냥 섞기만 하면
+ * 이틀 연달아 같은 출처가 나오는 날이 넷에 하루꼴입니다. 그래서 하루씩 채우며
+ * 전날과 출처가 다른 말씀 중에서만 무작위로 고릅니다. 끝에 가서 남은 말씀이
+ * 모두 전날과 같은 출처라 막히면, 씨앗을 바꿔 처음부터 다시 섞습니다.
+ */
+function cycleOrder(cycle: number): number[] {
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const random = seededRandom(cycle * 1000 + attempt);
+    const left = DOSAN_QUOTES.map((_, index) => index);
+    const order: number[] = [];
+    while (left.length > 0) {
+      const previous = order.length > 0 ? DOSAN_QUOTES[order[order.length - 1]].source : null;
+      const choices = left.filter((index) => DOSAN_QUOTES[index].source !== previous);
+      if (choices.length === 0) break;
+      const pick = choices[Math.floor(random() * choices.length)];
+      order.push(pick);
+      left.splice(left.indexOf(pick), 1);
+    }
+    if (order.length === DOSAN_QUOTES.length) return order;
+  }
+  // 출처 하나가 절반을 넘지 않는 한 여기까지 오지 않습니다. 그래도 멈추지는 않게 둡니다.
+  return DOSAN_QUOTES.map((_, index) => index);
+}
+
+/**
+ * cycleOrder에 바퀴 사이의 이음새까지 맞춘 순서.
+ *
+ * 한 바퀴의 첫날이 지난 바퀴 마지막 날과 출처가 같으면, 첫날 말씀을 뒤쪽의
+ * 알맞은 말씀과 맞바꿉니다. 마지막 날은 건드리지 않으므로 지난 바퀴의 마지막
+ * 날은 cycleOrder만 보고 알 수 있습니다 (이 함수를 거꾸로 끝없이 부르지 않습니다).
+ */
+function dayOrder(cycle: number): number[] {
+  const order = cycleOrder(cycle);
+  const sourceAt = (position: number) => DOSAN_QUOTES[order[position]].source;
+  const previousCycle = cycleOrder(cycle - 1);
+  const before = DOSAN_QUOTES[previousCycle[previousCycle.length - 1]].source;
+  if (sourceAt(0) !== before) return order;
+
+  for (let k = 2; k < order.length - 1; k++) {
+    const fitsFront = sourceAt(k) !== before && sourceAt(k) !== sourceAt(1);
+    const fitsBack = sourceAt(0) !== sourceAt(k - 1) && sourceAt(0) !== sourceAt(k + 1);
+    if (fitsFront && fitsBack) {
+      [order[0], order[k]] = [order[k], order[0]];
+      break;
+    }
+  }
+  return order;
+}
+
+/**
  * 오늘의 말씀. 날짜(그 지역의 하루)만으로 정하기 때문에
  * 같은 날 접속한 원우들은 모두 같은 말씀을 봅니다.
  */
 export function quoteOfTheDay(today: Date = new Date()): Quote {
   const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const days = Math.floor(midnight.getTime() / 86_400_000);
-  // 음수가 나오지 않도록 한 번 더 더해서 나눕니다.
-  const index = ((days % DOSAN_QUOTES.length) + DOSAN_QUOTES.length) % DOSAN_QUOTES.length;
-  return DOSAN_QUOTES[index];
+  const cycle = Math.floor(days / DOSAN_QUOTES.length);
+  const position = days - cycle * DOSAN_QUOTES.length;
+  return DOSAN_QUOTES[dayOrder(cycle)[position]];
 }
