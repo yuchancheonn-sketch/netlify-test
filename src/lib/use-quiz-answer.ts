@@ -57,6 +57,54 @@ function write(key: string, answer: OxAnswer) {
   for (const listener of listeners) listener();
 }
 
+/* ------------------------------------------------------------------ */
+/* 접어 두기 — 푼 뒤에 카드를 접었는지                                     */
+/* ------------------------------------------------------------------ */
+
+const COLLAPSE_PREFIX = "agikaeta:quiz-collapsed:";
+const collapsedMemory = new Map<string, boolean>();
+
+function readCollapsed(key: string): boolean {
+  const kept = collapsedMemory.get(key);
+  if (kept !== undefined) return kept;
+  try {
+    return localStorage.getItem(COLLAPSE_PREFIX + key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(key: string, collapsed: boolean) {
+  collapsedMemory.set(key, collapsed);
+  try {
+    // 지난 문제의 표시는 지웁니다. 새 문제는 늘 펼친 채로 시작합니다.
+    for (let index = localStorage.length - 1; index >= 0; index--) {
+      const stored = localStorage.key(index);
+      if (stored?.startsWith(COLLAPSE_PREFIX) && stored !== COLLAPSE_PREFIX + key) {
+        localStorage.removeItem(stored);
+      }
+    }
+    if (collapsed) localStorage.setItem(COLLAPSE_PREFIX + key, "1");
+    else localStorage.removeItem(COLLAPSE_PREFIX + key);
+  } catch {
+    // 저장만 못 할 뿐, 켜 둔 동안에는 collapsedMemory에서 읽습니다.
+  }
+  for (const listener of listeners) listener();
+}
+
+/**
+ * 오늘 문제를 푼 뒤 카드를 접어 두었는지 — 이 폰에만 기억합니다.
+ * 접어 두면 홈을 다시 열어도 접힌 채로 보이고, 다음 날 새 문제는 펼친 채로 시작합니다.
+ */
+export function useQuizCollapsed(key: string) {
+  const collapsed = useSyncExternalStore(
+    subscribe,
+    () => readCollapsed(key),
+    () => false,
+  );
+  return [collapsed, (value: boolean) => writeCollapsed(key, value)] as const;
+}
+
 /**
  * key는 "날짜:문제 id"처럼 오늘 문제를 가리키는 값입니다.
  * 날짜가 바뀌거나 문제 목록이 바뀌면 key가 달라져 새로 풀게 됩니다.

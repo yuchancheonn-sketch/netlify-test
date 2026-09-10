@@ -5,7 +5,7 @@ import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
 import { quizOfTheDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
 import { todayString } from "@/lib/format";
-import { useQuizAnswer } from "@/lib/use-quiz-answer";
+import { useQuizAnswer, useQuizCollapsed } from "@/lib/use-quiz-answer";
 
 /** "채점 중이에요" 화면을 보여주는 시간(ms). 너무 짧으면 번쩍하고, 길면 답답합니다. */
 const GRADING_MS = 1600;
@@ -32,7 +32,11 @@ function choiceLabel(value: OxAnswer): string {
  */
 export default function DosanQuizCard() {
   const quiz = quizOfTheDay();
-  const [answer, saveAnswer] = useQuizAnswer(`${todayString()}:${quiz.id}`);
+  const quizKey = `${todayString()}:${quiz.id}`;
+  const [answer, saveAnswer] = useQuizAnswer(quizKey);
+  /** 푼 뒤에만 접을 수 있습니다. 풀기 전에는 늘 펼쳐 둡니다 — 접힌 채로는 문제를 못 봅니다. */
+  const [collapsed, setCollapsed] = useQuizCollapsed(quizKey);
+  const expanded = !answer || !collapsed;
   /** 제출 전에 눌러 둔 답 */
   const [picked, setPicked] = useState<OxAnswer | null>(null);
   const [screen, setScreen] = useState<"none" | "grading" | "explanation">("none");
@@ -82,61 +86,95 @@ export default function DosanQuizCard() {
           <h2 className="text-[18px] font-bold text-ink">오늘의 OX 퀴즈</h2>
           {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
           {answer ? (
-            <button
-              type="button"
-              onClick={() => setScreen("explanation")}
-              className="flex items-center gap-0.5 text-[14px]! font-medium text-ink-muted"
-            >
-              해설 보기
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setScreen("explanation")}
+                className="flex items-center gap-0.5 text-[14px]! font-medium text-ink-muted"
+              >
+                해설 보기
+                <ChevronRightIcon className="h-4 w-4" />
+              </button>
+              {/*
+                접고 펴기. 접혀 있으면 ∨(눌러서 펼침), 펼쳐 있으면 ∧(눌러서 접음).
+                오른쪽 화살표를 돌려 씁니다. 손끝 자리는 32px로 넉넉히 두되,
+                -mr-1.5로 카드 오른쪽 여백 안쪽 줄에 화살표가 맞게 당깁니다.
+              */}
+              <button
+                type="button"
+                onClick={() => setCollapsed(!collapsed)}
+                aria-expanded={expanded}
+                aria-label={expanded ? "오늘의 OX 퀴즈 접기" : "오늘의 OX 퀴즈 펼치기"}
+                className="-mr-1.5 flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
+              >
+                <ChevronRightIcon
+                  className={`h-5 w-5 transition-transform duration-300 motion-reduce:transition-none ${
+                    expanded ? "-rotate-90" : "rotate-90"
+                  }`}
+                />
+              </button>
+            </div>
           ) : null}
         </div>
 
-        {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
-        <p className="mt-4 flex gap-2 text-[17px] leading-relaxed font-medium text-ink">
-          <span className="shrink-0 font-bold text-brand-500">Q.</span>
-          <span className="break-keep">{quiz.question}</span>
-        </p>
+        {/*
+          접고 펴는 부분 — 문제·고르기·결과.
+          높이를 재지 않고 grid 줄 높이를 1fr ↔ 0fr로 바꿔 부드럽게 여닫습니다.
+          접혀 있는 동안에는 inert로 안의 단추가 눌리거나 초점을 받지 않게 합니다.
+        */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          }`}
+          inert={!expanded}
+        >
+          <div className="min-h-0 overflow-hidden">
+            {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
+            <p className="flex gap-2 pt-4 text-[17px] leading-relaxed font-medium text-ink">
+              <span className="shrink-0 font-bold text-brand-500">Q.</span>
+              <span className="break-keep">{quiz.question}</span>
+            </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
-          {CHOICES.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={(answer ?? picked) === value}
-              disabled={Boolean(answer)}
-              onClick={() => setPicked(value)}
-              className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-3 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
-                value,
-              )}`}
-            >
-              {value === "O" ? (
-                <OMarkIcon className="h-5 w-5 text-brand-500" />
-              ) : (
-                <XMarkIcon className="h-5 w-5 text-danger" />
-              )}
-              {label}
-            </button>
-          ))}
-        </div>
+            <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
+              {CHOICES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={(answer ?? picked) === value}
+                  disabled={Boolean(answer)}
+                  onClick={() => setPicked(value)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-3 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
+                    value,
+                  )}`}
+                >
+                  {value === "O" ? (
+                    <OMarkIcon className="h-5 w-5 text-brand-500" />
+                  ) : (
+                    <XMarkIcon className="h-5 w-5 text-danger" />
+                  )}
+                  {label}
+                </button>
+              ))}
+            </div>
 
-        {answer ? (
-          <p
-            className={`mt-4 text-center text-[15px] font-bold ${
-              correct ? "text-brand-500" : "text-danger"
-            }`}
-          >
-            {correct ? "정답이에요!" : `아쉬워요, 정답은 ${quiz.answer}예요`}
-          </p>
-        ) : picked ? (
-          <div className="mt-3">
-            <PrimaryButton onClick={submit} size="compact">
-              정답 제출하기
-            </PrimaryButton>
+            {answer ? (
+              <p
+                className={`mt-4 text-center text-[15px] font-bold ${
+                  correct ? "text-brand-500" : "text-danger"
+                }`}
+              >
+                {correct ? "정답이에요!" : `아쉬워요, 정답은 ${quiz.answer}예요`}
+              </p>
+            ) : picked ? (
+              <div className="mt-3">
+                <PrimaryButton onClick={submit} size="compact">
+                  정답 제출하기
+                </PrimaryButton>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </section>
 
       {screen === "grading" ? <GradingScreen /> : null}
