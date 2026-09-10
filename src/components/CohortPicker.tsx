@@ -5,8 +5,11 @@ import { createPortal } from "react-dom";
 import { CheckIcon, ChevronLeftIcon } from "@/components/icons";
 import { ALL_COHORTS, COHORTS } from "@/lib/cohort";
 
-/** 펼친 목록의 폭(px). 체크 칸 + "10기"·"전체"가 한 줄로 들어가는 만큼만 둡니다. */
-const LIST_WIDTH = 100;
+/**
+ * 펼친 목록의 폭 = 글씨 크기 × 이 배수. 체크 칸 + "10기"·"전체"가 한 줄로 들어가는 만큼만 둡니다.
+ * 목록 글씨가 제목 크기(22px, 세로가 짧은 화면 18px)를 따라가므로 폭도 함께 따라갑니다.
+ */
+const LIST_WIDTH_EM = 5.5;
 /** 단추와 목록 사이 간격(px) */
 const LIST_GAP = 8;
 /** 목록이 화면 가장자리에 붙지 않게 남기는 여백(px). 카드들의 좌우 여백과 같습니다. */
@@ -46,7 +49,9 @@ export default function CohortPicker({
   includeAll?: boolean;
 }) {
   /** 펼친 목록의 화면 위 자리. 닫혀 있으면 null */
-  const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
+  const [anchor, setAnchor] = useState<{ top: number; left: number; fontSize: number } | null>(
+    null,
+  );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const open = anchor !== null;
 
@@ -58,15 +63,24 @@ export default function CohortPicker({
       setAnchor(null);
       return;
     }
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    /*
+     * 목록 글씨는 단추(= 제목 "원우수첩") 글씨와 같은 크기로 씁니다.
+     * 목록은 body에 따로 떠서 제목 크기를 물려받지 못하므로, 열 때 재어 옮겨 줍니다.
+     * 세로가 짧은 화면에서 제목이 18px로 줄어드는 것도 이렇게 따라갑니다.
+     */
+    const fontSize = parseFloat(getComputedStyle(trigger).fontSize) || 22;
+    const width = Math.round(fontSize * LIST_WIDTH_EM);
     setAnchor({
       top: rect.bottom + LIST_GAP,
       // 단추 글자에 맞추되, 화면 양옆으로 삐져나가지 않게 당깁니다.
       left: Math.max(
         SCREEN_EDGE,
-        Math.min(rect.left - LIST_SHIFT, window.innerWidth - LIST_WIDTH - SCREEN_EDGE),
+        Math.min(rect.left - LIST_SHIFT, window.innerWidth - width - SCREEN_EDGE),
       ),
+      fontSize,
     });
   }
 
@@ -157,8 +171,13 @@ export default function CohortPicker({
               <ul
                 ref={listRef}
                 aria-label="기수"
-                className="fixed z-50 max-h-[min(62dvh,470px)] origin-top-left overflow-y-auto overscroll-contain rounded-[20px] bg-surface/70 p-1.5 shadow-[0_16px_48px_rgba(17,20,24,0.2),0_2px_8px_rgba(17,20,24,0.08),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_0_0_0.5px_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
-                style={{ top: anchor.top, left: anchor.left, width: LIST_WIDTH }}
+                className="fixed z-50 max-h-[min(70dvh,560px)] origin-top-left overflow-y-auto overscroll-contain rounded-[20px] bg-surface/70 p-1.5 shadow-[0_16px_48px_rgba(17,20,24,0.2),0_2px_8px_rgba(17,20,24,0.08),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_0_0_0.5px_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
+                style={{
+                  top: anchor.top,
+                  left: anchor.left,
+                  width: Math.round(anchor.fontSize * LIST_WIDTH_EM),
+                  fontSize: anchor.fontSize,
+                }}
               >
                 {options.map((option) => {
                   const selected = option === value;
@@ -169,7 +188,10 @@ export default function CohortPicker({
                         <li aria-hidden="true" className="mx-2 my-1 h-px bg-ink/10" />
                       ) : null}
                       <li>
-                        {/* 크기 뒤의 !는 위 단추와 같은 이유입니다 (globals.css의 button 규칙). */}
+                        {/*
+                          글씨 크기는 목록(ul)에 옮겨 둔 제목 크기를 물려받습니다.
+                          !는 위 단추와 같은 이유입니다 (globals.css의 button 규칙).
+                        */}
                         <button
                           type="button"
                           aria-pressed={selected}
@@ -177,7 +199,7 @@ export default function CohortPicker({
                             onChange(option);
                             setAnchor(null);
                           }}
-                          className={`flex w-full items-center gap-1 rounded-[14px] py-2 pr-3 pl-1.5 text-left text-[17px]! text-ink transition-colors active:bg-ink/[0.08] ${
+                          className={`flex w-full items-center gap-1 rounded-[14px] py-2 pr-3 pl-1.5 text-left text-ink [font-size:inherit]! transition-colors active:bg-ink/[0.08] ${
                             selected ? "font-semibold" : "font-normal"
                           }`}
                         >
@@ -186,7 +208,7 @@ export default function CohortPicker({
                             그래야 모든 줄의 글자가 같은 자리에서 시작합니다.
                           */}
                           <CheckIcon
-                            className={`h-[18px] w-[18px] shrink-0 ${selected ? "" : "invisible"}`}
+                            className={`h-[0.85em] w-[0.85em] shrink-0 ${selected ? "" : "invisible"}`}
                             strokeWidth={2.4}
                           />
                           {labelOf(option)}
