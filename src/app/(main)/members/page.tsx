@@ -361,8 +361,15 @@ function MemberRow({
           같은 네 글자 직위가 붙으면 이름이 두세 글자만 남았습니다.
 
           지금은 순서를 뒤집었습니다 — 이름은 shrink-0으로 제 폭을 지키고,
-          자리가 정말 모자라면 이 줄의 overflow-hidden이 **오른쪽 끝(배지)부터**
-          잘라냅니다. 배지는 없어도 누구인지 알 수 있지만 이름은 그렇지 않습니다.
+          자리가 모자라면 **직위 배지만** 줄어들며 끝이 "…"로 잘립니다.
+          배지는 없어도 누구인지 알 수 있지만 이름은 그렇지 않습니다.
+
+          ★ 이 줄의 overflow-hidden은 이제 배지 부스러기만 자릅니다 (2026-09-11).
+            예전에는 이름이 칸보다 넓어질 수 있어서, 글씨 크기를 키운 폰에서는
+            이 overflow-hidden에 이름 끝까지 잘려 나갔습니다. 지금은 이름 덩어리에
+            max-w-full을 걸어 줄 폭을 넘지 못하게 했으므로 잘릴 일이 없고, 배지가
+            "…"까지 줄어들고도 남는 알약 여백만 여기서 깔끔하게 잘립니다.
+            (overflow-hidden을 빼 보니 그 여백이 수정 단추 밑으로 삐져나갔습니다.)
         */}
         {/*
           ★ items-baseline이 아니라 items-center입니다.
@@ -375,11 +382,16 @@ function MemberRow({
 
           번호와 이름은 둘 다 17px이라 어느 쪽으로 맞추든 똑같이 보입니다.
         */}
-        <div className="flex items-center gap-1.5 overflow-hidden">
-          <span className="shrink-0 text-[17px] font-bold text-ink tabular-nums">
-            {number}.
-          </span>
-          <span className="shrink-0 whitespace-nowrap text-[17px] font-bold text-ink">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+          {/*
+            번호와 이름을 한 덩어리로 묶습니다. 따로 두면 줄이 모자랄 때 "48."만
+            윗줄에 남고 이름이 아랫줄로 떨어집니다.
+            max-w-full + break-keep + overflow-wrap:anywhere — 평소엔 한 줄이고,
+            이름 하나가 칸보다 길 때만(글씨 크게 + 아주 긴 이름) 띄어쓰기에서,
+            그래도 안 되면 글자 사이에서 다음 줄로 넘깁니다. 잘리거나 옆 단추를 덮지는 않습니다.
+          */}
+          <span className="max-w-full shrink-0 text-[17px] font-bold break-keep text-ink [overflow-wrap:anywhere]">
+            <span className="mr-1.5 tabular-nums">{number}.</span>
             {entry.name}
           </span>
           {/*
@@ -397,11 +409,16 @@ function MemberRow({
               여백(py)으로 높이를 만들면 글씨 크기에 따라 값이 흔들려서
               이름 줄(17px 글씨의 줄 높이 ≈ 20px)과 미묘하게 어긋납니다.
               22px로 정해 두면 이름 줄보다 아주 조금 높아 나란히 선 것으로
-              읽힙니다. leading-none은 글씨가 제 줄 높이만큼 상자를 밀어
-              올리지 못하게 막아, 22px이 그대로 지켜지게 합니다.
+              읽힙니다. 줄 높이도 22px(leading-[22px])로 맞춰 글씨가 상자
+              한가운데에 앉습니다.
+
+              ★ 자리가 모자라면 이 배지만 줄어들며 끝이 "…"로 잘립니다(min-w-0 + truncate).
+              다음 줄로 넘기지 않습니다 — 카드 높이가 원우마다 들쭉날쭉해집니다.
+              inline-flex로 두면 "…"이 붙지 않아서(말줄임은 글씨를 직접 품은 block
+              상자에서만 동작) inline-block으로 그립니다.
           */}
           {entry.councilRole ? (
-            <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-brand-50 px-2 text-[11px] leading-none font-bold text-brand-500">
+            <span className="inline-block h-[22px] min-w-0 truncate rounded-full bg-brand-50 px-2 text-[11px] leading-[22px] font-bold text-brand-500">
               {shortCouncilRole(entry.councilRole)}
             </span>
           ) : null}
