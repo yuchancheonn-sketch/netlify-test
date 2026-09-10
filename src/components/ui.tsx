@@ -105,17 +105,22 @@ export function PrimaryButton({
   loading?: boolean;
   /**
    * 버튼 높이. 화면을 차지하는 큰 버튼은 md, 다른 버튼과 한 줄에 서는
-   * 작은 버튼은 sm.
+   * 작은 버튼은 sm. compact는 md보다 위아래 2px씩만 낮은 것으로, 카드 안에
+   * 들어가는 큰 버튼(오늘의 OX 퀴즈의 "정답 제출하기")에 씁니다.
    *
    * 굳이 값으로 받는 이유: 바깥에서 className에 py-2.5를 얹어도 py-4를
    * 이기지 못합니다. 같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가
    * 만든 CSS 순서로 이깁니다.
    */
-  size?: "md" | "sm";
+  size?: "md" | "compact" | "sm";
   className?: string;
 }) {
   const sizeClassName =
-    size === "sm" ? "px-5 py-2.5 text-[15px]" : "px-5 py-4 text-[16px]";
+    size === "sm"
+      ? "px-5 py-2.5 text-[15px]"
+      : size === "compact"
+        ? "px-5 py-3.5 text-[16px]"
+        : "px-5 py-4 text-[16px]";
 
   return (
     <button

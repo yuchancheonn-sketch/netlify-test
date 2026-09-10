@@ -130,7 +130,9 @@ export default function DosanQuizCard() {
           </p>
         ) : picked ? (
           <div className="mt-3">
-            <PrimaryButton onClick={submit}>정답 제출하기</PrimaryButton>
+            <PrimaryButton onClick={submit} size="compact">
+              정답 제출하기
+            </PrimaryButton>
           </div>
         ) : null}
       </section>
