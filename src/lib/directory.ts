@@ -107,24 +107,40 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
  * 운영진이 계정을 연결(linkedUid)해 두지 않았더라도 기수와 이름이 같으면
  * 같은 사람으로 보고 한 줄로 합칩니다. 그래야 본인이 가입한 뒤에도 수첩에
  * 두 번 나오지 않습니다.
+ *
+ * ★ 단, 짝이 하나뿐일 때만 합칩니다. 한 기수에 같은 이름의 가입자나 명단이
+ *   둘 이상이면(동명이인) 누가 누구 칸인지 이름만으로는 모르므로 따로 세웁니다.
+ *   잘못 합치면 남의 휴대폰·회사가 내 칸에 보입니다.
+ *   운영진이 명단 화면에서 직접 이어 주면 linkedUid로 합쳐집니다.
  */
 export function buildDirectory(
   members: UserDoc[],
   roster: RosterDoc[],
 ): DirectoryEntry[] {
   const rosterByUid = new Map<string, RosterDoc>();
-  const rosterByPerson = new Map<string, RosterDoc>();
+  const openRosterByPerson = new Map<string, RosterDoc[]>();
   for (const entry of roster) {
-    if (entry.linkedUid) rosterByUid.set(entry.linkedUid, entry);
-    else rosterByPerson.set(personKey(entry.cohort, entry.name), entry);
+    if (entry.linkedUid) {
+      rosterByUid.set(entry.linkedUid, entry);
+    } else {
+      const key = personKey(entry.cohort, entry.name);
+      openRosterByPerson.set(key, [...(openRosterByPerson.get(key) ?? []), entry]);
+    }
+  }
+
+  const memberCountByPerson = new Map<string, number>();
+  for (const member of members) {
+    const key = personKey(member.cohort, member.name);
+    memberCountByPerson.set(key, (memberCountByPerson.get(key) ?? 0) + 1);
   }
 
   const usedRosterIds = new Set<string>();
   const entries: DirectoryEntry[] = members.map((member) => {
+    const key = personKey(member.cohort, member.name);
+    const open = openRosterByPerson.get(key) ?? [];
     const matched =
       rosterByUid.get(member.uid) ??
-      rosterByPerson.get(personKey(member.cohort, member.name)) ??
-      null;
+      (open.length === 1 && memberCountByPerson.get(key) === 1 ? open[0] : null);
     if (matched) usedRosterIds.add(matched.id);
     return fromMember(member, matched);
   });

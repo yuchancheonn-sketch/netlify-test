@@ -38,29 +38,57 @@ export interface RosterCarryOver {
   introVideoUrl: string;
 }
 
+/** 휴대폰 비교용. 숫자만 남깁니다. */
+function digits(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
 /**
  * 같은 기수·같은 이름의 명단 항목을 찾아 계정과 이어붙이고, 미리 적혀 있던 정보를 돌려줍니다.
  *
- * 찾지 못하면 null을 돌려줍니다. 이미 이 계정과 이어져 있으면 정보만 돌려줍니다.
+ * ★ 동명이인 — 이름만으로는 사람을 가릴 수 없어서, 확실할 때만 잇습니다.
+ *   - 이미 이 계정과 이어진 항목이 있으면 그것을 씁니다.
+ *   - 아직 아무와도 안 이어진 같은 이름이 **딱 하나**일 때만 새로 잇습니다.
+ *     둘 이상이면 휴대폰 번호가 같은 칸이 딱 하나일 때만 그 칸을 고르고,
+ *     그래도 모르면 잇지 않습니다. 운영진이 명단 화면에서 직접 이어 줍니다.
+ *   - 명단과 본인이 모두 휴대폰을 적었는데 번호가 다르면 다른 사람으로 봅니다.
+ *     그대로 이으면 남의 번호·회사가 내 프로필로 옮겨 담기기 때문입니다.
+ *
+ * 찾지 못하면 null을 돌려줍니다.
  * 실패해도 프로필 저장 자체를 막지 않도록, 부르는 쪽에서 감싸 주세요.
  */
 export async function linkRosterEntry(
   uid: string,
   name: string,
   cohort: string,
+  phone = "",
 ): Promise<RosterCarryOver | null> {
   const target = normalize(name);
   if (!target) return null;
 
   const snapshot = await getDocs(collection(db, "roster"));
 
-  const match = snapshot.docs.find((document) => {
+  const sameName = snapshot.docs.filter((document) => {
     const entry = document.data() as RosterDoc;
-    if (normalize(entry.name ?? "") !== target) return false;
-    if (cohortOf(entry.cohort) !== cohortOf(cohort)) return false;
-    // 아직 아무와도 이어지지 않았거나, 이미 내 것으로 이어진 항목만 가져갑니다.
-    return !entry.linkedUid || entry.linkedUid === uid;
+    return (
+      normalize(entry.name ?? "") === target && cohortOf(entry.cohort) === cohortOf(cohort)
+    );
   });
+
+  const myPhone = digits(phone);
+  const open = sameName.filter((document) => {
+    const entry = document.data() as RosterDoc;
+    if (entry.linkedUid) return false;
+    const theirPhone = digits(entry.phone ?? "");
+    return !(myPhone && theirPhone && myPhone !== theirPhone);
+  });
+  const samePhone = myPhone
+    ? open.filter((document) => digits((document.data() as RosterDoc).phone ?? "") === myPhone)
+    : [];
+
+  let match = sameName.find((document) => (document.data() as RosterDoc).linkedUid === uid);
+  if (!match && open.length === 1) match = open[0];
+  if (!match && samePhone.length === 1) match = samePhone[0];
 
   if (!match) return null;
 

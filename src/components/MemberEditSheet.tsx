@@ -74,6 +74,10 @@ export default function MemberEditSheet({
   const [introVideoUrl, setIntroVideoUrl] = useState(entry?.introVideoUrl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
+  /** "10기:홍길동"처럼, 같은 이름이 있다고 한 번 알린 뒤 동명이인으로 추가를 기다리는 이름 */
+  const [confirmedDuplicate, setConfirmedDuplicate] = useState<string | null>(null);
+  const duplicateKey = `${cohort}:${name.replace(/\s+/g, "")}`;
+  const duplicatePending = !entry && confirmedDuplicate === duplicateKey;
   const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -110,15 +114,21 @@ export default function MemberEditSheet({
      * 새로 올릴 때만 확인합니다.
      * 운영진이 명단을 미리 넣어두었기 때문에, 같은 이름을 또 올리면
      * 수첩에 한 사람이 두 칸으로 서게 됩니다.
+     *
+     * 다만 동명이인은 실제로 있을 수 있어서 아주 막지는 않습니다.
+     * 한 번 알리고, 그래도 한 번 더 누르면 따로 추가합니다.
      */
-    if (!entry) {
-      // 기수가 다르면 이름이 같아도 다른 사람입니다. 같은 기수 안에서만 막습니다.
+    if (!entry && !duplicatePending) {
+      // 기수가 다르면 이름이 같아도 다른 사람입니다. 같은 기수 안에서만 봅니다.
       const typed = name.replace(/\s+/g, "");
       const taken = existing.some(
         (person) => person.cohort === cohort && person.name.replace(/\s+/g, "") === typed,
       );
       if (taken) {
-        showNameError(`이미 ${cohort} 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.`);
+        setConfirmedDuplicate(duplicateKey);
+        showNameError(
+          `이미 ${cohort} 수첩에 있는 이름이에요. 같은 분이면 그 칸의 수정을 눌러 주세요. 동명이인이면 한 번 더 누르면 추가돼요.`,
+        );
         return;
       }
     }
@@ -416,7 +426,7 @@ export default function MemberEditSheet({
           ) : null}
 
           <PrimaryButton type="submit" loading={saving}>
-            {entry ? "저장하기" : "수첩에 추가하기"}
+            {entry ? "저장하기" : duplicatePending ? "동명이인으로 추가하기" : "수첩에 추가하기"}
           </PrimaryButton>
 
           {isMine ? (

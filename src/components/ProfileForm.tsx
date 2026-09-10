@@ -249,7 +249,8 @@ export default function ProfileForm({
        */
       let carried = null;
       try {
-        carried = await linkRosterEntry(user.uid, name, form.cohort);
+        // 동명이인이면 확실할 때만 잇습니다 — 휴대폰 번호도 함께 넘겨 가려 봅니다.
+        carried = await linkRosterEntry(user.uid, name, form.cohort, form.phone);
       } catch {
         carried = null;
       }

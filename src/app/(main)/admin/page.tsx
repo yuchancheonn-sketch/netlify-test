@@ -147,7 +147,10 @@ function PendingSection({
        * 여러 개면 명단 탭에서 운영진이 직접 고르게 둡니다.
        */
       const matches = roster.filter(
-        (entry) => !entry.linkedUid && entry.name.trim() === user.name.trim(),
+        (entry) =>
+          !entry.linkedUid &&
+          cohortOf(entry.cohort) === cohortOf(user.cohort) &&
+          entry.name.trim() === user.name.trim(),
       );
       if (matches.length === 1) {
         await commitWrite(
@@ -509,15 +512,21 @@ function RosterSection({
                     </button>
                   </div>
 
-                  {/* 이름이 달라 자동 연결되지 않았을 때 직접 이어 붙입니다. */}
-                  {!linked && unlinkedUsers.length > 0 ? (
+                  {/*
+                    이름이 달라 자동 연결되지 않았거나, 동명이인이라 일부러 잇지 않았을 때
+                    직접 이어 붙입니다. 이미 이어진 칸도 바꿀 수 있습니다 — 동명이인이
+                    먼저 가입해 남의 칸을 가져간 경우를 바로잡는 길입니다.
+                  */}
+                  {unlinkedUsers.length > 0 ? (
                     <select
                       aria-label={`${entry.name} 계정 연결`}
                       value=""
                       onChange={(changed) => handleLink(entry, changed.target.value)}
                       className="mt-3 w-full rounded-xl bg-canvas px-3 py-2.5 text-[13px] text-ink-muted outline-none"
                     >
-                      <option value="">가입한 계정과 연결하기…</option>
+                      <option value="">
+                        {linked ? "다른 계정으로 바꾸기…" : "가입한 계정과 연결하기…"}
+                      </option>
                       {unlinkedUsers.map((member) => (
                         <option key={member.uid} value={member.uid}>
                           {member.name} ({member.email})
