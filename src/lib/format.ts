@@ -126,6 +126,17 @@ export function formatPhoneInput(raw: string): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
+/**
+ * 이름이 한글로만 되어 있는지. 앞뒤 공백은 보지 않고, 글자 사이 띄어쓰기는 허용합니다.
+ *
+ * 수첩은 가나다순이고, 가입한 원우와 명단은 이름이 같아야 한 칸으로 이어집니다.
+ * 한 사람이 "홍길동"과 "Gildong Hong"으로 따로 서지 않도록 한글만 받습니다.
+ * 완성된 글자(가~힣)만 통과하므로 "홍길ㄷ"처럼 덜 친 자모도 걸립니다.
+ */
+export function isKoreanName(name: string): boolean {
+  return /^[가-힣]+(?:\s+[가-힣]+)*$/.test(name.trim());
+}
+
 /** 전화 걸기·문자 보내기 링크에 쓸 번호 (숫자만) */
 export function phoneHref(raw: string): string {
   return raw.replace(/[^\d+]/g, "");

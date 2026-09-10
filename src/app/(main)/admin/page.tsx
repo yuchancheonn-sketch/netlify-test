@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth-context";
 import { COHORTS, cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
+import { isKoreanName } from "@/lib/format";
 import { useAllUsers, useRoster } from "@/lib/hooks";
 import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 
@@ -303,6 +304,14 @@ function RosterSection({
   async function handleAdd(submitEvent: React.FormEvent) {
     submitEvent.preventDefault();
     if (!user || saving || newNames.length === 0) return;
+
+    // 프로필 이름이 한글만 받으므로, 명단도 한글이어야 가입했을 때 같은 이름으로 이어집니다.
+    const notKorean = newNames.filter((name) => !isKoreanName(name));
+    if (notKorean.length > 0) {
+      setAdded(null);
+      setError(`이름은 한글로만 적어 주세요. (${notKorean.join(", ")})`);
+      return;
+    }
 
     setSaving(true);
     setError(null);

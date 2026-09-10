@@ -26,7 +26,7 @@ import {
   POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
-import { formatPhone, formatPhoneInput } from "@/lib/format";
+import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -82,7 +82,10 @@ export default function ProfileForm({
   const initial = useMemo<FormState>(() => {
     const [month = "", day = ""] = (profile?.birthdayMonthDay ?? "").split("-");
     return {
-      name: profile?.name || user?.displayName || "",
+      // 구글 계정 이름이 영문이면 채워 두지 않습니다 — 이름은 한글로만 받습니다.
+      name:
+        profile?.name ||
+        (user?.displayName && isKoreanName(user.displayName) ? user.displayName : ""),
       // 구분처럼 최초 설정에서는 비워 둡니다. 가입 직후 문서에 적힌 값을 그대로 믿지 않습니다.
       cohort: profile?.profileCompleted ? cohortOf(profile.cohort) : "",
       nickname: profile?.nickname ?? "",
@@ -163,6 +166,7 @@ export default function ProfileForm({
 
     if (!form.name.trim()) next.name = "이름을 입력해 주세요.";
     else if (form.name.trim().length > 20) next.name = "이름은 20자까지 넣을 수 있어요.";
+    else if (!isKoreanName(form.name)) next.name = "이름은 한글로만 적어 주세요.";
 
     /*
      * 원우수첩이 기수마다 따로라, 기수를 모르면 어느 수첩에 넣을지 정할 수 없습니다.
@@ -212,6 +216,18 @@ export default function ProfileForm({
     }
 
     setErrors(next);
+
+    /*
+     * 저장 버튼은 맨 아래, 이름 칸은 맨 위라 빨간 안내가 화면 밖에 뜰 수 있습니다.
+     * 처음 걸린 칸까지 올려 보여줍니다. (칸의 id를 FormState 이름과 맞춰 두었습니다)
+     */
+    const firstInvalid = Object.keys(next)[0];
+    if (firstInvalid) {
+      document
+        .getElementById(firstInvalid)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
     return Object.keys(next).length === 0;
   }
 
@@ -376,6 +392,7 @@ export default function ProfileForm({
         <FieldLabel hint="선택">생일</FieldLabel>
         <div className="flex gap-3">
           <select
+            id="month"
             aria-label="생일 월"
             value={form.month}
             onChange={(event) => {
@@ -416,6 +433,7 @@ export default function ProfileForm({
 
         <div className="mt-3 flex gap-3">
           <input
+            id="birthdayYear"
             aria-label="태어난 연도 (선택)"
             value={form.birthdayYear}
             onChange={(event) =>

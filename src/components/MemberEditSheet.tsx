@@ -26,7 +26,7 @@ import {
   POSITION_MAX_LENGTH,
 } from "@/lib/constants";
 import type { DirectoryEntry } from "@/lib/directory";
-import { formatPhone, formatPhoneInput } from "@/lib/format";
+import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -85,12 +85,24 @@ export default function MemberEditSheet({
     return link?.id ? videoThumbnail(link) : null;
   })();
 
+  /** 이름 칸은 시트 맨 위라, 아래 저장 버튼을 누른 자리에서는 안내가 안 보여 올려 보여줍니다. */
+  function showNameError(message: string) {
+    setNameError(message);
+    document.getElementById("edit-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (saving || !profile) return;
 
     if (!name.trim()) {
-      setNameError("이름을 입력해 주세요.");
+      showNameError("이름을 입력해 주세요.");
+      return;
+    }
+
+    // 이유는 lib/format.ts의 isKoreanName에.
+    if (!isKoreanName(name)) {
+      showNameError("이름은 한글로만 적어 주세요.");
       return;
     }
 
@@ -106,7 +118,7 @@ export default function MemberEditSheet({
         (person) => person.cohort === cohort && person.name.replace(/\s+/g, "") === typed,
       );
       if (taken) {
-        setNameError(`이미 ${cohort} 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.`);
+        showNameError(`이미 ${cohort} 수첩에 있는 이름이에요. 그 칸의 수정을 눌러 채워주세요.`);
         return;
       }
     }
