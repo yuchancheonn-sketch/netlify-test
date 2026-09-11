@@ -57,65 +57,21 @@ function write(key: string, answer: OxAnswer) {
   for (const listener of listeners) listener();
 }
 
-/* ------------------------------------------------------------------ */
-/* 접어 두기 — 푼 뒤에 카드를 접었는지                                     */
-/* ------------------------------------------------------------------ */
-
-const COLLAPSE_PREFIX = "agikaeta:quiz-collapsed:";
-const collapsedMemory = new Map<string, boolean>();
-
-function readCollapsed(key: string): boolean {
-  const kept = collapsedMemory.get(key);
-  if (kept !== undefined) return kept;
-  try {
-    return localStorage.getItem(COLLAPSE_PREFIX + key) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeCollapsed(key: string, collapsed: boolean) {
-  collapsedMemory.set(key, collapsed);
-  try {
-    // 지난 문제의 표시는 지웁니다. 새 문제는 늘 펼친 채로 시작합니다.
-    for (let index = localStorage.length - 1; index >= 0; index--) {
-      const stored = localStorage.key(index);
-      if (stored?.startsWith(COLLAPSE_PREFIX) && stored !== COLLAPSE_PREFIX + key) {
-        localStorage.removeItem(stored);
-      }
-    }
-    if (collapsed) localStorage.setItem(COLLAPSE_PREFIX + key, "1");
-    else localStorage.removeItem(COLLAPSE_PREFIX + key);
-  } catch {
-    // 저장만 못 할 뿐, 켜 둔 동안에는 collapsedMemory에서 읽습니다.
-  }
-  for (const listener of listeners) listener();
-}
-
 /**
- * 오늘 문제를 푼 뒤 카드를 접어 두었는지 — 이 폰에만 기억합니다.
- * 접어 두면 홈을 다시 열어도 접힌 채로 보이고, 다음 날 새 문제는 펼친 채로 시작합니다.
- */
-export function useQuizCollapsed(key: string) {
-  const collapsed = useSyncExternalStore(
-    subscribe,
-    () => readCollapsed(key),
-    () => false,
-  );
-  return [collapsed, (value: boolean) => writeCollapsed(key, value)] as const;
-}
-
-/**
- * 이 폰에 적어 둔 퀴즈 답과 접어 두기 표시를 모두 지웁니다 — 오늘 문제를 다시 풀 수 있게.
+ * 이 폰에 적어 둔 퀴즈 답을 모두 지웁니다 — 오늘 문제를 다시 풀 수 있게.
  * 화면에는 입구가 없고, 주소 끝에 `?quiz-reset`을 붙여 홈을 열면 불립니다(DosanQuizCard).
+ *
+ * 2026-09-11까지 있던 카드 접어 두기 표시("agikaeta:quiz-collapsed:…")도 앞머리가
+ * 같아(LEGACY_PREFIX) 함께 지워집니다. 접기 기능은 없앴고 남은 한 줄은 쓰이지 않습니다.
  */
+const LEGACY_PREFIX = "agikaeta:quiz";
+
 export function resetQuizAnswers() {
   memory.clear();
-  collapsedMemory.clear();
   try {
     for (let index = localStorage.length - 1; index >= 0; index--) {
       const stored = localStorage.key(index);
-      if (stored?.startsWith(KEY_PREFIX) || stored?.startsWith(COLLAPSE_PREFIX)) {
+      if (stored?.startsWith(LEGACY_PREFIX)) {
         localStorage.removeItem(stored);
       }
     }
