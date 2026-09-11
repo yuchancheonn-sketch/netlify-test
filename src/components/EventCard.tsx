@@ -117,9 +117,7 @@ export function EventHeroCard({
  *   ">" 사이의 좁은 폭에서 장소가 잘려 나갑니다. 끝나는 시간은 상세에서 봅니다.
  */
 export function EventDdayCard({ event }: { event: EventDoc }) {
-  const details = [event.location, event.startTime ? formatTime(event.startTime) : ""]
-    .filter(Boolean)
-    .join(" · ");
+  const time = event.startTime ? formatTime(event.startTime) : "";
 
   return (
     <div className="flex items-stretch rounded-3xl bg-surface text-ink shadow-[var(--shadow-card)]">
@@ -130,9 +128,25 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         <DdayRing date={event.date} />
         <span className="min-w-0">
           <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
-          {details ? (
-            <span className="mt-1.5 block truncate text-[14px] font-medium text-ink-muted">
-              {details}
+          {/*
+            둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 모임 상세의 주황 상자(EventHeroCard)와
+            같은 아이콘입니다. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
+            자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
+          */}
+          {event.location || time ? (
+            <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink-muted">
+              {event.location ? (
+                <span className="flex min-w-0 items-center gap-1">
+                  <PinIcon className="h-[15px] w-[15px] shrink-0" />
+                  <span className="truncate">{event.location}</span>
+                </span>
+              ) : null}
+              {time ? (
+                <span className="flex shrink-0 items-center gap-1">
+                  <ClockIcon className="h-[15px] w-[15px]" />
+                  {time}
+                </span>
+              ) : null}
             </span>
           ) : null}
         </span>
