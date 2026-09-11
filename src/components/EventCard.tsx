@@ -132,9 +132,10 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
             둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 모임 상세의 주황 상자(EventHeroCard)와
             같은 아이콘입니다. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
             자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
+            아이콘·글씨 모두 검정(ink) — 흐린 회색(ink-muted)이던 것을 2026-09-11에 바꿨습니다.
           */}
           {event.location || time ? (
-            <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink-muted">
+            <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink">
               {event.location ? (
                 <span className="flex min-w-0 items-center gap-1">
                   <PinIcon className="h-[15px] w-[15px] shrink-0" />
