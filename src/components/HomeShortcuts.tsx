@@ -39,13 +39,7 @@ export default function HomeShortcuts() {
       (4px로 줄였다가 조금 답답해 보여 2px씩 되돌렸습니다.)
     */
     <section className="rounded-3xl bg-surface px-2 py-1.5 shadow-[var(--shadow-card)]">
-      {/*
-        열 폭은 칸 내용만큼(max-content)입니다. 반반(grid-cols-2)으로 나누면 이름이 짧아
-        왼쪽 칸 글씨 끝과 오른쪽 아이콘 사이가 70px 넘게 비었습니다. 지금은 두 열 사이가
-        gap-x-4(16px)라 글씨 끝~아이콘이 약 40px이고, 남는 자리는 상자 오른쪽 끝으로 갑니다.
-        왼쪽 아이콘은 다른 카드의 글씨와 같은 자리에서 시작합니다. 윗줄·아랫줄의 열은 그대로 맞습니다.
-      */}
-      <div className="grid grid-cols-[max-content_max-content] gap-x-4">
+      <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
           <BallotBoxIllustration className="h-7 w-7 shrink-0" />
