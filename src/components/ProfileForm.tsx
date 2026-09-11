@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { cropToSquareDataUrl } from "@/lib/image";
-import { COHORTS, cohortOf } from "@/lib/cohort";
+import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
   COMPANY_MAX_LENGTH,
@@ -270,7 +270,8 @@ export default function ProfileForm({
           birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
           birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
           // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
-          memberType: form.memberType || "general",
+          // 1·2기엔 대학생 원우가 없어 고르개를 숨기고 늘 일반 원우로 적습니다(lib/cohort.ts).
+          memberType: hasYouthMembers(form.cohort) ? form.memberType || "general" : "general",
           company: form.company.trim() || carried?.company || "",
           position: form.position.trim() || carried?.position || "",
           phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
@@ -468,6 +469,8 @@ export default function ProfileForm({
       </div>
 
       {/* 구분 */}
+      {/* 구분 — 1·2기엔 대학생 원우가 없어 고르개를 보이지 않습니다(lib/cohort.ts의 hasYouthMembers). */}
+      {hasYouthMembers(form.cohort) ? (
       <div className="mb-6">
         <FieldLabel hint="선택">구분</FieldLabel>
         <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
@@ -502,6 +505,7 @@ export default function ProfileForm({
         </div>
         {errors.memberType ? <FieldError>{errors.memberType}</FieldError> : null}
       </div>
+      ) : null}
 
       {/* 회사·직책 — 원우수첩 카드에 이름 아래로 보입니다. */}
       <div className="mb-6">

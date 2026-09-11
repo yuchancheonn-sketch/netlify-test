@@ -11,7 +11,7 @@ import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
-import { ALL_COHORTS, cohortOf } from "@/lib/cohort";
+import { ALL_COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import {
   affiliationLine,
   buildDirectory,
@@ -82,13 +82,20 @@ export default function MembersPage() {
     return map;
   }, [book]);
 
+  /**
+   * 1·2기엔 대학생 원우가 없어 필터 알약을 숨깁니다(lib/cohort.ts). 그 수첩에서는
+   * 다른 기수에서 골라 둔 필터와 상관없이 늘 전체를 보여줍니다.
+   */
+  const showTypeFilter = hasYouthMembers(cohort);
+  const activeFilter: Filter = showTypeFilter ? filter : "all";
+
   const visible = useMemo(() => {
     const needle = keyword.trim().toLowerCase();
     return book.filter((entry) => {
-      if (filter !== "all" && entry.memberType !== filter) return false;
+      if (activeFilter !== "all" && entry.memberType !== activeFilter) return false;
       return entryMatches(entry, needle);
     });
-  }, [book, keyword, filter]);
+  }, [book, keyword, activeFilter]);
 
   function openEntry(entry: DirectoryEntry, playVideo = false) {
     setAutoPlay(playVideo);
@@ -145,10 +152,12 @@ export default function MembersPage() {
           흰 알약 하나 안에 셋을 담고, 고른 것만 주황 알약에 흰 글씨가 됩니다.
           나머지는 배경 없이 흐린 글씨로만 두어 어디에 서 있는지 색 하나로 읽힙니다.
           알약은 화면 폭을 꽉 채워 아래 원우 카드와 좌우 끝이 맞습니다.
+          1·2기 수첩에서는 대학생 원우가 없어 알약 줄을 통째로 숨깁니다.
         */}
+        {showTypeFilter ? (
         <div className="mt-3 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {FILTERS.map(({ value, label }) => {
-            const active = filter === value;
+            const active = activeFilter === value;
             return (
               <button
                 key={value}
@@ -177,6 +186,7 @@ export default function MembersPage() {
             );
           })}
         </div>
+        ) : null}
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
@@ -592,9 +602,12 @@ function MemberDetailSheet({
             ) : null}
             <div className="mt-3 flex items-center gap-1.5">
               <Badge tone="neutral">{entry.cohort}</Badge>
-              <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
-                {MEMBER_TYPE_LABEL[entry.memberType]}
-              </Badge>
+              {/* 1·2기엔 대학생 원우가 없어 구분 배지를 달지 않습니다. */}
+              {hasYouthMembers(entry.cohort) ? (
+                <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
+                  {MEMBER_TYPE_LABEL[entry.memberType]}
+                </Badge>
+              ) : null}
             </div>
           </div>
 

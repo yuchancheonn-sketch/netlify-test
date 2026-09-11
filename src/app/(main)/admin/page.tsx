@@ -23,7 +23,7 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { COHORTS, cohortOf } from "@/lib/cohort";
+import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
 import { isKoreanName } from "@/lib/format";
@@ -303,6 +303,8 @@ function RosterSection({
     [roster.data, cohort],
   );
   const newNames = parsedNames.filter((name) => !existingNames.has(name));
+  /** 1·2기엔 대학생 원우가 없어 구분 단추를 숨기고 늘 일반 원우로 넣습니다(lib/cohort.ts). */
+  const typeForCohort: MemberType = hasYouthMembers(cohort) ? memberType : "general";
 
   async function handleAdd(submitEvent: React.FormEvent) {
     submitEvent.preventDefault();
@@ -325,7 +327,7 @@ function RosterSection({
           addDoc(collection(db, "roster"), {
             name: newNames[0],
             cohort,
-            memberType,
+            memberType: typeForCohort,
             linkedUid: null,
             note: "",
             createdBy: user.uid,
@@ -339,7 +341,7 @@ function RosterSection({
           batch.set(doc(collection(db, "roster")), {
             name,
             cohort,
-            memberType,
+            memberType: typeForCohort,
             linkedUid: null,
             note: "",
             createdBy: user.uid,
@@ -416,6 +418,7 @@ function RosterSection({
             ))}
           </select>
 
+          {hasYouthMembers(cohort) ? (
           <div className="mt-3 flex gap-2">
             {(Object.keys(MEMBER_TYPE_LABEL) as MemberType[]).map((value) => (
               <button
@@ -433,6 +436,7 @@ function RosterSection({
               </button>
             ))}
           </div>
+          ) : null}
 
           <button
             type="submit"

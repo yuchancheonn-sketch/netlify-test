@@ -17,6 +17,20 @@ export const COHORTS: readonly string[] = Array.from(
 export const ALL_COHORTS = "all";
 
 /**
+ * 대학생 원우가 없었던 기수. 1기·2기 과정에는 대학생 원우가 없었습니다(공식 원우 명단 기준).
+ * 3기부터 일반 원우와 대학생 원우가 함께 들어왔습니다.
+ */
+const COHORTS_WITHOUT_YOUTH: readonly string[] = ["1기", "2기"];
+
+/**
+ * 그 기수에 대학생 원우가 있는지 — 없으면 일반/대학생을 가르는 고르개·배지를 보이지 않고,
+ * 저장도 늘 일반 원우로 합니다. "전체"나 아직 고르지 않은 값("")은 가를 수 있는 쪽으로 봅니다.
+ */
+export function hasYouthMembers(cohort: string | null | undefined): boolean {
+  return !(cohort && COHORTS_WITHOUT_YOUTH.includes(cohort));
+}
+
+/**
  * 저장된 기수 값을 믿을 수 있는 값으로 바꿉니다.
  *
  * 기수를 나누기 전에 만들어진 문서(명단·일정·투표·앨범·파일)에는 기수 칸이

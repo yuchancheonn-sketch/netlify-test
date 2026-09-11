@@ -16,7 +16,7 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { COHORTS } from "@/lib/cohort";
+import { COHORTS, hasYouthMembers } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
@@ -157,7 +157,8 @@ export default function MemberEditSheet({
     const fields = {
       name: name.trim(),
       cohort,
-      memberType,
+      // 1·2기엔 대학생 원우가 없어 늘 일반 원우로 적습니다(lib/cohort.ts).
+      memberType: hasYouthMembers(cohort) ? memberType : "general",
       company: company.trim(),
       position: position.trim(),
       phone: phone.trim() ? formatPhone(phone) : "",
@@ -278,7 +279,8 @@ export default function MemberEditSheet({
             </select>
           </div>
 
-          <div className="mb-5">
+          {/* 구분 — 1·2기엔 대학생 원우가 없어 숨깁니다. 기수를 다시 바꾸면 고른 값 그대로 돌아옵니다. */}
+          <div className={hasYouthMembers(cohort) ? "mb-5" : "hidden"}>
             <FieldLabel>구분</FieldLabel>
             <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
               {MEMBER_TYPES.map(({ value, label }) => {
