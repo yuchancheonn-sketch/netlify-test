@@ -49,13 +49,14 @@ export default function SessionPage({
   const [period, setPeriod] = useState<SessionPeriod>(1);
 
   /*
-   * 오른쪽으로 밀어서 홈으로 — 왼쪽 위 < 버튼과 같은 곳으로 갑니다.
+   * 오른쪽으로 밀어서 수업 기록 목록으로 — 왼쪽 위 < 버튼과 같은 곳으로 갑니다.
    *
-   * router.back()이 아니라 홈으로 못 박는 이유: 이 화면은 홈의 수업 기록
-   * 목록에서만 들어옵니다. 갈 곳이 하나뿐이라 기록을 되짚을 필요가 없고,
+   * router.back()이 아니라 목록으로 못 박는 이유: 이 화면은 수업 기록 목록(/sessions)
+   * 에서만 들어옵니다. 갈 곳이 하나뿐이라 기록을 되짚을 필요가 없고,
    * 알림을 눌러 바로 들어온 경우에도 나갈 자리가 생깁니다.
+   * (2026-09-11 전에는 목록이 홈에 있어서 홈으로 갔습니다.)
    */
-  const swipe = useSwipeBack({ onCommit: () => router.push("/home") });
+  const swipe = useSwipeBack({ onCommit: () => router.push("/sessions") });
 
   const videoLink = parseVideoLink(sessionVideoUrl(session, period));
   const isValidWeek =
@@ -64,7 +65,7 @@ export default function SessionPage({
   if (!isValidWeek) {
     return (
       <div className="bg-canvas">
-        <PageHeader title="수업" backHref="/home" />
+        <PageHeader title="수업" backHref="/sessions" />
         <p className="px-4 py-10 text-center text-[14px] text-ink-muted">
           없는 주차예요.
         </p>
@@ -84,12 +85,12 @@ export default function SessionPage({
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >
       {/*
-        backHref로 홈을 못 박습니다. back(기록 되돌리기)을 쓰면, 알림이나
+        backHref로 수업 기록 목록을 못 박습니다. back(기록 되돌리기)을 쓰면, 알림이나
         주소로 바로 들어온 원우는 되돌아갈 자리가 없어 앱 밖으로 나갑니다.
       */}
       <PageHeader
         title={`${week}주차 수업`}
-        backHref="/home"
+        backHref="/sessions"
         right={
           /* 원우수첩의 수정 버튼과 같은 모양입니다 — 누구나 함께 채우는 자리라는 뜻. */
           <button

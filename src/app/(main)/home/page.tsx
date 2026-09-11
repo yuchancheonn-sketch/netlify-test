@@ -5,7 +5,6 @@ import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
-import SessionList from "@/components/SessionList";
 import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
@@ -128,7 +127,7 @@ export default function HomePage() {
             제목 글씨 위 20px(pt-5), 아래 8px(mb-2). 카드 아래쪽 여백은 24px(pb-6).
             아래가 위(20px)보다 조금 넓은 것은 출처 줄의 글씨가 작아서 그렇습니다 —
             같은 값으로 맞추면 눈에는 아래가 더 좁아 보입니다.
-            ★ 위 여백은 아래 "수업 기록" 카드와 같은 값이어야 나란히 보입니다.
+            ★ 위 여백은 수업 기록 화면(/sessions)의 카드와 같은 값입니다 — 둘이 같은 결로 보이게.
           */}
           <div className="rounded-3xl bg-surface px-6 pt-5 pb-6 shadow-[var(--shadow-card)]">
             <h2 className="mb-2 text-[18px] font-bold text-ink">오늘의 도산</h2>
@@ -142,9 +141,6 @@ export default function HomePage() {
             </p>
           </div>
         </section>
-
-        {/* 주차별 수업 기록 — 한 줄을 누르면 그 주 화면으로 넘어갑니다. */}
-        <SessionList />
 
         {/* 맨 아래 — 과정을 여는 도산아카데미의 기관 정보. 다른 앱의 사업자 정보 자리입니다. */}
         <DosanAcademyFooter />

@@ -65,6 +65,31 @@ export function OpinionIllustration({ className }: { className?: string }) {
   );
 }
 
+/** 수업 기록 — 펼친 공책(왼쪽은 필기 줄, 오른쪽은 수업 영상 재생 표시) */
+export function LessonIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+      {/* 겉표지 — 펼친 쪽들보다 조금 크게 아래에 깔아 두께를 냅니다 */}
+      <path d="M5 14v25.5c7-1 13.5 0 19 3 5.5-3 12-4 19-3V14z" fill={PEACH} />
+      {/* 왼쪽·오른쪽 쪽 */}
+      <path d="M24 13c-4.5-3-10.5-4-17-3v26c6.5-1 12.5 0 17 3z" fill={CREAM} />
+      <path d="M24 13c4.5-3 10.5-4 17-3v26c-6.5-1-12.5 0-17 3z" fill={PEACH_LIGHT} />
+      {/* 가운데 책등 */}
+      <path d="M24 13v26" stroke={ORANGE} strokeWidth="2.4" strokeLinecap="round" />
+      {/* 왼쪽 필기 줄 */}
+      <path
+        d="M11 17.5c3.5-.5 6.5 0 9 1.3M11 23c3.5-.5 6.5 0 9 1.3M11 28.5c3.5-.5 6.5 0 9 1.3"
+        stroke={PEACH}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      {/* 오른쪽 재생 표시 — 주차마다 걸어 두는 수업 영상 */}
+      <circle cx="32.5" cy="23.5" r="6" fill={ORANGE} />
+      <path d="m30.8 20.8 4.4 2.7-4.4 2.7z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
 /** 원우 지도 — 세 번 접은 지도 위에 꽂힌 위치 핀 */
 export function MapIllustration({ className }: { className?: string }) {
   return (
