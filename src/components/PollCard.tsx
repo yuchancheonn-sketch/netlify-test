@@ -18,6 +18,7 @@ import {
 import { inCohort } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import {
   OPINION_MAX_LENGTH,
@@ -551,6 +552,8 @@ export function PollCreateSheet({
   /** 새 투표가 올라갈 기수 — 지금 홈에 보이는 기수입니다. */
   const { cohort } = useViewCohort();
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
+  // 시트가 떠 있는 동안 뒤쪽 홈 화면은 스크롤되지 않습니다.
+  useLockBodyScroll();
   const title = kind === "vote" ? "투표 만들기" : "의견 모으기";
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
@@ -615,8 +618,13 @@ export function PollCreateSheet({
   }
 
   return (
+    /*
+      어두운 반투명 바탕 — 누르면 닫고 홈으로 돌아갑니다.
+      touch-none: 바탕에서 시작한 손짓이 뒤쪽 화면 스크롤로 새지 않고 탭으로만 읽힙니다
+      (아이폰 대비, lib/use-lock-body-scroll.ts 설명). 시트 안 스크롤 상자는 따로 스크롤됩니다.
+    */
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex touch-none items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
       aria-label={title}
