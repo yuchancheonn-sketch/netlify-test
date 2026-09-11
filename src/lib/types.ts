@@ -130,29 +130,6 @@ export interface MemberRegionDoc {
   updatedAt: Timestamp | null;
 }
 
-/**
- * companyIntros/{uid} — 홈 "원우 회사" 카드에 원우가 직접 올리는 자기 회사 한 장.
- *
- * 원우끼리 서로의 회사를 알리는 자리입니다. 돈을 받는 광고가 아니라 본인이 올리는 소개입니다.
- * 수첩의 회사(users.company)와 따로 두는 이유는 memberRegions와 같습니다 — 홈이 users를 읽지 않게.
- * 문서 id가 곧 본인 uid라, 본인만 쓰고 지울 수 있습니다(보안 규칙).
- */
-export interface CompanyIntroDoc {
-  uid: string;
-  /** 회사 이름. 처음 올릴 때 수첩의 회사로 채워 두고 고쳐 쓸 수 있습니다. */
-  company: string;
-  /** 한 줄 소개 — 무엇을 하는 회사인지. 없으면 빈 문자열 */
-  intro: string;
-  /** 홈페이지 주소. 없으면 빈 문자열이고, 있으면 늘 http(s)://로 시작합니다(lib/company-intros.ts). */
-  url: string;
-  /** 카드 아래 "이름 · 직책". 프로필에서 바꾸면 따라 고칩니다. */
-  name: string;
-  position: string;
-  /** 카드를 기수별로 거르려고 함께 적어 둡니다. */
-  cohort: string;
-  updatedAt: Timestamp | null;
-}
-
 /** events/{eventId} */
 export interface EventDoc {
   id: string;

@@ -312,36 +312,6 @@ service cloud.firestore {
       allow delete: if isMember() && (request.auth.uid == uid || isAdmin());
     }
 
-    /*
-     * 원우 회사(홈) — 원우가 자기 회사를 알리는 한 장. 한 사람에 하나. (2026-09-11)
-     *
-     * 돈을 받는 광고가 아니라 원우 본인이 올리는 소개라, 원우 지도처럼 **본인만** 쓰고 고칩니다.
-     * 남의 이름으로 회사를 올리거나 남의 소개를 바꿔 버리는 길을 막습니다. 문서 id가 곧 uid입니다.
-     *
-     * hasOnly로 칸을 못 박고 길이를 묶습니다(lib/constants.ts와 같은 숫자 — 회사 40, 소개 60, 주소 200).
-     * ★ 홈페이지 주소는 비었거나 http(s)://로 시작해야 합니다. 누르면 새 창으로 여는 링크라,
-     *   앱을 거치지 않고 javascript: 같은 주소를 끼워 넣는 쓰기를 여기서 거절합니다.
-     *
-     * 내리기는 운영진도 됩니다 — 알맞지 않은 글이나 차단한 사람의 줄을 정리할 때 씁니다.
-     */
-    match /companyIntros/{uid} {
-      allow read: if isMember();
-      allow create, update: if isMember()
-                            && request.auth.uid == uid
-                            && request.resource.data.keys().hasOnly(
-                                 ['uid', 'company', 'intro', 'url', 'name', 'position', 'cohort', 'updatedAt'])
-                            && request.resource.data.uid == uid
-                            && request.resource.data.company is string
-                            && request.resource.data.company.size() > 0
-                            && request.resource.data.company.size() <= 40
-                            && request.resource.data.intro is string
-                            && request.resource.data.intro.size() <= 60
-                            && request.resource.data.url is string
-                            && request.resource.data.url.size() <= 200
-                            && request.resource.data.url.matches('^(https?://.+)?$');
-      allow delete: if isMember() && (request.auth.uid == uid || isAdmin());
-    }
-
     // 주차별 수업의 주제·강사·영상. 원우수첩처럼 누구나 채웁니다.
     match /sessions/{week} {
       allow read, write: if isMember();

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import CohortPicker from "@/components/CohortPicker";
-import CompanyIntroCard from "@/components/CompanyIntroCard";
 import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
@@ -116,9 +115,6 @@ export default function HomePage() {
 
         {/* 투표 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다. */}
         <PollCard />
-
-        {/* 원우 회사 — 원우가 직접 올린 자기 회사. 하루에 한 곳씩 맨 앞에 섭니다. */}
-        <CompanyIntroCard />
 
         {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>

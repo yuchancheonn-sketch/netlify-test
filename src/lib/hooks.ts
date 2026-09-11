@@ -18,7 +18,6 @@ import { todayString } from "@/lib/format";
 import type {
   ChatReadDoc,
   ChatRoomDoc,
-  CompanyIntroDoc,
   EventDoc,
   FileDoc,
   MemberRegionDoc,
@@ -114,29 +113,6 @@ export function useMemberRegions(): ListState<MemberRegionDoc> {
         setState({ data: entries, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "원우 지도를 불러오지 못했어요." }),
-    );
-  }, []);
-
-  return state;
-}
-
-/**
- * 홈 "원우 회사" 카드에 올라온 회사들.
- * 원우 지도처럼 홈이 users를 읽지 않도록 따로 둔 가벼운 컬렉션입니다 — types.ts의 CompanyIntroDoc.
- */
-export function useCompanyIntros(): ListState<CompanyIntroDoc> {
-  const [state, setState] = useState<ListState<CompanyIntroDoc>>(EMPTY);
-
-  useEffect(() => {
-    return onSnapshot(
-      collection(db, "companyIntros"),
-      (snapshot) => {
-        const entries = snapshot.docs.map(
-          (document) => ({ ...document.data(), uid: document.id }) as CompanyIntroDoc,
-        );
-        setState({ data: entries, loading: false, error: null });
-      },
-      () => setState({ data: [], loading: false, error: "원우 회사를 불러오지 못했어요." }),
     );
   }, []);
 

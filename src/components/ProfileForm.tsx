@@ -293,16 +293,6 @@ export default function ProfileForm({
       void updateDoc(doc(db, "memberRegions", user.uid), { name, cohort: form.cohort }).catch(
         () => {},
       );
-      /*
-       * 홈 "원우 회사" 카드의 이름·직책·기수도 같은 이유로 따라 고칩니다(올린 적이 없으면 흘려보냄).
-       * 수첩 수정 시트로 남이 내 직책을 고친 것은 여기까지 오지 않습니다 — 그 문서는 본인만 쓸 수 있어서,
-       * 내가 프로필을 저장하거나 회사 소개를 다시 저장할 때 맞춰집니다.
-       */
-      void updateDoc(doc(db, "companyIntros", user.uid), {
-        name,
-        cohort: form.cohort,
-        position: form.position.trim() || carried?.position || "",
-      }).catch(() => {});
       onSaved?.();
     } catch (caught) {
       // permission-denied면 보안 규칙을 아직 콘솔에 올리지 않은 것입니다.

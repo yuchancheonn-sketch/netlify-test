@@ -155,14 +155,6 @@ export const COMPANY_MAX_LENGTH = 40;
 export const POSITION_MAX_LENGTH = 20;
 
 /**
- * 홈 "원우 회사" 카드 — 한 줄 소개와 홈페이지 주소 길이 제한.
- * 소개는 카드에 두 줄 안으로 들어가는 정도입니다. 회사 이름은 수첩과 같은 COMPANY_MAX_LENGTH.
- * firestore.rules의 companyIntros 블록에도 같은 숫자가 적혀 있습니다 — 바꾸면 둘 다.
- */
-export const COMPANY_INTRO_MAX_LENGTH = 60;
-export const COMPANY_URL_MAX_LENGTH = 200;
-
-/**
  * 원우회 직위 길이 제한. 적으면 원우수첩 이름 옆에 배지로 붙습니다.
  *
  * 예전에는 정해 둔 목록에서 고르게 했지만(2026-09-09에 한 번 통째로 갈기도 했습니다),
