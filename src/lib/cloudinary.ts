@@ -206,7 +206,34 @@ export function viewerUrl(url: string, maxSize = 1600): string {
  * 원본 저장용 주소.
  * fl_attachment를 붙이면 브라우저에서 열리지 않고 곧바로 내려받아집니다.
  * (다른 도메인의 이미지는 a 태그의 download 속성이 통하지 않아 이 방법을 씁니다.)
+ *
+ * ★ 아이폰에는 이 주소를 주지 마세요 — saveUrl()을 쓰세요.
+ *   이 주소는 Content-Disposition: attachment를 달고 내려오는데, 홈 화면 앱에서 연 아이폰 브라우저는
+ *   첨부 파일을 그리지 못해 주소창만 뜬 **흰 화면**에서 멈춥니다(2026-09-09 PDF, 2026-09-11 워드 파일에서 확인).
  */
 export function downloadUrl(url: string): string {
   return url.replace("/upload/", "/upload/fl_attachment/");
+}
+
+/**
+ * 아이폰·아이패드인지. 아이패드는 요즘 "Mac"이라고 스스로를 소개해서, 손가락 입력이 되는지로 한 번 더 봅니다.
+ * 누르는 순간에만 부르세요(렌더 중에 부르면 서버 화면과 어긋납니다).
+ */
+export function isIosDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1)
+  );
+}
+
+/**
+ * "받기·저장"을 눌렀을 때 열 주소 (2026-09-11).
+ *
+ *  - 아이폰: 원본 주소 그대로. 아이폰 브라우저가 문서·사진을 미리보기로 열어 주고,
+ *    공유 단추에서 "파일에 저장"·"이미지 저장"으로 받습니다. 첨부 주소를 주면 흰 화면에서 멈춥니다.
+ *  - 그 밖(안드로이드·컴퓨터): fl_attachment 주소로 곧바로 내려받습니다.
+ */
+export function saveUrl(url: string): string {
+  return isIosDevice() ? url : downloadUrl(url);
 }

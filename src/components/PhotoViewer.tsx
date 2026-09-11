@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import { downloadUrl, viewerUrl } from "@/lib/cloudinary";
+import { saveUrl, viewerUrl } from "@/lib/cloudinary";
 import type { PhotoDoc } from "@/lib/types";
 
 /**
@@ -92,8 +92,20 @@ export default function PhotoViewer({
         <span className="text-[14px] font-medium text-white/80">
           {index + 1} / {photos.length}
         </span>
+        {/*
+          저장 — 누르는 순간 기기를 보고 주소를 고릅니다(lib/cloudinary.ts의 saveUrl, 2026-09-11).
+          안드로이드·컴퓨터는 fl_attachment 주소로 곧바로 내려받고, 아이폰은 원본 사진을 새 창에 열어
+          길게 누르거나 공유 단추로 "이미지 저장"을 합니다. 예전처럼 첨부 주소를 같은 창에서 열면
+          홈 화면 앱이 흰 화면에서 멈춰 앱으로 돌아올 길이 없었습니다.
+        */}
         <a
-          href={downloadUrl(photo.imageUrl)}
+          href={photo.imageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) => {
+            event.preventDefault();
+            window.open(saveUrl(photo.imageUrl), "_blank", "noopener,noreferrer");
+          }}
           className="rounded-full px-3 py-2 text-[14px] font-bold text-white active:bg-white/15"
         >
           저장

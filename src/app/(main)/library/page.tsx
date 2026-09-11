@@ -28,9 +28,9 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import {
-  downloadUrl,
   fileThumbnailUrl,
   isCloudinaryConfigured,
+  saveUrl,
   thumbnailUrl,
   uploadFile,
 } from "@/lib/cloudinary";
@@ -286,23 +286,22 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   const thumbnail = fileThumbnailUrl(file.url);
 
   /*
-   * 브라우저가 그대로 열어 보여줄 수 있는 파일인지 (PDF·사진).
-   *
-   * 미리보기 그림을 만들 수 있다는 것은 Cloudinary가 image로 담았다는 뜻이고,
-   * 그런 파일은 주소를 그냥 열면 화면에 그려집니다. 한글·엑셀 같은 raw 파일은
-   * 열어봐야 볼 것이 없으므로 곧바로 내려받게 합니다.
-   */
-  const viewable = thumbnail !== null;
-
-  /*
-   * ★ 누르면 가는 곳에 fl_attachment를 붙이면 안 됩니다.
+   * ★ 칸을 누르면 **어떤 파일이든** 원본 주소를 그대로 엽니다 — fl_attachment를 붙이면 안 됩니다.
    *
    *   그 주소는 Content-Disposition: attachment를 달고 내려옵니다. 아이폰은
    *   앱 안에서 열린 브라우저에서 첨부 파일을 그리지 못해 **흰 화면만** 뜹니다.
-   *   (2026-09-09에 실제로 그랬습니다.) 썸네일을 누르는 사람은 내려받으려는
-   *   것이 아니라 보려는 것이므로, 볼 수 있는 파일은 그냥 주소로 엽니다.
+   *   2026-09-09에 PDF에서 겪고 PDF·사진만 원본 주소로 바꿨는데, 워드·한글·엑셀은 여전히
+   *   첨부 주소라 2026-09-11에 같은 흰 화면이 떴습니다. 이제 모두 원본 주소입니다.
+   *   아이폰은 워드·엑셀·PDF를 미리보기로 열어 주고, 안드로이드·컴퓨터는 못 그리는 파일을 알아서 내려받습니다.
    */
-  const openUrl = viewable ? file.url : downloadUrl(file.url);
+  const openUrl = file.url;
+
+  /** ⋯ → "받기". 누르는 순간 기기를 보고 주소를 고릅니다(아이폰은 원본, 그 밖은 곧바로 내려받기 — lib/cloudinary.ts). */
+  function handleSave(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    setMenuOpen(false);
+    window.open(saveUrl(file.url), "_blank", "noopener,noreferrer");
+  }
 
   async function handleDelete() {
     setMenuOpen(false);
@@ -388,14 +387,15 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
           */}
           <div className="absolute top-9 right-1.5 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
             {/*
-              여기는 fl_attachment가 붙은 주소가 맞습니다. 내려받겠다고 고른
-              것이니, 브라우저가 열어 보이지 말고 파일로 저장해야 합니다.
+              받기 — 안드로이드·컴퓨터는 fl_attachment 주소로 곧바로 파일 저장, 아이폰은 원본 주소를 열어
+              공유 단추로 "파일에 저장"(첨부 주소는 아이폰에서 흰 화면). 주소는 누르는 순간 handleSave가 고릅니다.
+              href는 원본 주소로 두어, 길게 눌러 여는 경우에도 흰 화면이 뜨지 않게 합니다.
             */}
             <a
-              href={downloadUrl(file.url)}
+              href={file.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
+              onClick={handleSave}
               className="px-3.5 py-2 text-[13px] font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
             >
               받기
