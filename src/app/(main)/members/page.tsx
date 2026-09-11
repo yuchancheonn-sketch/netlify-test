@@ -485,12 +485,14 @@ function MemberRow({
           한때 py-2까지 올렸다가 단추가 카드 안에서 혼자 두툼해 보여
           py-1로 되돌렸습니다. 이 줄에서 눈에 먼저 들어와야 하는 것은
           이름이고, 수정은 그 다음입니다.
+
+          테두리·글씨는 ink-faint — 2026-09-11에 ink-muted에서 한 단계 연하게 바꿨습니다.
       */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-ink-muted px-2.5 py-1 text-[13px]! font-bold text-ink-muted transition active:scale-95"
+        className="shrink-0 rounded-lg border border-ink-faint px-2.5 py-1 text-[13px]! font-bold text-ink-faint transition active:scale-95"
       >
         수정
       </button>
