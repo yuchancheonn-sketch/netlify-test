@@ -10,7 +10,8 @@ const SITE_URL = "https://dosan21.kr";
  *
  * 당근·나만의닥터 같은 앱이 맨 아래에 사업자 정보를 두는 자리를 따랐습니다.
  * 약관 링크 한 줄, 접었다 펼 수 있는 정보 묶음, 저작권 한 줄 순서이고,
- * 글씨는 작고 흐리게 두어 위 카드들과 섞이지 않게 합니다.
+ * 글씨는 작게 두어 위 카드들과 섞이지 않게 합니다.
+ * 색은 검정(ink)입니다 — 처음엔 흐린 회색(ink-faint·ink-soft)이었는데 읽기 어려워 2026-09-11에 바꿨습니다.
  *
  * 문구는 도산아카데미 누리집(dosan21.kr) 맨 아래를 그대로 옮겼습니다 (2026-09-11 확인).
  * 전화·이메일·책임자 이름은 기관이 누리집에 공개한 정보라 공개 저장소에 두어도
@@ -24,8 +25,8 @@ export default function DosanAcademyFooter() {
   const [open, setOpen] = useState(false);
 
   return (
-    <footer className="px-1 pt-4 pb-2 text-[12px] leading-relaxed text-ink-faint">
-      <p className="flex items-center gap-2.5 text-ink-soft">
+    <footer className="px-1 pt-4 pb-2 text-[12px] leading-relaxed text-ink">
+      <p className="flex items-center gap-2.5 text-ink">
         <a href={`${SITE_URL}/?mode=policy`} target="_blank" rel="noopener noreferrer">
           이용약관
         </a>
@@ -46,7 +47,7 @@ export default function DosanAcademyFooter() {
         type="button"
         onClick={() => setOpen((previous) => !previous)}
         aria-expanded={open}
-        className="mt-4 flex items-center gap-1 text-[13px]! font-bold text-ink-soft"
+        className="mt-4 flex items-center gap-1 text-[13px]! font-bold text-ink"
       >
         도산아카데미 기관 정보
         {/* 왼쪽 꺾쇠를 돌려 씁니다 — 펼치면 위(∧), 접으면 아래(∨). */}
