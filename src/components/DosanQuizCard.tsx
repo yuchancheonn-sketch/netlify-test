@@ -155,7 +155,7 @@ export default function DosanQuizCard() {
               aria-checked={(answer ?? picked) === value}
               disabled={Boolean(answer)}
               onClick={() => setPickedFor({ key: quizKey, value })}
-              className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-3 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
+              className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-2 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
                 value,
               )}`}
             >
