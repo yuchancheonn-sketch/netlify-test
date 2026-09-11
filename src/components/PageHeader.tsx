@@ -83,15 +83,16 @@ export default function PageHeader({
  */
 export function HeaderActions() {
   /*
-   * -space-x-1로 단추끼리 4px 겹칩니다.
+   * -space-x-1.5로 단추끼리 6px 겹칩니다.
    *
    * 단추는 손끝이 닿아야 해서 40px인데 아이콘은 27px이라, 아이콘 둘레에
    * 6.5px씩 빈 자리가 이미 붙어 있습니다. 사이를 0으로 붙여도 아이콘끼리는
-   * 13px 떨어져 보이는 이유입니다. 그래서 4px을 겹쳐 9px로 좁혔습니다.
-   * 겹치는 4px은 아이콘이 아니라 빈 여백이라 누르는 데는 지장이 없습니다.
+   * 13px 떨어져 보이는 이유입니다. 그래서 6px을 겹쳐 7px로 좁혔습니다.
+   * (4px 겹침·9px 간격이던 것을 알림 종이 더해져 셋이 된 뒤 2026-09-11에 2px 더 좁혔습니다.)
+   * 겹치는 6px은 아이콘이 아니라 빈 여백이라 누르는 데는 지장이 없습니다.
    */
   return (
-    <div className="flex items-center -space-x-1">
+    <div className="flex items-center -space-x-1.5">
       <HeaderBellLink />
       <HeaderIconLink href="/profile" label="내 프로필 열기">
         <PersonIcon className={HEADER_ICON_SIZE} />
