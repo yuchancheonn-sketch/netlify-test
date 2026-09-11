@@ -146,7 +146,8 @@ export default function DosanQuizCard() {
               )}`}
             >
               {value === "O" ? (
-                <OMarkIcon className="h-5 w-5 text-brand-500" />
+                /* O는 파랑, X는 빨강 — OX 퀴즈에서 흔히 쓰는 짝입니다(2026-09-11, 예전엔 O가 주황). */
+                <OMarkIcon className="h-5 w-5 text-blue-500" />
               ) : (
                 <XMarkIcon className="h-5 w-5 text-danger" />
               )}
