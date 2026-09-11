@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { markChatRead } from "@/lib/chat-read";
-import { parseSessionDocId, sessionDocId } from "@/lib/cohort";
+import { ALL_COHORTS, parseSessionDocId, sessionDocId } from "@/lib/cohort";
 import { otherUidOf, toChatRoom } from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
 import type {
@@ -108,11 +108,18 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
   const [entry, setEntry] = useState<{ cohort: string; state: ListState<UserDoc> } | null>(null);
 
   useEffect(() => {
-    const membersQuery = query(
-      collection(db, "users"),
-      where("status", "==", "approved"),
-      where("cohort", "==", cohort),
-    );
+    /*
+     * "전체"(ALL_COHORTS)는 일부러 고를 때만 모든 기수를 받습니다 — 기본은 내 기수라,
+     * 원우수첩을 여는 것만으로는 모든 기수를 읽지 않습니다(2026-09-11).
+     */
+    const membersQuery =
+      cohort === ALL_COHORTS
+        ? query(collection(db, "users"), where("status", "==", "approved"))
+        : query(
+            collection(db, "users"),
+            where("status", "==", "approved"),
+            where("cohort", "==", cohort),
+          );
     return onSnapshot(
       membersQuery,
       (snapshot) => {
@@ -135,7 +142,10 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
   return entry?.cohort === cohort ? entry.state : EMPTY;
 }
 
-/** 원우수첩 한 권 — 고른 기수의 명단(roster)만. 이유는 useCohortMembers와 같습니다. */
+/**
+ * 원우수첩 한 권 — 고른 기수의 명단(roster)만. 이유는 useCohortMembers와 같습니다.
+ * "전체"(ALL_COHORTS)를 고르면 그때만 명단 전체를 받습니다.
+ */
 export function useCohortRoster(cohort: string): ListState<RosterDoc> {
   const [entry, setEntry] = useState<{ cohort: string; state: ListState<RosterDoc> } | null>(
     null,
@@ -143,7 +153,9 @@ export function useCohortRoster(cohort: string): ListState<RosterDoc> {
 
   useEffect(() => {
     return onSnapshot(
-      query(collection(db, "roster"), where("cohort", "==", cohort)),
+      cohort === ALL_COHORTS
+        ? collection(db, "roster")
+        : query(collection(db, "roster"), where("cohort", "==", cohort)),
       (snapshot) => {
         const entries = snapshot.docs.map(
           (document) => ({ id: document.id, ...document.data() }) as RosterDoc,
