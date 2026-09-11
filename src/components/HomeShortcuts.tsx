@@ -12,12 +12,12 @@ import { PollCreateSheet } from "@/components/PollCard";
 
 /**
  * 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다.
- * py-2: 줄 사이를 좁히려고 위아래 12px에서 8px로 줄였습니다(2026-09-11).
- * 아이콘 28px·글씨 15px — 처음 36px·16px에서 같은 날 한 단계 줄였습니다. 아이콘과 합쳐
- * 한 칸 높이가 44px이라 손끝으로 누르기에는 여전히 충분합니다.
+ * py-1: 윗줄과 아랫줄 사이를 좁히려고 위아래 12px → 8px → 4px로 줄였습니다(2026-09-11).
+ * 두 줄의 아이콘 사이가 8px입니다. 줄인 만큼 상자 여백(section의 py)을 늘려 상자 끝은 그대로입니다.
+ * 아이콘 28px·글씨 15px — 처음 36px·16px에서 같은 날 한 단계 줄였습니다. 한 칸 높이는 36px입니다.
  */
 const ITEM_CLASS_NAME =
-  "flex items-center gap-2.5 rounded-2xl px-3 py-2 text-left transition active:bg-fill";
+  "flex items-center gap-2.5 rounded-2xl px-3 py-1 text-left transition active:bg-fill";
 
 /**
  * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 원우 지도 · 수업 기록.
@@ -35,11 +35,11 @@ export default function HomeShortcuts() {
 
   return (
     /*
-      위아래 여백은 10px(py-2.5) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 18px입니다.
-      (2026-09-11에 4px → 6px → 10px로 늘려 왔습니다. 두 열 사이 간격을 좁혀 보기도 했지만
-       되돌리고, 대신 위아래를 넉넉히 두기로 했습니다.)
+      위아래 여백은 14px(py-3.5) — 칸 안의 py-1과 합쳐 상자 끝에서 아이콘까지 18px입니다.
+      (2026-09-11에 4px → 6px → 10px로 늘려 왔고, 칸 안 여백을 8px → 4px로 줄이면서 14px로
+       옮겨 18px을 지켰습니다. 두 열 사이 간격을 좁혀 보기도 했지만 되돌렸습니다.)
     */
-    <section className="rounded-3xl bg-surface px-2 py-2.5 shadow-[var(--shadow-card)]">
+    <section className="rounded-3xl bg-surface px-2 py-3.5 shadow-[var(--shadow-card)]">
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
