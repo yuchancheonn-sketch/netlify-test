@@ -258,6 +258,7 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
                     className={`h-[34px] w-[34px] shrink-0 ${
                       on ? "text-red-500" : "text-line"
                     }`}
+                    strokeWidth={on ? 2.4 : 2}
                   />
                 </button>
               );
@@ -560,6 +561,7 @@ function PollResult({
                 {on ? (
                   <VoteStampIcon
                     className="h-[20px] w-[20px] shrink-0 text-red-500"
+                    strokeWidth={2.4}
                   />
                 ) : null}
               </span>
