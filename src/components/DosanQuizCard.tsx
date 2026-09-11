@@ -151,7 +151,8 @@ export default function DosanQuizCard() {
               ) : (
                 <XMarkIcon className="h-5 w-5 text-danger" />
               )}
-              {label}
+              {/* -translate-y-px: 글씨만 1px 위로 — 아이콘 옆에서 살짝 아래로 앉아 보였습니다. 아이콘은 그대로. */}
+              <span className="-translate-y-px">{label}</span>
             </button>
           ))}
         </div>
