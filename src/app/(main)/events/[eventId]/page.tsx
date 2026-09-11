@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { deleteDoc, doc } from "firebase/firestore";
@@ -12,6 +12,7 @@ import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
 import { formatYear } from "@/lib/format";
 import { useEvent } from "@/lib/hooks";
+import { useSwipeBack } from "@/lib/use-swipe-back";
 
 /**
  * 모임 상세 — 일정 요약 상자와 안내, 그리고 (올린 사람·운영진에게) 수정·삭제.
@@ -28,6 +29,30 @@ export default function EventDetailPage() {
   const { event, loading, notFound } = useEvent(eventId);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  /*
+   * 오른쪽으로 밀면 들어오기 전 화면으로 돌아갑니다(2026-09-11).
+   * 이 화면은 홈의 D-day 카드·이후 일정, 모임 목록, 알림함 등 여러 곳에서 들어오므로
+   * 갈 곳을 하나로 못 박지 않고 router.back()으로 원래 있던 화면에 돌려보냅니다 — 제목 줄의 <도 같습니다.
+   */
+  const swipe = useSwipeBack({ onCommit: () => router.back() });
+
+  /**
+   * 화면 전체를 한 상자로 밉니다 — 안에 떠 있는(fixed) 요소가 없습니다.
+   * 불러오는 중·못 찾음·본문 세 경우 모두 같은 상자에 담아, 어느 상태에서든 밀어서 나갈 수 있게 합니다.
+   * (컴포넌트가 아니라 함수로 두어, 상태가 바뀔 때 상자가 새로 만들어지지 않습니다.)
+   */
+  function swipeFrame(children: ReactNode) {
+    return (
+      <div
+        className="min-h-full bg-canvas"
+        {...swipe.handlers}
+        style={{ ...swipe.touchAction, ...swipe.slideStyle }}
+      >
+        {children}
+      </div>
+    );
+  }
+
   async function handleDelete() {
     if (!window.confirm("이 일정을 삭제할까요? 되돌릴 수 없어요.")) return;
     try {
@@ -39,27 +64,27 @@ export default function EventDetailPage() {
   }
 
   if (loading) {
-    return (
+    return swipeFrame(
       <>
         <PageHeader title="모임 상세" back />
         <div className="flex flex-col gap-3 px-5">
           <Skeleton className="h-40 rounded-3xl" />
           <Skeleton className="h-24 rounded-3xl" />
         </div>
-      </>
+      </>,
     );
   }
 
   if (notFound || !event) {
-    return (
+    return swipeFrame(
       <>
         <PageHeader title="모임 상세" back />
         <ErrorState message="일정을 찾을 수 없어요. 삭제되었을 수 있습니다." />
-      </>
+      </>,
     );
   }
 
-  return (
+  return swipeFrame(
     <>
       <PageHeader title="모임 상세" back />
 
@@ -111,6 +136,6 @@ export default function EventDetailPage() {
           </section>
         ) : null}
       </div>
-    </>
+    </>,
   );
 }
