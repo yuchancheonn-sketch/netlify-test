@@ -132,8 +132,8 @@ export default function MembersPage() {
             */
             className="w-full rounded-xl bg-surface py-2.5 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
+          {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
           {!busy && !error ? (
-            {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
             <p className="pointer-events-none absolute top-1/2 right-3.5 -mt-px -translate-y-1/2 text-[16px] font-medium text-ink-soft">
               원우 <span className="font-bold text-ink">{visible.length}</span>명
             </p>
