@@ -11,7 +11,7 @@ import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
-import { ALL_COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
+import { cohortOf, hasYouthMembers } from "@/lib/cohort";
 import {
   affiliationLine,
   buildDirectory,
@@ -65,10 +65,12 @@ export default function MembersPage() {
     [members, roster.data],
   );
 
-  /** 고른 기수의 수첩 한 권. "전체"면 모든 기수를 이름 가나다순 한 목록으로 */
+  /**
+   * 고른 기수의 수첩 한 권. 기수는 1기~10기 가운데 하나입니다.
+   * ("전체" 보기는 2026-09-11에 없앴습니다 — 378명을 한 목록에 그리는 부담.)
+   */
   const book = useMemo(
-    () =>
-      cohort === ALL_COHORTS ? entries : entries.filter((entry) => entry.cohort === cohort),
+    () => entries.filter((entry) => entry.cohort === cohort),
     [entries, cohort],
   );
 
@@ -110,7 +112,7 @@ export default function MembersPage() {
         title={
           <span className="flex items-center gap-2">
             원우수첩
-            <CohortPicker value={cohort} onChange={setCohort} includeAll />
+            <CohortPicker value={cohort} onChange={setCohort} />
           </span>
         }
         right={<HeaderActions />}
@@ -223,7 +225,6 @@ export default function MembersPage() {
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
-                    showCohort={cohort === ALL_COHORTS}
                     onOpen={() => openEntry(entry)}
                     onOpenVideo={() => openEntry(entry, true)}
                     onEnlargePhoto={() => setEnlarged(entry)}
@@ -278,7 +279,7 @@ export default function MembersPage() {
         <MemberEditSheet
           entry={editing.entry}
           existing={entries}
-          defaultCohort={cohort === ALL_COHORTS ? cohortOf(profile?.cohort) : cohort}
+          defaultCohort={cohort}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -294,7 +295,6 @@ export default function MembersPage() {
 function MemberRow({
   entry,
   number,
-  showCohort,
   onOpen,
   onOpenVideo,
   onEnlargePhoto,
@@ -302,8 +302,6 @@ function MemberRow({
 }: {
   entry: DirectoryEntry;
   number: number;
-  /** "전체" 수첩일 때만 — 여러 기수가 섞여 있어 누가 몇 기인지 붙여 줍니다. */
-  showCohort: boolean;
   onOpen: () => void;
   onOpenVideo: () => void;
   onEnlargePhoto: () => void;
@@ -447,10 +445,6 @@ function MemberRow({
             affiliation ? "font-medium text-brand-500" : "text-ink-muted"
           }`}
         >
-          {/* "전체" 수첩에서만 앞에 기수를 붙입니다. 한 기수 수첩에서는 다 같은 값이라 자리만 먹습니다. */}
-          {showCohort ? (
-            <span className="font-bold text-ink-soft">{entry.cohort} · </span>
-          ) : null}
           {affiliation || "아직 정보가 입력 안 됐어요"}
         </p>
       </button>

@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckIcon, ChevronLeftIcon } from "@/components/icons";
-import { ALL_COHORTS, COHORTS } from "@/lib/cohort";
+import { COHORTS } from "@/lib/cohort";
 
-/** 펼친 목록의 폭(px). 체크 칸 + "10기"·"전체"가 한 줄로 들어가는 만큼만 둡니다. */
+/** 펼친 목록의 폭(px). 체크 칸 + "10기"가 한 줄로 들어가는 만큼만 둡니다. */
 const LIST_WIDTH = 100;
 /** 단추와 목록 사이 간격(px) */
 const LIST_GAP = 8;
@@ -19,7 +19,8 @@ const LIST_SHIFT = 8;
 
 /**
  * 제목 옆 기수 고르기. "원우수첩 10기 ⌄"처럼 제목과 한 줄에 글씨로 섭니다.
- * 원우수첩(원우 누구나, "전체" 있음)과 홈·자료·모임(운영진만)이 함께 씁니다.
+ * 원우수첩(원우 누구나)과 홈·자료·모임(운영진만)이 함께 씁니다. 목록은 1기~10기뿐입니다.
+ * (원우수첩 끝에 있던 "전체"는 2026-09-11에 없앴습니다 — 378명을 한 번에 그리는 부담.)
  *
  * ★ 폰의 <select> 창을 빌려 쓰지 않고 목록을 직접 그립니다.
  *   기기 창은 아이폰의 유리 메뉴라 보기엔 좋았지만 폭을 기기가 정해서,
@@ -38,20 +39,14 @@ const LIST_SHIFT = 8;
 export default function CohortPicker({
   value,
   onChange,
-  includeAll = false,
 }: {
   value: string;
   onChange: (next: string) => void;
-  /** 맨 끝에 "전체"를 둘지 (원우수첩만) */
-  includeAll?: boolean;
 }) {
   /** 펼친 목록의 화면 위 자리. 닫혀 있으면 null */
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const open = anchor !== null;
-
-  const options = includeAll ? [...COHORTS, ALL_COHORTS] : COHORTS;
-  const labelOf = (option: string) => (option === ALL_COHORTS ? "전체" : option);
 
   function toggle() {
     if (open) {
@@ -128,10 +123,10 @@ export default function CohortPicker({
         onClick={toggle}
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label={`기수 고르기 (지금 ${labelOf(value)})`}
+        aria-label={`기수 고르기 (지금 ${value})`}
         className="inline-flex items-center gap-1 text-ink transition [font-size:inherit]! active:opacity-60"
       >
-        {labelOf(value)}
+        {value}
         <ChevronLeftIcon className="h-5 w-5 -rotate-90" strokeWidth={2.5} />
       </button>
 
@@ -160,39 +155,33 @@ export default function CohortPicker({
                 className="fixed z-50 max-h-[min(62dvh,470px)] origin-top-left overflow-y-auto overscroll-contain rounded-[20px] bg-surface/70 p-1.5 shadow-[0_16px_48px_rgba(17,20,24,0.2),0_2px_8px_rgba(17,20,24,0.08),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_0_0_0.5px_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
                 style={{ top: anchor.top, left: anchor.left, width: LIST_WIDTH }}
               >
-                {options.map((option) => {
+                {COHORTS.map((option) => {
                   const selected = option === value;
                   return (
-                    <Fragment key={option}>
-                      {/* "전체"는 기수들과 성격이 달라 가는 선으로 한 칸 떼어 둡니다. */}
-                      {option === ALL_COHORTS ? (
-                        <li aria-hidden="true" className="mx-2 my-1 h-px bg-ink/10" />
-                      ) : null}
-                      <li>
-                        {/* 크기 뒤의 !는 위 단추와 같은 이유입니다 (globals.css의 button 규칙). */}
-                        <button
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => {
-                            onChange(option);
-                            setAnchor(null);
-                          }}
-                          className={`flex w-full items-center gap-1 rounded-[14px] py-2 pr-3 pl-1.5 text-left text-[17px]! text-ink transition-colors active:bg-ink/[0.08] ${
-                            selected ? "font-semibold" : "font-normal"
-                          }`}
-                        >
-                          {/*
-                            체크 칸은 고르지 않은 줄에도 자리를 남겨 둡니다.
-                            그래야 모든 줄의 글자가 같은 자리에서 시작합니다.
-                          */}
-                          <CheckIcon
-                            className={`h-[18px] w-[18px] shrink-0 ${selected ? "" : "invisible"}`}
-                            strokeWidth={2.4}
-                          />
-                          {labelOf(option)}
-                        </button>
-                      </li>
-                    </Fragment>
+                    <li key={option}>
+                      {/* 크기 뒤의 !는 위 단추와 같은 이유입니다 (globals.css의 button 규칙). */}
+                      <button
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => {
+                          onChange(option);
+                          setAnchor(null);
+                        }}
+                        className={`flex w-full items-center gap-1 rounded-[14px] py-2 pr-3 pl-1.5 text-left text-[17px]! text-ink transition-colors active:bg-ink/[0.08] ${
+                          selected ? "font-semibold" : "font-normal"
+                        }`}
+                      >
+                        {/*
+                          체크 칸은 고르지 않은 줄에도 자리를 남겨 둡니다.
+                          그래야 모든 줄의 글자가 같은 자리에서 시작합니다.
+                        */}
+                        <CheckIcon
+                          className={`h-[18px] w-[18px] shrink-0 ${selected ? "" : "invisible"}`}
+                          strokeWidth={2.4}
+                        />
+                        {option}
+                      </button>
+                    </li>
                   );
                 })}
               </ul>

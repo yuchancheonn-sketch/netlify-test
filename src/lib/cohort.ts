@@ -13,9 +13,6 @@ export const COHORTS: readonly string[] = Array.from(
   (_, index) => `${index + 1}기`,
 );
 
-/** 원우수첩 드롭다운에서 "전체"를 뜻하는 값. 기수 값("10기")과 겹치지 않습니다. */
-export const ALL_COHORTS = "all";
-
 /**
  * 대학생 원우가 없었던 기수. 1기·2기 과정에는 대학생 원우가 없었습니다(공식 원우 명단 기준).
  * 3기부터 일반 원우와 대학생 원우가 함께 들어왔습니다.
