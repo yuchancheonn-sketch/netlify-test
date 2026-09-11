@@ -5,6 +5,7 @@ import type { Firestore } from "firebase-admin/firestore";
  *
  * 쓰는 곳은 서버뿐입니다. 폰에 푸시를 보내는 바로 그 자리에서 함께 적습니다.
  *  - 새 일정: /api/push/event (그 기수 원우에게)
+ *  - 새 투표·의견 모으기: /api/push/poll (그 기수, "전체 기수"로 열었으면 모든 기수)
  *  - 새 복습 영상·소식: netlify/functions/feed-push.mts → lib/feed-watch.ts (모든 기수)
  * 채팅은 넣지 않습니다 — 하단 채팅 탭에 이미 빨간 점이 있어, 알림함까지 채우면 같은 소식이 두 번 옵니다.
  *
@@ -15,7 +16,7 @@ import type { Firestore } from "firebase-admin/firestore";
  * 보안 규칙에서 notices 쓰기는 아무에게도 열지 않았습니다. Admin SDK만 씁니다.
  */
 
-export type NoticeType = "event" | "video" | "news";
+export type NoticeType = "event" | "poll" | "video" | "news";
 
 export interface NewNotice {
   type: NoticeType;

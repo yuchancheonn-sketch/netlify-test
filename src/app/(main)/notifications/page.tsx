@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import { BellIcon, CalendarIcon, ChevronRightIcon, MegaphoneIcon } from "@/components/icons";
+import {
+  BellIcon,
+  CalendarIcon,
+  ChevronRightIcon,
+  MegaphoneIcon,
+  VoteStampIcon,
+} from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markNoticesSeen } from "@/lib/chat-read";
@@ -98,9 +104,10 @@ export default function NotificationsPage() {
   );
 }
 
-/** 알림 종류마다의 그림 — 일정은 달력, 영상은 재생, 소식은 확성기 */
+/** 알림 종류마다의 그림 — 일정은 달력, 투표는 기표 도장, 영상은 재생, 소식은 확성기 */
 function NoticeGlyph({ type }: { type: NoticeDoc["type"] }) {
   if (type === "event") return <CalendarIcon className="h-[22px] w-[22px]" />;
+  if (type === "poll") return <VoteStampIcon className="h-[22px] w-[22px]" strokeWidth={2.2} />;
   if (type === "news") return <MegaphoneIcon className="h-[22px] w-[22px]" />;
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-[22px] w-[22px]" aria-hidden="true">

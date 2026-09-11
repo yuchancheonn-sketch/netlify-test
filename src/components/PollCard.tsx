@@ -19,6 +19,7 @@ import {
 import { useVoteChoice } from "@/lib/use-vote-choice";
 import { cohortOf } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
+import { requestPush } from "@/lib/push";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { useViewCohort } from "@/lib/use-view-cohort";
@@ -627,7 +628,7 @@ export function PollCreateSheet({
     setSaving(true);
     setError(null);
     try {
-      await createPoll({
+      const pollId = await createPoll({
         cohort,
         audience,
         kind,
@@ -635,6 +636,8 @@ export function PollCreateSheet({
         options: trimmedOptions,
         author: { uid: user.uid, profile },
       });
+      // 대상 원우들에게 알림(알림함 + 폰 푸시) — /api/push/poll. 곁들이는 일이라 기다리지 않습니다.
+      void requestPush("poll", { pollId });
       onClose();
     } catch (caught) {
       setError(

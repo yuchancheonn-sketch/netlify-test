@@ -443,7 +443,7 @@ export interface ChatReadDoc {
  */
 export interface NoticeDoc {
   id: string;
-  type: "event" | "video" | "news";
+  type: "event" | "poll" | "video" | "news";
   title: string;
   body: string;
   /** 누르면 열 앱 안 주소 */

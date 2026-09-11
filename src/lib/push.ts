@@ -47,7 +47,7 @@ const ASKED_KEY = "agikaeta:push-asked";
  * 원우에게 오류를 띄울 만한 일이 아닙니다.
  */
 export async function requestPush(
-  path: "chat" | "event",
+  path: "chat" | "event" | "poll",
   payload: Record<string, string>,
 ): Promise<void> {
   try {
