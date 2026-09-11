@@ -5,7 +5,7 @@ import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
 import { kstDateString, quizForDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
 import { useKstDay } from "@/lib/use-kst-day";
-import { useQuizAnswer, useQuizCollapsed } from "@/lib/use-quiz-answer";
+import { resetQuizAnswers, useQuizAnswer, useQuizCollapsed } from "@/lib/use-quiz-answer";
 
 /** "채점 중이에요" 화면을 보여주는 시간(ms). 너무 짧으면 번쩍하고, 길면 답답합니다. */
 const GRADING_MS = 1600;
@@ -47,6 +47,24 @@ export default function DosanQuizCard() {
   const picked = pickedFor?.key === quizKey ? pickedFor.value : null;
   const [screen, setScreen] = useState<"none" | "grading" | "explanation">("none");
   const gradingTimer = useRef<number | null>(null);
+
+  /*
+   * 주소 끝에 ?quiz-reset을 붙여 홈을 열면 이 폰에 적어 둔 답을 지워 다시 풀게 합니다.
+   * 문제를 고치거나 흐름을 다시 볼 때 쓰는 뒷문이라 화면에는 단추가 없습니다.
+   * 지운 뒤에는 주소에서 떼어 새로고침해도 또 지워지지 않게 합니다.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("quiz-reset")) return;
+    resetQuizAnswers();
+    params.delete("quiz-reset");
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+    );
+  }, []);
 
   // 채점 화면이 떠 있는 동안 홈을 벗어나면 타이머만 치웁니다.
   useEffect(

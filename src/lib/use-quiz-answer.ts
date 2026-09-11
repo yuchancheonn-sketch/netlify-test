@@ -106,6 +106,26 @@ export function useQuizCollapsed(key: string) {
 }
 
 /**
+ * 이 폰에 적어 둔 퀴즈 답과 접어 두기 표시를 모두 지웁니다 — 오늘 문제를 다시 풀 수 있게.
+ * 화면에는 입구가 없고, 주소 끝에 `?quiz-reset`을 붙여 홈을 열면 불립니다(DosanQuizCard).
+ */
+export function resetQuizAnswers() {
+  memory.clear();
+  collapsedMemory.clear();
+  try {
+    for (let index = localStorage.length - 1; index >= 0; index--) {
+      const stored = localStorage.key(index);
+      if (stored?.startsWith(KEY_PREFIX) || stored?.startsWith(COLLAPSE_PREFIX)) {
+        localStorage.removeItem(stored);
+      }
+    }
+  } catch {
+    // 저장소를 못 쓰는 브라우저는 memory만 비우면 됩니다.
+  }
+  for (const listener of listeners) listener();
+}
+
+/**
  * key는 "날짜:문제 id"처럼 오늘 문제를 가리키는 값입니다.
  * 날짜가 바뀌거나 문제 목록이 바뀌면 key가 달라져 새로 풀게 됩니다.
  */
