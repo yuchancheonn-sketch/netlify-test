@@ -106,8 +106,8 @@ export default function DosanQuizCard() {
 
   return (
     <>
-      {/* 위 여백 19px — 20px(pt-5)에서 1px 줄였습니다(2026-09-11). */}
-      <section className="rounded-3xl bg-surface px-5 pt-[19px] pb-5 shadow-[var(--shadow-card)]">
+      {/* 위 여백 17px — 20px(pt-5) → 19px → 17px로 두 번 줄였습니다(2026-09-11). */}
+      <section className="rounded-3xl bg-surface px-5 pt-[17px] pb-5 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between gap-2">
           {/*
             제목은 "오늘의 도산" 카드의 제목과 같은 크기·굵기·색입니다(18px, 굵게, 검정).
