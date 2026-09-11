@@ -11,7 +11,7 @@ import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
-import { cohortOf, hasYouthMembers } from "@/lib/cohort";
+import { canAddMembers, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import {
   affiliationLine,
   buildDirectory,
@@ -213,7 +213,9 @@ export default function MembersPage() {
                 }
                 description={
                   book.length === 0
-                    ? "아래 원우 추가하기로 우리 기수 원우를 한 명씩 채워보세요."
+                    ? canAddMembers(cohort)
+                      ? "아래 원우 추가하기로 우리 기수 원우를 한 명씩 채워보세요."
+                      : undefined
                     : "검색어나 필터를 바꿔보세요."
                 }
               />
@@ -243,8 +245,10 @@ export default function MembersPage() {
             생김새가 다르면 다른 종류의 단추처럼 읽힙니다.
             (예전에는 여기만 테두리만 두른 회색 단추였습니다.)
             한쪽을 고치면 나머지 둘도 같이 맞춰 주세요.
+
+            1기~9기 수첩에는 이 단추가 없습니다 — 공식 명단으로 이미 다 채웠습니다(lib/cohort.ts의 canAddMembers).
           */}
-          {!busy && !error ? (
+          {!busy && !error && canAddMembers(cohort) ? (
             <button
               type="button"
               onClick={() => setEditing({ entry: null })}

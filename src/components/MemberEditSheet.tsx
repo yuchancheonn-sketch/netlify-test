@@ -16,7 +16,8 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { COHORTS, hasYouthMembers } from "@/lib/cohort";
+import { COHORT } from "@/lib/constants";
+import { COHORTS, canAddMembers, hasYouthMembers } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
@@ -65,7 +66,10 @@ export default function MemberEditSheet({
   const isMine = entry?.member?.uid === profile?.uid && !!entry?.member;
 
   const [name, setName] = useState(entry?.name ?? "");
-  const [cohort, setCohort] = useState(entry?.cohort ?? defaultCohort);
+  // 새로 올릴 때는 추가할 수 있는 기수(10기)만 — 1기~9기 수첩에서는 추가하지 않습니다(lib/cohort.ts).
+  const [cohort, setCohort] = useState(
+    entry?.cohort ?? (canAddMembers(defaultCohort) ? defaultCohort : COHORT),
+  );
   const [memberType, setMemberType] = useState<MemberType>(entry?.memberType ?? "general");
   const [company, setCompany] = useState(entry?.company ?? "");
   const [position, setPosition] = useState(entry?.position ?? "");
@@ -131,6 +135,12 @@ export default function MemberEditSheet({
         );
         return;
       }
+    }
+
+    // 화면에서 이미 막지만, 새 이름은 추가할 수 있는 기수에만 올라가게 한 번 더 확인합니다.
+    if (!entry && !canAddMembers(cohort)) {
+      setError(`원우 추가는 ${COHORT} 수첩에서만 할 수 있어요.`);
+      return;
     }
 
     const digits = phone.replace(/\D/g, "");
@@ -271,7 +281,8 @@ export default function MemberEditSheet({
               className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
               style={SELECT_ARROW_STYLE}
             >
-              {COHORTS.map((value) => (
+              {/* 새로 올릴 때는 10기만, 이미 있는 칸을 고칠 때는 모든 기수(옮기기) */}
+              {(entry ? COHORTS : COHORTS.filter(canAddMembers)).map((value) => (
                 <option key={value} value={value}>
                   {value}
                 </option>

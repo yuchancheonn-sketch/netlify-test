@@ -28,6 +28,17 @@ export function hasYouthMembers(cohort: string | null | undefined): boolean {
 }
 
 /**
+ * 원우수첩에서 "원우 추가하기"로 새 이름을 올릴 수 있는 기수인지 — 지금 기수(10기)만.
+ *
+ * 1기~9기 명단은 공식 원우 명단으로 이미 다 넣었으므로(2026-09-11), 그 수첩에서는
+ * 추가 단추를 보이지 않고 추가 시트에서도 고를 수 없게 합니다. 이미 있는 칸을 고치는 것은 그대로입니다.
+ * (화면에서 막는 것이지 보안 규칙이 막는 것은 아닙니다 — roster 쓰기는 원우 누구나.)
+ */
+export function canAddMembers(cohort: string | null | undefined): boolean {
+  return cohort === COHORT;
+}
+
+/**
  * 저장된 기수 값을 믿을 수 있는 값으로 바꿉니다.
  *
  * 기수를 나누기 전에 만들어진 문서(명단·일정·투표·앨범·파일)에는 기수 칸이
