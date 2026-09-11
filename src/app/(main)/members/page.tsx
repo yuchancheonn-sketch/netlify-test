@@ -127,12 +127,13 @@ export default function MembersPage() {
               눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
               깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
               있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
-              오른쪽은 인원 수 자리만큼(pr-16) 비워 글자와 겹치지 않게 합니다.
+              오른쪽은 인원 수 자리만큼(pr-24) 비워 글자와 겹치지 않게 합니다.
+              (인원 수 글씨를 13px → 16px로 키우면서 pr-16에서 넓혔습니다.)
             */
-            className="w-full rounded-xl bg-surface py-2.5 pr-16 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="w-full rounded-xl bg-surface py-2.5 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {!busy && !error ? (
-            <p className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-[13px] font-medium text-ink-soft">
+            <p className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-[16px] font-medium text-ink-soft">
               원우 <span className="font-bold text-ink">{visible.length}</span>명
             </p>
           ) : null}
