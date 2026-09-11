@@ -36,6 +36,13 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# 새 복습 영상·소식 알림 — 매시 도는 예약 함수 (netlify/functions/feed-push.mts, 2026-09-11)
+# firebase-admin은 한 파일로 묶지 않고 node_modules에서 그대로 씁니다.
+# 묶어 버리면 Firestore가 안에서 읽는 설정 파일(protos)을 못 찾아 실행 중에 멈추는 경우가 있습니다.
+# 예약 함수는 배포본에서만 돌고, Netlify 환경변수 FIREBASE_SERVICE_ACCOUNT가 있어야 알림이 나갑니다.
+[functions."feed-push"]
+  external_node_modules = ["firebase-admin"]
+
 # 비공개 커뮤니티 앱이므로 검색엔진에 잡히지 않게 합니다.
 # (앱 코드에서도 robots 메타태그로 한 번 더 막고 있습니다.)
 [[headers]]

@@ -4,6 +4,7 @@ import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
+import { parseServiceAccount } from "@/lib/service-account";
 
 /**
  * 서버(라우트 핸들러)에서만 쓰는 Firebase Admin SDK.
@@ -17,28 +18,10 @@ import { getMessaging, type Messaging } from "firebase-admin/messaging";
  * 통째로(한 줄로) 넣어 전달합니다. NEXT_PUBLIC_ 이 없으므로 브라우저로는
  * 절대 나가지 않습니다. 값이 없으면 아래 함수들이 null을 돌려주고,
  * 알림 기능만 조용히 꺼집니다. (앱의 다른 부분은 영향 없음)
+ *
+ * 값을 읽는 방법은 lib/service-account.ts에 있습니다 — 새 영상·소식 알림을 보내는
+ * Netlify 예약 함수(netlify/functions/feed-push.mts)도 같은 것을 씁니다.
  */
-
-interface ServiceAccount {
-  project_id?: string;
-  client_email?: string;
-  private_key?: string;
-}
-
-function loadServiceAccount(): ServiceAccount | null {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as ServiceAccount;
-    // 환경변수에 붙여넣을 때 줄바꿈이 \n 두 글자로 바뀌는 경우가 많아 되돌립니다.
-    if (typeof parsed.private_key === "string") {
-      parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
-    }
-    return parsed.private_key && parsed.client_email && parsed.project_id ? parsed : null;
-  } catch {
-    return null;
-  }
-}
 
 let cached: App | null = null;
 
@@ -48,15 +31,9 @@ function getAdminApp(): App | null {
     cached = getApps()[0];
     return cached;
   }
-  const account = loadServiceAccount();
+  const account = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT);
   if (!account) return null;
-  cached = initializeApp({
-    credential: cert({
-      projectId: account.project_id,
-      clientEmail: account.client_email,
-      privateKey: account.private_key,
-    }),
-  });
+  cached = initializeApp({ credential: cert(account) });
   return cached;
 }
 

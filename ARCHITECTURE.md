@@ -383,6 +383,7 @@ EventForm(원우 누구나) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
 | 읽음 기록 | 본인만 |
 | `pushTokens` | 본인 것 하나만. **list는 아무에게도 안 엶** (열면 누가 어떤 기기 쓰는지 다 보이고 남의 알림을 끊을 수 있음) |
 | `pushLog` | **규칙에 안 적음 = 클라이언트 전면 차단.** Admin SDK만 접근 |
+| `feedState` | **규칙에 안 적음 = 클라이언트 전면 차단.** 새 복습 영상·소식 알림의 "이미 본 글 id"(`videos`, `news` 두 문서). Netlify 예약 함수 `netlify/functions/feed-push.mts`(매시)만 씀 |
 
 > ★★ **`match /{document=**}` 전체 허용 줄을 지운 것이 이 규칙의 핵심입니다.**
 > Firestore 규칙은 "하나라도 허용하면 허용"이라, 그 줄이 남아 있으면 채팅을 아무리 잠가도 통과됩니다.

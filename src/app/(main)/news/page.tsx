@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
@@ -35,13 +36,43 @@ const SUBTABS = [
 type Subtab = (typeof SUBTABS)[number]["value"];
 
 export default function NewsPage() {
-  const [subtab, setSubtab] = useState<Subtab>("videos");
-
   return (
     <>
       <PageHeader title="소식" right={<HeaderActions />} />
 
       <div className="px-4 pb-8">
+        {/*
+          주소의 ?tab을 읽는 useSearchParams는 정적 화면에서 Suspense로 감싸야 빌드가 됩니다(Next 문서).
+          그동안은 알약 줄과 첫 칸 자리만 회색으로 잡아 둡니다.
+        */}
+        <Suspense
+          fallback={
+            <>
+              <Skeleton className="h-[40px] rounded-full" />
+              <Skeleton className="mt-5 aspect-video rounded-2xl" />
+            </>
+          }
+        >
+          <NewsTabs />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+/**
+ * 복습 영상 / 소식 알약과 그 아래 목록.
+ * 주소가 /news?tab=news 면 소식 칸을 먼저 엽니다 — 새 소식 알림(netlify/functions/feed-push.mts)이
+ * 이 주소로 엽니다. 새 영상 알림은 그냥 /news(복습 영상 칸)로 엽니다.
+ */
+function NewsTabs() {
+  const searchParams = useSearchParams();
+  const [subtab, setSubtab] = useState<Subtab>(() =>
+    searchParams.get("tab") === "news" ? "news" : "videos",
+  );
+
+  return (
+    <>
         <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {SUBTABS.map(({ value, label }) => (
             <button
@@ -67,7 +98,6 @@ export default function NewsPage() {
         <div className="mt-5">
           {subtab === "videos" ? <VideoList /> : <NewsList />}
         </div>
-      </div>
     </>
   );
 }
