@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
 import { kstDateString, quizForDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
 import { useKstDay } from "@/lib/use-kst-day";
 import { resetQuizAnswers, useQuizAnswer } from "@/lib/use-quiz-answer";
@@ -28,14 +29,17 @@ function choiceLabel(value: OxAnswer): string {
  *   3. 이어서 전체 화면 해설이 뜹니다. 닫으면 카드에 결과가 남고,
  *      "해설 보기"로 다시 열 수 있습니다.
  *
- * 문제와 해설은 lib/dosan-quiz.ts, 고른 답은 이 폰에만(lib/use-quiz-answer.ts).
+ * 문제와 해설은 lib/dosan-quiz.ts, 고른 답은 이 폰의 내 계정에만(lib/use-quiz-answer.ts).
+ * 누가 먼저 풀어도 다른 원우에게 정답·해설이 열리지 않습니다 — 각자 한 번씩 풉니다.
  */
 export default function DosanQuizCard() {
   // 한국 시간 새벽 12시에 다음 문제로 — 홈을 켜 둔 채여도 그 순간 바뀝니다(use-kst-day.ts).
   const day = useKstDay();
   const quiz = quizForDay(day);
   const quizKey = `${kstDateString(day)}:${quiz.id}`;
-  const [answer, saveAnswer] = useQuizAnswer(quizKey);
+  // 퀴즈는 원우마다 각자 풉니다 — 같은 폰이라도 계정이 다르면 따로입니다(use-quiz-answer.ts).
+  const { user } = useAuth();
+  const [answer, saveAnswer] = useQuizAnswer(user?.uid, quizKey);
   /**
    * 제출 전에 눌러 둔 답. 어느 문제에 고른 것인지(key)와 함께 둡니다 —
    * 고르기만 하고 자정을 넘기면 새 문제에 어제 고른 답이 켜져 있지 않게 합니다.
