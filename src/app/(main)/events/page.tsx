@@ -37,8 +37,7 @@ export default function EventsPage() {
    * 모임 당일까지는 보이고, 그 다음 날부터 사라집니다.
    *
    * 화면에서만 감추고 저장된 기록은 그대로 둡니다. 앱이 알아서 지우게 하면
-   * 되돌릴 수 없고, 참석 응답까지 딸려 사라집니다. 정말 지워야 할 일정은
-   * Firebase 콘솔에서 지우는 편이 안전합니다.
+   * 되돌릴 수 없습니다. 정말 지워야 할 일정은 Firebase 콘솔에서 지우는 편이 안전합니다.
    */
   const today = todayString();
   const events = allEvents.filter(

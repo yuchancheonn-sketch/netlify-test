@@ -4,18 +4,19 @@ import { useState } from "react";
 import { Badge, FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
 import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
-import { usePollOpinions, usePolls, usePollVotes } from "@/lib/hooks";
+import { useHasVoted, usePollOpinions, usePolls, usePollTally } from "@/lib/hooks";
 import {
   addOpinion,
   castVote,
   closePoll,
-  countVotes,
   createPoll,
   deleteOpinion,
   deletePoll,
   isPollForCohort,
+  sumCounts,
   votePercent,
 } from "@/lib/polls";
+import { useVoteChoice } from "@/lib/use-vote-choice";
 import { cohortOf } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
@@ -101,38 +102,52 @@ export function PollBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   );
 }
 
-/** 투표 하나 — 고르는 중이거나, 이미 넣었으면 결과. */
+/**
+ * 투표 하나 — 고르는 중이거나, 이미 넣었으면 결과.
+ *
+ * 무기명입니다(lib/polls.ts) — 누가 무엇을 골랐는지 어디에도 남지 않습니다.
+ * 그래서 넣은 뒤에는 바꿀 수 없어 넣기 전에 한 번 묻고, 결과에서 내가 찍은 자리는
+ * 이 폰이 기억할 때만 도장으로 표시합니다(lib/use-vote-choice.ts).
+ */
 function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const { isAdmin } = useAuth();
-  const { data: votes } = usePollVotes(poll.id);
-
-  const myVote = votes.find((vote) => vote.uid === myUid);
-  /** 고르는 중인 자리. 아직 안 눌렀으면 이미 넣은 표를 기본으로 둡니다. */
+  const counts = usePollTally(poll.id, poll.options.length);
+  /** 이미 넣었는지 — 아직 모르면 null */
+  const hasVoted = useHasVoted(poll.id, myUid);
+  const [myChoice, rememberChoice] = useVoteChoice(myUid, poll.id);
+  /** 고르는 중인 자리 */
   const [picked, setPicked] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** 표를 넣은 뒤에도 다시 고르는 중인지 */
-  const [changing, setChanging] = useState(false);
 
-  const counts = countVotes(poll, votes);
-  const total = votes.length;
-  const mine = myVote?.optionIndex ?? null;
-  // 마감된 투표는 고르지 않고 결과만 보여줍니다(역대 투표 화면).
-  const showResult = poll.closed || (mine !== null && !changing);
+  const total = sumCounts(counts);
+  // 마감된 투표이거나 이미 넣었으면 고르지 않고 결과만 보여줍니다.
+  const showResult = poll.closed || hasVoted === true;
   const canManage = poll.createdBy === myUid || isAdmin;
 
-  const selected = picked ?? mine;
+  const selected = picked;
 
   async function handleSubmit() {
-    if (selected === null || !myUid || saving) return;
+    if (selected === null || !myUid || saving || hasVoted !== false) return;
+    if (
+      !window.confirm(
+        `"${poll.options[selected]}"에 투표할까요?\n무기명 투표라 넣은 뒤에는 바꿀 수 없어요.`,
+      )
+    ) {
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       await castVote({ pollId: poll.id, uid: myUid, optionIndex: selected });
-      setChanging(false);
+      rememberChoice(selected);
       setPicked(null);
     } catch (caught) {
-      setError(saveErrorMessage(caught, "표를 넣지 못했어요."));
+      setError(
+        caught instanceof Error && caught.message === "already-voted"
+          ? "이미 투표했어요."
+          : saveErrorMessage(caught, "표를 넣지 못했어요."),
+      );
     } finally {
       setSaving(false);
     }
@@ -186,7 +201,7 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
       </div>
 
       {showResult ? (
-        <PollResult poll={poll} counts={counts} total={total} mine={mine} />
+        <PollResult poll={poll} counts={counts} total={total} mine={myChoice} />
       ) : (
         <>
           {/*
@@ -247,27 +262,15 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
             })}
           </div>
 
+          {/* 이미 넣었는지 아직 모를 때(null)는 누르지 못하게 둡니다 — 두 번 넣기 시도를 막습니다. */}
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={selected === null || saving}
+            disabled={selected === null || saving || hasVoted !== false}
             className="mt-3 w-full rounded-2xl bg-brand-500 py-4 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
           >
             {saving ? "넣는 중…" : "투표완료하기"}
           </button>
-
-          {changing ? (
-            <button
-              type="button"
-              onClick={() => {
-                setChanging(false);
-                setPicked(null);
-              }}
-              className="mt-2 w-full py-1 text-[13px]! font-bold text-ink-faint"
-            >
-              그대로 두기
-            </button>
-          ) : null}
         </>
       )}
 
@@ -284,19 +287,8 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
           {poll.createdByName}님이 만듦
         </span>
 
+        {/* "다시 고르기"는 없습니다 — 무기명이라 넣은 표를 되돌릴 수 없습니다(lib/polls.ts). */}
         <div className="flex shrink-0 items-center gap-3">
-          {showResult && !poll.closed ? (
-            <button
-              type="button"
-              onClick={() => {
-                setChanging(true);
-                setPicked(mine);
-              }}
-              className="text-[12px]! font-bold text-brand-500"
-            >
-              다시 고르기
-            </button>
-          ) : null}
           {canManage ? (
             <>
               {/* 이미 마감된 투표에는 마감 단추가 없습니다. 지우기는 남깁니다. */}

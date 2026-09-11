@@ -25,9 +25,7 @@ import type {
   PhotoAlbumDoc,
   PhotoDoc,
   PollDoc,
-  PollVoteDoc,
   RosterDoc,
-  RsvpDoc,
   SessionCommentDoc,
   SessionDoc,
   UserDoc,
@@ -192,26 +190,6 @@ export function useEvent(eventId: string) {
   }, [eventId]);
 
   return { event, loading, notFound };
-}
-
-/** 일정별 참석 응답 목록 */
-export function useRsvps(eventId: string): ListState<RsvpDoc> {
-  const [state, setState] = useState<ListState<RsvpDoc>>(EMPTY);
-
-  useEffect(() => {
-    return onSnapshot(
-      collection(db, "events", eventId, "rsvps"),
-      (snapshot) => {
-        const rsvps = snapshot.docs.map(
-          (document) => ({ uid: document.id, ...document.data() }) as RsvpDoc,
-        );
-        setState({ data: rsvps, loading: false, error: null });
-      },
-      () => setState({ data: [], loading: false, error: "참석 현황을 불러오지 못했어요." }),
-    );
-  }, [eventId]);
-
-  return state;
 }
 
 /**
@@ -437,34 +415,49 @@ export function usePolls(): ListState<PollDoc> {
 }
 
 /**
- * 한 투표에 들어온 표 전부.
+ * 무기명 투표의 자리별 표 수 — polls/{id}/tally/counts 문서 하나 (lib/polls.ts).
  *
- * 문서 하나가 표 하나라 원우 수만큼 읽습니다(쉰 명이면 쉰 건). 개수를 투표
- * 문서에 세어 두면 한 건으로 줄지만, 그 숫자는 브라우저가 올리는 값이라
- * 아무나 늘릴 수 있습니다. 규칙으로 "1만큼만 늘었는지"를 확인할 방법이 없어
- * 표를 그대로 세는 쪽을 골랐습니다. 내가 어디에 넣었는지도 이걸로 압니다.
+ * 예전엔 표 문서를 사람 수만큼 읽었는데(378명이면 378건) 이제 문서 하나라 늘 1건입니다.
+ * 문서가 아직 없으면(옛 투표를 옮기기 전 등) 모든 자리를 0으로 둡니다.
  */
-export function usePollVotes(pollId: string): ListState<PollVoteDoc> {
-  const [state, setState] = useState<ListState<PollVoteDoc>>(EMPTY);
+export function usePollTally(pollId: string, optionCount: number): number[] {
+  const [entry, setEntry] = useState<{ pollId: string; counts: number[] } | null>(null);
 
   useEffect(() => {
-    /*
-     * 여기서 "투표가 없으면" 같은 분기를 두지 마세요.
-     * effect 안에서 곧바로 setState를 하면 이 저장소의 린트가 빌드를 막습니다
-     * (react-hooks/set-state-in-effect). 이 훅은 늘 투표 하나에 붙으므로
-     * pollId는 반드시 있고, 그래서 분기가 필요 없습니다.
-     */
     return onSnapshot(
-      collection(db, "polls", pollId, "votes"),
-      (snapshot) => {
-        const votes = snapshot.docs.map((document) => document.data() as PollVoteDoc);
-        setState({ data: votes, loading: false, error: null });
-      },
-      () => setState({ data: [], loading: false, error: "표를 불러오지 못했어요." }),
+      doc(db, "polls", pollId, "tally", "counts"),
+      (snapshot) =>
+        setEntry({ pollId, counts: (snapshot.get("counts") as number[] | undefined) ?? [] }),
+      () => setEntry({ pollId, counts: [] }),
     );
   }, [pollId]);
 
-  return state;
+  const stored = entry?.pollId === pollId ? entry.counts : [];
+  return Array.from({ length: optionCount }, (_, index) =>
+    typeof stored[index] === "number" ? stored[index] : 0,
+  );
+}
+
+/**
+ * 내가 이 투표에 이미 넣었는지 — polls/{id}/voters/{내 uid} 문서가 있는지.
+ * 그 문서에는 무엇을 골랐는지가 없고, 보안 규칙상 본인만 읽습니다. 아직 모르면 null.
+ */
+export function useHasVoted(pollId: string, uid: string | undefined): boolean | null {
+  const [entry, setEntry] = useState<{ key: string; voted: boolean } | null>(null);
+  const key = `${pollId}:${uid ?? ""}`;
+
+  useEffect(() => {
+    if (!uid) return;
+    const current = `${pollId}:${uid}`;
+    return onSnapshot(
+      doc(db, "polls", pollId, "voters", uid),
+      (snapshot) => setEntry({ key: current, voted: snapshot.exists() }),
+      () => setEntry({ key: current, voted: false }),
+    );
+  }, [pollId, uid]);
+
+  if (!uid) return false;
+  return entry?.key === key ? entry.voted : null;
 }
 
 /**

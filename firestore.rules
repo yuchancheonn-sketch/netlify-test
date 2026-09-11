@@ -79,6 +79,41 @@ service cloud.firestore {
     }
 
     /*
+     * ── 무기명 투표의 표 수 확인 (2026-09-11) ──
+     * 고를 것은 2~4개라 반복문 없이 자리마다 적습니다(규칙에는 반복문이 없습니다).
+     * 자리가 없는 칸은 앞의 size 조건에서 멈추므로 읽지 않습니다(&&·||는 앞이 정해지면 뒤를 안 봅니다).
+     */
+    function countAt(counts, index) {
+      return counts.size() > index ? counts[index] : 0;
+    }
+
+    function countsAreInts(counts) {
+      return counts.size() >= 2 && counts.size() <= 4
+             && counts[0] is int && counts[1] is int
+             && (counts.size() < 3 || counts[2] is int)
+             && (counts.size() < 4 || counts[3] is int);
+    }
+
+    /** 새로 여는 투표의 표 수 — 모든 자리가 0 */
+    function isAllZero(counts) {
+      return countsAreInts(counts)
+             && countAt(counts, 0) == 0 && countAt(counts, 1) == 0
+             && countAt(counts, 2) == 0 && countAt(counts, 3) == 0;
+    }
+
+    /** 옛 표 수에서 딱 한 자리만 1 늘었는지 (줄어든 자리 없음, 합계 +1, 모두 정수) */
+    function isOneVoteMore(before, after) {
+      return countsAreInts(after)
+             && after.size() == before.size()
+             && countAt(after, 0) >= countAt(before, 0)
+             && countAt(after, 1) >= countAt(before, 1)
+             && countAt(after, 2) >= countAt(before, 2)
+             && countAt(after, 3) >= countAt(before, 3)
+             && countAt(after, 0) + countAt(after, 1) + countAt(after, 2) + countAt(after, 3)
+                == countAt(before, 0) + countAt(before, 1) + countAt(before, 2) + countAt(before, 3) + 1;
+    }
+
+    /*
      * ── 계정 문서 ──
      *
      * 여기만 규칙이 깁니다. 앱의 문지기가 이 문서의 status 값이라,
@@ -143,7 +178,7 @@ service cloud.firestore {
      * 합니다 — 새 일정 알림(/api/push/event)도 그 값으로 보낸 사람을 확인합니다.
      *
      * 고치고 지우는 것은 올린 사람과 운영진만. 남이 올린 일정이 조용히 바뀌거나
-     * 사라지면 참석 응답까지 딸려 엉킵니다. createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
+     * 사라지면 원우들이 헷갈립니다. createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
      */
     match /events/{eventId} {
       allow read: if isMember();
@@ -156,9 +191,7 @@ service cloud.firestore {
       allow delete: if isMember()
                     && (resource.data.get('createdBy', '') == request.auth.uid || isAdmin());
 
-      match /rsvps/{uid} {
-        allow read, write: if isMember();
-      }
+      // rsvps(참석/불참/미정)는 2026-09-11에 "참석하시나요?"를 없애며 규칙에서도 뺐습니다.
     }
 
     match /photoAlbums/{albumId} {
@@ -199,14 +232,20 @@ service cloud.firestore {
                          .affectedKeys().hasOnly(['closed']);
 
       /*
-       * 표 — 문서 id가 곧 투표한 사람의 uid입니다.
+       * ★★ 무기명 투표 (2026-09-11) — 누가 무엇을 골랐는지 어디에도 남지 않습니다.
        *
-       * 그래서 문서를 읽지 않고 id만 보고 본인인지 가릴 수 있고(1:1 방 id와
-       * 같은 수법), **한 사람이 두 표를 넣을 길이 없습니다.** 다시 고르면
-       * 같은 문서를 덮어씁니다.
+       *   tally/counts  : 자리마다 표 수만. 원우 누구나 읽습니다.
+       *   voters/{uid}  : "이 사람은 이미 넣었다"는 표시만(무엇을 골랐는지 없음). 본인만 읽습니다.
        *
-       * 남의 표를 읽는 것은 열어 둡니다. 결과를 세려면 필요하고, 애초에
-       * 누가 무엇을 골랐는지 서로 아는 작은 모임의 투표입니다.
+       * 표 한 장 = 한 쓰기(트랜잭션)에서 voters/{내 uid}를 새로 만들고 tally의 한 자리를 +1.
+       * 두 문서의 규칙이 서로를 확인합니다(existsAfter·getAfter).
+       *  - voters는 만들기만 되고 고치기·지우기가 없습니다 → 한 사람 한 표, 다시 고르기 없음.
+       *  - tally는 "내 voters 표시가 이번 쓰기에서 처음 생길 때"만, 한 자리만 정확히 1 늘 수 있습니다.
+       *  - 닫힌 투표에는 넣을 수 없습니다.
+       * 서버 어디에도 uid와 고른 자리가 함께 적히지 않으므로, 운영진이 콘솔을 열어도 이을 수 없습니다.
+       *
+       * 예전의 votes/{uid}(고른 자리 + uid, 원우 누구나 읽음)는 없앴고 규칙에서도 뺐습니다.
+       * 규칙에 없는 하위 컬렉션은 앱에서 읽지도 쓰지도 못합니다.
        */
       /*
        * ★ 지우기를 따로 적어야 합니다.
@@ -221,12 +260,40 @@ service cloud.firestore {
        *   그래서 create·update와 조건이 다를 수밖에 없고, 나눠 적는 것이
        *   원래 맞는 방식입니다.
        */
-      match /votes/{uid} {
+      match /tally/{docId} {
         allow read: if isMember();
-        allow create, update: if isMember()
-                              && request.auth.uid == uid
-                              && request.resource.data.uid == request.auth.uid;
-        allow delete: if isMember() && request.auth.uid == uid;
+        // 투표를 여는 그 쓰기(묶음)에서, 연 사람이 고를 것 수만큼의 0으로 만듭니다.
+        allow create: if isMember()
+                      && docId == 'counts'
+                      && getAfter(/databases/$(database)/documents/polls/$(pollId)).data.createdBy
+                           == request.auth.uid
+                      && request.resource.data.keys().hasOnly(['counts'])
+                      && request.resource.data.counts.size()
+                           == getAfter(/databases/$(database)/documents/polls/$(pollId)).data.options.size()
+                      && isAllZero(request.resource.data.counts);
+        // 표를 넣는 그 쓰기에서만 — 내 voters 표시가 이번에 처음 생기고, 한 자리만 +1.
+        allow update: if isMember()
+                      && docId == 'counts'
+                      && get(/databases/$(database)/documents/polls/$(pollId)).data.closed == false
+                      && !exists(/databases/$(database)/documents/polls/$(pollId)/voters/$(request.auth.uid))
+                      && existsAfter(/databases/$(database)/documents/polls/$(pollId)/voters/$(request.auth.uid))
+                      && request.resource.data.keys().hasOnly(['counts'])
+                      && isOneVoteMore(resource.data.counts, request.resource.data.counts);
+        allow delete: if false;
+      }
+
+      match /voters/{uid} {
+        // 내가 넣었는지만 봅니다. 목록 훑기는 아무에게도 열지 않습니다(누가 넣었는지도 드러내지 않게).
+        allow get: if isMember() && request.auth.uid == uid;
+        allow list: if false;
+        // 표 수가 같은 쓰기에서 바뀌어야 만들 수 있습니다(바뀌는 방식은 위 tally update가 확인).
+        allow create: if isMember()
+                      && request.auth.uid == uid
+                      && request.resource.data.keys().hasOnly(['votedAt'])
+                      && get(/databases/$(database)/documents/polls/$(pollId)).data.closed == false
+                      && getAfter(/databases/$(database)/documents/polls/$(pollId)/tally/counts).data.counts
+                           != get(/databases/$(database)/documents/polls/$(pollId)/tally/counts).data.counts;
+        allow update, delete: if false;
       }
 
       /*

@@ -9,9 +9,6 @@ export type UserRole = "member" | "admin";
 /** 가입 상태 */
 export type UserStatus = "pending" | "approved";
 
-/** 참석 여부 */
-export type RsvpStatus = "attending" | "notAttending" | "undecided";
-
 /** users/{uid} */
 export interface UserDoc {
   uid: string;
@@ -126,13 +123,6 @@ export interface EventDoc {
   createdAt: Timestamp | null;
 }
 
-/** events/{eventId}/rsvps/{uid} */
-export interface RsvpDoc {
-  uid: string;
-  status: RsvpStatus;
-  updatedAt: Timestamp | null;
-}
-
 /** photoAlbums/{albumId} — 행사 단위로 사진을 묶는 앨범 */
 export interface PhotoAlbumDoc {
   id: string;
@@ -205,16 +195,22 @@ export interface PollDoc {
 }
 
 /**
- * polls/{pollId}/votes/{uid} — 한 사람이 한 표.
+ * polls/{pollId}/tally/counts — 무기명 투표의 자리별 표 수 (2026-09-11).
  *
- * 문서 id가 곧 투표한 사람의 uid입니다. 그래서 **한 사람이 두 표를 넣을 수
- * 없습니다** — 다시 고르면 같은 문서를 덮어씁니다. 규칙에서 문서를 읽지 않고
- * id만 보고 본인인지 가릴 수 있는 것도 같은 이유입니다(1:1 방 id와 같은 수법).
+ * ★ 누가 무엇을 골랐는지는 어디에도 없습니다. 숫자만 있습니다.
+ *   원우 누구나 읽고, 보안 규칙상 "새 voters 표시와 함께 한 자리만 +1"로만 바뀝니다.
+ * 예전의 polls/{pollId}/votes/{uid}(고른 자리 + uid, 누구나 읽음)를 대신합니다 — lib/polls.ts.
  */
-export interface PollVoteDoc {
-  uid: string;
-  /** options 배열에서 고른 자리 */
-  optionIndex: number;
+export interface PollTallyDoc {
+  /** options와 같은 길이. counts[i]가 i번째 고를 것의 표 수 */
+  counts: number[];
+}
+
+/**
+ * polls/{pollId}/voters/{uid} — "이 원우는 이미 넣었다"는 표시.
+ * 무엇을 골랐는지는 적지 않고, 본인만 읽습니다. 고치기·지우기가 없어 한 사람 한 표, 다시 고르기 없음.
+ */
+export interface PollVoterDoc {
   votedAt: Timestamp | null;
 }
 
