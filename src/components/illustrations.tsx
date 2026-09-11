@@ -7,7 +7,7 @@
  *
  * ★ 그림마다 제 색이 있습니다 (2026-09-11). 처음엔 넷 다 브랜드 주황의 밝기 단계였는데,
  *   한 상자에 나란히 놓이니 단조로워 그림에 어울리는 색으로 나눴습니다.
- *   투표함은 파랑, 말풍선은 초록, 지도는 누런 종이에 빨간 핀, 공책은 보라.
+ *   투표함은 파랑, 말풍선은 초록, 지도는 누런 종이에 빨간 핀, 공책은 보라, 역대 투표 클립보드는 청록.
  *   한 그림 안에서는 같은 색의 진하기만 달리 씁니다(지도만 종이와 핀 두 가지).
  */
 
@@ -29,6 +29,29 @@ const PURPLE = "#7C5CFA";
 const PURPLE_MID = "#B8A4FF";
 const PURPLE_LIGHT = "#DCD2FF";
 const LAVENDER = "#F1EDFF";
+
+const TEAL = "#0FA5A0";
+const TEAL_MID = "#62D2CC";
+const TEAL_LIGHT = "#B5EDE9";
+
+/** 역대 투표 — 클립보드에 끼운 결과표(길이가 다른 막대 셋) (청록) */
+export function PollHistoryIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+      {/* 클립보드 판 */}
+      <rect x="8" y="7" width="32" height="37" rx="4" fill={TEAL_LIGHT} />
+      {/* 끼운 종이 */}
+      <rect x="12.5" y="12" width="23" height="28" rx="2" fill="#FFFFFF" />
+      {/* 위 집게 */}
+      <rect x="17" y="4" width="14" height="7.5" rx="2.5" fill={TEAL} />
+      <rect x="21.5" y="6.3" width="5" height="2.2" rx="1.1" fill="#FFFFFF" opacity="0.8" />
+      {/* 결과 막대 — 맨 위가 가장 긴(이긴) 막대 */}
+      <rect x="16.5" y="18" width="15" height="3.4" rx="1.7" fill={TEAL} />
+      <rect x="16.5" y="24.5" width="9" height="3.4" rx="1.7" fill={TEAL_MID} />
+      <rect x="16.5" y="31" width="12" height="3.4" rx="1.7" fill={TEAL_MID} />
+    </svg>
+  );
+}
 
 /** 투표 만들기 — 체크한 투표용지가 투표함 투입구로 들어가는 모습 (파랑) */
 export function BallotBoxIllustration({ className }: { className?: string }) {

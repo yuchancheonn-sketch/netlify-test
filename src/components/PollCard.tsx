@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Badge, FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
-import { ChevronRightIcon, PlusIcon, VoteStampIcon } from "@/components/icons";
+import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { usePollOpinions, usePolls, usePollVotes } from "@/lib/hooks";
 import {
@@ -54,18 +53,17 @@ export default function PollCard() {
   // 보고 있는 기수의 투표만 — 홈이 기수마다 따로입니다.
   const { cohort } = useViewCohort();
 
-  // 그 기수 것 + 모든 기수에 올린 것(audience "all")
-  const visible = polls.filter((poll) => isPollForCohort(poll, cohort));
-  const open = visible.filter((poll) => !poll.closed);
+  // 열린 것만 — 그 기수 것 + 모든 기수에 올린 것(audience "all"). 지난 것은 바로가기 "역대 투표"(/polls)에서.
+  const open = polls.filter((poll) => !poll.closed && isPollForCohort(poll, cohort));
 
   /*
-    불러오는 동안에도, 이 기수에 올라온 투표가 하나도 없을 때도 자리를 아예 비웁니다.
+    불러오는 동안에도, 열린 투표가 없을 때도 자리를 아예 비웁니다.
 
     "투표 만들기"는 2026-09-11부터 홈 바로가기(HomeShortcuts)에 있습니다. 예전엔
     이 카드 아래에 그 단추가 따로 서 있어서, 열린 투표가 없으면 단추가 곧 이 자리였습니다.
     이제 빈 section을 남기면 홈의 칸 사이 간격만 한 칸 더 벌어지므로 null을 돌려줍니다.
   */
-  if (loading || visible.length === 0) return null;
+  if (loading || open.length === 0) return null;
 
   return (
     /*
@@ -76,23 +74,7 @@ export default function PollCard() {
     <section className="flex flex-col gap-3">
       {open.map((poll) => (
         <PollBoard key={poll.id} poll={poll} myUid={user?.uid} />
-      ))}
-
-      {/*
-        역대 투표 — 닫힌 것까지 모두 모아 보는 화면(/polls)으로 갑니다 (2026-09-11).
-        열린 투표가 없어도 지난 투표가 있으면 이 한 줄은 남습니다.
-      */}
-      <Link
-        href="/polls"
-        className="flex items-center justify-between gap-3 rounded-3xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-      >
-        <span className="text-[16px] font-bold text-ink">역대 투표</span>
-        <span className="flex shrink-0 items-center gap-0.5 text-[14px] font-medium text-ink-muted">
-          {visible.length}개
-          <ChevronRightIcon className="h-4 w-4" />
-        </span>
-      </Link>
-    </section>
+      ))}    </section>
   );
 }
 

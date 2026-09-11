@@ -7,6 +7,7 @@ import {
   LessonIllustration,
   MapIllustration,
   OpinionIllustration,
+  PollHistoryIllustration,
 } from "@/components/illustrations";
 import { PollCreateSheet } from "@/components/PollCard";
 
@@ -20,7 +21,7 @@ const ITEM_CLASS_NAME =
   "flex items-center gap-2.5 rounded-2xl px-3 py-1 text-left transition active:bg-fill";
 
 /**
- * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 원우 지도 · 수업 기록.
+ * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 원우 지도 · 수업 기록 · 역대 투표.
  *
  * 은행 앱(신한 SOL)의 "추천 서비스"처럼 흰 상자 하나에 그림 아이콘과 이름을
  * 2열로 늘어놓았습니다 (2026-09-11). 칸을 더하면 grid-cols-2가 알아서 다음 줄을 채웁니다.
@@ -65,6 +66,12 @@ export default function HomeShortcuts() {
         <Link href="/sessions" className={ITEM_CLASS_NAME}>
           <LessonIllustration className="h-7 w-7 shrink-0 -translate-y-px" />
           <span className="-translate-y-px text-[15px] font-medium text-ink">수업 기록</span>
+        </Link>
+
+        {/* 역대 투표 — 열린·닫힌 투표를 모두 모아 보는 /polls 화면 (2026-09-11). */}
+        <Link href="/polls" className={ITEM_CLASS_NAME}>
+          <PollHistoryIllustration className="h-7 w-7 shrink-0 -translate-y-px" />
+          <span className="-translate-y-px text-[15px] font-medium text-ink">역대 투표</span>
         </Link>
       </div>
 
