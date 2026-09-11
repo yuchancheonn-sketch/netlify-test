@@ -26,12 +26,14 @@ const nextConfig: NextConfig = {
   images: {
     /**
      * 프로필 사진은 Google 계정(lh3.googleusercontent.com) 또는
-     * Firebase Storage에서 옵니다. 두 곳만 허용합니다.
+     * Cloudinary(res.cloudinary.com — 직접 올린 사진, 2026-09-11부터)에서 옵니다.
+     * Firebase Storage 두 줄은 예전 설정의 흔적입니다(이 프로젝트는 Storage를 쓰지 않습니다).
      * 이미지 최적화 비용을 아끼려고 Avatar 컴포넌트에서는 unoptimized로 쓰지만,
      * 호스트 검증은 여기 설정을 따르므로 함께 등록해 둡니다.
      */
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "*.firebasestorage.app" },
     ],

@@ -14,14 +14,14 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { cropToSquareDataUrl } from "@/lib/image";
+import { uploadImage } from "@/lib/cloudinary";
+import { cropToSquare } from "@/lib/image";
 import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import {
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLE_MAX_LENGTH,
   INTRODUCTION_MAX_LENGTH,
-  MAX_PROFILE_PHOTO_BYTES,
   NICKNAME_MAX_LENGTH,
   POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
@@ -140,21 +140,25 @@ export default function ProfileForm({
     setSaveError(null);
     try {
       /*
-       * 사진을 파일로 올리지 않고 문자열(data URL)로 만들어 프로필과 함께 저장합니다.
-       * Firebase Storage는 유료 요금제를 요구하는데, 프로필 사진은 아주 작아서
-       * Firestore에 그대로 담아도 무료 한도에 전혀 부담이 없습니다.
+       * 사진은 가운데를 정사각형으로 잘라 줄인 뒤 Cloudinary(행사 사진과 같은 보관소)에 올리고,
+       * 계정 문서에는 그 주소만 적습니다(2026-09-11).
+       *
+       * 예전엔 사진을 문자열(data URL)로 만들어 계정 문서 안에 통째로 넣었습니다. 그러면
+       * 원우수첩·채팅이 원우들의 문서를 받을 때마다 사진까지 딸려 와, 무료 전송량을 가장 많이 썼습니다.
+       * 이제 문서에는 짧은 주소만 남고, 사진은 Cloudinary의 CDN과 브라우저 캐시에서 받습니다.
+       *
+       * 올린 사진은 아래 "저장"을 눌러야 프로필에 반영됩니다(주소가 이 폼에만 들어갑니다).
+       * 저장하지 않고 나가면 Cloudinary에 사진 한 장이 남지만, 서명 없는 업로드라 앱에서 지울 수는 없습니다.
        */
-      const dataUrl = await cropToSquareDataUrl(
-        file,
-        PROFILE_IMAGE_SIZE,
-        MAX_PROFILE_PHOTO_BYTES,
-      );
-      update("photoURL", dataUrl);
+      const blob = await cropToSquare(file, PROFILE_IMAGE_SIZE);
+      const uploaded = await uploadImage(blob, "profile.jpg");
+      update("photoURL", uploaded.url);
     } catch (caught) {
+      // 자르기·올리기 오류는 모두 우리말 문구로 던집니다(lib/image.ts, lib/cloudinary.ts).
       setSaveError(
-        caught instanceof Error && caught.message.includes("용량")
+        caught instanceof Error && caught.message
           ? caught.message
-          : "사진을 불러오지 못했어요. 다른 사진으로 다시 시도해 주세요.",
+          : "사진을 올리지 못했어요. 다른 사진으로 다시 시도해 주세요.",
       );
     } finally {
       setUploading(false);

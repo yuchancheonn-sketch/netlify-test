@@ -49,10 +49,12 @@ export default function Avatar({ src, name, size = 40, seed, className = "" }: A
 
   if (src) {
     /*
-     * 직접 올린 프로필 사진은 Firestore에 문자열(data:image/jpeg;base64,...)로
-     * 담겨 오고, Google 계정 사진은 https 주소로 옵니다.
+     * 직접 올린 프로필 사진은 Cloudinary 주소(res.cloudinary.com)로, Google 계정 사진은
+     * lh3.googleusercontent.com 주소로 옵니다 — 둘 다 next.config.ts의 remotePatterns에 올려 두었습니다.
+     *
+     * 예전(~2026-09-11)엔 직접 올린 사진이 문서 안에 문자열(data:image/jpeg;base64,...)로 담겨 왔습니다.
+     * 기존 사진은 모두 Cloudinary로 옮겼지만, 혹시 남은 값이 있어도 그려지도록 data URL 갈래는 남겨 둡니다.
      * next/image는 data URL을 다루지 못하므로 그때는 평범한 img를 씁니다.
-     * 어차피 이미 192px로 줄여둔 사진이라 최적화가 필요 없습니다.
      */
     if (src.startsWith("data:")) {
       return (
