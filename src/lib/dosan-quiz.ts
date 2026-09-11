@@ -246,3 +246,30 @@ export function quizForDay(day: number): DosanQuiz {
   const index = day - 1;
   return DOSAN_QUIZZES[((index % count) + count) % count];
 }
+
+/** 오늘의 OX 퀴즈를 처음 낸 날(한국 날짜). 역대 퀴즈는 이 날부터 셉니다. */
+export const QUIZ_START_DATE = "2026-09-11";
+
+/**
+ * 역대 퀴즈 — 처음 낸 날부터 지금까지 실제로 나왔던 문제를 최근 날부터 (2026-09-11).
+ *
+ *  - 앞으로 나올 문제는 넣지 않습니다. 넣으면 내일 문제의 정답을 미리 보게 됩니다.
+ *  - 오늘 문제는 includeToday일 때만(이 폰의 이 계정이 오늘 문제를 푼 뒤) 넣습니다 — 안 푼 원우에게 정답이 새지 않게.
+ *  - 문제는 20개가 돌아가며 나오므로, 같은 문제는 가장 최근에 나온 날 하나만 남깁니다(최대 20개).
+ */
+export function pastQuizzes(
+  today: number,
+  includeToday: boolean,
+): { day: number; quiz: DosanQuiz }[] {
+  const startDay = Math.floor(Date.parse(`${QUIZ_START_DATE}T00:00:00Z`) / DAY_MS);
+  const seen = new Set<string>();
+  const items: { day: number; quiz: DosanQuiz }[] = [];
+  for (let day = includeToday ? today : today - 1; day >= startDay; day--) {
+    const quiz = quizForDay(day);
+    if (seen.has(quiz.id)) continue;
+    seen.add(quiz.id);
+    items.push({ day, quiz });
+    if (seen.size === DOSAN_QUIZZES.length) break;
+  }
+  return items;
+}

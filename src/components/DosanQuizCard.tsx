@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -110,21 +111,33 @@ export default function DosanQuizCard() {
             처음엔 나만의닥터처럼 주황 바탕의 작은 이름표였는데 2026-09-11에 맞췄습니다.
           */}
           <h2 className="text-[18px] font-bold text-ink">오늘의 OX 퀴즈</h2>
-          {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
           {/*
-            푼 뒤에 해설을 다시 여는 단추. 카드를 접고 펴는 화살표도 옆에 있었지만
-            굳이 필요 없다고 해서 2026-09-11에 없앴습니다 — 카드는 늘 펼쳐져 있습니다.
+            오른쪽 위 — (푼 뒤에만) 해설 보기, 그리고 늘 ">" 역대 퀴즈(/quizzes).
+            -mr-1.5: ">"의 손끝 자리(32px)는 넉넉히 두고, 꺾쇠 끝은 카드 오른쪽 여백 줄에 맞춥니다.
           */}
-          {answer ? (
-            <button
-              type="button"
-              onClick={() => setScreen("explanation")}
-              className="flex shrink-0 items-center gap-0.5 text-[14px]! font-medium text-ink-muted"
+          <div className="-mr-1.5 flex shrink-0 items-center gap-1">
+            {/*
+              푼 뒤에 해설을 다시 여는 단추. 바로 옆에 ">"가 서므로 꺾쇠를 떼고 글자만 둡니다(2026-09-11) —
+              꺾쇠 둘이 나란히 서면 어느 것이 무엇인지 헷갈립니다.
+              크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다.
+            */}
+            {answer ? (
+              <button
+                type="button"
+                onClick={() => setScreen("explanation")}
+                className="text-[14px]! font-medium text-ink-muted"
+              >
+                해설 보기
+              </button>
+            ) : null}
+            <Link
+              href="/quizzes"
+              aria-label="역대 퀴즈 보기"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
             >
-              해설 보기
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          ) : null}
+              <ChevronRightIcon className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
 
         {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
