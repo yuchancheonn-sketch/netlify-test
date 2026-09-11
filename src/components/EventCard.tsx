@@ -160,7 +160,11 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         aria-label="모임 일정 전체 보기"
         className="flex shrink-0 items-center pr-4 pl-3 text-white/80 transition active:opacity-60"
       >
-        <ChevronRightIcon className="h-7 w-7" strokeWidth={2.2} />
+        {/*
+          오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
+          맞췄습니다. 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
+        */}
+        <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </Link>
     </div>
   );

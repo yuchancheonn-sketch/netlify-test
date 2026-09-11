@@ -135,7 +135,11 @@ export default function DosanQuizCard() {
               aria-label="역대 퀴즈 보기"
               className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
             >
-              <ChevronRightIcon className="h-5 w-5" />
+              {/*
+                홈 D-day 카드의 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠(20px·2, 28px·2.2)의
+                가운데 값으로 맞췄습니다. 한쪽을 바꾸면 EventCard.tsx의 EventDdayCard도 같이 바꿔 주세요.
+              */}
+              <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
             </Link>
           </div>
         </div>
