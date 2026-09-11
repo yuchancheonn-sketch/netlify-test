@@ -641,13 +641,9 @@ export function PollCreateSheet({
           <div className="h-1.5 w-10 rounded-full bg-line" />
         </div>
 
-        {/*
-          좌우 여백 16px(px-4) — 홈 화면의 좌우 여백과 같아서, 입력칸 같은 흰 상자의 가로 길이가
-          홈의 흰 카드와 똑같습니다. (예전 24px에서 2026-09-11에 줄였습니다.)
-        */}
         <form
           onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
         >
           {/* 무엇을 만들지는 홈 바로가기에서 이미 골랐으므로 제목이 곧 그 이름입니다. */}
           <h2 className="mb-5 text-[19px] font-bold text-ink">{title}</h2>
