@@ -52,8 +52,8 @@ export default function HomePage() {
         right={<HeaderActions />}
       />
 
-      {/* 칸 사이는 20px. 아래 "모임 일정 전체 보기" 한 줄만 예외로 더 붙습니다. */}
-      <div className="flex flex-col gap-5 px-4">
+      {/* 칸 사이는 16px (2026-09-11에 20px에서 줄였습니다). */}
+      <div className="flex flex-col gap-4 px-4">
         {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
         <DosanQuizCard />
 
