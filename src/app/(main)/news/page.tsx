@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChevronRightIcon, MegaphoneIcon } from "@/components/icons";
+import { MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
 import {
@@ -232,6 +232,13 @@ function VideoList() {
  *
  * 우리 앱 서버(/api/dosan)가 도산아카데미 RSS를 대신 받아 정리해 줍니다.
  * 글을 누르면 원문(도산아카데미 사이트)으로 넘어갑니다.
+ *
+ * 한 칸의 짜임새는 복습 영상 카드와 같습니다 (2026-09-11) — 위에 큰 그림, 아래에 제목과
+ * 날짜·원문 보기. 예전엔 68px 작은 그림 옆에 제목이 서는 한 줄 목록이었습니다.
+ *
+ * ★ 그림은 자르지 않고 원래 비율 그대로 폭에 맞춥니다.
+ *   피드 그림은 대부분 700×700 정사각 포스터이고 가끔 16:9입니다(2026-09-11에 재어 봄).
+ *   영상처럼 16:9 틀에 채우면 포스터 위아래의 글씨가 잘려 나갑니다.
  */
 function NewsList() {
   const [items, setItems] = useState<NewsItem[]>([]);
@@ -268,10 +275,10 @@ function NewsList() {
 
   if (loading) {
     return (
-      <ul className="flex flex-col gap-3">
-        {[0, 1, 2, 3, 4].map((key) => (
+      <ul className="flex flex-col gap-5">
+        {[0, 1, 2].map((key) => (
           <li key={key}>
-            <Skeleton className="h-[92px] rounded-3xl" />
+            <Skeleton className="aspect-square rounded-2xl" />
           </li>
         ))}
       </ul>
@@ -310,14 +317,14 @@ function NewsList() {
 
   return (
     <>
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-5">
         {items.map((item) => (
           <li key={item.id}>
             <a
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+              className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {item.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -325,26 +332,30 @@ function NewsList() {
                   src={item.imageUrl}
                   alt=""
                   loading="lazy"
-                  className="h-[68px] w-[68px] shrink-0 rounded-2xl bg-canvas object-cover"
+                  className="block h-auto w-full bg-canvas"
                 />
               ) : (
-                <span className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-300">
-                  <MegaphoneIcon className="h-7 w-7" />
+                <span className="flex aspect-video w-full items-center justify-center bg-brand-50 text-brand-300">
+                  <MegaphoneIcon className="h-10 w-10" />
                 </span>
               )}
 
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[15px] leading-snug font-bold text-ink">
-                  {item.title}
-                </p>
-                {item.date ? (
-                  <p className="mt-1.5 text-[12px] text-ink-faint">
-                    {formatDotDate(item.date)}
-                  </p>
-                ) : null}
+              {/* 아래 글자 칸은 복습 영상 카드와 같은 크기·여백입니다. */}
+              <div className="px-4 py-3.5">
+                <p className="text-[15px] leading-snug font-bold text-ink">{item.title}</p>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  {item.date ? (
+                    <span className="text-[12px] text-ink-faint">
+                      {formatDotDate(item.date)}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <span className="shrink-0 text-[12px] font-bold text-brand-500">
+                    원문 보기 ↗
+                  </span>
+                </div>
               </div>
-
-              <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </a>
           </li>
         ))}
@@ -354,7 +365,7 @@ function NewsList() {
         href={SITE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
+        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
       >
         도산아카데미 홈페이지 열기 ↗
       </a>
