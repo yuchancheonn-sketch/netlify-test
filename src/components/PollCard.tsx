@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
-import { PlusIcon, VoteStampIcon } from "@/components/icons";
+import Link from "next/link";
+import { Badge, FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
+import { ChevronRightIcon, PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { usePollOpinions, usePolls, usePollVotes } from "@/lib/hooks";
 import {
@@ -13,9 +14,10 @@ import {
   createPoll,
   deleteOpinion,
   deletePoll,
+  isPollForCohort,
   votePercent,
 } from "@/lib/polls";
-import { inCohort } from "@/lib/cohort";
+import { cohortOf } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
@@ -52,33 +54,63 @@ export default function PollCard() {
   // 보고 있는 기수의 투표만 — 홈이 기수마다 따로입니다.
   const { cohort } = useViewCohort();
 
-  const open = polls.filter((poll) => !poll.closed && inCohort(poll, cohort));
+  // 그 기수 것 + 모든 기수에 올린 것(audience "all")
+  const visible = polls.filter((poll) => isPollForCohort(poll, cohort));
+  const open = visible.filter((poll) => !poll.closed);
 
   /*
-    불러오는 동안에도, 열린 투표가 없을 때도 자리를 아예 비웁니다.
+    불러오는 동안에도, 이 기수에 올라온 투표가 하나도 없을 때도 자리를 아예 비웁니다.
 
     "투표 만들기"는 2026-09-11부터 홈 바로가기(HomeShortcuts)에 있습니다. 예전엔
     이 카드 아래에 그 단추가 따로 서 있어서, 열린 투표가 없으면 단추가 곧 이 자리였습니다.
-    이제 빈 section을 남기면 홈의 gap-5 간격만 한 칸 더 벌어지므로 null을 돌려줍니다.
+    이제 빈 section을 남기면 홈의 칸 사이 간격만 한 칸 더 벌어지므로 null을 돌려줍니다.
   */
-  if (loading || open.length === 0) return null;
+  if (loading || visible.length === 0) return null;
 
   return (
     /*
       위아래 여백을 따로 주지 않습니다.
-      홈의 바깥 상자가 gap-5(20px)로 칸 사이를 정하고 있어서, 여기서 mt-를
+      홈의 바깥 상자가 gap으로 칸 사이를 정하고 있어서, 여기서 mt-를
       더하면 그만큼 혼자 더 벌어집니다.
     */
     <section className="flex flex-col gap-3">
       {open.map((poll) => (
-        <OnePoll key={poll.id} poll={poll} myUid={user?.uid} />
+        <PollBoard key={poll.id} poll={poll} myUid={user?.uid} />
       ))}
+
+      {/*
+        역대 투표 — 닫힌 것까지 모두 모아 보는 화면(/polls)으로 갑니다 (2026-09-11).
+        열린 투표가 없어도 지난 투표가 있으면 이 한 줄은 남습니다.
+      */}
+      <Link
+        href="/polls"
+        className="flex items-center justify-between gap-3 rounded-3xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      >
+        <span className="text-[16px] font-bold text-ink">역대 투표</span>
+        <span className="flex shrink-0 items-center gap-0.5 text-[14px] font-medium text-ink-muted">
+          {visible.length}개
+          <ChevronRightIcon className="h-4 w-4" />
+        </span>
+      </Link>
     </section>
   );
 }
 
-/** 투표든 의견 모으기든, 한 칸을 그립니다. */
-function OnePoll({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
+/** 제목 옆 작은 표시 — 모든 기수에 올린 것이면 "전체 기수", 닫힌 것이면 "마감". */
+function PollTags({ poll }: { poll: PollDoc }) {
+  return (
+    <>
+      {poll.audience === "all" ? <Badge>전체 기수</Badge> : null}
+      {poll.closed ? <Badge tone="neutral">마감</Badge> : null}
+    </>
+  );
+}
+
+/**
+ * 투표든 의견 모으기든, 한 칸을 그립니다.
+ * 홈(열린 것만)과 역대 투표 화면(닫힌 것까지)이 함께 씁니다 — 닫힌 것은 결과만 보입니다.
+ */
+export function PollBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   // kind가 없는 옛 문서는 투표입니다 (투표가 먼저 있었습니다).
   return poll.kind === "opinion" ? (
     <OpinionBoard poll={poll} myUid={myUid} />
@@ -103,7 +135,8 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const counts = countVotes(poll, votes);
   const total = votes.length;
   const mine = myVote?.optionIndex ?? null;
-  const showResult = mine !== null && !changing;
+  // 마감된 투표는 고르지 않고 결과만 보여줍니다(역대 투표 화면).
+  const showResult = poll.closed || (mine !== null && !changing);
   const canManage = poll.createdBy === myUid || isAdmin;
 
   const selected = picked ?? mine;
@@ -144,7 +177,10 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   return (
     <div className="rounded-3xl bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-[18px] font-bold text-ink">투표</h2>
+        <h2 className="flex min-w-0 items-center gap-1.5 text-[18px] font-bold text-ink">
+          투표
+          <PollTags poll={poll} />
+        </h2>
         {/* 몇 명이 넣었는지. 고르기 전에도 보이는 편이 참여를 부릅니다. */}
         <span className="shrink-0 text-[12px] font-medium text-ink-faint">
           {total}명 참여
@@ -261,11 +297,13 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-3">
         <span className="min-w-0 truncate text-[12px] text-ink-faint">
+          {/* 모든 기수에 올린 것은 다른 기수 원우가 누군지 알 수 있게 만든 기수를 앞에 붙입니다. */}
+          {poll.audience === "all" ? `${cohortOf(poll.cohort)} ` : ""}
           {poll.createdByName}님이 만듦
         </span>
 
         <div className="flex shrink-0 items-center gap-3">
-          {showResult ? (
+          {showResult && !poll.closed ? (
             <button
               type="button"
               onClick={() => {
@@ -279,13 +317,16 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
           ) : null}
           {canManage ? (
             <>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="text-[12px]! font-bold text-ink-faint"
-              >
-                마감
-              </button>
+              {/* 이미 마감된 투표에는 마감 단추가 없습니다. 지우기는 남깁니다. */}
+              {!poll.closed ? (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="text-[12px]! font-bold text-ink-faint"
+                >
+                  마감
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={handleDelete}
@@ -364,7 +405,10 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   return (
     <div className="rounded-3xl bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-[18px] font-bold text-ink">의견 모으기</h2>
+        <h2 className="flex min-w-0 items-center gap-1.5 text-[18px] font-bold text-ink">
+          의견 모으기
+          <PollTags poll={poll} />
+        </h2>
         <span className="shrink-0 text-[12px] font-medium text-ink-faint">
           {opinions.length}개
         </span>
@@ -381,6 +425,9 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
         </p>
       </div>
 
+      {/* 닫힌 의견 모으기는 더 받지 않으므로 안내와 쓰는 칸을 숨기고 모인 의견만 보여줍니다. */}
+      {!poll.closed ? (
+        <>
       {/*
         익명이라는 사실을 쓰기 전에 알려줍니다.
         이 안내가 없으면 이름이 붙는 줄 알고 하고 싶은 말을 못 합니다 —
@@ -414,6 +461,8 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
           </button>
         </div>
       </form>
+        </>
+      ) : null}
 
       {opinions.length > 0 ? (
         <ul className="mt-4 flex flex-col gap-2">
@@ -449,17 +498,21 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-3">
         <span className="min-w-0 truncate text-[12px] text-ink-faint">
+          {/* 모든 기수에 올린 것은 다른 기수 원우가 누군지 알 수 있게 만든 기수를 앞에 붙입니다. */}
+          {poll.audience === "all" ? `${cohortOf(poll.cohort)} ` : ""}
           {poll.createdByName}님이 만듦
         </span>
         {canManage ? (
           <div className="flex shrink-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="text-[12px]! font-bold text-ink-faint"
-            >
-              마감
-            </button>
+            {!poll.closed ? (
+              <button
+                type="button"
+                onClick={handleClose}
+                className="text-[12px]! font-bold text-ink-faint"
+              >
+                마감
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={handleDelete}
@@ -558,6 +611,8 @@ export function PollCreateSheet({
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
   const [options, setOptions] = useState<string[]>(["찬성", "반대"]);
+  /** 누구에게 묻는지 — 처음에는 우리 기수만. "전체 기수"를 고르면 모든 기수의 홈에 올라갑니다. */
+  const [audience, setAudience] = useState<"cohort" | "all">("cohort");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -600,6 +655,7 @@ export function PollCreateSheet({
     try {
       await createPoll({
         cohort,
+        audience,
         kind,
         question: trimmedQuestion,
         options: trimmedOptions,
@@ -655,6 +711,42 @@ export function PollCreateSheet({
         >
           {/* 무엇을 만들지는 홈 바로가기에서 이미 골랐으므로 제목이 곧 그 이름입니다. */}
           <h2 className="mb-5 text-[19px] font-bold text-ink">{title}</h2>
+
+          {/*
+            누구에게 — 우리 기수만, 또는 모든 기수 (2026-09-11).
+            원우수첩 필터와 같은 알약 고르개입니다(고르개는 알약 모양을 지킵니다).
+          */}
+          <div className="mb-5">
+            <FieldLabel>누구에게 물어볼까요</FieldLabel>
+            <div
+              className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]"
+              role="radiogroup"
+              aria-label="물어볼 대상"
+            >
+              {(
+                [
+                  { value: "cohort", label: `${cohortOf(cohort)}만` },
+                  { value: "all", label: "전체 기수" },
+                ] as const
+              ).map(({ value, label }) => {
+                const active = audience === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setAudience(value)}
+                    className={`flex flex-1 items-center justify-center rounded-full py-2.5 text-[14px]! font-bold transition ${
+                      active ? "bg-brand-500 text-white" : "text-ink-muted"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="mb-5">
             <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>

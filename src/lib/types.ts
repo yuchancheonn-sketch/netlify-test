@@ -208,6 +208,11 @@ export interface PollDoc {
   options: string[];
   /** 기수 ("10기"). 이 칸이 없는 예전 투표는 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
+  /**
+   * 누구에게 묻는지 (2026-09-11). "cohort"면 위 기수의 홈에만, "all"이면 모든 기수의 홈에 올라갑니다.
+   * 이 칸이 없는 예전 투표는 "cohort"로 봅니다. "all"이어도 cohort에는 만든 기수를 적어 둡니다.
+   */
+  audience?: "cohort" | "all";
   createdBy: string;
   createdByName: string;
   createdAt: Timestamp | null;

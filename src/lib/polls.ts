@@ -18,8 +18,17 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import { inCohort } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import type { PollDoc, UserDoc } from "@/lib/types";
+
+/**
+ * 이 투표가 그 기수의 원우에게 보이는지 — 모든 기수에 올린 것("all")이거나 그 기수의 것.
+ * 홈 투표 칸과 역대 투표 화면이 같은 기준을 씁니다.
+ */
+export function isPollForCohort(poll: PollDoc, cohort: string): boolean {
+  return poll.audience === "all" || inCohort(poll, cohort);
+}
 
 /**
  * 투표를 엽니다. 문서 id를 먼저 뽑아 두는 것은 일정 등록과 같은 이유입니다 —
@@ -27,13 +36,16 @@ import type { PollDoc, UserDoc } from "@/lib/types";
  */
 export async function createPoll({
   cohort,
+  audience,
   kind,
   question,
   options,
   author,
 }: {
-  /** 이 투표가 올라갈 기수의 홈 */
+  /** 이 투표가 올라갈 기수의 홈 (audience가 "all"이면 만든 기수로만 적어 둡니다) */
   cohort: string;
+  /** "cohort": 그 기수만, "all": 모든 기수 */
+  audience: "cohort" | "all";
   kind: "vote" | "opinion";
   question: string;
   /** 의견 모으기면 빈 배열입니다. */
@@ -44,6 +56,7 @@ export async function createPoll({
 
   await setDoc(reference, {
     cohort,
+    audience,
     kind,
     question,
     options,
