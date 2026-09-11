@@ -49,9 +49,14 @@ export default function HomeShortcuts() {
           <span className="text-[15px]! font-medium text-ink">의견 모으기</span>
         </button>
 
+        {/*
+          -translate-y-px: 이 칸만 아이콘과 글씨를 1px 위로 올립니다. 링크(a)는 단추와 줄 높이
+          계산이 미세하게 달라, 옆 줄의 단추 칸들보다 살짝 아래에 앉아 보였습니다.
+          칸 크기(py-2)는 그대로 두고 내용만 옮깁니다.
+        */}
         <Link href="/map" className={ITEM_CLASS_NAME}>
-          <MapIllustration className="h-7 w-7 shrink-0" />
-          <span className="text-[15px] font-medium text-ink">원우 지도</span>
+          <MapIllustration className="h-7 w-7 shrink-0 -translate-y-px" />
+          <span className="-translate-y-px text-[15px] font-medium text-ink">원우 지도</span>
         </Link>
       </div>
 
