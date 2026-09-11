@@ -24,36 +24,27 @@ function base(className?: string) {
 /**
  * 투표 기표 도장 — 동그라미 안에 卜.
  *
- * 우리나라 선거에서 쓰는 기표용구가 찍어내는 그 모양입니다. 동그라미 안에
- * 「卜」(점 복) 한 글자가 들어 있고, 세로획과 그 가운데에서 오른쪽 아래로
- * 뻗는 삐침으로 이루어집니다.
+ * 우리나라 선거에서 쓰는 기표용구가 찍어내는 그 모양입니다 (2026-09-11에
+ * 사용자가 준 기표 도장 그림을 1000×1000 칸으로 재어 그대로 옮겼습니다).
+ *  - 동그라미: 바깥 반지름 500, 두께 72 — 선 가운데가 반지름 464
+ *  - 세로획: 한가운데를 위아래 끝까지 지나 동그라미에 붙습니다. 두께 75
+ *  - 삐침: 한가운데(500,500)에서 오른쪽 아래 45°로 동그라미까지. 두께 74
+ * 선 끝은 모두 뭉툭하게(butt) 자르고, 끝을 동그라미 두께 안에 묻어 틈 없이 붙게 합니다.
  *
  * ★ 글자(卜)를 텍스트로 쓰지 않고 선으로 그립니다.
- *   폰마다 깔린 글꼴이 달라 卜의 굵기와 자리가 제각각이 되고, 동그라미와
- *   가운데를 맞추는 일도 글꼴에 맡겨야 합니다. 선으로 그리면 어느 기기에서나
- *   같은 모양이고, 다른 아이콘들처럼 굵기와 색을 바깥에서 정할 수 있습니다.
+ *   폰마다 깔린 글꼴이 달라 卜의 굵기와 자리가 제각각이 됩니다.
  *
- * strokeWidth를 크게 주면 실제 도장처럼 두툼해집니다 (기본 1.8은 다른
- * 아이콘과 맞춘 값이라, 투표 화면에서는 2.2쯤을 넘겨 씁니다).
+ * ★ 굵기는 바깥에서 받지 않습니다(strokeWidth 무시). 그림과 같은 비율이어야
+ *   도장으로 읽히고, 굵기를 바꾸면 선 끝이 동그라미 밖으로 삐져나옵니다.
  */
-export function VoteStampIcon({ className, strokeWidth = 1.8 }: IconProps) {
+export function VoteStampIcon({ className }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
-      <circle cx="12" cy="12" r="9.2" stroke="currentColor" strokeWidth={strokeWidth} />
-      {/* 卜의 세로획. 동그라미 안에서 위아래로 시원하게 지나갑니다. */}
-      <path
-        d="M10.1 5.6v12.8"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
-      {/* 卜의 삐침. 세로획 가운데에서 오른쪽 아래로 뻗습니다. */}
-      <path
-        d="M10.1 12.2 16.4 18"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 1000 1000" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="500" cy="500" r="464" stroke="currentColor" strokeWidth="72" />
+      {/* 卜의 세로획 — 위아래 끝이 동그라미 두께 안에 묻힙니다. */}
+      <path d="M500 18V982" stroke="currentColor" strokeWidth="75" />
+      {/* 卜의 삐침 — 한가운데에서 오른쪽 아래 45°로, 끝이 동그라미 두께 안에 묻힙니다. */}
+      <path d="M500 500 834 834" stroke="currentColor" strokeWidth="74" />
     </svg>
   );
 }
