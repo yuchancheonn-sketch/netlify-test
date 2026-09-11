@@ -24,6 +24,7 @@ import type {
   OpinionDoc,
   PhotoAlbumDoc,
   PhotoDoc,
+  NoticeDoc,
   PollDoc,
   RosterDoc,
   SessionCommentDoc,
@@ -751,4 +752,67 @@ export function useHasUnreadChat(uid?: string): boolean {
   const unread = useUnreadRooms(uid, rooms, readMillis, loaded);
 
   return rooms.some((room) => unread[room.id]);
+}
+
+/** 알림함에 가져올 최근 알림 수. 기수를 화면에서 거르므로 넉넉히 받습니다. */
+const NOTICE_LIMIT = 50;
+
+/**
+ * 헤더 알림함의 알림 — 내 기수 것과 모든 기수("all") 것, 최근 순 (2026-09-11).
+ *
+ * 기수로 거르는 것은 화면에서 합니다. `where("cohort","in",…)`와 `orderBy("createdAt")`를 함께 걸면
+ * 콘솔에서 복합 색인을 따로 만들어야 해서, 최근 50건을 받아 거릅니다(알림은 하루 몇 건뿐입니다).
+ * 헤더의 종과 알림 화면이 같이 씁니다 — 같은 질의라 Firestore가 한 번만 받아 나눠 줍니다.
+ */
+export function useNotices(cohort: string): ListState<NoticeDoc> {
+  const [state, setState] = useState<ListState<NoticeDoc>>(EMPTY);
+
+  useEffect(() => {
+    const noticesQuery = query(
+      collection(db, "notices"),
+      orderBy("createdAt", "desc"),
+      limit(NOTICE_LIMIT),
+    );
+    return onSnapshot(
+      noticesQuery,
+      (snapshot) => {
+        const notices = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as NoticeDoc,
+        );
+        setState({ data: notices, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "알림을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return useMemo(
+    () => ({
+      ...state,
+      data: state.data.filter((notice) => notice.cohort === "all" || notice.cohort === cohort),
+    }),
+    [state, cohort],
+  );
+}
+
+/**
+ * 알림함을 마지막으로 연 시각(밀리초) — chatReads/{uid}.noticesSeenAt. 아직 모르면 null, 연 적이 없으면 0.
+ * serverTimestamps "estimate"는 useChatReadTimes와 같은 이유입니다(방금 적은 값이 null로 보이지 않게).
+ */
+export function useNoticesSeenAt(uid: string | undefined): number | null {
+  const [entry, setEntry] = useState<{ uid: string; millis: number } | null>(null);
+
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(
+      doc(db, "chatReads", uid),
+      (snapshot) => {
+        const data = snapshot.data({ serverTimestamps: "estimate" }) as ChatReadDoc | undefined;
+        setEntry({ uid, millis: data?.noticesSeenAt?.toMillis() ?? 0 });
+      },
+      () => setEntry({ uid, millis: 0 }),
+    );
+  }, [uid]);
+
+  if (!uid) return null;
+  return entry?.uid === uid ? entry.millis : null;
 }

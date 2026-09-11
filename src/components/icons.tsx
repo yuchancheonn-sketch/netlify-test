@@ -450,6 +450,28 @@ export function PersonIcon({ className, strokeWidth = 1.9 }: IconProps) {
  *
  * 비율을 바꾸고 싶으면 저 세 값으로 경로를 다시 계산하는 편이 안전합니다.
  */
+/**
+ * 알림 종 — 헤더 알림함(2026-09-11). 사람·톱니 아이콘과 같은 굵기(1.9)와 채움 정도로 맞췄습니다.
+ */
+export function BellIcon({ className, strokeWidth = 1.9 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 1.8H4.4z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 20.5a2.2 2.2 0 0 0 4 0"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className, strokeWidth = 1.9 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">

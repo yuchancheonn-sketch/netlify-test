@@ -1,5 +1,6 @@
 import type { Firestore } from "firebase-admin/firestore";
 import type { Messaging } from "firebase-admin/messaging";
+import { addNotice } from "./notices";
 import { sendPushToTokens } from "./push-send";
 import { parseRss } from "./rss";
 import { DOSAN_CHANNEL_ID, parseChannelFeed } from "./youtube";
@@ -171,9 +172,19 @@ export async function checkFeedsAndNotify({
       updatedAt: new Date(),
     });
 
-    tokens ??= await allMemberTokens(db);
     const body =
       fresh.length === 1 ? fresh[0].title : `${fresh[0].title} 외 ${fresh.length - 1}건`;
+
+    // 헤더 알림함에도 한 건(모든 기수) — lib/notices.ts. 실패해도 푸시는 그대로 보냅니다.
+    await addNotice(db, {
+      type: source.key === "videos" ? "video" : "news",
+      title: source.title,
+      body,
+      url: source.url,
+      cohort: "all",
+    }).catch(() => {});
+
+    tokens ??= await allMemberTokens(db);
     const { sent, failed } = await sendPushToTokens(db, messaging, tokens, {
       title: source.title,
       body,

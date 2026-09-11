@@ -21,3 +21,15 @@ export async function markChatRead(uid: string, roomId: string): Promise<void> {
     // 조용히 넘어갑니다.
   }
 }
+
+/**
+ * 헤더 알림함을 "지금 다 봤다"고 표시합니다. (chatReads/{uid} 의 noticesSeenAt)
+ * 종의 빨간 점은 이 시각 이후에 온 알림이 있을 때만 켜집니다. 실패해도 조용히 넘어갑니다.
+ */
+export async function markNoticesSeen(uid: string): Promise<void> {
+  try {
+    await setDoc(doc(db, "chatReads", uid), { noticesSeenAt: serverTimestamp() }, { merge: true });
+  } catch {
+    // 조용히 넘어갑니다.
+  }
+}

@@ -430,4 +430,25 @@ export interface ChatRoomDoc {
 export interface ChatReadDoc {
   /** 방 id → 그 방을 마지막으로 본 시각 */
   rooms?: Record<string, Timestamp | null>;
+  /**
+   * 헤더 알림함(종)을 마지막으로 연 시각. 이보다 뒤에 온 알림이 있으면 종에 빨간 점이 켜집니다.
+   * 같은 문서에 둔 이유는 위와 같습니다 — 가볍고, 본인만 읽고 쓰는 규칙이 이미 있습니다(2026-09-11).
+   */
+  noticesSeenAt?: Timestamp | null;
+}
+
+/**
+ * notices/{noticeId} — 헤더 알림함에 쌓이는 알림 (2026-09-11).
+ * 서버(Admin SDK)만 적습니다 — lib/notices.ts. 원우 누구나 읽고, 앱이 내 기수 것 + "all"만 골라 보여줍니다.
+ */
+export interface NoticeDoc {
+  id: string;
+  type: "event" | "video" | "news";
+  title: string;
+  body: string;
+  /** 누르면 열 앱 안 주소 */
+  url: string;
+  /** "10기"처럼 한 기수, 또는 모든 기수 "all" */
+  cohort: string;
+  createdAt: Timestamp | null;
 }

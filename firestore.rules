@@ -464,9 +464,19 @@ service cloud.firestore {
       }
     }
 
-    // 내가 각 방을 마지막으로 본 시각. 남의 것은 보지도 고치지도 못합니다.
+    // 내가 각 방을 마지막으로 본 시각(+ 알림함을 마지막으로 연 시각). 남의 것은 보지도 고치지도 못합니다.
     match /chatReads/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    /*
+     * 헤더 알림함(종)에 쌓이는 알림 (2026-09-11) — 새 일정, 새 복습 영상·소식.
+     * 서버(Admin SDK)만 적습니다: /api/push/event, Netlify 예약 함수 feed-push. 앱에서는 읽기만 합니다.
+     * 사람마다 따로 적지 않고 한 건씩이라, 앱이 내 기수 것과 "all"만 골라 보여줍니다.
+     */
+    match /notices/{noticeId} {
+      allow read: if isMember();
+      allow write: if false;
     }
 
     /*

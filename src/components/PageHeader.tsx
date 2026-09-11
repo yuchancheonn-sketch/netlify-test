@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
+import { BellIcon, ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
+import { useAuth } from "@/lib/auth-context";
+import { cohortOf } from "@/lib/cohort";
+import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
 
 /**
  * 화면 상단 제목 줄.
@@ -71,15 +74,16 @@ export default function PageHeader({
 }
 
 /**
- * 헤더 오른쪽에 놓는 단추 두 개 — 내 프로필과 설정.
+ * 헤더 오른쪽에 놓는 단추 세 개 — 알림함, 내 프로필, 설정.
  *
  * 예전에는 내 프로필 사진을 동그랗게 띄웠습니다. 사람 아이콘으로 바꾼 이유:
  * 사진은 사람마다 색과 밝기가 제각각이라 제목 줄에서 혼자 튀고, 옆에 설정
  * 아이콘이 서면 둘의 결이 맞지 않습니다.
+ * 알림 종은 2026-09-11에 내 프로필 왼쪽에 더했습니다.
  */
 export function HeaderActions() {
   /*
-   * -space-x-1로 두 단추를 4px 겹칩니다.
+   * -space-x-1로 단추끼리 4px 겹칩니다.
    *
    * 단추는 손끝이 닿아야 해서 40px인데 아이콘은 27px이라, 아이콘 둘레에
    * 6.5px씩 빈 자리가 이미 붙어 있습니다. 사이를 0으로 붙여도 아이콘끼리는
@@ -88,6 +92,7 @@ export function HeaderActions() {
    */
   return (
     <div className="flex items-center -space-x-1">
+      <HeaderBellLink />
       <HeaderIconLink href="/profile" label="내 프로필 열기">
         <PersonIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>
@@ -133,9 +138,37 @@ function HeaderIconLink({
     <Link
       href={href}
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-fill active:scale-95"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-fill active:scale-95"
     >
       {children}
     </Link>
+  );
+}
+
+/**
+ * 알림함 종 — 마지막으로 알림함을 연 뒤에 새 알림이 왔으면 빨간 점을 켭니다(개수는 세지 않음, 채팅 탭과 같음).
+ *
+ * 알림함을 한 번도 연 적이 없으면 가입한 시각을 기준으로 삼습니다 — 안 그러면 새로 들어온 원우에게
+ * 지난 알림 전부가 "새 알림"으로 켜집니다.
+ */
+function HeaderBellLink() {
+  const { user, profile } = useAuth();
+  const { data: notices } = useNotices(cohortOf(profile?.cohort));
+  const seenAt = useNoticesSeenAt(user?.uid);
+
+  const since = seenAt === null ? null : seenAt || (profile?.createdAt?.toMillis() ?? 0);
+  const hasNew =
+    since !== null && notices.some((notice) => (notice.createdAt?.toMillis() ?? 0) > since);
+
+  return (
+    <HeaderIconLink href="/notifications" label={hasNew ? "알림 열기 (새 알림 있음)" : "알림 열기"}>
+      <BellIcon className={HEADER_ICON_SIZE} />
+      {hasNew ? (
+        <span
+          aria-hidden="true"
+          className="absolute top-[7px] right-[8px] h-2 w-2 rounded-full bg-danger ring-2 ring-canvas"
+        />
+      ) : null}
+    </HeaderIconLink>
   );
 }

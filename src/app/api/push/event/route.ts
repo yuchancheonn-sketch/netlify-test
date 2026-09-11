@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { addNotice } from "@/lib/notices";
 import { sendPushToUsers } from "@/lib/push-server";
 import { cohortOf } from "@/lib/cohort";
 import { formatMonthDay, formatTime } from "@/lib/format";
@@ -62,6 +63,28 @@ export async function POST(request: Request) {
    * 기수 칸이 없는 예전 일정·계정은 10기로 봅니다 (lib/cohort.ts).
    */
   const eventCohort = cohortOf(eventSnap.get("cohort") as string | undefined);
+
+  /*
+   * 헤더 알림함에도 한 건 쌓습니다(그 기수 원우에게 보임) — lib/notices.ts.
+   * 받는 사람이 없거나 푸시를 꺼 둔 원우라도 알림함에서는 보이도록, 발송 여부와 상관없이 먼저 적습니다.
+   * 알림함 적기가 실패해도 푸시 발송은 그대로 합니다.
+   */
+  {
+    const noticeTitle = (eventSnap.get("title") as string | undefined) ?? "새 일정";
+    const noticeDate = (eventSnap.get("date") as string | undefined) ?? "";
+    const noticeTime = (eventSnap.get("startTime") as string | undefined) ?? "";
+    const noticeWhen = [formatMonthDay(noticeDate), noticeTime ? formatTime(noticeTime) : ""]
+      .filter(Boolean)
+      .join(" ");
+    await addNotice(db, {
+      type: "event",
+      title: `새 일정 · ${noticeTitle}`,
+      body: noticeWhen,
+      url: `/events/${eventId}`,
+      cohort: eventCohort,
+    }).catch(() => {});
+  }
+
   const membersSnap = await db
     .collection("users")
     .where("status", "==", "approved")
