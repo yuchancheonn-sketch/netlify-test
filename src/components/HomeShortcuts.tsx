@@ -35,10 +35,11 @@ export default function HomeShortcuts() {
 
   return (
     /*
-      위아래 여백은 6px(py-1.5) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 14px입니다.
-      (4px로 줄였다가 조금 답답해 보여 2px씩 되돌렸습니다.)
+      위아래 여백은 10px(py-2.5) — 칸 안의 py-2와 합쳐 상자 끝에서 아이콘까지 18px입니다.
+      (2026-09-11에 4px → 6px → 10px로 늘려 왔습니다. 두 열 사이 간격을 좁혀 보기도 했지만
+       되돌리고, 대신 위아래를 넉넉히 두기로 했습니다.)
     */
-    <section className="rounded-3xl bg-surface px-2 py-1.5 shadow-[var(--shadow-card)]">
+    <section className="rounded-3xl bg-surface px-2 py-2.5 shadow-[var(--shadow-card)]">
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
