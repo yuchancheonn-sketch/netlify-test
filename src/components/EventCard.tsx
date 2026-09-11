@@ -101,9 +101,12 @@ export function EventHeroCard({
 }
 
 /**
- * 홈 맨 위의 다가오는 모임 — 흰 카드 왼쪽에 둘레가 차오르는 D-day 원, 옆에 두 줄
+ * 홈 맨 위의 다가오는 모임 — 주황 카드 왼쪽에 둘레가 차오르는 흰 D-day 원, 옆에 두 줄
  * (이름 / 장소·시간), 오른쪽 끝에 ">"(모임 일정 전체 보기).
- * 처음엔 주황 카드였다가 같은 날 흰 카드로 바꿨습니다 — 주황은 원의 채워진 둘레에만 씁니다.
+ * 주황 카드 → 흰 카드(원 둘레만 주황) → 다시 주황 카드로 왔습니다(2026-09-11).
+ * 주황 위 D-day는 네 시안(흰 둘레 원 / 흰 알+둘레 / 진한 주황 원 / 숫자만 크게) 가운데
+ * 사용자가 "흰 둘레 원"을 골랐습니다 — 흰 카드 때 모양 그대로 색만 뒤집은 것.
+ * 주황 위 흰 글씨는 대비가 2.7:1이라 제목은 굵게, 장소·시간은 font-medium을 지킵니다.
  *
  * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
  * 위의 EventHeroCard에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
@@ -120,7 +123,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
   const time = event.startTime ? formatTime(event.startTime) : "";
 
   return (
-    <div className="flex items-stretch rounded-3xl bg-surface text-ink shadow-[var(--shadow-card)]">
+    <div className="flex items-stretch rounded-3xl bg-brand-500 text-white shadow-[var(--shadow-float)]">
       <Link
         href={`/events/${event.id}`}
         className="flex min-w-0 flex-1 items-center gap-4 py-4 pl-4 transition active:opacity-80"
@@ -132,10 +135,10 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
             둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 모임 상세의 주황 상자(EventHeroCard)와
             같은 아이콘입니다. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
             자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
-            아이콘·글씨 모두 검정(ink) — 흐린 회색(ink-muted)이던 것을 2026-09-11에 바꿨습니다.
+            아이콘·글씨 모두 흰색 — 주황 카드로 바꾸면서(2026-09-11) 검정(ink)에서 옮겼습니다.
           */}
           {event.location || time ? (
-            <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink">
+            <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
               {event.location ? (
                 <span className="flex min-w-0 items-center gap-1">
                   <PinIcon className="h-[15px] w-[15px] shrink-0" />
@@ -155,7 +158,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
       <Link
         href="/events"
         aria-label="모임 일정 전체 보기"
-        className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint transition active:opacity-60"
+        className="flex shrink-0 items-center pr-4 pl-3 text-white/80 transition active:opacity-60"
       >
         <ChevronRightIcon className="h-7 w-7" strokeWidth={2.2} />
       </Link>
@@ -177,7 +180,8 @@ const RING_STROKE = 4;
  *   원 지름 144px → 48px, 둘레 두께 12px → 4px. D-day 글씨는 사진대로 옮기면 13px이지만
  *   작게 보여서 키웠습니다(세 글자 16px, 네 글자 14px). "D-DAY"처럼 다섯 글자는 원 안(40px)에
  *   들도록 11px입니다.
- *   카드가 흰색(surface)이라 회색 둘레는 line 토큰, 글씨는 ink 토큰으로 화면을 따라갑니다.
+ *   카드가 주황(brand-500)이라 둘레 바탕은 흰색을 32%만, 채워지는 둘레와 글씨는 흰색입니다
+ *   (주황 카드 위 "흰 둘레 원" 시안, 2026-09-11). 어두운 화면에서도 카드가 주황이라 그대로입니다.
  *
  * ★ 얼마나 채울지는 "2주 전부터"로 고정했습니다. 일정을 올린 날을 기준으로 삼으면
  *   하루 전에 올린 번개는 D-1에도 빈 원이라, 같은 D-숫자가 일정마다 다르게 보입니다.
@@ -227,7 +231,7 @@ function DdayRing({ date }: { date: string }) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="var(--color-line)"
+          stroke="rgba(255, 255, 255, 0.32)"
           strokeWidth={RING_STROKE}
         />
         {/* 하나도 안 찼을 때 그리면 둥근 끝(round cap)이 점 하나로 남습니다. */}
@@ -238,7 +242,7 @@ function DdayRing({ date }: { date: string }) {
             cy={center}
             r={radius}
             fill="none"
-            stroke="var(--color-brand-500)"
+            stroke="#ffffff"
             strokeWidth={RING_STROKE}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -247,7 +251,7 @@ function DdayRing({ date }: { date: string }) {
         ) : null}
       </svg>
       <span
-        className="relative leading-none font-bold tracking-tight text-ink"
+        className="relative leading-none font-bold tracking-tight text-white"
         style={{ fontSize }}
       >
         {label}
