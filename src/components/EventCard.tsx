@@ -255,7 +255,8 @@ function DdayRing({ date }: { date: string }) {
         ) : null}
       </svg>
       <span
-        className="relative leading-none font-bold tracking-tight text-white"
+        /* -translate-y-px: 원 한가운데에서 글씨만 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다(2026-09-11). */
+        className="relative -translate-y-px leading-none font-bold tracking-tight text-white"
         style={{ fontSize }}
       >
         {label}
