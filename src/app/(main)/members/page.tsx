@@ -20,7 +20,7 @@ import {
   type DirectoryEntry,
 } from "@/lib/directory";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
-import { useApprovedMembers, useRoster } from "@/lib/hooks";
+import { useCohortMembers, useCohortRoster } from "@/lib/hooks";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
@@ -42,8 +42,6 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
 type Editing = { entry: DirectoryEntry | null } | null;
 
 export default function MembersPage() {
-  const { data: members, loading, error } = useApprovedMembers();
-  const roster = useRoster();
   const { profile } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -52,6 +50,12 @@ export default function MembersPage() {
    * StageGate가 프로필을 확인한 뒤에만 이 화면을 그리므로 profile은 이미 와 있습니다.
    */
   const [cohort, setCohort] = useState<string>(() => cohortOf(profile?.cohort));
+  /*
+   * 고른 기수의 가입 원우·명단만 받습니다(2026-09-11). 예전엔 모든 기수를 통째로 받아 화면에서
+   * 걸렀는데, 378명 규모에서 원우수첩을 열 때마다 약 750건을 읽어서 기수로 질의하게 바꿨습니다.
+   */
+  const { data: members, loading, error } = useCohortMembers(cohort);
+  const roster = useCohortRoster(cohort);
   const [selected, setSelected] = useState<DirectoryEntry | null>(null);
   /** 사진만 크게 보기 */
   const [enlarged, setEnlarged] = useState<DirectoryEntry | null>(null);

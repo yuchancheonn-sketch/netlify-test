@@ -93,6 +93,74 @@ export function useAllUsers(): ListState<UserDoc> {
 }
 
 /** 운영진이 미리 등록해 둔 원우 명단 */
+/**
+ * 원우수첩 한 권 — 고른 기수의 가입 원우만 (2026-09-11).
+ *
+ * useApprovedMembers는 모든 기수를 통째로 받습니다. 1~10기 378명 규모에서는 원우수첩을
+ * 열 때마다 전원의 문서(프로필 사진 포함)를 읽어 무료 한도가 금방 닿아서, 원우수첩만 이 훅으로
+ * 기수 칸을 걸어 그 기수만 받습니다. 기수를 바꾸면 새로 받습니다.
+ *
+ * ★ 기수 칸이 비어 있던 옛 문서는 질의에 안 걸립니다. 그래서 2026-09-11에 그런 문서에
+ *   "10기"를 채워 넣었습니다(가입 원우·명단 모두). 새로 가입하는 원우는 프로필에서 기수를 꼭 고릅니다.
+ * status·cohort 둘 다 "같다" 조건이라 콘솔에서 복합 색인을 만들 필요가 없습니다.
+ */
+export function useCohortMembers(cohort: string): ListState<UserDoc> {
+  const [entry, setEntry] = useState<{ cohort: string; state: ListState<UserDoc> } | null>(null);
+
+  useEffect(() => {
+    const membersQuery = query(
+      collection(db, "users"),
+      where("status", "==", "approved"),
+      where("cohort", "==", cohort),
+    );
+    return onSnapshot(
+      membersQuery,
+      (snapshot) => {
+        const members = snapshot.docs
+          .map((document) => document.data() as UserDoc)
+          // 아직 온보딩을 마치지 않은 사람은 수첩에 띄우지 않습니다.
+          .filter((member) => member.profileCompleted)
+          .sort((a, b) => (a.name || a.nickname).localeCompare(b.name || b.nickname, "ko"));
+        setEntry({ cohort, state: { data: members, loading: false, error: null } });
+      },
+      () =>
+        setEntry({
+          cohort,
+          state: { data: [], loading: false, error: "원우 목록을 불러오지 못했어요." },
+        }),
+    );
+  }, [cohort]);
+
+  // 기수를 바꾼 직후에는 옛 기수 목록을 보이지 않고 불러오는 중으로 둡니다.
+  return entry?.cohort === cohort ? entry.state : EMPTY;
+}
+
+/** 원우수첩 한 권 — 고른 기수의 명단(roster)만. 이유는 useCohortMembers와 같습니다. */
+export function useCohortRoster(cohort: string): ListState<RosterDoc> {
+  const [entry, setEntry] = useState<{ cohort: string; state: ListState<RosterDoc> } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return onSnapshot(
+      query(collection(db, "roster"), where("cohort", "==", cohort)),
+      (snapshot) => {
+        const entries = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as RosterDoc,
+        );
+        setEntry({ cohort, state: { data: entries, loading: false, error: null } });
+      },
+      () =>
+        setEntry({
+          cohort,
+          state: { data: [], loading: false, error: "명단을 불러오지 못했어요." },
+        }),
+    );
+  }, [cohort]);
+
+  return entry?.cohort === cohort ? entry.state : EMPTY;
+}
+
 export function useRoster(): ListState<RosterDoc> {
   const [state, setState] = useState<ListState<RosterDoc>>(EMPTY);
 
