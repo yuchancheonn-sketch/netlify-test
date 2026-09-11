@@ -71,10 +71,11 @@ export default function EventForm({ event }: { event?: EventDoc }) {
     /*
      * 응답을 잠깐만 기다리고 넘어갑니다 — 이유는 lib/firestore-commit.ts에.
      *
-     * 새 일정은 addDoc의 결과에서 id를 받아야 그 일정 화면으로 갈 수 있는데,
-     * 서버를 기다리면 또 멈춰 설 수 있습니다. addDoc은 문서 참조(id 포함)를
+     * 새 일정은 알림을 보내려면 id가 필요한데, addDoc의 결과를 기다리면
+     * 또 멈춰 설 수 있습니다. addDoc은 문서 참조(id 포함)를
      * 보내기 전에 이미 만들어 두므로, id는 doc()으로 미리 뽑아 쓰고
      * setDoc으로 적습니다. 그러면 저장이 늦어도 곧바로 이동할 수 있습니다.
+     * 저장한 뒤에는 모임 목록으로 돌아갑니다(모임 상세 화면은 2026-09-11에 없앴습니다).
      */
     try {
       const target = event
@@ -102,7 +103,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
       if (!event && result === "saved") {
         void requestPush("event", { eventId: target.id });
       }
-      router.replace(`/events/${target.id}`);
+      router.replace("/events");
     } catch (caught) {
       setSaveError(
         saveErrorMessage(

@@ -3,17 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { deleteDoc, doc } from "firebase/firestore";
 import CohortPicker from "@/components/CohortPicker";
 import { EventListItem } from "@/components/EventCard";
 import MonthCalendar from "@/components/MonthCalendar";
 import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
 import { inCohort } from "@/lib/cohort";
+import { db } from "@/lib/firebase";
+import { commitWrite } from "@/lib/firestore-commit";
 import { formatMonthDay, todayString } from "@/lib/format";
 import { useEvents } from "@/lib/hooks";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 import { useViewCohort } from "@/lib/use-view-cohort";
+import type { EventDoc } from "@/lib/types";
 
 type ViewMode = "list" | "calendar";
 
@@ -124,7 +129,9 @@ export default function EventsPage() {
                     <ul className="flex flex-col gap-3">
                       {selectedEvents.map((event) => (
                         <li key={event.id}>
-                          <EventListItem event={event} />
+                          <EventListItem event={event}>
+                            <EventExtras event={event} />
+                          </EventListItem>
                         </li>
                       ))}
                     </ul>
@@ -149,7 +156,9 @@ export default function EventsPage() {
             <ul className="flex flex-col gap-3">
               {events.map((event) => (
                 <li key={event.id}>
-                  <EventListItem event={event} />
+                  <EventListItem event={event}>
+                    <EventExtras event={event} />
+                  </EventListItem>
                 </li>
               ))}
             </ul>
@@ -160,7 +169,7 @@ export default function EventsPage() {
       {/*
         일정 등록은 원우 누구나 할 수 있습니다(2026-09-11부터 — 그 전엔 운영진만).
         번개 모임처럼 원우들이 직접 여는 일정이 많아서입니다. 고치고 지우는 것은
-        올린 사람과 운영진만 됩니다(모임 상세 화면 · firestore.rules).
+        올린 사람과 운영진만 됩니다(아래 EventExtras · firestore.rules).
         밀려나는 상자 바깥에 둡니다(위 설명).
       */}
       <Link
@@ -171,5 +180,61 @@ export default function EventsPage() {
         일정 등록
       </Link>
     </div>
+  );
+}
+
+/**
+ * 모임 카드 아래칸 — 안내 글과, 올린 사람·운영진에게만 수정·삭제.
+ * 모임 상세 화면을 없애면서(2026-09-11) 그 화면에 있던 것을 여기로 옮겼습니다.
+ * 둘 다 없으면 아무것도 그리지 않아 카드가 한 줄 그대로입니다.
+ */
+function EventExtras({ event }: { event: EventDoc }) {
+  const { user, isAdmin } = useAuth();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const canManage = isAdmin || event.createdBy === user?.uid;
+
+  if (!event.description && !canManage) return null;
+
+  async function handleDelete() {
+    if (!window.confirm("이 일정을 삭제할까요? 되돌릴 수 없어요.")) return;
+    try {
+      // 지우면 목록 구독(useEvents)이 알아서 이 카드를 내립니다.
+      await commitWrite(deleteDoc(doc(db, "events", event.id)));
+    } catch {
+      setDeleteError("일정을 삭제하지 못했어요.");
+    }
+  }
+
+  return (
+    <>
+      {event.description ? (
+        <p className="mt-3 px-1 text-[14px] leading-relaxed whitespace-pre-wrap text-ink-soft">
+          {event.description}
+        </p>
+      ) : null}
+      {canManage ? (
+        /* 원우수첩의 "수정" 단추와 같은 결의 작은 테두리 단추. 크기 뒤 !는 globals.css의 button 규칙 때문입니다. */
+        <div className="mt-3 flex justify-end gap-2">
+          <Link
+            href={`/events/${event.id}/edit`}
+            className="rounded-full border border-line px-3 py-1 text-[13px] font-bold text-ink-soft transition active:scale-95"
+          >
+            수정
+          </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="rounded-full border border-line px-3 py-1 text-[13px]! font-bold text-danger transition active:scale-95"
+          >
+            삭제
+          </button>
+        </div>
+      ) : null}
+      {deleteError ? (
+        <p role="alert" className="mt-2 text-right text-[13px] font-medium text-danger">
+          {deleteError}
+        </p>
+      ) : null}
+    </>
   );
 }

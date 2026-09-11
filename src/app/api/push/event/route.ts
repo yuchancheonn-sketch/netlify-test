@@ -80,7 +80,8 @@ export async function POST(request: Request) {
       type: "event",
       title: `새 일정 · ${noticeTitle}`,
       body: noticeWhen,
-      url: `/events/${eventId}`,
+      // 모임 상세 화면은 없앴습니다(2026-09-11) — 알림은 모임 목록으로 데려갑니다.
+      url: "/events",
       cohort: eventCohort,
     }).catch(() => {});
   }
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
     recipientUids,
     title: `새 일정 · ${title}`,
     body,
-    url: `/events/${eventId}`,
+    url: "/events",
     tag: `event:${eventId}`,
   });
 

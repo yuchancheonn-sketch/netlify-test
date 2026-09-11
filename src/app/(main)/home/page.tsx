@@ -58,7 +58,7 @@ export default function HomePage() {
         <DosanQuizCard />
 
         {/*
-          다가오는 모임 — D-day 한 줄. 오른쪽 ">"가 모임 일정 전체 보기로 갑니다
+          다가오는 모임 — D-day 한 줄. 누르면 모임 일정 전체 보기로 갑니다
           (예전의 따로 선 "모임 일정 전체 보기" 상자를 이 카드에 합쳤습니다).
         */}
         <section>
@@ -113,7 +113,7 @@ export default function HomePage() {
             <ul className="flex flex-col gap-3">
               {laterEvents.slice(0, 2).map((event) => (
                 <li key={event.id}>
-                  <EventListItem event={event} />
+                  <EventListItem event={event} href="/events" />
                 </li>
               ))}
             </ul>
