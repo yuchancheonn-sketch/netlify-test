@@ -88,16 +88,17 @@ export default function DosanQuizCard() {
    * 풀기 전에는 고른 칸만 주황 테두리. 푼 뒤에는 정답 칸이 주황 테두리이고, 내가 틀리게 고른
    * 칸은 빨간 테두리, 나머지는 흐리게 둡니다.
    *
-   * ★ 바탕은 칠하지 않고 글씨도 검정 그대로입니다 — 테두리 색 하나로 고른 칸을 알립니다(2026-09-11).
-   *   예전엔 연한 주황 바탕(brand-50)에 주황 글씨였는데 사용자가 테두리만 남기길 원했습니다.
+   * ★ 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50), 글씨는 검정입니다(2026-09-11).
+   *   처음엔 글씨까지 주황이었고, 한때 바탕을 걷어 테두리만 남겼다가, 사용자 요청으로
+   *   연한 바탕은 되살리고 글씨만 검정으로 두었습니다.
    */
   function choiceClassName(value: OxAnswer): string {
     if (!answer) {
       return picked === value
-        ? "border-brand-500 bg-surface text-ink"
+        ? "border-brand-500 bg-brand-50 text-ink"
         : "border-line bg-surface text-ink";
     }
-    if (value === quiz.answer) return "border-brand-500 bg-surface text-ink";
+    if (value === quiz.answer) return "border-brand-500 bg-brand-50 text-ink";
     if (value === answer) return "border-danger bg-surface text-danger";
     return "border-line bg-surface text-ink-faint";
   }
