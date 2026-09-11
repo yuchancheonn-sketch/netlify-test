@@ -84,6 +84,13 @@ export default function HomePage() {
           )}
         </section>
 
+        {/*
+          투표·의견 모으기 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다.
+          다가오는 모임(D-day) 카드 바로 아래에 둡니다(2026-09-11 — 예전엔 이후 일정 아래).
+          열린 것이 없으면 PollCard가 아무것도 그리지 않아 바로가기가 곧바로 이어집니다.
+        */}
+        <PollCard />
+
         {/* 바로가기 — 투표 만들기 · 원우 지도. 그림 아이콘과 이름을 2열로. */}
         <HomeShortcuts />
 
@@ -112,9 +119,6 @@ export default function HomePage() {
             </ul>
           </section>
         ) : null}
-
-        {/* 투표 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다. */}
-        <PollCard />
 
         {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>
