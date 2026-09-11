@@ -37,7 +37,7 @@ const TABS = [
    * 여기에 적어두지 않으면 모임 화면에서 다섯 탭이 모두 꺼진 채로 보여,
    * 원우가 앱의 어디에 서 있는지 알 수 없게 됩니다.
    */
-  { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events", "/map", "/sessions"] },
+  { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events", "/sessions", "/polls"] },
   { href: "/members", label: "원우", Icon: UsersIcon, owns: [] },
   /*
    * 2026-09-09에 소식과 자료의 자리를 맞바꿨습니다.

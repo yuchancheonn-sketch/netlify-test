@@ -12,8 +12,8 @@ import { useViewCohort } from "@/lib/use-view-cohort";
  * 한 줄을 누르면 그 주 화면(/sessions/{주차})으로 갑니다.
  *
  * 홈과 같은 기수를 봅니다(useViewCohort). 운영진만 제목 옆에서 기수를 바꿀 수 있고,
- * 여기서 바꾸면 홈·자료·모임·원우 지도도 같은 기수로 따라갑니다.
- * 돌아갈 자리는 홈 하나라, 왼쪽 위 <와 오른쪽으로 밀기 모두 홈으로 갑니다(원우 지도와 같음).
+ * 여기서 바꾸면 홈·자료·모임도 같은 기수로 따라갑니다.
+ * 돌아갈 자리는 홈 하나라, 왼쪽 위 <와 오른쪽으로 밀기 모두 홈으로 갑니다(역대 투표와 같음).
  */
 export default function SessionsPage() {
   const router = useRouter();

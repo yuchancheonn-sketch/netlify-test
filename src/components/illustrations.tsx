@@ -7,8 +7,9 @@
  *
  * ★ 그림마다 제 색이 있습니다 (2026-09-11). 처음엔 넷 다 브랜드 주황의 밝기 단계였는데,
  *   한 상자에 나란히 놓이니 단조로워 그림에 어울리는 색으로 나눴습니다.
- *   투표함은 파랑, 말풍선은 초록, 지도는 누런 종이에 빨간 핀, 공책은 보라, 역대 투표 클립보드는 청록.
- *   한 그림 안에서는 같은 색의 진하기만 달리 씁니다(지도만 종이와 핀 두 가지).
+ *   투표함은 파랑, 말풍선은 초록, 공책은 보라, 역대 투표 클립보드는 청록.
+ *   한 그림 안에서는 같은 색의 진하기만 달리 씁니다.
+ *   (원우 지도의 누런 지도·빨간 핀 그림은 2026-09-11에 기능과 함께 없앴습니다.)
  */
 
 const BLUE = "#3182F6";
@@ -18,12 +19,6 @@ const BLUE_LIGHT = "#90C2FF";
 const GREEN = "#15B777";
 const GREEN_MID = "#7FD9B0";
 const GREEN_LIGHT = "#C6F0DC";
-
-const RED = "#F04452";
-const RED_DEEP = "#B3263A";
-const SAND = "#FFE6A3";
-const SAND_LIGHT = "#FFF4D1";
-const SAND_DEEP = "#EDB53C";
 
 const PURPLE = "#7C5CFA";
 const PURPLE_MID = "#B8A4FF";
@@ -126,33 +121,6 @@ export function LessonIllustration({ className }: { className?: string }) {
       {/* 오른쪽 재생 표시 — 주차마다 걸어 두는 수업 영상 */}
       <circle cx="32.5" cy="23.5" r="6" fill={PURPLE} />
       <path d="m30.8 20.8 4.4 2.7-4.4 2.7z" fill="#FFFFFF" />
-    </svg>
-  );
-}
-
-/** 원우 지도 — 세 번 접은 지도 위에 꽂힌 위치 핀 (누런 종이 지도 + 빨간 핀) */
-export function MapIllustration({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-      {/* 접힌 지도 세 쪽 — 가운데만 밝게 해서 접힌 결이 보이게 */}
-      <path d="M5 15 17 11v28L5 43z" fill={SAND} />
-      <path d="m17 11 14 4v28l-14-4z" fill={SAND_LIGHT} />
-      <path d="m31 15 12-4v28l-12 4z" fill={SAND} />
-      {/* 지도 위 점선 길 */}
-      <path
-        d="M9 35c4-3 7 1 11-2s7-6 12-3"
-        stroke={SAND_DEEP}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeDasharray="0.1 3.4"
-      />
-      {/* 핀 그림자와 핀 */}
-      <ellipse cx="29" cy="35.5" rx="5" ry="1.6" fill={RED_DEEP} opacity="0.25" />
-      <path
-        d="M29 6c-5.8 0-10.5 4.5-10.5 10.1 0 7 10.5 18.4 10.5 18.4s10.5-11.4 10.5-18.4C39.5 10.5 34.8 6 29 6z"
-        fill={RED}
-      />
-      <circle cx="29" cy="16" r="3.8" fill="#FFFFFF" />
     </svg>
   );
 }

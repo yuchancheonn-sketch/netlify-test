@@ -20,7 +20,6 @@ import type {
   ChatRoomDoc,
   EventDoc,
   FileDoc,
-  MemberRegionDoc,
   MessageDoc,
   OpinionDoc,
   PhotoAlbumDoc,
@@ -88,31 +87,6 @@ export function useAllUsers(): ListState<UserDoc> {
         setState({ data: users, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
-    );
-  }, []);
-
-  return state;
-}
-
-/**
- * 원우 지도에 찍힌 시·도 목록 (홈).
- *
- * 한 사람에 한 줄이고 좌표가 아니라 시·도 이름만 들어 있어 가볍습니다.
- * 홈이 users(프로필 사진이 든 무거운 문서)를 읽지 않게 따로 둔 컬렉션입니다 — types.ts의 MemberRegionDoc.
- */
-export function useMemberRegions(): ListState<MemberRegionDoc> {
-  const [state, setState] = useState<ListState<MemberRegionDoc>>(EMPTY);
-
-  useEffect(() => {
-    return onSnapshot(
-      collection(db, "memberRegions"),
-      (snapshot) => {
-        const entries = snapshot.docs.map(
-          (document) => ({ ...document.data(), uid: document.id }) as MemberRegionDoc,
-        );
-        setState({ data: entries, loading: false, error: null });
-      },
-      () => setState({ data: [], loading: false, error: "원우 지도를 불러오지 못했어요." }),
     );
   }, []);
 
