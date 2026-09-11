@@ -279,14 +279,21 @@ export function EventListItem({
       href={`/events/${event.id}`}
       className="flex items-center gap-4 rounded-3xl bg-surface p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
-      <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-50">
-        <span className="text-[12px] font-bold text-brand-500">
+      {/*
+        날짜 칸 — 주황으로 꽉 채우고 글씨는 흰색 (2026-09-11).
+        예전엔 연한 주황(brand-50) 바탕에 주황 글씨였는데, 어두운 화면에서 그 바탕이 탁한 갈색으로
+        보여 네 시안(주황 채움 / 달력 한 장 / 주황 테두리 / 상자 없이) 가운데 사용자가 "주황 채움"을 골랐습니다.
+        홈 맨 위 D-day 카드(주황 바탕 + 흰 글씨)와 같은 결이고, 밝은·어두운 화면에서 똑같이 보입니다.
+        요일·월은 흰색을 조금 풀어 가운데 날짜가 먼저 읽히게 합니다.
+      */}
+      <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-500">
+        <span className="text-[12px] font-bold text-white/90">
           {date ? WEEKDAYS[date.getDay()] : ""}
         </span>
-        <span className="text-[24px] font-bold leading-tight text-brand-500">
+        <span className="text-[24px] font-bold leading-tight text-white">
           {date ? date.getDate() : "-"}
         </span>
-        <span className="text-[11px] font-medium text-brand-500">
+        <span className="text-[11px] font-medium text-white/90">
           {date ? `${date.getMonth() + 1}월` : ""}
         </span>
       </div>
