@@ -17,14 +17,15 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 모임 일정 등록·수정 폼. 운영진만 볼 수 있는 화면에서 씁니다.
+ * 모임 일정 등록·수정 폼.
+ * 등록은 원우 누구나, 수정은 그 일정을 올린 사람과 운영진만 이 폼을 봅니다.
  * (권한 확인은 이 폼이 아니라 Firestore 보안 규칙이 최종적으로 합니다.)
  */
 export default function EventForm({ event }: { event?: EventDoc }) {
   const router = useRouter();
   const { user } = useAuth();
   /**
-   * 새 일정이 올라갈 기수 — 운영진이 홈·일정 화면에서 고른 기수입니다.
+   * 새 일정이 올라갈 기수 — 원우는 자기 기수, 운영진은 홈·일정 화면에서 고른 기수입니다.
    * 수정할 때는 원래 기수를 건드리지 않습니다.
    */
   const { cohort } = useViewCohort();
@@ -103,7 +104,14 @@ export default function EventForm({ event }: { event?: EventDoc }) {
       }
       router.replace(`/events/${target.id}`);
     } catch (caught) {
-      setSaveError(saveErrorMessage(caught, "일정 등록은 운영진만 할 수 있어요."));
+      setSaveError(
+        saveErrorMessage(
+          caught,
+          editing
+            ? "이 일정은 올린 사람과 운영진만 고칠 수 있어요."
+            : "저장 권한이 없어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)",
+        ),
+      );
       setSaving(false);
     }
   }

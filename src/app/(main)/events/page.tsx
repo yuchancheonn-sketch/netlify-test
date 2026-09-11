@@ -9,7 +9,6 @@ import MonthCalendar from "@/components/MonthCalendar";
 import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
-import { useAuth } from "@/lib/auth-context";
 import { inCohort } from "@/lib/cohort";
 import { formatMonthDay, todayString } from "@/lib/format";
 import { useEvents } from "@/lib/hooks";
@@ -19,7 +18,6 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 type ViewMode = "list" | "calendar";
 
 export default function EventsPage() {
-  const { isAdmin } = useAuth();
   const { data: allEvents, loading, error } = useEvents();
   // 홈과 같은 기수의 일정만. 운영진이 홈에서 고른 기수를 그대로 따릅니다.
   const { cohort, canSwitch, setCohort } = useViewCohort();
@@ -144,11 +142,7 @@ export default function EventsPage() {
               <EmptyState
                 icon={<CalendarIcon className="h-10 w-10" />}
                 title="등록된 일정이 없어요"
-                description={
-                  isAdmin
-                    ? "아래 '일정 등록' 버튼으로 첫 모임을 올려보세요."
-                    : "운영진이 모임을 올리면 여기에 표시됩니다."
-                }
+                description="아래 '일정 등록' 버튼으로 첫 모임을 올려보세요."
               />
             </div>
           ) : (
@@ -164,16 +158,19 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* 일정 등록은 운영진만 할 수 있습니다. 밀려나는 상자 바깥에 둡니다(위 설명). */}
-      {isAdmin ? (
-        <Link
-          href="/events/new"
-          className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
-        >
-          <PlusIcon className="h-5 w-5" />
-          일정 등록
-        </Link>
-      ) : null}
+      {/*
+        일정 등록은 원우 누구나 할 수 있습니다(2026-09-11부터 — 그 전엔 운영진만).
+        번개 모임처럼 원우들이 직접 여는 일정이 많아서입니다. 고치고 지우는 것은
+        올린 사람과 운영진만 됩니다(모임 상세 화면 · firestore.rules).
+        밀려나는 상자 바깥에 둡니다(위 설명).
+      */}
+      <Link
+        href="/events/new"
+        className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+      >
+        <PlusIcon className="h-5 w-5" />
+        일정 등록
+      </Link>
     </div>
   );
 }

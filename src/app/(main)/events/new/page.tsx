@@ -2,20 +2,16 @@
 
 import EventForm from "@/components/EventForm";
 import PageHeader from "@/components/PageHeader";
-import { ErrorState } from "@/components/ui";
-import { useAuth } from "@/lib/auth-context";
 
+/**
+ * 일정 등록 — 원우 누구나(2026-09-11부터, 그 전엔 운영진만).
+ * 올린 일정의 수정·삭제는 올린 사람과 운영진만 됩니다(모임 상세 · firestore.rules).
+ */
 export default function NewEventPage() {
-  const { isAdmin } = useAuth();
-
   return (
     <>
       <PageHeader title="일정 등록" back />
-      {isAdmin ? (
-        <EventForm />
-      ) : (
-        <ErrorState message="일정 등록은 운영진만 할 수 있어요." />
-      )}
+      <EventForm />
     </>
   );
 }

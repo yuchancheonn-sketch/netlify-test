@@ -555,7 +555,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
   async function toggleAdmin(member: UserDoc) {
     const makingAdmin = member.role !== "admin";
     const question = makingAdmin
-      ? `${member.name} 님에게 운영진 권한을 줄까요?\n일정·앨범 등록과 명단 관리를 할 수 있게 됩니다.`
+      ? `${member.name} 님에게 운영진 권한을 줄까요?\n앨범 등록·명단 관리와, 남이 올린 일정 고치기·지우기를 할 수 있게 됩니다.`
       : `${member.name} 님의 운영진 권한을 뺄까요?`;
     if (!window.confirm(question)) return;
 

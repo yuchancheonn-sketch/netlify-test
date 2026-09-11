@@ -135,8 +135,26 @@ service cloud.firestore {
       allow read, write: if isMember();
     }
 
+    /*
+     * 모임 일정.
+     *
+     * 올리는 것은 원우 누구나(2026-09-11부터 — 그 전엔 화면에서 운영진만 보였습니다).
+     * 번개 모임처럼 원우가 직접 여는 일정이 많아서입니다. 올릴 때 createdBy가 본인이어야
+     * 합니다 — 새 일정 알림(/api/push/event)도 그 값으로 보낸 사람을 확인합니다.
+     *
+     * 고치고 지우는 것은 올린 사람과 운영진만. 남이 올린 일정이 조용히 바뀌거나
+     * 사라지면 참석 응답까지 딸려 엉킵니다. createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
+     */
     match /events/{eventId} {
-      allow read, write: if isMember();
+      allow read: if isMember();
+      allow create: if isMember()
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isMember()
+                    && (resource.data.get('createdBy', '') == request.auth.uid || isAdmin())
+                    && request.resource.data.get('createdBy', '')
+                         == resource.data.get('createdBy', '');
+      allow delete: if isMember()
+                    && (resource.data.get('createdBy', '') == request.auth.uid || isAdmin());
 
       match /rsvps/{uid} {
         allow read, write: if isMember();

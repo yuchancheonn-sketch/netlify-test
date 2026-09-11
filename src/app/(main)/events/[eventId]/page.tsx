@@ -178,8 +178,12 @@ export default function EventDetailPage() {
           </div>
         </section>
 
-        {/* 운영진 전용 */}
-        {isAdmin ? (
+        {/*
+          고치기·지우기는 이 일정을 올린 사람과 운영진만.
+          일정 등록은 원우 누구나 할 수 있게 되면서(2026-09-11), 남이 올린 일정을
+          지우는 일은 막고 자기가 올린 일정의 오타는 스스로 고칠 수 있게 했습니다.
+        */}
+        {isAdmin || event.createdBy === user?.uid ? (
           <section className="flex gap-3">
             <Link
               href={`/events/${eventId}/edit`}

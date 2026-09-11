@@ -69,7 +69,7 @@ export default function HomePage() {
           ) : (
             /*
               모임이 없어도 전체 일정 화면으로 갈 길은 남겨 둡니다 —
-              운영진의 "일정 등록" 단추가 그 화면에 있습니다.
+              "일정 등록" 단추(원우 누구나)가 그 화면에 있습니다.
             */
             <Link
               href="/events"
@@ -78,7 +78,7 @@ export default function HomePage() {
               <EmptyState
                 icon={<CalendarIcon className="h-9 w-9" />}
                 title="다가오는 모임이 아직 없어요"
-                description="운영진이 일정을 올리면 여기에 D-day로 표시됩니다."
+                description="일정을 올리면 여기에 D-day로 표시됩니다."
               />
             </Link>
           )}

@@ -143,7 +143,7 @@
 | `/map` | 원우 지도 | 원우들이 등록한 시·도를 지도로. 내 지역 등록(위치 한 번 → 시·도만 저장)·변경·삭제. 밀어서 홈으로 | `memberRegions` |
 | `/events` | 모임 (목록/캘린더 전환) | 지난 일정은 **화면에서만** 감춤 | `events` |
 | `/events/[id]` | 모임 상세 | 참석/불참/미정 응답 + 참석자 얼굴 | `events/{id}/rsvps` |
-| `/events/new`, `/[id]/edit` | 일정 등록·수정 | **운영진만**. 새 일정만 알림 발송 | — |
+| `/events/new`, `/[id]/edit` | 일정 등록·수정 | 등록은 **원우 누구나**(2026-09-11부터), 수정·삭제는 **올린 사람과 운영진만**. 새 일정만 알림 발송 | — |
 | `/members` | 원우수첩 | 가입자+미가입 명단 합친 가나다순. **누구나 남의 칸 수정** | `users` + `roster` |
 | `/library` | 자료 (사진/파일) | 행사 사진 = 앨범, 파일 = 원우가 올린 문서 | `photoAlbums`, `files` |
 | `/albums/[id]` | 앨범 | 사진 올리기(여러 장)·좋아요·전체화면 뷰어 | `photoAlbums/{id}/photos` |
@@ -165,7 +165,7 @@
 | `users/{uid}` | 로그인 uid | 이름·별칭·회사·직책·휴대폰·원우회 직위·소개·소개영상·**프로필 사진(data URL)**·role·status | 로그인하면 누구나 읽기/쓰기 |
 | `memberRegions/{uid}` | 본인 uid | 원우 지도 — **시·도 이름만**(`region`)·기수·이름. 좌표는 폰에서 시·도로 바꾼 뒤 버려서 저장 안 함. 홈이 무거운 `users`를 안 읽게 따로 뺌 | 읽기는 누구나 / **쓰기·지우기는 본인만**(운영진 지우기 가능), `hasOnly`로 칸 고정 |
 | `roster/{id}` | 자동 | 아직 가입 안 한 원우 이름 + 미리 채워둔 정보 + `linkedUid` | 로그인하면 누구나 |
-| `events/{id}` | 자동 | 제목·날짜·시각·장소·설명 | 로그인하면 누구나 |
+| `events/{id}` | 자동 | 제목·날짜·시각·장소·설명·기수·`createdBy` | 읽기·올리기는 누구나(`createdBy`는 본인) / **고치기·지우기는 올린 사람과 운영진만**, `createdBy`는 못 바꿈 |
 | `events/{id}/rsvps/{uid}` | 응답자 uid | attending / notAttending / undecided | 로그인하면 누구나 |
 | `sessions/{id}` | 10기는 `"1"`~`"10"`, 다른 기수는 `"3기-5"` 꼴 (`sessionDocId`) | 주제·강사·`videoUrl`(1교시)·`videoUrl2`(2교시)·`commentCount` | 로그인하면 누구나 |
 | `sessions/{week}/comments/{id}` | 자동 | 느낀점. `parentId`(1단 답글), `period` | 읽기 자유 / **쓰기는 본인 이름만**, 수정 금지, 삭제는 본인 것만 |
@@ -313,7 +313,7 @@ useHasUnreadChat    하나라도 켜졌으면 탭바에 점
 ### 8-4. 새 일정 등록
 
 ```
-EventForm(운영진) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
+EventForm(원우 누구나) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
                      │  ★ addDoc이 아니라 doc()+setDoc: id를 먼저 알아야
                      │    저장이 늦어도 곧바로 그 일정 화면으로 갈 수 있음
                      ├─ 결과가 "saved"일 때만  ─▶ POST /api/push/event
@@ -376,7 +376,8 @@ EventForm(운영진) ─ commitWrite(setDoc(events/{미리 뽑은 id}))
 
 | 대상 | 상태 |
 |---|---|
-| 수첩·명단·일정·참석·사진·수업 | **활짝 열림** — 로그인만 하면 누구나 읽고 씀 (휴대폰 번호 포함). 원우끼리 서로 채워주는 앱이라 일부러 이렇게 둠 |
+| 수첩·명단·참석·사진·수업 | **활짝 열림** — 로그인만 하면 누구나 읽고 씀 (휴대폰 번호 포함). 원우끼리 서로 채워주는 앱이라 일부러 이렇게 둠 |
+| 일정 | 읽기·올리기는 누구나(`createdBy`는 본인) / **고치기·지우기는 올린 사람과 운영진만**, `createdBy`는 못 바꿈 (2026-09-11) |
 | 느낀점 댓글 | 읽기 자유. **쓸 땐 본인 이름만**, 수정 불가, 삭제는 본인 것만 |
 | 채팅 | **잠김.** `uid in roomId.split('__')` — 1:1 방의 두 사람만 (단체방 `'main'` 통과는 2026-09-10에 지움). 메시지는 `senderId == uid` 검사, 수정·삭제는 본인 것만 |
 | 채팅 목록 조회(list) | 문서 id로는 검증이 불가능해서 **`memberUids` 기준**. 앱의 질의(`array-contains`)와 짝이 맞아야 통과 — **앱 질의를 바꾸면 규칙도 같이 고쳐야 함** |
