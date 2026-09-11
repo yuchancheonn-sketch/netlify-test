@@ -2,7 +2,8 @@
  * 홈 맨 위 "오늘의 OX 퀴즈" — 도산 안창호 선생에 관한 문제.
  *
  * 오늘의 도산(quotes.ts)처럼 서버 없이 날짜만으로 고릅니다. 같은 날에는 모든
- * 원우가 같은 문제를 보고, 자정이 지나면 다음 문제로 넘어갑니다.
+ * 원우가 같은 문제를 보고, **한국 시간 새벽 12시**에 다음 문제로 넘어갑니다
+ * (앱을 켜 둔 채여도 그 순간 바뀝니다 — use-kst-day.ts).
  * 답은 폰에만 적어 둡니다(use-quiz-answer.ts) — 누가 맞혔는지 모으지 않으므로
  * Firestore 컬렉션도, 보안 규칙 변경도 없습니다.
  *
@@ -209,13 +210,39 @@ export const DOSAN_QUIZZES: DosanQuiz[] = [
   },
 ];
 
+/** 한국 시간 = UTC+9. 서머타임이 없어 늘 9시간입니다. */
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 86_400_000;
+
 /**
- * 오늘의 문제. 날짜(그 지역의 하루)만으로 정하기 때문에
- * 같은 날 접속한 원우들은 모두 같은 문제를 봅니다.
+ * 한국 시간으로 "며칠째"인지. 한국 시간 새벽 12시(자정)에 1씩 늘어납니다.
+ *
+ * 폰의 시간대 설정은 보지 않습니다. 해외에 나가 있는 원우도 한국 날짜로 같은 날
+ * 같은 문제를 보고, 한국 자정에 함께 다음 문제로 넘어갑니다.
  */
-export function quizOfTheDay(today: Date = new Date()): DosanQuiz {
-  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const days = Math.floor(midnight.getTime() / 86_400_000);
+export function kstDayNumber(now: number = Date.now()): number {
+  return Math.floor((now + KST_OFFSET_MS) / DAY_MS);
+}
+
+/** 다음 한국 자정까지 남은 시간(ms). 켜 둔 화면을 자정에 바꾸는 타이머가 씁니다. */
+export function msUntilNextKstMidnight(now: number = Date.now()): number {
+  return (kstDayNumber(now) + 1) * DAY_MS - KST_OFFSET_MS - now;
+}
+
+/** 그 날의 한국 날짜 "YYYY-MM-DD" — 폰에 적어 둔 답을 그 날 문제와 짝지을 때 씁니다. */
+export function kstDateString(day: number): string {
+  return new Date(day * DAY_MS).toISOString().slice(0, 10);
+}
+
+/**
+ * 그 날(kstDayNumber)의 문제. 같은 날 접속한 원우들은 모두 같은 문제를 봅니다.
+ *
+ * ★ day - 1인 이유: 처음에는 폰 시간대의 자정을 UTC 기준 일수로 세었는데, 한국 폰에서
+ *   그 값은 한국 날짜보다 하루 작았습니다. 한국 시간으로 바꾸면서(2026-09-11) 순서를
+ *   그대로 이어 가려고 1을 뺍니다 — 이미 오늘 문제를 푼 원우가 새 문제를 받지 않도록.
+ */
+export function quizForDay(day: number): DosanQuiz {
   const count = DOSAN_QUIZZES.length;
-  return DOSAN_QUIZZES[((days % count) + count) % count];
+  const index = day - 1;
+  return DOSAN_QUIZZES[((index % count) + count) % count];
 }

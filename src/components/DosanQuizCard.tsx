@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui";
-import { quizOfTheDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
-import { todayString } from "@/lib/format";
+import { kstDateString, quizForDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
+import { useKstDay } from "@/lib/use-kst-day";
 import { useQuizAnswer, useQuizCollapsed } from "@/lib/use-quiz-answer";
 
 /** "채점 중이에요" 화면을 보여주는 시간(ms). 너무 짧으면 번쩍하고, 길면 답답합니다. */
@@ -31,14 +31,20 @@ function choiceLabel(value: OxAnswer): string {
  * 문제와 해설은 lib/dosan-quiz.ts, 고른 답은 이 폰에만(lib/use-quiz-answer.ts).
  */
 export default function DosanQuizCard() {
-  const quiz = quizOfTheDay();
-  const quizKey = `${todayString()}:${quiz.id}`;
+  // 한국 시간 새벽 12시에 다음 문제로 — 홈을 켜 둔 채여도 그 순간 바뀝니다(use-kst-day.ts).
+  const day = useKstDay();
+  const quiz = quizForDay(day);
+  const quizKey = `${kstDateString(day)}:${quiz.id}`;
   const [answer, saveAnswer] = useQuizAnswer(quizKey);
   /** 푼 뒤에만 접을 수 있습니다. 풀기 전에는 늘 펼쳐 둡니다 — 접힌 채로는 문제를 못 봅니다. */
   const [collapsed, setCollapsed] = useQuizCollapsed(quizKey);
   const expanded = !answer || !collapsed;
-  /** 제출 전에 눌러 둔 답 */
-  const [picked, setPicked] = useState<OxAnswer | null>(null);
+  /**
+   * 제출 전에 눌러 둔 답. 어느 문제에 고른 것인지(key)와 함께 둡니다 —
+   * 고르기만 하고 자정을 넘기면 새 문제에 어제 고른 답이 켜져 있지 않게 합니다.
+   */
+  const [pickedFor, setPickedFor] = useState<{ key: string; value: OxAnswer } | null>(null);
+  const picked = pickedFor?.key === quizKey ? pickedFor.value : null;
   const [screen, setScreen] = useState<"none" | "grading" | "explanation">("none");
   const gradingTimer = useRef<number | null>(null);
 
@@ -143,7 +149,7 @@ export default function DosanQuizCard() {
                   role="radio"
                   aria-checked={(answer ?? picked) === value}
                   disabled={Boolean(answer)}
-                  onClick={() => setPicked(value)}
+                  onClick={() => setPickedFor({ key: quizKey, value })}
                   className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-3 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
                     value,
                   )}`}
