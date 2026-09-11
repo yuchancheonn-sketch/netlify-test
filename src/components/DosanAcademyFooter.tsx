@@ -17,8 +17,11 @@ const SITE_URL = "https://dosan21.kr";
  * 됩니다 — 원우의 연락처(개인정보)와는 다릅니다. 바뀌면 이 파일만 고치면 됩니다.
  */
 export default function DosanAcademyFooter() {
-  // 펼친 채로 시작합니다. 접힌 채로 두면 정보가 없는 줄 알기 쉽습니다.
-  const [open, setOpen] = useState(true);
+  /*
+   * 접힌 채로 시작합니다 — "도산아카데미 기관 정보 ∨"를 누르면 전문이 펼쳐집니다.
+   * 처음엔 펼친 채로 두었다가 2026-09-11에 사용자 요청으로 바꿨습니다.
+   */
+  const [open, setOpen] = useState(false);
 
   return (
     <footer className="px-1 pt-4 pb-2 text-[12px] leading-relaxed text-ink-faint">
