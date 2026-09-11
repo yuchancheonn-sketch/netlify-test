@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { BellIcon, CalendarIcon, ChevronRightIcon, MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
@@ -10,6 +11,7 @@ import { markNoticesSeen } from "@/lib/chat-read";
 import { cohortOf } from "@/lib/cohort";
 import { formatChatListTime } from "@/lib/format";
 import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
+import { useSwipeBack } from "@/lib/use-swipe-back";
 import type { NoticeDoc } from "@/lib/types";
 
 /**
@@ -25,6 +27,13 @@ import type { NoticeDoc } from "@/lib/types";
  */
 export default function NotificationsPage() {
   const { user, profile } = useAuth();
+  const router = useRouter();
+  /*
+   * 오른쪽으로 밀면 들어오기 전 화면으로 돌아갑니다(2026-09-11).
+   * 종은 모든 탭의 제목 줄에 있어서, 갈 곳을 홈으로 못 박으면 원우가 있던 탭이 아니라
+   * 엉뚱한 탭으로 나가게 됩니다 — 내 프로필·설정 화면과 같은 router.back()이고, 제목 줄의 <도 같습니다.
+   */
+  const swipe = useSwipeBack({ onCommit: () => router.back() });
   const { data: notices, loading, error } = useNotices(cohortOf(profile?.cohort));
   const seenAt = useNoticesSeenAt(user?.uid);
 
@@ -44,7 +53,15 @@ export default function NotificationsPage() {
   }, [uid]);
 
   return (
-    <>
+    /*
+      안에 떠 있는(fixed) 요소가 없어 화면 전체를 한 상자로 밀어도 됩니다(수업 기록·역대 투표와 같음).
+      min-h-full: 알림이 몇 줄 없어도 그 아래 빈 자리에서 민 손짓을 받습니다.
+    */
+    <div
+      className="min-h-full bg-canvas"
+      {...swipe.handlers}
+      style={{ ...swipe.touchAction, ...swipe.slideStyle }}
+    >
       <PageHeader title="알림" back />
 
       <div className="px-4 pb-8">
@@ -77,7 +94,7 @@ export default function NotificationsPage() {
           </ul>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
