@@ -72,10 +72,10 @@ export default function PageHeader({
           /*
             mt-0.5는 eyebrow가 있어 윗변을 맞출 때만 필요합니다. 가운데를
             맞추는 갈래에서는 이 2px이 화살표를 가운데에서 밀어냅니다.
-            색은 제목·오른쪽 아이콘과 같은 ink-soft입니다 — 제목 줄에 서는
-            것들은 모두 한 색으로 둡니다.
+            색은 제목과 같은 먹색(ink)입니다 — 오른쪽 아이콘(ink-soft)보다
+            한 단 진한 쪽입니다.
           */
-          className={`-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-soft active:bg-fill ${
+          className={`-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-fill ${
             eyebrow ? "mt-0.5" : ""
           }`}
         >
@@ -90,11 +90,13 @@ export default function PageHeader({
         {/*
           홈의 앱 이름도 다른 화면 제목과 똑같이 씁니다. 예외를 두지 않습니다.
 
-          색은 ink가 아니라 **ink-soft** — 오른쪽 아이콘과 같은 색입니다(2026-09-14).
-          제목만 먹색이면 같은 줄에 선 아이콘들보다 혼자 진해 보였습니다.
-          뒤로가기 화살표도 같은 색이라, 제목 줄은 통째로 한 색입니다.
+          색은 먹색(ink)입니다. 2026-09-14에 오른쪽 아이콘과 같은 ink-soft로
+          옮겼다가 같은 날 되돌렸습니다 — 제목은 진하고 아이콘은 한 단 옅은
+          쪽이 낫다는 판단입니다. 다시 옮기자고 제안하지 마세요.
+          (뒤로가기 화살표와 제목 옆 기수 고르개도 같은 먹색입니다. 셋은
+           제목 줄에서 한 덩어리로 읽히므로 늘 같이 움직여야 합니다.)
         */}
-        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink-soft">{title}</h1>
+        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
       </div>
 
       {/* mt-0.5를 뺐습니다 — 위 header가 가운데를 맞추므로 2px을 더하면 오히려 내려앉습니다. */}

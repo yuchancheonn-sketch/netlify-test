@@ -132,11 +132,12 @@ export default function CohortPicker({
         aria-expanded={open}
         aria-label={`기수 고르기 (지금 ${labelOf(value)})`}
         /*
-          색은 제목과 같은 ink-soft입니다. 이 단추는 제목 바로 옆에 붙어
-          한 덩어리로 읽히므로, 제목이 ink-soft로 옅어진 2026-09-14에 함께
-          옮겼습니다. 한쪽만 두면 "애기애타"와 "10기"의 진하기가 어긋납니다.
+          색은 제목과 같은 먹색(ink)입니다. 이 단추는 제목 바로 옆에 붙어
+          한 덩어리로 읽히므로 제목 색을 건드릴 때 반드시 같이 옮겨야 합니다 —
+          한쪽만 두면 "애기애타"와 "10기"의 진하기가 어긋납니다.
+          (2026-09-14에 둘 다 ink-soft로 옮겼다가 같은 날 둘 다 되돌렸습니다.)
         */
-        className="inline-flex items-center gap-1 text-ink-soft transition [font-size:inherit]! active:opacity-60"
+        className="inline-flex items-center gap-1 text-ink transition [font-size:inherit]! active:opacity-60"
       >
         {labelOf(value)}
         <ChevronLeftIcon className="h-5 w-5 -rotate-90" strokeWidth={2.5} />
