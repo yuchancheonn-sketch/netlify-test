@@ -558,18 +558,18 @@ button {
  *
  * env(safe-area-inset-top)은 노치·상태바에 가리지 않기 위한 자리라 건드리면
  * 안 됩니다. 그 위에 우리가 얹는 여백만 여기서 정합니다.
- * 브라우저에서는 화면 맨 위에서 8px, 홈 화면에 추가한 앱에서는 상태바 바로
- * 아래 8px입니다.
+ * 브라우저에서는 화면 맨 위에서 6px, 홈 화면에 추가한 앱에서는 상태바 바로
+ * 아래 6px입니다.
  *
  * 지나온 값 (모두 2026-09-14): 6px → 2px(제목을 위로 올려 달라고 해서)
- * → 8px(그러고 나니 제목 위가 답답하다고 해서). 눈으로 고른 값입니다.
+ * → 8px → 다시 6px. 돌고 돌아 처음 값으로 왜습니다. 눈으로 고른 값입니다.
  *
  * 아래 짧은 화면 규칙에도 padding-top을 다시 적지 않습니다 — 거기서는
  * padding-bottom만 줄이고 위는 이 값을 그대로 씁니다. 같은 값을 두 곳에
  * 적어 두면 한쪽만 고쳐져 어긋납니다.
  */
 .page-header {
-  padding-top: calc(8px + env(safe-area-inset-top));
+  padding-top: calc(6px + env(safe-area-inset-top));
 }
 
 @media (max-height: 480px) {
