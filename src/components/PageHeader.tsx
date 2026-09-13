@@ -47,14 +47,37 @@ export default function PageHeader({
      * ★ 그 값이 인라인 style이 아니라 globals.css의 .page-header에 있습니다.
      *   세로가 짧을 때(눕힌 폰·자판이 올라온 화면) 제목을 한 단 줄이는데,
      *   인라인 style로 두면 그 media query가 위 여백을 이기지 못합니다.
+     *
+     * ★ 세로 정렬이 두 갈래인 이유 (2026-09-14)
+     *   제목 한 줄의 높이는 약 31px(22px 글씨 × 글줄 1.4배)인데 오른쪽
+     *   아이콘 단추는 40px입니다. items-start로 둘의 **윗변**을 맞추면
+     *   가운데가 6px쯤 어긋나, 제목이 아이콘보다 위로 뜬 것처럼 보였습니다.
+     *   그래서 가운데를 맞춥니다(items-center).
+     *
+     *   다만 eyebrow(제목 위 작은 글씨)가 있을 때는 예전처럼 윗변을 맞춥니다.
+     *   그때는 제목 칸이 두 줄이라 40px보다 높아져서, 가운데를 맞추면 이번에는
+     *   뒤로가기 화살표가 아래로 내려앉습니다. eyebrow를 쓰는 화면(운영진·앨범)
+     *   에는 오른쪽 요소가 없어서 이 갈래로 손해 보는 것이 없습니다.
      */
-    <header className="page-header flex items-start gap-3 px-4 pb-3">
+    <header
+      className={`page-header flex gap-3 px-4 pb-3 ${
+        eyebrow ? "items-start" : "items-center"
+      }`}
+    >
       {showBack ? (
         <button
           type="button"
           onClick={() => (backHref ? router.push(backHref) : router.back())}
           aria-label="뒤로 가기"
-          className="-ml-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink active:bg-fill"
+          /*
+            mt-0.5는 eyebrow가 있어 윗변을 맞출 때만 필요합니다. 가운데를
+            맞추는 갈래에서는 이 2px이 화살표를 가운데에서 밀어냅니다.
+            색은 제목·오른쪽 아이콘과 같은 ink-soft입니다 — 제목 줄에 서는
+            것들은 모두 한 색으로 둡니다.
+          */
+          className={`-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-soft active:bg-fill ${
+            eyebrow ? "mt-0.5" : ""
+          }`}
         >
           <ChevronLeftIcon className="h-7 w-7" />
         </button>
@@ -64,11 +87,18 @@ export default function PageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-medium text-ink-faint">{eyebrow}</p>
         ) : null}
-        {/* 홈의 앱 이름도 다른 화면 제목과 똑같이 씁니다. 예외를 두지 않습니다. */}
-        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
+        {/*
+          홈의 앱 이름도 다른 화면 제목과 똑같이 씁니다. 예외를 두지 않습니다.
+
+          색은 ink가 아니라 **ink-soft** — 오른쪽 아이콘과 같은 색입니다(2026-09-14).
+          제목만 먹색이면 같은 줄에 선 아이콘들보다 혼자 진해 보였습니다.
+          뒤로가기 화살표도 같은 색이라, 제목 줄은 통째로 한 색입니다.
+        */}
+        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink-soft">{title}</h1>
       </div>
 
-      {right ? <div className="mt-0.5 shrink-0">{right}</div> : null}
+      {/* mt-0.5를 뺐습니다 — 위 header가 가운데를 맞추므로 2px을 더하면 오히려 내려앉습니다. */}
+      {right ? <div className="shrink-0">{right}</div> : null}
     </header>
   );
 }
