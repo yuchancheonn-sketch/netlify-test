@@ -37,38 +37,47 @@ const SUBTABS = [
 type Subtab = (typeof SUBTABS)[number]["value"];
 
 export default function NewsPage() {
+  /*
+    주소의 ?tab을 읽는 useSearchParams는 정적 화면에서 Suspense로 감싸야 빌드가 됩니다(Next 문서).
+
+    ★ 제목 줄까지 그 안으로 들어왔습니다 (2026-09-14).
+      고르개가 제목 자리를 차지하게 되면서 제목이 subtab 상태를 써야 하는데,
+      그 상태는 useSearchParams를 읽는 NewsTabs 안에만 있습니다. 그래서 머리를
+      밖에 두지 못하고, 기다리는 동안은 아래 NewsFallback이 같은 모양의
+      머리를 대신 그려 화면이 튀지 않게 합니다.
+  */
+  return (
+    <Suspense fallback={<NewsFallback />}>
+      <NewsTabs />
+    </Suspense>
+  );
+}
+
+/**
+ * 기다리는 동안의 화면.
+ *
+ * 머리줄과 첫 칸 자리만 회색으로 잡아 둡니다. 제목 자리의 회색 칸은
+ * TextTabs("header" 갈래)와 같은 크기입니다 — 글씨 28px(22px × 글줄 1.25배)
+ * + 사이 6px + 바 3px = 37px. 크기를 안 맞추면 자리가 채워질 때 제목 줄 높이가
+ * 달라져 본문이 통째로 솔구칩니다.
+ * (TextTabs의 글씨·바 크기를 고치면 이 값도 같이 고쳐 주세요.)
+ */
+function NewsFallback() {
   return (
     <>
-      <PageHeader title="소식" right={<HeaderActions />} />
-
+      <PageHeader
+        title={<Skeleton className="h-[37px] w-[165px] rounded-lg" />}
+        right={<HeaderActions />}
+      />
       <div className="px-4 pb-8">
-        {/*
-          주소의 ?tab을 읽는 useSearchParams는 정적 화면에서 Suspense로 감싸야 빌드가 됩니다(Next 문서).
-          그동안은 고르개 줄과 첫 칸 자리만 회색으로 잡아 둡니다.
-
-          첫 칸의 크기는 아래 TextTabs와 같게 맞춥니다 —
-          글씨 24px(19px × 글줄 1.25배) + 사이 6px + 바 3px = 33px 높이에,
-          "복습 영상 소식" 두 칸만큼의 폭. 크기를 안 맞추면 자리가 채워질 때
-          줄 높이가 달라져 아래 목록이 통째로 솟구칩니다.
-          (TextTabs의 글씨·바 크기를 고치면 이 값도 같이 고쳐 주세요.)
-        */}
-        <Suspense
-          fallback={
-            <>
-              <Skeleton className="ml-3 h-[33px] w-[142px] rounded-lg" />
-              <Skeleton className="mt-5 aspect-video rounded-2xl" />
-            </>
-          }
-        >
-          <NewsTabs />
-        </Suspense>
+        <Skeleton className="aspect-video rounded-2xl" />
       </div>
     </>
   );
 }
 
 /**
- * 복습 영상 / 소식 알약과 그 아래 목록.
+ * 복습 영상 / 소식 고르개와 그 아래 목록.
  * 주소가 /news?tab=news 면 소식 칸을 먼저 엽니다 — 새 소식 알림(netlify/functions/feed-push.mts)이
  * 이 주소로 엽니다. 새 영상 알림은 그냥 /news(복습 영상 칸)로 엽니다.
  */
@@ -80,16 +89,20 @@ function NewsTabs() {
 
   return (
     <>
-        {/*
-          복습 영상 / 소식 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
-          원우수첩·자료 탭의 고르개와 **같은 컴포넌트**를 씁니다.
-          모양을 고치려면 그 파일만 고치세요.
-        */}
-        <TextTabs items={SUBTABS} value={subtab} onChange={setSubtab} />
+      {/*
+        제목 자리에 고르개를 넣습니다 (2026-09-14 사용자 요청).
+        예전에는 제목이 "소식"이고 본문 맨 위에 고르개가 따로 서 있었는데,
+        그 고르개에 이미 "소식" 칸이 있어 같은 말이 두 번 보였습니다.
+        variant="header"가 글씨를 22px로 키워 다른 화면의 제목과 같게 맞춥니다.
+      */}
+      <PageHeader
+        title={
+          <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
+        }
+        right={<HeaderActions />}
+      />
 
-        <div className="mt-5">
-          {subtab === "videos" ? <VideoList /> : <NewsList />}
-        </div>
+      <div className="px-4 pb-8">{subtab === "videos" ? <VideoList /> : <NewsList />}</div>
     </>
   );
 }

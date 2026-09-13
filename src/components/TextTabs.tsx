@@ -26,18 +26,36 @@ export default function TextTabs<T extends string>({
   items,
   value,
   onChange,
+  variant = "body",
   className = "",
 }: {
   items: readonly { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /**
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 19px, 왼쪽 12px 들여씀.
+   * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식 탭). 22px에 들여쓰기 없음 —
+   *          다른 화면의 제목("자료"·"원우수첩")과 같은 크기·같은 자리에 서야 하므로
+   *          PageHeader의 h1이 쓰는 값(text-[22px] tracking-tight)을 그대로 맞췄습니다.
+   */
+  variant?: "body" | "header";
   /** 바깥 여백처럼 화면마다 다른 것만 여기로 받습니다 (예: "mt-4"). */
   className?: string;
 }) {
+  const header = variant === "header";
+
   return (
     /*
+     * ★ 뿌리가 <div>가 아니라 <span>입니다.
+     *   "header" 갈래일 때 PageHeader의 <h1> 안으로 들어가는데, h1은 글줄에
+     *   들어갈 수 있는 것(phrasing content)만 품을 수 있어 div를 넣으면 잘못된
+     *   HTML이 됩니다. span에 display:flex를 주면 자리잡는 방식은 div와 같으면서
+     *   h1 안에서도 올바릅니다. (제목 옆 기수 고르개도 같은 이유로 span입니다.)
+     *
      * pl-3 — 왼쪽으로 12px 들여 씁니다. 쓰는 쪽이 px-4(16px) 안에 두므로
      * 화면 끝에서 28px입니다. 끝에 바짝 붙이면 글자만 있는 줄이라 허전합니다.
+     * "header" 갈래에서는 들이지 않습니다 — 다른 화면의 제목이 서는 자리(16px)에
+     * 그대로 서야 하기 때문입니다.
      *
      * gap-[14px] — 칸 사이. 20px → 16px → 14px로 좁혀 온 값이라
      * Tailwind 단계(12px·16px) 사이입니다.
@@ -48,7 +66,11 @@ export default function TextTabs<T extends string>({
      * no-scrollbar로 숨깁니다(globals.css).
      * shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
      */
-    <div className={`no-scrollbar flex gap-[14px] overflow-x-auto pl-3 ${className}`}>
+    <span
+      className={`no-scrollbar flex gap-[14px] overflow-x-auto ${
+        header ? "" : "pl-3"
+      } ${className}`}
+    >
       {items.map((item) => {
         const active = item.value === value;
         return (
@@ -86,7 +108,13 @@ export default function TextTabs<T extends string>({
               안 적으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래에 빈 자리가
               생기고, 글씨가 클수록 그 자리도 같이 커집니다.
             */}
-            <span className="text-[19px] leading-tight font-bold">{item.label}</span>
+            <span
+              className={`leading-tight font-bold ${
+                header ? "text-[22px] tracking-tight" : "text-[19px]"
+              }`}
+            >
+              {item.label}
+            </span>
             {/*
               고른 칸 아래 검은 바.
 
@@ -115,6 +143,6 @@ export default function TextTabs<T extends string>({
           </button>
         );
       })}
-    </div>
+    </span>
   );
 }
