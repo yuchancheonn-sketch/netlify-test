@@ -180,7 +180,15 @@ export default function MembersPage() {
         right={<HeaderActions />}
       />
 
-      <div className="px-4">
+      {/*
+        pt-4 — 검색 알약과 제목 줄 사이 16px. 제목 줄의 pb(6px)에 더해 22px입니다.
+
+        ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
+          제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
+          여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
+          (홈의 OX 퀴즈 카드 위 여백도 같은 까닭으로 본문 쪽에 있습니다.)
+      */}
+      <div className="px-4 pt-4">
         {/* 검색 */}
         <div className="relative">
           {/*
