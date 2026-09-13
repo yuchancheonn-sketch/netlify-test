@@ -153,17 +153,17 @@ function ChatRoomRow({
       className="flex items-center gap-3.5 rounded-3xl py-2 transition active:scale-[0.99]"
     >
       {/*
-        동그라미가 아니라 모서리 둥근 네모입니다. 뒤에 붙은 !는 Avatar가
-        기본으로 들고 있는 rounded-full을 확실히 이기기 위한 것입니다 —
+        동그라미가 아니라 스쿼클(네 변이 부드럽게 부푼 둥근 네모)입니다 — globals.css의 squircle.
+        뒤에 붙은 !는 Avatar가 기본으로 들고 있는 rounded-full을 확실히 끄기 위한 것입니다 —
         같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가 만든 CSS
-        순서로 이깁니다.
+        순서로 이깁니다. 모서리를 둥글게 남겨 두면 가면보다 먼저 깎여 모양이 틀어집니다.
       */}
       <Avatar
         src={other?.photoURL ?? null}
         name={title}
         seed={room.id}
         size={62}
-        className="ml-px rounded-2xl!"
+        className="squircle ml-px rounded-none!"
       />
 
       <div className="min-w-0 flex-1">

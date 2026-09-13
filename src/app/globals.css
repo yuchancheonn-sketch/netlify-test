@@ -438,6 +438,19 @@ button {
 }
 
 /*
+ * 스쿼클 — 네 변이 부드럽게 부푼 둥근 네모 (채팅 목록 사진, 2026-09-14).
+ *
+ * border-radius로는 모서리만 둥글고 변은 곧아서 이 모양이 안 나옵니다.
+ * 그래서 가면(mask)으로 오려냅니다. 경로는 0~100 좌표라 preserveAspectRatio="none"과
+ * 100% 크기로 어느 크기에나 맞습니다. 사파리는 아직 -webkit- 쪽을 읽습니다.
+ */
+@utility squircle {
+  --squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M50 0C90 0 100 10 100 50S90 100 50 100 0 90 0 50 10 0 50 0Z'/%3E%3C/svg%3E");
+  -webkit-mask: var(--squircle) center / 100% 100% no-repeat;
+  mask: var(--squircle) center / 100% 100% no-repeat;
+}
+
+/*
  * 로딩 스켈레톤용 은은한 물결 애니메이션.
  *
  * 두 색을 토큰으로 빼둔 이유: 밝은 화면에서는 흰 카드보다 조금 어두워야
