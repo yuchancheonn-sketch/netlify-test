@@ -194,7 +194,17 @@ export default function MembersPage() {
           1·2기 수첩에서는 대학생 원우가 없어 이 줄을 통째로 숨깁니다.
         */}
         {showTypeFilter ? (
-        <div className="mt-4 flex gap-5">
+        /*
+          pl-3 — 이 줄만 왼쪽으로 12px 들여 씁니다.
+          바깥 px-4(16px)에 더해 28px에서 시작하는데, 이 자리가 아래 원우 카드
+          **안쪽 내용**이 시작하는 자리와 같습니다(카드 16px + 카드 안 p-3 12px).
+          화면 끝에 바짝 붙이면 글자만 있는 줄이라 허전해 보이고, 카드 테두리
+          자리(16px)에 맞추면 카드보다 왼쪽으로 튀어나온 것처럼 읽혔습니다.
+
+          gap-4 — 셋 사이는 16px. 글자를 17px로 키우면서 20px에서 좁혔습니다.
+          글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
+        */
+        <div className="mt-4 flex gap-4 pl-3">
           {FILTERS.map(({ value, label }) => {
             const active = activeFilter === value;
             return (
@@ -213,7 +223,7 @@ export default function MembersPage() {
                   2.4:1까지 떨어져, 원우 연령대를 생각하면 안 고른 칸이
                   "눌리지 않는 칸"처럼 보일 만큼 흐려집니다.
                 */
-                className={`text-[15px] font-bold transition ${
+                className={`text-[17px] font-bold transition ${
                   active ? "text-ink" : "text-ink-muted"
                 }`}
               >
