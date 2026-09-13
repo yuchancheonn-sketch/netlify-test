@@ -52,8 +52,17 @@ export default function HomePage() {
         right={<HeaderActions />}
       />
 
-      {/* 칸 사이는 16px (2026-09-11에 20px에서 줄였습니다). */}
-      <div className="flex flex-col gap-4 px-4">
+      {/*
+        칸 사이는 16px (2026-09-11에 20px에서 줄였습니다).
+
+        pt-4 — 맨 위 OX 퀴즈 카드와 제목 줄 사이 16px (2026-09-14).
+        제목 줄의 pb(6px)에 더해 22px이 됩니다.
+
+        ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
+          제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
+          여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
+      */}
+      <div className="flex flex-col gap-4 px-4 pt-4">
         {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
         <DosanQuizCard />
 
