@@ -14,12 +14,20 @@ import {
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 홈 맨 위의 다가오는 모임 — 주황 카드 왼쪽에 둘레가 차오르는 흰 D-day 원, 옆에 두 줄
+ * 홈 맨 위의 다가오는 모임 — 흰 카드 왼쪽에 둘레가 차오르는 D-day 원, 옆에 두 줄
  * (이름 / 장소·시간), 오른쪽 끝에 ">".
- * 주황 카드 → 흰 카드(원 둘레만 주황) → 다시 주황 카드로 왔습니다(2026-09-11).
- * 주황 위 D-day는 네 시안(흰 둘레 원 / 흰 알+둘레 / 진한 주황 원 / 숫자만 크게) 가운데
- * 사용자가 "흰 둘레 원"을 골랐습니다 — 흰 카드 때 모양 그대로 색만 뒤집은 것.
- * 주황 위 흰 글씨는 대비가 2.7:1이라 제목은 굵게, 장소·시간은 font-medium을 지킵니다.
+ *
+ * 색이 여러 번 뒤집혔습니다: 주황 카드 → 흰 카드(원 둘레만 주황) → 주황 카드(2026-09-11)
+ * → **흰 카드 + 주황 테두리(2026-09-14, 사용자가 참고 사진을 주며 요청)**.
+ * 지금은 바탕이 흰색이라 글씨를 흰색으로 뒤집을 일이 없습니다 — 제목은 먹색,
+ * 장소·시간은 흐린 먹색, 꺾쇠는 더 흐린 먹색입니다. 주황 위 흰 글씨의 대비(2.7:1)를
+ * 걱정하던 조건도 함께 사라졌습니다.
+ *
+ * ★ 테두리를 ring으로 두르고 그림자는 --shadow-float를 씁니다.
+ *   --shadow-card는 연회색 헤어라인이 이미 박혀 있어서 주황 테두리와 겹쳐 두 줄이 됩니다.
+ *   --shadow-float는 색 있는 것들(주황 FAB·검은 드롭다운) 전용이라 일부러 헤어라인을
+ *   넣지 않았는데, 그 덕에 여기서 주황 링과 깨끗하게 겹칩니다(globals.css 주석 참고).
+ *   굵기 1.5px은 원우수첩 검색 알약의 주황 테두리와 같은 값입니다.
  *
  * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
  * 큰 주황 상자(EventHeroCard)에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
@@ -35,20 +43,28 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
   const time = event.startTime ? formatTime(event.startTime) : "";
 
   return (
+    /*
+      눌린 표시를 opacity-80에서 scale-[0.99]로 바꿨습니다. 주황 카드일 때는 옅어지는
+      것이 잘 보였지만, 흰 카드가 흰 배경 위에서 옅어지면 아무 일도 없는 것처럼 보입니다.
+      아래 EventListItem이 쓰는 것과 같은 표시입니다.
+    */
     <Link
       href="/events"
-      className="flex items-center gap-4 rounded-3xl bg-brand-500 py-4 pl-4 text-white shadow-[var(--shadow-float)] transition active:opacity-80"
+      className="flex items-center gap-4 rounded-3xl bg-surface py-4 pl-4 shadow-[var(--shadow-float)] ring-[1.5px] ring-brand-500 transition active:scale-[0.99]"
     >
       <DdayRing date={event.date} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
+        <span className="block truncate text-[18px] leading-tight font-bold text-ink">
+          {event.title}
+        </span>
         {/*
           둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
           자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
-          아이콘·글씨 모두 흰색 — 주황 카드로 바꾸면서(2026-09-11) 검정(ink)에서 옮겼습니다.
+          아이콘·글씨 모두 흐린 먹색 — 흰 카드로 돌아오면서(2026-09-14) 흰색에서 옮겼습니다.
+          참고 사진처럼 제목은 진하고 이 줄은 한 단 흐려, 둘의 차례가 한눈에 읽힙니다.
         */}
         {event.location || time ? (
-          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
+          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink-muted">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[15px] w-[15px] shrink-0" />
@@ -68,7 +84,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
         맞췄습니다. 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
       */}
-      <span className="flex shrink-0 items-center pr-4 pl-3 text-white/80">
+      <span className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint">
         <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
     </Link>
@@ -89,8 +105,10 @@ const RING_STROKE = 4;
  *   원 지름 144px → 48px, 둘레 두께 12px → 4px. D-day 글씨는 사진대로 옮기면 13px이지만
  *   작게 보여서 키웠습니다(세 글자 16px, 네 글자 14px). "D-DAY"처럼 다섯 글자는 원 안(40px)에
  *   들도록 11px입니다.
- *   카드가 주황(brand-500)이라 둘레 바탕은 흰색을 32%만, 채워지는 둘레와 글씨는 흰색입니다
- *   (주황 카드 위 "흰 둘레 원" 시안, 2026-09-11). 어두운 화면에서도 카드가 주황이라 그대로입니다.
+ *   흰 카드로 돌아온 2026-09-14부터 둘레 바탕은 연회색(--color-line), 채워지는 둘레는
+ *   주황(--color-brand-500), 글씨는 먹색입니다. 참고 사진의 파란 둘레 자리에 우리 주황을
+ *   넣은 것입니다. 두 색을 토큰으로 쓰므로 어두운 화면에서는 둘레 바탕만 알아서
+ *   어두운 선(--dark-line)으로 바뀌고, 주황은 그대로입니다.
  *
  * ★ 얼마나 채울지는 "2주 전부터"로 고정했습니다. 일정을 올린 날을 기준으로 삼으면
  *   하루 전에 올린 번개는 D-1에도 빈 원이라, 같은 D-숫자가 일정마다 다르게 보입니다.
@@ -135,12 +153,16 @@ function DdayRing({ date }: { date: string }) {
         className="absolute inset-0 h-full w-full -rotate-90"
         aria-hidden="true"
       >
+        {/*
+          색을 stroke="..." 속성이 아니라 클래스로 줍니다. SVG 표현 속성에 var()를
+          넣는 방식은 브라우저마다 지원이 갈려서, CSS 규칙으로 두는 편이 확실합니다.
+        */}
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.32)"
+          className="stroke-line"
           strokeWidth={RING_STROKE}
         />
         {/* 하나도 안 찼을 때 그리면 둥근 끝(round cap)이 점 하나로 남습니다. */}
@@ -151,7 +173,7 @@ function DdayRing({ date }: { date: string }) {
             cy={center}
             r={radius}
             fill="none"
-            stroke="#ffffff"
+            className="stroke-brand-500"
             strokeWidth={RING_STROKE}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -161,7 +183,7 @@ function DdayRing({ date }: { date: string }) {
       </svg>
       <span
         /* -translate-y-px: 원 한가운데에서 글씨만 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다(2026-09-11). */
-        className="relative -translate-y-px leading-none font-bold tracking-tight text-white"
+        className="relative -translate-y-px leading-none font-bold tracking-tight text-ink"
         style={{ fontSize }}
       >
         {label}
