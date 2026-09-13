@@ -64,11 +64,14 @@ export default function ChatListPage() {
       {/* 좌우 여백은 다른 탭과 같은 px-4로 맞춥니다. */}
       <div className="px-4 pb-8">
         {loading ? (
-          <ul className="flex flex-col gap-2">
-            {[0, 1, 2].map((key) => (
+          /* 아래 진짜 목록과 같은 짜임 — 줄 사이 선, 칸 높이 78px. */
+          <ul className="flex flex-col">
+            {[0, 1, 2].map((key, index) => (
               <li key={key}>
-                {/* 실제 칸과 같은 높이(8 + 사진 62 + 8). 어긋나면 다 불러온 순간 목록이 덜컥 움직입니다. */}
-                <Skeleton className="h-[78px] rounded-3xl" />
+                {index > 0 ? <div className="border-t border-line" /> : null}
+                <div className="py-2">
+                  <Skeleton className="h-[62px] rounded-2xl" />
+                </div>
               </li>
             ))}
           </ul>
@@ -84,9 +87,15 @@ export default function ChatListPage() {
             />
           </div>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {rooms.map((room) => (
+          /*
+            칸마다 흰 카드를 세우던 것을 줄 사이 선으로 바꿨습니다 (2026-09-14).
+            원우수첩·소식 목록과 같은 짜임입니다 — 이 앱의 목록은 모두 이렇게 둡니다.
+            맨 윗줄 위에는 선을 긋지 않습니다 — 위쪽은 제목 줄이 이미 갈라 줍니다.
+          */
+          <ul className="flex flex-col">
+            {rooms.map((room, index) => (
               <li key={room.id}>
+                {index > 0 ? <div className="border-t border-line" /> : null}
                 <ChatRoomRow
                   room={room}
                   title={roomTitle(room, uid ?? "", nameByUid)}
@@ -136,12 +145,12 @@ function ChatRoomRow({
         혼자 정합니다. 글씨나 줄 간격을 건드려도 칸은 꿈쩍하지 않습니다.
         지금은 8 + 62 + 8 = 78px입니다.
 
-        위아래(py-2)와 좌우(px-3)를 다르게 준 이유: 사진을 키우면서도 칸
-        높이는 78px 그대로 두려고 위아래만 8px로 좁혔습니다. 좌우까지 8px로
-        좁히면 오른쪽 시각·안 읽은 배지가 카드 모서리에 바짝 붙습니다.
+        좌우 여백(옛 px-3)은 2026-09-14에 걷었습니다. 흰 카드를 벗기면서
+        안쪽 여백을 둘 이유가 없어졌고, 걷어야 사진 왼쪽 끝이 바깥 px-4에 맞아
+        제목 줄과 한 줄로 섭니다. (원우수첩 목록도 같은 까닭으로 이렇게 둡니다.)
         (위 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
       */
-      className="flex items-center gap-3.5 rounded-3xl bg-surface px-3 py-2 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-3.5 rounded-3xl py-2 transition active:scale-[0.99]"
     >
       {/*
         동그라미가 아니라 모서리 둥근 네모입니다. 뒤에 붙은 !는 Avatar가
