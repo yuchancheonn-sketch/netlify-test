@@ -201,8 +201,8 @@ export default function MembersPage() {
           화면 끝에 바짝 붙이면 글자만 있는 줄이라 허전해 보이고, 카드 테두리
           자리(16px)에 맞추면 카드보다 왼쪽으로 튀어나온 것처럼 읽혔습니다.
 
-          gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
-          글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
+          gap-[14px] — 셋 사이 간격. 20px에서 16px, 다시 14px로 좁혀 왔습니다.
+          Tailwind의 단계(gap-3=12px, gap-4=16px) 사이 값이라 직접 적습니다.
 
           overflow-x-auto + shrink-0 — 19px에서 셋을 늘어놓으면 약 240px이라
           폭이 411px인 폰에서 쓸 수 있는 자리(367px)에 넉넉히 들어옵니다.
@@ -219,7 +219,7 @@ export default function MembersPage() {
           mt-4 — 윗 여백 16px. 12px까지 줄였다가 조금 되돌렸습니다.
           글씨가 커질수록 위가 좁으면 검색칸에 얹힌 것처럼 붙어 보입니다.
         */
-        <div className="no-scrollbar mt-4 flex gap-4 overflow-x-auto pl-3">
+        <div className="no-scrollbar mt-4 flex gap-[14px] overflow-x-auto pl-3">
           {FILTERS.map(({ value, label }) => {
             const active = activeFilter === value;
             return (
