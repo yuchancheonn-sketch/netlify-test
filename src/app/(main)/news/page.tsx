@@ -205,17 +205,10 @@ function VideoList() {
 
   return (
     <>
-      {/*
-        칸마다 흰 카드를 세우던 것을 줄 사이 선으로 바꿨습니다 (2026-09-14).
-        원우수첩 목록과 같은 짜임입니다 — 이 앱의 목록은 모두 이렇게 둡니다.
-        맨 윗줄 위에는 선을 긋지 않습니다 — 위쪽은 제목 줄이 이미 갈라 줍니다.
-        그림은 카드가 없어도 모서리를 둥글게 두어(rounded-2xl) 낱낱해 보이지 않게 합니다.
-      */}
-      <ul className="flex flex-col">
-        {videos.map((video, index) => (
+      <ul className="flex flex-col gap-5">
+        {videos.map((video) => (
           <li key={video.id}>
-            {index > 0 ? <div className="border-t border-line" /> : null}
-            <div className="overflow-hidden rounded-2xl py-4">
+            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
               {playingId === video.id ? (
                 <iframe
                   src={embedUrl(video.id)}
@@ -246,7 +239,7 @@ function VideoList() {
                 </button>
               )}
 
-              <div className="pt-3">
+              <div className="px-4 py-3.5">
                 <p className="text-[15px] leading-snug font-bold text-ink">{video.title}</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   {video.date ? (
@@ -373,16 +366,14 @@ function NewsList() {
 
   return (
     <>
-      {/* 복습 영상 목록과 같은 짜임 — 카드 없이 줄 사이 선으로 나눕니다. */}
-      <ul className="flex flex-col">
-        {items.map((item, index) => (
+      <ul className="flex flex-col gap-5">
+        {items.map((item) => (
           <li key={item.id}>
-            {index > 0 ? <div className="border-t border-line" /> : null}
             <a
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block overflow-hidden rounded-2xl py-4 transition active:scale-[0.99]"
+              className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {item.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -398,8 +389,8 @@ function NewsList() {
                 </span>
               )}
 
-              {/* 아래 글자 칸은 복습 영상 칸과 같은 크기·여백입니다. */}
-              <div className="pt-3">
+              {/* 아래 글자 칸은 복습 영상 카드와 같은 크기·여백입니다. */}
+              <div className="px-4 py-3.5">
                 <p className="text-[15px] leading-snug font-bold text-ink">{item.title}</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   {item.date ? (
