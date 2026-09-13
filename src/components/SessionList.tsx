@@ -71,7 +71,7 @@ export default function SessionList() {
 
                 <Link
                   href={`/sessions/${week}`}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-canvas"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-fill"
                 >
                   {/*
                     폭을 32px로 못 박아 두는 이유: 한 자리(1)와 두 자리(11)의

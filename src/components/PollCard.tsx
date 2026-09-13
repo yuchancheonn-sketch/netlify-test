@@ -444,7 +444,7 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
           {opinions.map((opinion) => (
             <li
               key={opinion.id}
-              className="flex items-start gap-2 rounded-2xl bg-canvas px-4 py-3"
+              className="flex items-start gap-2 rounded-2xl bg-fill px-4 py-3"
             >
               <p className="min-w-0 flex-1 text-[14px] leading-relaxed whitespace-pre-wrap text-ink">
                 {opinion.text}

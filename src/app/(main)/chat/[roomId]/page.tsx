@@ -434,7 +434,7 @@ export default function ChatRoomPage({
           이것이 없으면 왜 입력칸에 글이 미리 들어와 있는지 알 수 없습니다.
         */}
         {editingId ? (
-          <div className="mx-auto mb-2 flex w-full max-w-[560px] items-center gap-2 rounded-2xl bg-canvas px-3.5 py-2">
+          <div className="mx-auto mb-2 flex w-full max-w-[560px] items-center gap-2 rounded-2xl bg-fill px-3.5 py-2">
             {/* min-w-0이 있어야 아래 truncate가 듣습니다. 없으면 칸이 글자만큼 늘어납니다. */}
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-bold text-ink-muted">메시지 수정 중</p>
@@ -483,12 +483,14 @@ export default function ChatRoomPage({
             aria-label={editingId ? "메시지 수정" : "메시지 입력"}
             maxLength={1000}
             /*
-              바탕은 canvas — 남의 말풍선과 같은 회색입니다.
-              대화방은 바탕이 흰색(surface)이라 입력칸까지 흰색이면 테두리 없는
-              칸이 바탕에 묻혔습니다. 어두운 화면에서는 이 색이 바탕보다 한 단
-              더 진한 회색이 되어, 카톡처럼 입력칸이 또렷하게 앉습니다.
+              바탕은 fill — 남의 말풍선과 같은 회색입니다.
+              대화방은 바탕이 흰색(surface)이라 입력칸까지 흰색이면 칸이 바탕에
+              묻혔습니다. 어두운 화면에서는 이 색이 바탕보다 한 단 더 진한
+              회색이 되어, 카톡처럼 입력칸이 또렷하게 앉습니다.
+              (예전에는 canvas를 썼는데, 페이지 배경이 흰색이 되면서
+               흰색 위 흰색이 되어 fill로 옮겼습니다.)
             */
-            className="min-w-0 flex-1 rounded-full bg-canvas px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="min-w-0 flex-1 rounded-full bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {/*
             동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
@@ -756,7 +758,7 @@ function MessageRow({
                      겹치므로, 내 말풍선에서만 글자 선택을 끕니다.
                    */
                   "rounded-br-lg bg-brand-500 text-white select-none [-webkit-touch-callout:none]"
-                : "rounded-bl-lg bg-canvas text-ink shadow-[var(--shadow-card)]"
+                : "rounded-bl-lg bg-fill text-ink shadow-[var(--shadow-card)]"
             }`}
           >
             {message.text}

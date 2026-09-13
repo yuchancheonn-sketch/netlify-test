@@ -362,7 +362,7 @@ function NewsList() {
                   src={item.imageUrl}
                   alt=""
                   loading="lazy"
-                  className="block h-auto w-full bg-canvas"
+                  className="block h-auto w-full bg-fill"
                 />
               ) : (
                 <span className="flex aspect-video w-full items-center justify-center bg-brand-50 text-brand-300">

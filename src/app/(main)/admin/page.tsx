@@ -429,7 +429,7 @@ function RosterSection({
                 className={`flex-1 rounded-2xl py-2.5 text-[14px] font-bold transition ${
                   memberType === value
                     ? "bg-brand-50 text-brand-500 ring-2 ring-brand-500"
-                    : "bg-canvas text-ink-muted"
+                    : "bg-fill text-ink-muted"
                 }`}
               >
                 {MEMBER_TYPE_LABEL[value]}
@@ -526,7 +526,7 @@ function RosterSection({
                       aria-label={`${entry.name} 계정 연결`}
                       value=""
                       onChange={(changed) => handleLink(entry, changed.target.value)}
-                      className="mt-3 w-full rounded-xl bg-canvas px-3 py-2.5 text-[13px] text-ink-muted outline-none"
+                      className="mt-3 w-full rounded-xl bg-fill px-3 py-2.5 text-[13px] text-ink-muted outline-none"
                     >
                       <option value="">
                         {linked ? "다른 계정으로 바꾸기…" : "가입한 계정과 연결하기…"}

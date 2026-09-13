@@ -29,7 +29,7 @@ export default function KeyboardTestPage() {
           value={typed}
           onChange={(event) => setTyped(event.target.value)}
           placeholder="여기를 눌러보세요"
-          className="w-full rounded-full bg-canvas px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+          className="w-full rounded-full bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
         />
       </section>
 
@@ -44,7 +44,7 @@ export default function KeyboardTestPage() {
           role="textbox"
           aria-label="시험용 글쓰기 칸"
           data-placeholder="여기도 눌러보세요"
-          className="editable-test w-full rounded-3xl bg-canvas px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none"
+          className="editable-test w-full rounded-3xl bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none"
         />
       </section>
 

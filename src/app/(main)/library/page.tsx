@@ -323,7 +323,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         rel="noopener noreferrer"
         className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
       >
-        <div className="flex aspect-[4/3] w-full items-center justify-center bg-canvas">
+        <div className="flex aspect-[4/3] w-full items-center justify-center bg-fill">
           {thumbnail ? (
             /*
               문서는 c_fit으로 통째로 담아 왔으므로(lib/cloudinary.ts) 여기서도

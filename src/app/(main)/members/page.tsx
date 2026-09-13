@@ -348,7 +348,7 @@ function MemberRow({
           영상이 없는 원우는 여기에 프로필 사진이 들어오고, 그때는 가로로
           넓게 잘립니다.
         */
-        className="relative h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-canvas transition active:scale-95"
+        className="relative h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-fill transition active:scale-95"
       >
         {thumbnail ? (
           <>
@@ -698,7 +698,7 @@ function MemberDetailSheet({
 
           {/* 한 줄 소개 줄을 없애서 적힌 것이 하나도 없을 수 있습니다. 그땐 빈 상자를 그리지 않습니다. */}
           {entry.company || entry.position || entry.phone || member ? (
-            <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-canvas p-5">
+            <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-fill p-5">
               {entry.company ? (
                 <div className="flex items-start justify-between gap-4">
                   <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
@@ -734,7 +734,7 @@ function MemberDetailSheet({
 
           {/* 본인이 쓴 자기소개 전문 */}
           {entry.introduction ? (
-            <div className="mt-4 rounded-2xl bg-canvas p-5">
+            <div className="mt-4 rounded-2xl bg-fill p-5">
               <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
               <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
                 {entry.introduction}
