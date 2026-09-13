@@ -94,19 +94,21 @@ export default function TextTabs<T extends string>({
                 아예 빼 버리면 고를 때마다 줄 높이가 3px씩 오르내려 아래 목록이
                 통째로 들썩입니다.
 
-              ★ 폭이 글자의 60%인 것은 일부러입니다.
-                글자 폭을 꽉 채우면 "파일"(두 자)과 "대학생 원우"(여섯 자)의 바
-                길이가 세 배 가까이 벌어져 들쭉날쭉해 보입니다. 비율로 두면
-                모두 같은 비례로 짧아져 나란히 읽힙니다.
-                (%는 글자 폭에 걸립니다 — 단추 폭이 글자만큼만 잡히고, 비율 폭은
-                 그 폭을 정하는 데는 끼어들지 않기 때문입니다.)
+              ★ 폭은 글자 폭에서 좌우 4px씩만 들인 값입니다 (self-stretch + mx-1).
+                self-stretch가 바를 단추 폭(= 글자 폭)만큼 늘리고, mx-1이 양옆을
+                4px씩 깎습니다. 그래서 글자가 길든 짧든 **늘 8px만 짧습니다.**
+
+                예전에는 w-[60%]였습니다. 비율로 두면 긴 이름일수록 더 많이
+                깎여서, "파일"(두 자)은 살짝 짧은데 "대학생 원우"(여섯 자)는
+                글자 가운데께에만 바가 걸렸습니다. 고정값이라야 "글씨보다
+                아주 조금 작다"가 모든 칸에서 똑같이 보입니다.
 
               두께 3px. rounded-full이라 양 끝이 둥근데, 2px 이하로 줄이면
               그 둥근 끝이 뭉개져 그냥 선처럼 보입니다.
             */}
             <span
               aria-hidden
-              className={`h-[3px] w-[60%] rounded-full transition ${
+              className={`mx-1 h-[3px] self-stretch rounded-full transition ${
                 active ? "bg-ink" : "bg-transparent"
               }`}
             />
