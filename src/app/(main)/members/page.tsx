@@ -204,7 +204,7 @@ export default function MembersPage() {
           gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
 
-          overflow-x-auto + shrink-0 — 22px에서 셋을 늘어놓으면 약 280px이라
+          overflow-x-auto + shrink-0 — 19px에서 셋을 늘어놓으면 약 240px이라
           폭이 411px인 폰에서 쓸 수 있는 자리(367px)에 넉넉히 들어옵니다.
           (16px로 그려지던 때 실제 화면을 재 보니 셋이 약 203px였고, 그 값을
            비례로 올린 것입니다. 글자 폭을 눈대중으로 셈하면 크게 빗나갑니다 —
@@ -266,7 +266,7 @@ export default function MembersPage() {
                   leading-none(1배)까지 가지 않은 것은 한글 내림 부분이
                   글자 상자에 닿아 답답해 보이기 때문입니다.
                 */}
-                <span className="text-[22px] leading-tight font-bold">{label}</span>
+                <span className="text-[19px] leading-tight font-bold">{label}</span>
               </button>
             );
           })}
