@@ -98,13 +98,54 @@ export default function MembersPage() {
   const showTypeFilter = hasYouthMembers(cohort);
   const activeFilter: Filter = showTypeFilter ? filter : "all";
 
-  const visible = useMemo(() => {
+  /**
+   * 검색어까지만 거른 목록. 구분(일반/대학생)은 아직 안 걸렀습니다.
+   *
+   * 고르개의 세 칸이 각자 "지금 검색어로 몇 명이 걸리는지"를 달고 있어야 해서,
+   * 구분을 거르기 전 단계를 따로 둡니다. 아래 visible은 여기에 구분만 더 겁니다.
+   */
+  const searched = useMemo(() => {
     const needle = keyword.trim().toLowerCase();
-    return book.filter((entry) => {
-      if (activeFilter !== "all" && entry.memberType !== activeFilter) return false;
-      return entryMatches(entry, needle);
-    });
-  }, [book, keyword, activeFilter]);
+    return book.filter((entry) => entryMatches(entry, needle));
+  }, [book, keyword]);
+
+  const visible = useMemo(
+    () =>
+      activeFilter === "all"
+        ? searched
+        : searched.filter((entry) => entry.memberType === activeFilter),
+    [searched, activeFilter],
+  );
+
+  /**
+   * 고르개 칸 이름표 — 이름 뒤에 인원 수를 답니다 ("전체 50").
+   *
+   * ★ 숫자 때문에 칸 폭이 출렁이지 않게 두 가지를 겁니다.
+   *   tabular-nums  숫자마다 폭이 같아집니다. 이게 없으면 1과 8의 폭이 달라
+   *                 같은 두 자리여도 칸이 미세하게 흔들립니다.
+   *   min-w-[2ch]   숫자 자리를 늘 두 자리만큼 잡습니다. 검색어를 칠 때마다
+   *                 50 → 8 → 12로 자릿수가 오가는데, 이게 없으면 그때마다
+   *                 옆 칸들이 좌우로 밀립니다.
+   *                 (100을 넘는 것은 "전체 기수" 수첩뿐이고, 그때는 세 자리로
+   *                  한 번 넓어진 뒤 그대로입니다.)
+   */
+  const filterItems = useMemo(
+    () =>
+      FILTERS.map(({ value, label }) => ({
+        value,
+        label: (
+          <>
+            {label}{" "}
+            <span className="inline-block min-w-[2ch] text-right tabular-nums">
+              {value === "all"
+                ? searched.length
+                : searched.filter((entry) => entry.memberType === value).length}
+            </span>
+          </>
+        ),
+      })),
+    [searched],
+  );
 
   function openEntry(entry: DirectoryEntry, playVideo = false) {
     setAutoPlay(playVideo);
@@ -197,28 +238,22 @@ export default function MembersPage() {
 
           mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
 
-          1·2기 수첩에는 대학생 원우가 없어 고르개를 숨깁니다. 그때는 items에
-          빈 배열을 줍니다 — 줄은 남고 오른쪽 "원우 N명"만 섭니다.
+          ★ 인원 수는 칸 이름 뒤에 붙어 있습니다 ("전체 50 / 일반 원우 45 /
+            대학생 원우 5"). 2026-09-14에 오른쪽 끝의 "원우 N명" 한 덩어리에서
+            이리로 옮겼습니다 — 칸마다 몇 명인지 바로 보이고, 고르개 옆에 따로
+            떠 있던 숫자가 사라집니다. 세는 자리는 위 filterItems입니다.
 
-          ★ "원우 N명"은 trailing으로 넘깁니다.
-            TextTabs가 탭과 똑같은 짜임(글씨 + 아래 투명한 바)으로 감싸 주므로
-            글씨 크기와 줄 높이가 탭과 한 치도 안 어긋납니다. 바깥에서 따로
-            그리면 글씨 크기·gap·바 두께 세 값을 베껴 써야 하고, 언젠가 한쪽만
-            고쳐져 어긋납니다. (실제로 16px로 따로 그렸다가 4px 어긋났습니다.)
-            색과 굵기만 여기서 정합니다.
+          1·2기 수첩에는 대학생 원우가 없어 고르개를 숨깁니다. 그러면 칸에 붙은
+          숫자도 함께 사라지므로, **그때만** 오른쪽 끝에 "원우 N명"을 세웁니다
+          (trailing). 그 기수에서는 어차피 전체 = 일반이라 한 줄이면 충분합니다.
         */}
         <TextTabs
-          items={showTypeFilter ? FILTERS : []}
+          items={showTypeFilter ? filterItems : []}
           value={activeFilter}
           onChange={setFilter}
           className="mt-4"
           trailing={
-            /*
-              2026-09-14에 검색 알약 안에서 이리로 꺼냈습니다. 알약 안에 있을
-              때는 오른쪽 자리(pr-24)를 늘 비워 둬야 해서 긴 검색어가 일찍
-              잘렸습니다.
-            */
-            !busy && !error ? (
+            !showTypeFilter && !busy && !error ? (
               <span className="font-medium text-ink-soft">
                 원우 <span className="font-bold text-ink">{visible.length}</span>명
               </span>

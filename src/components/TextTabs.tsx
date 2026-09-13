@@ -30,8 +30,14 @@ export default function TextTabs<T extends string>({
   variant = "body",
   className = "",
 }: {
-  /** 빈 배열을 주면 탭 없이 trailing만 그립니다 (원우수첩 1·2기처럼 고르개를 숨기는 때). */
-  items: readonly { value: T; label: string }[];
+  /**
+   * 빈 배열을 주면 탭 없이 trailing만 그립니다 (원우수첩 1·2기처럼 고르개를 숨기는 때).
+   *
+   * label은 글자만 아니라 JSX도 됩니다 — 원우수첩은 이름 뒤에 몇 명인지를
+   * 붙여 넣습니다("전체 50"). 그 숫자를 고정폭으로 둘지 말지는 넘기는 쪽이
+   * 정합니다. 여기서는 받은 것을 그대로 그릴 뿐입니다.
+   */
+  items: readonly { value: T; label: React.ReactNode }[];
   value: T;
   onChange: (value: T) => void;
   /**
