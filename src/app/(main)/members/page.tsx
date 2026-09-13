@@ -175,14 +175,18 @@ export default function MembersPage() {
         </div>
 
         {/*
-          필터 — 자료 탭의 서브탭과 같은 짜임새입니다.
-          흰 알약 하나 안에 셋을 담고, 고른 것만 주황 알약에 흰 글씨가 됩니다.
-          나머지는 배경 없이 흐린 글씨로만 두어 어디에 서 있는지 색 하나로 읽힙니다.
-          알약은 화면 폭을 꽉 채워 아래 원우 카드와 좌우 끝이 맞습니다.
-          1·2기 수첩에서는 대학생 원우가 없어 알약 줄을 통째로 숨깁니다.
+          구분 고르개 — 글자만 늘어놓고, 고른 것만 진한 글씨 + 아래 짧은 밑줄입니다.
+          (2026-09-13에 흰 알약 하나 안에 셋을 담던 방식에서 바꿨습니다.)
+
+          앱의 다른 고르개 다섯 곳(자료·소식·모임·투표·운영진)은 아직 알약입니다.
+          여기만 이렇게 둔 것은 수첩에서 이 줄이 "탭"처럼 읽히길 바라서입니다 —
+          바로 위 검색칸이 이미 알약이라, 알약 두 줄이 겹쳐 서면 어느 쪽이
+          고르개인지 한눈에 갈라지지 않았습니다.
+
+          1·2기 수첩에서는 대학생 원우가 없어 이 줄을 통째로 숨깁니다.
         */}
         {showTypeFilter ? (
-        <div className="mt-3 flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
+        <div className="mt-4 flex gap-5">
           {FILTERS.map(({ value, label }) => {
             const active = activeFilter === value;
             return (
@@ -192,23 +196,36 @@ export default function MembersPage() {
                 onClick={() => setFilter(value)}
                 aria-pressed={active}
                 /*
-                  위 7.5px + 아래 11.5px. (2026-09-11에 2px씩 키웠다가 1px을 도로 줄였습니다 —
-                  위아래를 0.5px씩 깎아 차이 4px을 지켰습니다)
-                  두 값의 합(19px)이 위아래 9.5px씩과 같아서 알약 높이는 그대로이고,
-                  두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
-                  높이를 건드리지 않고 글씨만 올리려면 이렇게 합을 지켜야 합니다.
+                  고른 것과 아닌 것의 차이는 **색 하나뿐**입니다.
+                  굵기까지 바꾸면 고를 때마다 글자 폭이 달라져 옆 칸들이
+                  좌우로 밀립니다. 그래서 셋 다 늘 굵게 두고 색만 바꿉니다.
                 */
-                className={`flex flex-1 items-center justify-center rounded-full px-3 pt-[7.5px] pb-[11.5px] text-[13px] font-bold transition ${
-                  active ? "bg-brand-500 text-white" : "text-ink-muted"
+                className={`flex flex-col items-center gap-1.5 transition ${
+                  active ? "text-ink" : "text-ink-muted"
                 }`}
               >
                 {/*
-                  글씨를 감싸서 알약 한가운데에 앉힙니다.
-                  leading-none로 글줄 높이를 글자 크기와 같게 잘라내고 1px 올립니다 —
-                  한글 폰트는 내림 부분(descender)이 커서, 상자 한가운데에 맞춰도
-                  눈으로는 살짝 아래에 앉아 보입니다.
+                  leading-none로 글줄 높이를 글자 크기와 같게 잘라냅니다.
+                  이게 없으면 글자 아래에 글줄 여백이 남아 밑줄이 멀어집니다.
                 */}
-                <span className="-mt-px leading-none">{label}</span>
+                <span className="text-[15px] leading-none font-bold">{label}</span>
+                {/*
+                  밑줄. 안 고른 칸에도 같은 크기로 두되 색만 없앱니다 —
+                  빼버리면 고를 때마다 줄 높이가 4px씩 오르내립니다.
+
+                  폭이 글자의 60%인 것은 일부러입니다. 글자 폭을 꽉 채우면
+                  "전체"(두 자)와 "대학생 원우"(여섯 자)의 밑줄 길이가 세 배
+                  가까이 벌어져 들쭉날쭉해 보입니다. 비율로 두면 셋이 같은
+                  비례로 짧아져 나란히 읽힙니다.
+                  (%는 글자 폭에 걸립니다 — 단추 폭이 글자만큼만 잡히고,
+                   비율 폭은 그 폭을 정하는 데는 끼어들지 않기 때문입니다.)
+                */}
+                <span
+                  aria-hidden
+                  className={`h-[5px] w-[60%] rounded-full transition ${
+                    active ? "bg-brand-500" : "bg-transparent"
+                  }`}
+                />
               </button>
             );
           })}
