@@ -26,12 +26,25 @@ export default function TextTabs<T extends string>({
   items,
   value,
   onChange,
+  trailing,
   variant = "body",
   className = "",
 }: {
+  /** 빈 배열을 주면 탭 없이 trailing만 그립니다 (원우수첩 1·2기처럼 고르개를 숨기는 때). */
   items: readonly { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /**
+   * 같은 줄 맨 오른쪽에 세우는 읽을거리 (원우수첩의 "원우 50명").
+   *
+   * 탭과 **똑같은 짜임**(글씨 + 아래 투명한 바)으로 감싸 그립니다. 그래서 글씨
+   * 크기와 줄 높이가 탭과 한 치도 어긋나지 않고, 나중에 탭 크기를 고치면 이쪽도
+   * 저절로 따라옵니다. 바깥에서 따로 그리면 gap·바 두께·글씨 크기 세 값을
+   * 베껴 써야 하고, 언젠가 한쪽만 고쳐져 어긋납니다.
+   *
+   * 색과 굵기는 넘겨주는 쪽이 정합니다 — 여기서는 크기와 높이만 맞춥니다.
+   */
+  trailing?: React.ReactNode;
   /**
    * "body"   본문 맨 위에 놓이는 보통 고르개. 20px, 왼쪽 12px 들여씀.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
@@ -46,6 +59,8 @@ export default function TextTabs<T extends string>({
   className?: string;
 }) {
   const header = variant === "header";
+  /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[20px]";
 
   return (
     /*
@@ -111,13 +126,7 @@ export default function TextTabs<T extends string>({
               안 적으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래에 빈 자리가
               생기고, 글씨가 클수록 그 자리도 같이 커집니다.
             */}
-            <span
-              className={`leading-tight font-bold ${
-                header ? "text-[22px] tracking-tight" : "text-[20px]"
-              }`}
-            >
-              {item.label}
-            </span>
+            <span className={`leading-tight font-bold ${textClass}`}>{item.label}</span>
             {/*
               고른 칸 아래 검은 바.
 
@@ -148,6 +157,22 @@ export default function TextTabs<T extends string>({
           </button>
         );
       })}
+
+      {/*
+        오른쪽 끝 읽을거리. 위 단추와 띄어내기 위해 ml-auto로 밀어붙입니다 —
+        탭이 하나도 없을 때도 제자리에 서도록.
+
+        안에 바(투명)를 한 줄 더 두는 것이 핵심입니다. 탭 한 칸은
+        글씨 + gap + 바만큼 높은데, 이쪽에 글씨만 두면 낮아서 세로로
+        어긋납니다. 같은 짜임으로 두면 두 덩어리가 마치 같은 모양이라
+        어떤 정렬을 쓰든 글자 줄이 정확히 맞습니다.
+      */}
+      {trailing ? (
+        <span className="ml-auto flex shrink-0 flex-col items-center gap-1.5">
+          <span className={`leading-tight ${textClass}`}>{trailing}</span>
+          <span aria-hidden className="mx-1 h-[2.5px] self-stretch" />
+        </span>
+      ) : null}
     </span>
   );
 }

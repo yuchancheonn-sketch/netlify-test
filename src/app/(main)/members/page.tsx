@@ -197,33 +197,34 @@ export default function MembersPage() {
 
           mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
 
-          1·2기 수첩에서는 대학생 원우가 없어 **고르개만** 숨깁니다. 줄 자체는
-          남습니다 — 오른쪽 "원우 N명"은 어느 기수에서나 보여야 하기 때문입니다.
-          그래서 숫자에 ml-auto를 걸어, 고르개가 있든 없든 늘 오른쪽 끝에 섭니다.
+          1·2기 수첩에는 대학생 원우가 없어 고르개를 숨깁니다. 그때는 items에
+          빈 배열을 줍니다 — 줄은 남고 오른쪽 "원우 N명"만 섭니다.
 
-          ★ items-center로 세로를 맞춥니다.
-            고르개 한 칸은 글씨 + 아래 바까지가 한 덩어리라, 숫자는 그 덩어리의
-            가운데에 섭니다(글씨 가운데보다 4px쯤 아래). 둘이 화면 양 끝에
-            멀찍이 떨어져 있어 눈에 걸리지 않습니다.
-            baseline으로 맞추는 방법도 있지만, 고르개가 가로로 밀리는 상자
-            (overflow-x-auto)라 브라우저가 글자 밑선 대신 상자 아랫변을 기준으로
-            삼아 오히려 크게 어긋납니다.
+          ★ "원우 N명"은 trailing으로 넘깁니다.
+            TextTabs가 탭과 똑같은 짜임(글씨 + 아래 투명한 바)으로 감싸 주므로
+            글씨 크기와 줄 높이가 탭과 한 치도 안 어긋납니다. 바깥에서 따로
+            그리면 글씨 크기·gap·바 두께 세 값을 베껴 써야 하고, 언젠가 한쪽만
+            고쳐져 어긋납니다. (실제로 16px로 따로 그렸다가 4px 어긋났습니다.)
+            색과 굵기만 여기서 정합니다.
         */}
-        <div className="mt-4 flex items-center gap-3">
-          {showTypeFilter ? (
-            <TextTabs items={FILTERS} value={activeFilter} onChange={setFilter} className="min-w-0" />
-          ) : null}
-          {/*
-            보이는 원우 수 — 2026-09-14에 검색 알약 안에서 이리로 꺼냈습니다.
-            알약 안에 있을 때는 오른쪽 자리(pr-24)를 늘 비워 둬야 해서 긴
-            검색어가 일찍 잘렸습니다.
-          */}
-          {!busy && !error ? (
-            <p className="ml-auto shrink-0 text-[16px] font-medium text-ink-soft">
-              원우 <span className="font-bold text-ink">{visible.length}</span>명
-            </p>
-          ) : null}
-        </div>
+        <TextTabs
+          items={showTypeFilter ? FILTERS : []}
+          value={activeFilter}
+          onChange={setFilter}
+          className="mt-4"
+          trailing={
+            /*
+              2026-09-14에 검색 알약 안에서 이리로 꺼냈습니다. 알약 안에 있을
+              때는 오른쪽 자리(pr-24)를 늘 비워 둬야 해서 긴 검색어가 일찍
+              잘렸습니다.
+            */
+            !busy && !error ? (
+              <span className="font-medium text-ink-soft">
+                원우 <span className="font-bold text-ink">{visible.length}</span>명
+              </span>
+            ) : null
+          }
+        />
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
