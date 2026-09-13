@@ -290,8 +290,12 @@ export default function MembersPage() {
                   고른 칸 아래 검은 바.
 
                   ★ 안 고른 칸에도 같은 크기로 두고 색만 없앱니다.
-                    아예 빼 버리면 고를 때마다 줄 높이가 5px씩 오르내려
+                    아예 빼 버리면 고를 때마다 줄 높이가 3px씩 오르내려
                     아래 목록이 통째로 들썩입니다.
+
+                  두께는 3px입니다. 5px로 넣었다가 같은 날 얇게 바꿨습니다.
+                  rounded-full이라 양 끝이 둥근데, 두께를 더 줄이면(2px 이하)
+                  그 둥근 끝이 뭉개져 그냥 선처럼 보입니다.
 
                   ★ 폭이 글자의 60%인 것은 일부러입니다.
                     글자 폭을 꽉 채우면 "전체"(두 자)와 "대학생 원우"(여섯 자)의
@@ -305,7 +309,7 @@ export default function MembersPage() {
                 */}
                 <span
                   aria-hidden
-                  className={`h-[5px] w-[60%] rounded-full transition ${
+                  className={`h-[3px] w-[60%] rounded-full transition ${
                     active ? "bg-ink" : "bg-transparent"
                   }`}
                 />
@@ -500,7 +504,7 @@ function MemberRow({
      *
      *   위아래는 12px입니다.
      */
-    <div className="flex items-center gap-[13px] py-3 pl-0.5">
+    <div className="flex items-center gap-[14px] py-3 pl-0.5">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
@@ -514,8 +518,17 @@ function MemberRow({
           비율을 바꾸면 검은 줄이 다시 보이니 폭과 높이를 함께 고쳐야 합니다.
           영상이 없는 원우는 여기에 프로필 사진이 들어오고, 그때는 가로로
           넓게 잘립니다.
+
+          ★ -ml-px — 사진만 왼쪽으로 1px 더 나갑니다 (2026-09-14 사용자 요청).
+            줄 전체의 pl(2px)을 1px로 줄여도 같은 자리가 되지만, 그러면 옆의
+            글씨까지 딸려 옵니다. 사진만 옮기고 글씨는 제자리에 두려고
+            바깥 div의 gap을 13px → 14px로 함께 1px 늘렸습니다.
+            (사진 1px 왼쪽 + 사이 1px 넓힘 = 글씨 자리 그대로)
+            둘은 짝이니 한쪽만 고치면 글씨가 따라 움직입니다.
+            줄 사이 구분선은 그대로 2px(ml-0.5)이라, 사진이 선보다 1px 왼쪽에
+            섭니다.
         */
-        className="relative h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-fill transition active:scale-95"
+        className="relative -ml-px h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-fill transition active:scale-95"
       >
         {thumbnail ? (
           <>
