@@ -204,12 +204,15 @@ export default function MembersPage() {
           gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
 
-          overflow-x-auto + shrink-0 — 평소에는 셋이 다 들어와 아무 일도
-          일어나지 않습니다. 좁은 폰에서 보기 설정을 "크게"(zoom 1.15)로 둔
-          때만 줄이 넘치는데, body가 overflow-x: hidden이라 그냥 두면
-          "대학생 원우"의 끝이 잘려 나갑니다. 넘칠 때만 가로로 밀 수 있게
-          해 두고, 막대는 no-scrollbar로 숨깁니다(globals.css).
+          overflow-x-auto + shrink-0 — 글씨가 22px이라 셋을 늘어놓으면 약 290px,
+          보통 폰(390·360px)에서는 그대로 들어오지만 여유가 크지 않습니다.
+          320px짜리 좁은 폰이거나 보기 설정이 "크게"(zoom 1.15)면 줄이 넘치는데,
+          body가 overflow-x: hidden이라 그냥 두면 "대학생 원우"의 끝이 잘려
+          나갑니다. 넘칠 때만 가로로 밀 수 있게 해 두고, 막대는 no-scrollbar로
+          숨깁니다(globals.css).
           shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
+
+          ★ 글씨를 여기서 더 키우면 보통 폰에서도 밀어야 셋째가 보입니다.
         */
         <div className="no-scrollbar mt-4 flex gap-4 overflow-x-auto pl-3">
           {FILTERS.map(({ value, label }) => {
@@ -230,7 +233,7 @@ export default function MembersPage() {
                   2.4:1까지 떨어져, 원우 연령대를 생각하면 안 고른 칸이
                   "눌리지 않는 칸"처럼 보일 만큼 흐려집니다.
                 */
-                className={`shrink-0 text-[19px] font-bold transition ${
+                className={`shrink-0 text-[22px] font-bold transition ${
                   active ? "text-ink" : "text-ink-muted"
                 }`}
               >
