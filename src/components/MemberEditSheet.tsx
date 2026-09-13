@@ -242,16 +242,16 @@ export default function MemberEditSheet({
           onSubmit={handleSubmit}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
         >
-          <h2 className="text-[19px] font-bold text-ink">
+          {/*
+            제목 아래 작은 안내문은 두지 않습니다 (2026-09-14에 걷어냈습니다).
+            세 갈래("수첩에 원우를 추가합니다…" / "내 항목이에요…" /
+            "원우들이 함께 채우는 수첩이에요…")가 있었는데 통째로 뺐습니다.
+            아래 여백(mb-6)은 그 문단이 갖고 있던 값을 제목으로 옮긴 것입니다.
+            다시 넣자고 제안하지 마세요.
+          */}
+          <h2 className="mb-6 text-[19px] font-bold text-ink">
             {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
           </h2>
-          <p className="mt-1 mb-6 text-[13px] leading-relaxed text-ink-faint">
-            {!entry
-              ? "수첩에 원우를 추가합니다. 본인이 같은 이름으로 가입하면 자동으로 이어집니다."
-              : isMine
-                ? "내 항목이에요. 사진과 자기소개는 내 프로필에서 바꿀 수 있어요."
-                : "원우들이 함께 채우는 수첩이에요. 고친 사람 이름이 항목에 남습니다."}
-          </p>
 
           <div className="mb-5">
             <FieldLabel htmlFor="edit-name">이름</FieldLabel>
