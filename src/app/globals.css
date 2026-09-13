@@ -141,10 +141,19 @@
    * 회색 그림자를 얹으면 그 자리만 푸르스름해집니다.
    *
    * 79곳이 이 값을 쓰고 있어서, 여기만 고치면 전부 따라옵니다.
+   *
+   * ★ 글로우만 따로 빼 둔 이유 (--shadow-card-glow)
+   *   테두리 색을 이 카드만 다르게 하고 싶을 때가 있습니다(원우수첩 검색칸은
+   *   주황 테두리입니다). 그때 --shadow-card를 통째로 다시 적으면 글로우 두
+   *   줄을 베껴 쓰게 되고, 나중에 글로우를 고칠 때 그 자리만 옛 값으로
+   *   남습니다. 그래서 글로우를 따로 두고, 테두리 색을 바꿀 쪽은
+   *   `shadow-[var(--shadow-card-glow)] ring-1 ring-<색>` 으로 씁니다.
+   *   테두리를 ring으로 두면 Tailwind가 ring을 글로우보다 위에 그려 주어
+   *   여기서 정한 순서(헤어라인이 맨 위)가 그대로 지켜집니다.
    */
-  --shadow-card:
-    0 0 0 1px var(--color-line), 0 1px 3px rgba(28, 25, 23, 0.06),
-    0 6px 20px rgba(28, 25, 23, 0.1);
+  --shadow-card-glow:
+    0 1px 3px rgba(28, 25, 23, 0.06), 0 6px 20px rgba(28, 25, 23, 0.1);
+  --shadow-card: 0 0 0 1px var(--color-line), var(--shadow-card-glow);
 
   /*
    * 홈의 주요 일정 카드처럼 한 단계 더 떠 있어야 하는 것.
@@ -227,9 +236,9 @@
    *
    * float 쪽에 헤어라인이 없는 이유는 밝은 화면과 같습니다(--shadow-float 주석).
    */
-  --dark-shadow-card:
-    0 0 0 1px var(--dark-line), 0 1px 2px rgba(0, 0, 0, 0.4),
-    0 6px 16px rgba(0, 0, 0, 0.28);
+  --dark-shadow-card-glow:
+    0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.28);
+  --dark-shadow-card: 0 0 0 1px var(--dark-line), var(--dark-shadow-card-glow);
   --dark-shadow-float: 0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
@@ -248,6 +257,7 @@
     --color-brand-100: var(--dark-brand-100);
     --color-brand-200: var(--dark-brand-200);
     --shadow-card: var(--dark-shadow-card);
+    --shadow-card-glow: var(--dark-shadow-card-glow);
     --shadow-float: var(--dark-shadow-float);
   }
 }
@@ -266,6 +276,7 @@
   --color-brand-100: var(--dark-brand-100);
   --color-brand-200: var(--dark-brand-200);
   --shadow-card: var(--dark-shadow-card);
+  --shadow-card-glow: var(--dark-shadow-card-glow);
   --shadow-float: var(--dark-shadow-float);
 }
 

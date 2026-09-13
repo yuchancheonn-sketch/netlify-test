@@ -150,8 +150,21 @@ export default function MembersPage() {
               좌우 여백(pl-10 / pr-24)은 그대로 둡니다 — 알약은 위아래 가운데가
               가장 넓은 자리라, 아이콘과 인원 수가 앉는 높이에서는 둥글기가
               글자를 밀지 않습니다.
+
+              위아래 여백은 10px(py-2.5)에서 12px(py-3)로 2px씩 올렸습니다.
+              돋보기와 "원우 N명"은 top-1/2로 가운데에 매달려 있어서 높이를
+              건드려도 저절로 따라옵니다.
+
+              ★ 테두리만 주황입니다.
+                다른 카드는 shadow-[var(--shadow-card)] 한 줄로 연회색 헤어라인
+                까지 함께 받지만, 이 칸은 테두리 색이 달라야 해서 글로우
+                (--shadow-card-glow)만 받고 테두리는 ring으로 따로 두릅니다.
+                --shadow-card를 통째로 다시 적으면 글로우 값을 베껴 쓰게 되고
+                나중에 글로우를 고칠 때 이 칸만 옛 값으로 남습니다.
+                Tailwind가 ring을 그림자보다 위에 그려 주므로, 테두리가 맨 위에
+                온다는 순서(globals.css의 --shadow-card 주석)도 그대로입니다.
             */
-            className="w-full rounded-full bg-surface py-2.5 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-3 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-1 ring-brand-500 outline-none placeholder:text-ink-faint"
           />
           {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
           {!busy && !error ? (
