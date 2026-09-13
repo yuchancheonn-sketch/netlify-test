@@ -33,7 +33,10 @@ export default function TextTabs<T extends string>({
   value: T;
   onChange: (value: T) => void;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 19px, 왼쪽 12px 들여씀.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 20px, 왼쪽 12px 들여씀.
+   *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
+   *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
+   *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
    * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식 탭). 22px에 들여쓰기 없음 —
    *          다른 화면의 제목("자료"·"원우수첩")과 같은 크기·같은 자리에 서야 하므로
    *          PageHeader의 h1이 쓰는 값(text-[22px] tracking-tight)을 그대로 맞췄습니다.
@@ -110,7 +113,7 @@ export default function TextTabs<T extends string>({
             */}
             <span
               className={`leading-tight font-bold ${
-                header ? "text-[22px] tracking-tight" : "text-[19px]"
+                header ? "text-[22px] tracking-tight" : "text-[20px]"
               }`}
             >
               {item.label}

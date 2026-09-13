@@ -128,11 +128,20 @@ export default function MembersPage() {
       <div className="px-4">
         {/* 검색 */}
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 h-[18px] w-[18px] -translate-y-1/2 text-ink-faint" />
+          {/*
+            돋보기 — 오른쪽 끝, 주황, 26px (2026-09-14에 셋 다 바뀌었습니다).
+            예전에는 왼쪽 끝의 18px 연회색이었고 오른쪽에는 "원우 N명"이 앉아
+            있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
+            옮겼습니다. 색도 테두리와 같은 주황으로 맞췄습니다.
+
+            pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
+            누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
+            안 올라옵니다.
+          */}
+          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500" />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
-            오른쪽에는 지금 몇 명이 보이는지를 넣어, 따로 줄을 만들지 않습니다.
           */}
           <input
             value={keyword}
@@ -143,18 +152,21 @@ export default function MembersPage() {
               눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
               깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
               있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
-              오른쪽은 인원 수 자리만큼(pr-24) 비워 글자와 겹치지 않게 합니다.
-              (인원 수 글씨를 13px → 16px로 키우면서 pr-16에서 넓혔습니다.)
 
-              모서리는 알약(rounded-full)입니다. 바로 아래 필터 알약과 대화방
-              입력칸이 같은 모양이라 셋이 나란히 읽힙니다.
-              좌우 여백(pl-10 / pr-24)은 그대로 둡니다 — 알약은 위아래 가운데가
-              가장 넓은 자리라, 아이콘과 인원 수가 앉는 높이에서는 둥글기가
-              글자를 밀지 않습니다.
+              좌우 여백 (2026-09-14에 뒤집혔습니다)
+                pl-5(20px)  — 왼쪽에 있던 돋보기를 치워서 글씨가 앞으로 왔습니다.
+                pr-14(56px) — 오른쪽 끝 돋보기(26px, right-4)가 앉을 자리입니다.
+                              16 + 26 = 42px에 글씨와의 숨통 14px을 더한 값이라,
+                              아이콘 크기나 right-4를 고치면 이 값도 같이 고쳐야
+                              긴 검색어가 돋보기 밑으로 파고들지 않습니다.
+                예전에는 pl-10 / pr-24였습니다(왼쪽 돋보기 + 오른쪽 "원우 N명").
+
+              모서리는 알약(rounded-full)입니다. 알약은 위아래 가운데가 가장
+              넓은 자리라, 돋보기가 앉는 높이에서는 둥글기가 글자를 밀지 않습니다.
 
               위아래 여백은 10px(py-2.5)에서 12px(py-3)로 2px씩 올렸습니다.
-              돋보기와 "원우 N명"은 top-1/2로 가운데에 매달려 있어서 높이를
-              건드려도 저절로 따라옵니다.
+              돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
+              따라옵니다.
 
               ★ 테두리만 주황입니다.
                 다른 카드는 shadow-[var(--shadow-card)] 한 줄로 연회색 헤어라인
@@ -173,14 +185,8 @@ export default function MembersPage() {
                 눈에 걸리되, 2px까지 가면 칸이 주황 테로 갇힌 것처럼 답답해
                 집니다. 폰은 화소 밀도가 2배 이상이라 0.5px도 또렷하게 나옵니다.
             */
-            className="w-full rounded-full bg-surface py-3 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-3 pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
           />
-          {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
-          {!busy && !error ? (
-            <p className="pointer-events-none absolute top-1/2 right-3.5 -mt-px -translate-y-1/2 text-[16px] font-medium text-ink-soft">
-              원우 <span className="font-bold text-ink">{visible.length}</span>명
-            </p>
-          ) : null}
         </div>
 
         {/*
@@ -191,16 +197,33 @@ export default function MembersPage() {
 
           mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
 
-          1·2기 수첩에서는 대학생 원우가 없어 이 줄을 통째로 숨깁니다.
+          1·2기 수첩에서는 대학생 원우가 없어 **고르개만** 숨깁니다. 줄 자체는
+          남습니다 — 오른쪽 "원우 N명"은 어느 기수에서나 보여야 하기 때문입니다.
+          그래서 숫자에 ml-auto를 걸어, 고르개가 있든 없든 늘 오른쪽 끝에 섭니다.
+
+          ★ items-center로 세로를 맞춥니다.
+            고르개 한 칸은 글씨 + 아래 바까지가 한 덩어리라, 숫자는 그 덩어리의
+            가운데에 섭니다(글씨 가운데보다 4px쯤 아래). 둘이 화면 양 끝에
+            멀찍이 떨어져 있어 눈에 걸리지 않습니다.
+            baseline으로 맞추는 방법도 있지만, 고르개가 가로로 밀리는 상자
+            (overflow-x-auto)라 브라우저가 글자 밑선 대신 상자 아랫변을 기준으로
+            삼아 오히려 크게 어긋납니다.
         */}
-        {showTypeFilter ? (
-          <TextTabs
-            items={FILTERS}
-            value={activeFilter}
-            onChange={setFilter}
-            className="mt-4"
-          />
-        ) : null}
+        <div className="mt-4 flex items-center gap-3">
+          {showTypeFilter ? (
+            <TextTabs items={FILTERS} value={activeFilter} onChange={setFilter} className="min-w-0" />
+          ) : null}
+          {/*
+            보이는 원우 수 — 2026-09-14에 검색 알약 안에서 이리로 꺼냈습니다.
+            알약 안에 있을 때는 오른쪽 자리(pr-24)를 늘 비워 둬야 해서 긴
+            검색어가 일찍 잘렸습니다.
+          */}
+          {!busy && !error ? (
+            <p className="ml-auto shrink-0 text-[16px] font-medium text-ink-soft">
+              원우 <span className="font-bold text-ink">{visible.length}</span>명
+            </p>
+          ) : null}
+        </div>
 
         {/* 목록 */}
         <div className="mt-4 pb-6">
