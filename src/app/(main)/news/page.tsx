@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
+import TextTabs from "@/components/TextTabs";
 import { MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
@@ -45,14 +46,16 @@ export default function NewsPage() {
           주소의 ?tab을 읽는 useSearchParams는 정적 화면에서 Suspense로 감싸야 빌드가 됩니다(Next 문서).
           그동안은 고르개 줄과 첫 칸 자리만 회색으로 잡아 둡니다.
 
-          첫 칸의 크기는 아래 고르개와 같게 맞춥니다 — 25px(20px 글씨 × 글줄 1.25배)
-          높이에 "복습 영상 소식" 두 칸만큼의 폭. 알약이던 시절의 h-[40px] rounded-full을
-          그대로 두면 자리가 차지된 뒤 줄이 15px 솟구쳐 화면이 튑니다.
+          첫 칸의 크기는 아래 TextTabs와 같게 맞춥니다 —
+          글씨 24px(19px × 글줄 1.25배) + 사이 6px + 바 3px = 33px 높이에,
+          "복습 영상 소식" 두 칸만큼의 폭. 크기를 안 맞추면 자리가 채워질 때
+          줄 높이가 달라져 아래 목록이 통째로 솟구칩니다.
+          (TextTabs의 글씨·바 크기를 고치면 이 값도 같이 고쳐 주세요.)
         */}
         <Suspense
           fallback={
             <>
-              <Skeleton className="ml-3 h-[25px] w-[142px] rounded-lg" />
+              <Skeleton className="ml-3 h-[33px] w-[142px] rounded-lg" />
               <Skeleton className="mt-5 aspect-video rounded-2xl" />
             </>
           }
@@ -78,51 +81,11 @@ function NewsTabs() {
   return (
     <>
         {/*
-          복습 영상 / 소식 고르개 — 원우수첩의 구분 고르개와 **똑같은 짜임**입니다
-          (2026-09-14에 흰 알약 하나 안에 둘을 담던 방식에서 바꿨습니다).
-          글자만 늘어놓고, 고른 것은 먹색·나머지는 회색. 바탕도 테두리도 밑줄도 없습니다.
-
-          색·간격·들여쓰기는 원우수첩과 같은 값이지만 **글씨 크기만 다릅니다** —
-          여기는 20px, 원우수첩은 19px(2026-09-14에 그쪽만 한 단 내렸습니다).
-          일부러 벌린 것이 아니라 사용자가 한쪽씩 고르다 그렇게 된 것이니,
-          맞출 일이 생기면 두 곳을 같이 보세요.
-
-          pl-3은 원우수첩과 같은 들여쓰기입니다. 바깥 px-4(16px)에 더해 28px에서
-          시작합니다.
-
-          원우수첩 쪽에 있는 가로 밀기(overflow-x-auto)는 여기 두지 않았습니다.
-          여기는 칸이 둘뿐이고 "복습 영상 소식"을 다 합쳐도 약 140px이라,
-          보기 설정을 "크게"로 둔 좁은 폰에서도 넘칠 일이 없습니다.
+          복습 영상 / 소식 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
+          원우수첩·자료 탭의 고르개와 **같은 컴포넌트**를 씁니다.
+          모양을 고치려면 그 파일만 고치세요.
         */}
-        <div className="flex gap-[14px] pl-3">
-          {SUBTABS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSubtab(value)}
-              aria-pressed={subtab === value}
-              /*
-                고른 것과 아닌 것의 차이는 색 하나뿐입니다. 굵기까지 바꾸면
-                고를 때마다 글자 폭이 달라져 옆 칸이 좌우로 밀립니다.
-
-                안 고른 칸의 ink-faint는 원우수첩 구분 고르개와 같은 값입니다
-                (2026-09-14에 ink-muted에서 함께 옮겼습니다). 한쪽만 고치지 마세요.
-              */
-              className={`transition ${
-                subtab === value ? "text-ink" : "text-ink-faint"
-              }`}
-            >
-              {/*
-                ★ 글씨 크기는 <button>이 아니라 이 <span>에 겁니다.
-                  globals.css의 `button { font-size: 16px }`가 레이어 밖에 있어,
-                  @layer utilities 안의 text-* 유틸리티를 이깁니다. 단추에 직접
-                  걸면 조용히 무시되고 16px로 그려집니다.
-                  (자세한 내막은 members/page.tsx의 같은 자리에 적어 뒀습니다.)
-              */}
-              <span className="text-[20px] leading-tight font-bold">{label}</span>
-            </button>
-          ))}
-        </div>
+        <TextTabs items={SUBTABS} value={subtab} onChange={setSubtab} />
 
         <div className="mt-5">
           {subtab === "videos" ? <VideoList /> : <NewsList />}

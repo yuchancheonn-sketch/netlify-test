@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
+import TextTabs from "@/components/TextTabs";
 import { PlusIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -81,27 +82,13 @@ export default function LibraryPage() {
       />
 
       <div className="px-4 pb-8">
-        <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
-          {SUBTABS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSubtab(value)}
-              aria-pressed={subtab === value}
-              /*
-                위 4px(pt-1) + 아래 8px(pb-2).
-                두 값의 합(12px)이 py-1.5(6+6)와 같아서 알약 높이는 그대로이고,
-                두 값의 차(4px) 때문에 글씨만 2px 위에 앉습니다.
-                원우수첩의 서브탭과 같은 방식입니다.
-              */
-              className={`flex-1 rounded-full pt-1 pb-2 text-[14px] font-bold transition ${
-                subtab === value ? "bg-brand-500 text-white" : "text-ink-muted"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {/*
+          행사 사진 / 파일 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
+          원우수첩·소식 탭의 고르개와 **같은 컴포넌트**를 씁니다.
+          모양을 고치려면 그 파일만 고치세요.
+          (2026-09-14에 흰 알약 하나 안에 둘을 담던 방식에서 바꿨습니다.)
+        */}
+        <TextTabs items={SUBTABS} value={subtab} onChange={setSubtab} />
 
         <div className="mt-5">
           {subtab === "photos" ? <AlbumList /> : <FileList />}

@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
+import TextTabs from "@/components/TextTabs";
 import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -183,140 +184,22 @@ export default function MembersPage() {
         </div>
 
         {/*
-          구분 고르개 — 글자만 늘어놓고, 고른 것은 먹색 글씨 + 글씨 아래 검은 바.
-          안 고른 것은 연회색 글씨에 바 없음. 바탕도 테두리도 없습니다.
+          구분 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
+          소식 탭·자료 탭의 서브탭과 **같은 컴포넌트**를 씁니다.
+          크기·간격·색·바를 고치려면 그 파일만 고치세요 — 세 화면이 같이 따라옵니다.
+          (예전에는 화면마다 마크업을 복붙해 둔 탓에 하루 만에 글씨 크기가 갈라졌습니다.)
 
-          모양이 세 번 바뀌었습니다:
-          흰 알약 하나 안에 셋을 담던 방식 → 주황 밑줄 탭 → 색만 바뀌는 글자
-          → 지금의 색 + 검은 바(2026-09-14).
-          알약을 걷어낸 것은 바로 위 검색칸이 이미 알약이라 두 줄이 겹쳐 서면
-          어느 쪽이 고르개인지 한눈에 갈라지지 않아서였고, 나머지는 사용자가
-          실제 화면을 보며 고른 모양입니다.
-          바가 주황이 아니라 **검은색**인 것도 사용자가 정한 것입니다.
-
-          앱의 다른 고르개 다섯 곳(자료·소식·모임·투표·운영진)은 알약 그대로라
-          여기만 모양이 다릅니다.
+          mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
 
           1·2기 수첩에서는 대학생 원우가 없어 이 줄을 통째로 숨깁니다.
         */}
         {showTypeFilter ? (
-        /*
-          pl-3 — 왼쪽으로 12px 들여 씁니다. 바깥 px-4(16px)에 더해 28px입니다.
-          화면 끝(16px)에 바짝 붙이면 글자만 있는 줄이라 허전해 보였습니다.
-
-          ★ 아래 목록의 줄은 이보다 덜 들어갑니다(pl-0.5, 18px). 일부러 어긋나게
-            둔 것입니다 — 여기는 글자라 양옆에 제 여백을 달고 있지만 목록 쪽
-            맨 앞은 사진(112px)이라 가장자리가 꽉 찬 면이어서, 같은 자리에 두면
-            사진이 더 오른쪽으로 나온 것처럼 보입니다. 숫자를 맞추기보다
-            눈에 맞춘 값이니 한쪽을 고칠 때 다른 쪽을 따라 고치지 마세요.
-
-          gap-[14px] — 셋 사이 간격. 20px에서 16px, 다시 14px로 좁혀 왔습니다.
-          Tailwind의 단계(gap-3=12px, gap-4=16px) 사이 값이라 직접 적습니다.
-
-          overflow-x-auto + shrink-0 — 19px에서 셋을 늘어놓으면 약 240px이라
-          폭이 411px인 폰에서 쓸 수 있는 자리(367px)에 넉넉히 들어옵니다.
-          (16px로 그려지던 때 실제 화면을 재 보니 셋이 약 203px였고, 그 값을
-           비례로 올린 것입니다. 글자 폭을 눈대중으로 셈하면 크게 빗나갑니다 —
-           한글 한 자를 1em으로 잡았다가 두 배 가까이 틀린 적이 있습니다.)
-
-          그래도 가로로 밀 수 있게 남겨 둡니다. 320px짜리 좁은 폰이거나 보기
-          설정이 "크게"(zoom 1.15)면 넘치는데, body가 overflow-x: hidden이라
-          이게 없으면 넘친 글자가 잘려 나가고 밀 수도 없습니다. 막대는
-          no-scrollbar로 숨깁니다(globals.css).
-          shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
-
-          mt-4 — 윗 여백 16px. 12px까지 줄였다가 조금 되돌렸습니다.
-          글씨가 커질수록 위가 좁으면 검색칸에 얹힌 것처럼 붙어 보입니다.
-        */
-        <div className="no-scrollbar mt-4 flex gap-[14px] overflow-x-auto pl-3">
-          {FILTERS.map(({ value, label }) => {
-            const active = activeFilter === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value)}
-                aria-pressed={active}
-                /*
-                  ★ 셋 다 늘 굵게 두고 색만 바꿉니다.
-                    굵기까지 바꾸면 고를 때마다 글자 폭이 달라져 옆 칸들이
-                    좌우로 밀립니다. 색만 바뀌면 글자는 제자리에 못 박힙니다.
-
-                  안 고른 칸은 ink-faint(#A8A29E)입니다. 토큰 단계에서 가장 연한
-                  회색으로, 2026-09-14에 한 단계 진한 ink-muted(#78716C)에서
-                  사용자 요청으로 옮겼습니다.
-                  흰 바탕에서 대비가 2.4:1이라 읽기 기준(4.5:1)에는 못 미칩니다 —
-                  대신 고른 칸이 먹색이라 "지금 어디에 서 있는지"는 또렷합니다.
-                  안 고른 칸이 너무 흐려 못 누르는 칸처럼 보인다는 이야기가 나오면
-                  ink-muted로 되돌리세요.
-
-                  소식 탭(news/page.tsx)의 복습 영상·소식 고르개가 같은 색을
-                  씁니다. 한쪽만 고치면 두 화면이 어긋나 보입니다.
-                  (그쪽에는 아래 검은 바가 없습니다 — 여기만 붙였습니다.)
-
-                  flex-col — 글씨 아래에 바를 세로로 쌓습니다. gap-1.5(6px)가
-                  글씨와 바 사이입니다.
-                */
-                className={`flex shrink-0 flex-col items-center gap-1.5 transition ${
-                  active ? "text-ink" : "text-ink-faint"
-                }`}
-              >
-                {/*
-                  ★ 글씨 크기를 <button>이 아니라 이 <span>에 겁니다. 반드시.
-
-                  globals.css 맨 아래에 `input, textarea, select, button {
-                  font-size: 16px }` 가 있습니다(폰에서 입력칸을 눌렀을 때
-                  iOS가 화면을 확대하지 않게 막는 규칙입니다). 이 규칙은
-                  레이어 밖에 적혀 있고 Tailwind의 text-* 유틸리티는
-                  @layer utilities 안에 들어갑니다. CSS 캐스케이드 레이어에서는
-                  **레이어 밖 선언이 레이어 안 선언을 이깁니다** — 선택자
-                  우선순위(클래스 > 태그)와 상관없이 그렇습니다.
-                  그래서 <button>에 text-[30px]을 걸면 조용히 무시되고 16px로
-                  그려집니다. 실제로 이 줄의 글씨를 15px부터 80px까지 여러 번
-                  고쳤는데 화면은 내내 16px이었습니다(2026-09-14에 발견).
-
-                  <span>은 저 규칙의 선택자에 없으니 유틸리티가 그대로 먹습니다.
-                  !important(text-[30px]!)로도 이길 수 있지만, 이 방법이 더
-                  조용합니다.
-
-                  leading-tight — 글줄 높이를 글자 크기의 1.25배로 조입니다.
-                  적지 않으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래로
-                  빈 자리가 생기고, 글씨가 클수록 그 자리도 같이 커집니다.
-                  leading-none(1배)까지 가지 않은 것은 한글 내림 부분이
-                  글자 상자에 닿아 답답해 보이기 때문입니다.
-                */}
-                <span className="text-[19px] leading-tight font-bold">{label}</span>
-                {/*
-                  고른 칸 아래 검은 바.
-
-                  ★ 안 고른 칸에도 같은 크기로 두고 색만 없앱니다.
-                    아예 빼 버리면 고를 때마다 줄 높이가 3px씩 오르내려
-                    아래 목록이 통째로 들썩입니다.
-
-                  두께는 3px입니다. 5px로 넣었다가 같은 날 얇게 바꿨습니다.
-                  rounded-full이라 양 끝이 둥근데, 두께를 더 줄이면(2px 이하)
-                  그 둥근 끝이 뭉개져 그냥 선처럼 보입니다.
-
-                  ★ 폭이 글자의 60%인 것은 일부러입니다.
-                    글자 폭을 꽉 채우면 "전체"(두 자)와 "대학생 원우"(여섯 자)의
-                    바 길이가 세 배 가까이 벌어져 들쭉날쭉해 보입니다. 비율로
-                    두면 셋이 같은 비례로 짧아져 나란히 읽힙니다.
-                    (%는 글자 폭에 걸립니다 — 단추 폭이 글자만큼만 잡히고,
-                     비율 폭은 그 폭을 정하는 데는 끼어들지 않기 때문입니다.)
-
-                  색은 bg-ink — 위 글씨와 같은 먹색입니다. 주황으로 해 본 적도
-                  있지만 사용자가 검은색으로 정했습니다.
-                */}
-                <span
-                  aria-hidden
-                  className={`h-[3px] w-[60%] rounded-full transition ${
-                    active ? "bg-ink" : "bg-transparent"
-                  }`}
-                />
-              </button>
-            );
-          })}
-        </div>
+          <TextTabs
+            items={FILTERS}
+            value={activeFilter}
+            onChange={setFilter}
+            className="mt-4"
+          />
         ) : null}
 
         {/* 목록 */}
