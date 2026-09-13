@@ -201,10 +201,17 @@ export default function MembersPage() {
           화면 끝에 바짝 붙이면 글자만 있는 줄이라 허전해 보이고, 카드 테두리
           자리(16px)에 맞추면 카드보다 왼쪽으로 튀어나온 것처럼 읽혔습니다.
 
-          gap-4 — 셋 사이는 16px. 글자를 17px로 키우면서 20px에서 좁혔습니다.
+          gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
+
+          overflow-x-auto + shrink-0 — 평소에는 셋이 다 들어와 아무 일도
+          일어나지 않습니다. 좁은 폰에서 보기 설정을 "크게"(zoom 1.15)로 둔
+          때만 줄이 넘치는데, body가 overflow-x: hidden이라 그냥 두면
+          "대학생 원우"의 끝이 잘려 나갑니다. 넘칠 때만 가로로 밀 수 있게
+          해 두고, 막대는 no-scrollbar로 숨깁니다(globals.css).
+          shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
         */
-        <div className="mt-4 flex gap-4 pl-3">
+        <div className="no-scrollbar mt-4 flex gap-4 overflow-x-auto pl-3">
           {FILTERS.map(({ value, label }) => {
             const active = activeFilter === value;
             return (
@@ -223,7 +230,7 @@ export default function MembersPage() {
                   2.4:1까지 떨어져, 원우 연령대를 생각하면 안 고른 칸이
                   "눌리지 않는 칸"처럼 보일 만큼 흐려집니다.
                 */
-                className={`text-[17px] font-bold transition ${
+                className={`shrink-0 text-[19px] font-bold transition ${
                   active ? "text-ink" : "text-ink-muted"
                 }`}
               >
