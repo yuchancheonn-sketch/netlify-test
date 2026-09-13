@@ -141,7 +141,7 @@ function ChatRoomRow({
       /*
         칸 높이 = 위아래 여백 + 사진.
 
-        가운데 글 두 줄(16px + 14px)을 합쳐도 49px이라, 사진이 칸 높이를
+        가운데 글 두 줄(17px + 14px)을 합쳐도 50px 남짓이라, 사진이 칸 높이를
         혼자 정합니다. 글씨나 줄 간격을 건드려도 칸은 꿈쩍하지 않습니다.
         지금은 8 + 62 + 8 = 78px입니다.
 
@@ -163,11 +163,11 @@ function ChatRoomRow({
         name={title}
         seed={room.id}
         size={62}
-        className="rounded-2xl!"
+        className="ml-px rounded-2xl!"
       />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[16px] font-bold text-ink">{title}</p>
+        <p className="truncate text-[17px] font-bold text-ink">{title}</p>
         <p className="mt-1 truncate text-[14px] text-ink-muted">
           {preview || "대화를 시작해 보세요."}
         </p>
@@ -175,7 +175,7 @@ function ChatRoomRow({
 
       <div className="flex shrink-0 flex-col items-end gap-1.5">
         {room.lastMessageAt ? (
-          <time className="text-[12px] text-ink-faint">
+          <time className="mr-0.5 text-[13px] text-ink-faint">
             {formatChatListTime(room.lastMessageAt.toDate())}
           </time>
         ) : null}
