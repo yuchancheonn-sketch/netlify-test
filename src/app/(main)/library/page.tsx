@@ -35,7 +35,7 @@ import {
   thumbnailUrl,
   uploadFile,
 } from "@/lib/cloudinary";
-import { formatDotDate, todayString } from "@/lib/format";
+import { dotDate, formatDotDate, todayString } from "@/lib/format";
 import { useAlbums, useFiles } from "@/lib/hooks";
 import { MAX_UPLOAD_FILE_BYTES } from "@/lib/constants";
 import type { FileDoc } from "@/lib/types";
@@ -179,12 +179,12 @@ function FileList() {
   }
 
   if (loading) {
-    // 행사 사진 앨범과 같은 2열 자리표시입니다.
+    /* 아래 진짜 목록과 같은 짜임 — 3열, 세로로 선 3:4 종이. */
     return (
-      <ul className="grid grid-cols-2 gap-3">
-        {[0, 1, 2, 3].map((key) => (
+      <ul className="grid grid-cols-3 gap-x-3 gap-y-5">
+        {[0, 1, 2, 3, 4, 5].map((key) => (
           <li key={key}>
-            <Skeleton className="aspect-[4/3] rounded-2xl" />
+            <Skeleton className="aspect-[3/4] rounded-lg" />
           </li>
         ))}
       </ul>
@@ -212,8 +212,13 @@ function FileList() {
           />
         </div>
       ) : (
-        /* 행사 사진 앨범과 같은 2열 격자 */
-        <ul className="grid grid-cols-2 gap-3">
+        /*
+          3열 격자 (2026-09-14, 아이폰 파일 앱처럼).
+          가로 12px·세로 20px로 다르게 둡니다 — 칸 아래에 글씨가 석 줄까지
+          붙으므로, 세로를 가로만큼만 두면 윗칸 글씨와 아랫칸 그림이 붙어 보입니다.
+          (행사 사진 앨범은 2열 그대로입니다 — 그쪽은 사진이라 크게 보여야 합니다.)
+        */
+        <ul className="grid grid-cols-3 gap-x-3 gap-y-5">
           {files.map((file) => (
             <FileCard
               key={file.id}
@@ -276,6 +281,12 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const thumbnail = fileThumbnailUrl(file.url);
+  /*
+    올린 날짜. 방금 올린 파일은 서버가 시각을 적기 전이라 uploadedAt이 잠깐
+    비어 있습니다(serverTimestamp). 그때는 날짜 줄을 아예 그리지 않습니다 —
+    "-" 같은 빈 표를 두면 한 칸만 높이가 달라져 격자가 어긋납니다.
+  */
+  const uploadedOn = file.uploadedAt ? dotDate(file.uploadedAt.toDate()) : "";
 
   /*
    * ★ 칸을 누르면 **어떤 파일이든** 원본 주소를 그대로 엽니다 — fl_attachment를 붙이면 안 됩니다.
@@ -313,9 +324,19 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
+        className="block transition active:scale-[0.97]"
       >
-        <div className="flex aspect-[4/3] w-full items-center justify-center bg-fill">
+        {/*
+          미리보기 — 세로로 선 종이 한 장 (2026-09-14, 아이폰 파일 앱을 본떴습니다).
+
+          예전에는 가로 4:3 그림 + 글씨를 한 카드 안에 담았는데, 문서는 대부분
+          세로라 가로 칸에 담으면 위아래가 비고 글씨가 작아져 무슨 문서인지
+          알아보기 어려웠습니다. 3:4로 세우니 첫 장이 제 비례로 들어옵니다.
+
+          카드(흰 상자)를 씌우지 않고 그림만 둡니다. 아래 글씨는 카드 밖에
+          놓여, 종이 석 장이 늘어선 것처럼 보입니다.
+        */}
+        <div className="flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-lg bg-surface shadow-[var(--shadow-card)]">
           {thumbnail ? (
             /*
               문서는 c_fit으로 통째로 담아 왔으므로(lib/cloudinary.ts) 여기서도
@@ -340,14 +361,23 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
           )}
         </div>
 
-        <div className="px-3 py-2.5">
-          <p className="line-clamp-2 text-[14px] leading-snug font-bold text-ink">
-            {file.name}
-          </p>
-          <p className="mt-1 truncate text-[12px] text-ink-faint">
-            {file.uploadedByName} · {formatBytes(file.bytes)}
-          </p>
-        </div>
+        {/*
+          그림 아래 석 줄 — 이름 / 날짜 / 올린 사람·크기.
+          가운데로 모읍니다. 칸이 좁아(한 칸 110px 안팎) 왼쪽으로 붙이면
+          두 줄짜리 이름의 둘째 줄이 짧게 끝나 들쭉날쭉해 보입니다.
+
+          이름은 두 줄까지 보이고 넘치면 "…"입니다(line-clamp-2). 파일 이름은
+          길고 끝에 의미가 몰려 있는 일이 많아, 한 줄로 자르면 구별이 안 됩니다.
+        */}
+        <p className="mt-2 line-clamp-2 text-center text-[13px] leading-snug font-bold text-ink">
+          {file.name}
+        </p>
+        {uploadedOn ? (
+          <p className="mt-0.5 text-center text-[12px] text-ink-faint">{uploadedOn}</p>
+        ) : null}
+        <p className="truncate text-center text-[12px] text-ink-faint">
+          {file.uploadedByName} · {formatBytes(file.bytes)}
+        </p>
       </a>
 
       {/*

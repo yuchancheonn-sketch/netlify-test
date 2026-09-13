@@ -38,6 +38,17 @@ export function formatMonthDay(value: string): string {
 export function formatDotDate(value: string): string {
   const date = parseDateString(value);
   if (!date) return value;
+  return dotDate(date);
+}
+
+/**
+ * Date → "2026.09.06".
+ *
+ * Firestore Timestamp는 `.toDate()`로 넘기세요 — 자료 탭의 파일 칸이
+ * uploadedAt을 이렇게 씁니다. 날짜 글자("2026-09-06")를 갖고 있으면
+ * 위 formatDotDate를 쓰세요. 둘은 같은 모양을 냅니다.
+ */
+export function dotDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}.${month}.${day}`;
