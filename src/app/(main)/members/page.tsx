@@ -282,10 +282,14 @@ export default function MembersPage() {
         {/* 목록 */}
         <div className="mt-4 pb-6">
           {busy ? (
-            <ul className="flex flex-col gap-3">
-              {[0, 1, 2, 3].map((key) => (
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 줄 사이 선, 위아래 12px, 63px 사진 칸. */
+            <ul className="flex flex-col">
+              {[0, 1, 2, 3].map((key, index) => (
                 <li key={key}>
-                  <Skeleton className="h-[92px] rounded-3xl" />
+                  {index > 0 ? <div className="border-t border-line" /> : null}
+                  <div className="py-3">
+                    <Skeleton className="h-[63px] rounded-2xl" />
+                  </div>
                 </li>
               ))}
             </ul>
@@ -310,9 +314,23 @@ export default function MembersPage() {
               />
             </div>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {visible.map((entry) => (
+            /*
+              카드 대신 줄 사이 선으로 나눕니다 (2026-09-14, 사용자 제안).
+              예전에는 원우마다 흰 카드(rounded-3xl · 그림자)를 세우고 12px씩
+              띄웠는데, 배경이 흰색이 된 뒤로는 카드마다 헤어라인이 둘려
+              378명을 훑을 때 상자 테두리만 눈에 밟혔습니다.
+
+              맨 윗줄 위에는 선을 긋지 않습니다. 위쪽은 구분 고르개가 이미
+              갈라 주고 있어서, 선을 그으면 고르개를 가두는 상자처럼 보입니다.
+
+              선은 좌우로 들이지 않고 본문 폭을 꽉 채웁니다. 사진 칸(112px)
+              뒤부터 긋는 방법도 있지만, 그러면 사진이 선 밖으로 튀어나온
+              것처럼 읽혀서 그냥 끝까지 긋습니다.
+            */
+            <ul className="flex flex-col">
+              {visible.map((entry, index) => (
                 <li key={entry.key}>
+                  {index > 0 ? <div className="border-t border-line" /> : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -415,8 +433,15 @@ function MemberRow({
      * 예전에는 gap-4(16px)였습니다. 썸네일 폭(112px)은 16:9를 지켜야 해서
      * 줄일 수 없으므로, 네 글자 직위(정무특보)가 붙어도 이름이 안 잘리게 할
      * 자리를 여기서 8px(양옆 두 칸) 냈습니다.
+     *
+     * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
+     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
+     *   가르는 일은 목록 쪽의 border-t가 맡습니다.
+     *   좌우 여백(옛 p-3의 12px)도 함께 걷었습니다 — 카드가 없으니 안쪽
+     *   여백을 둘 이유가 없고, 걷어야 사진 왼쪽 끝이 바깥 px-4(16px)에 맞아
+     *   위의 검색칸·고르개와 한 줄로 섭니다. 위아래 12px만 남깁니다.
      */
-    <div className="flex items-center gap-3 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
+    <div className="flex items-center gap-3 py-3">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
