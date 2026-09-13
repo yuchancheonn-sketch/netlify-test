@@ -312,13 +312,26 @@ export default function ChatRoomPage({
    * 회색을 두는 것과 같은 이유로, 대화방은 자기 바탕색인 흰색을 둡니다.
    */
   return (
+    /*
+      ★ 화면 전체가 아니라 **대화 부분만** 스크롤합니다 (2026-09-14).
+
+        예전에는 바깥이 min-h-dvh라 페이지가 통째로 스크롤됐습니다. 그러면
+        자판이 올라올 때 아이폰이 입력칸을 보이게 하려고 페이지를 밀어 내리고,
+        그 바람에 제목 줄이 화면 위로 빠져나가 "위에가 안 보인다"는 상태가
+        됩니다. 페이지가 아예 스크롤되지 않으면 밀 것이 없습니다.
+
+        h-dvh + overflow-hidden으로 화면 높이에 못 박고, 아래 대화 상자에만
+        overflow-y-auto를 줍니다. 안쪽 상자들이 줄어들 수 있도록 min-h-0을
+        함께 걸어야 합니다 — flex 칸은 기본이 "내용보다 작아지지 않기"라,
+        이게 없으면 대화가 길어질 때 상자가 늘어나 버리고 스크롤이 안 생깁니다.
+    */
     <div
-      className="flex min-h-dvh flex-col bg-surface"
+      className="flex h-dvh flex-col overflow-hidden bg-surface"
       {...swipe.handlers}
       style={swipe.touchAction}
     >
       <div
-        className="relative z-10 flex flex-1 flex-col bg-surface"
+        className="relative z-10 flex min-h-0 flex-1 flex-col bg-surface"
         style={slide}
         onTransitionEnd={swipe.onSlideSettled}
       >
@@ -329,6 +342,10 @@ export default function ChatRoomPage({
           바탕은 대화와 같은 흰색이되, 아래에 연한 회색 실선 한 줄로 대화와
           갈라 둡니다. 반투명은 쓰지 않습니다 — 살짝 비치면 위로 지나가는
           말풍선이 제목 글씨에 겹쳐 보입니다.
+
+          sticky는 이제 하는 일이 없습니다. 대화 상자만 스스로 스크롤하게 된
+          뒤로는 제목 줄이 스크롤 바깥에 있어 애초에 움직이지 않습니다.
+          지워도 되지만, 나중에 구조를 되돌릴 때를 생각해 남겨 둡니다.
         */}
         <header
           className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-surface px-2 pb-2.5"
@@ -351,7 +368,14 @@ export default function ChatRoomPage({
           <div className="h-10 w-10 shrink-0" aria-hidden="true" />
         </header>
 
-        <div className="flex-1 px-4 pb-[104px]">
+        {/*
+          대화 — 이 상자만 스스로 스크롤합니다.
+          pb-[104px]는 화면 아래에 붙어 있는 입력줄에 마지막 말풍선이 가리지
+          않도록 비워 두는 자리입니다.
+          overscroll-contain은 맨 위/아래에 닿았을 때 그 힘이 바깥 페이지로
+          넘어가 화면이 통째로 딸려 움직이는 것을 막습니다.
+        */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[104px]">
           {loading ? (
             <div className="flex flex-col gap-4 px-1 pt-4">
               <Skeleton className="h-12 w-2/3 rounded-2xl" />
