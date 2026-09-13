@@ -106,7 +106,14 @@ export default function LibraryPage() {
           제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
           여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
       */}
-      <div className="px-4 pt-4 pb-8">
+      {/*
+        pb-24 — 떠 있는 주황 알약이 마지막 줄을 가리지 않게 밑을 비우는 값입니다.
+        알약은 바닥에서 92px 위에 서고 높이가 52px라 바닥 144px까지 가리는데,
+        MainShell이 이미 78px을 비워 두므로 96px을 더해 174px를 확보합니다.
+        (앨범 화면·모임 탭은 pb-8·pb-6이라 마지막 줄이 알약에 조금 가려 있습니다 —
+         거기도 고칠 일이 생기면 같은 셈법을 쓰면 됩니다.)
+      */}
+      <div className="px-4 pt-4 pb-24">
         {subtab === "photos" ? <AlbumList /> : <FileList />}
       </div>
     </>
@@ -240,35 +247,42 @@ function FileList() {
         </ul>
       )}
 
-      {/* 파일 올리기는 원우 누구나. 사진 앨범 만들기와 달리 운영진만이 아닙니다. */}
-      {isCloudinaryConfigured ? (
-        <>
-          <label
-            className={`mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
-              uploading ? "text-ink-faint" : "text-brand-500"
-            }`}
-          >
-            {uploading ? (
-              `올리는 중… ${Math.round(progress * 100)}%`
-            ) : (
-              <>
-                <PlusIcon className="h-5 w-5" />
-                파일 올리기
-              </>
-            )}
-            <input
-              type="file"
-              multiple
-              disabled={uploading}
-              onChange={handlePick}
-              className="hidden"
-            />
-          </label>
+      {/*
+        파일 올리기 — 오른쪽 아래에 떠 있는 주황 알약 (2026-09-14).
+        예전에는 목록 끝에 폭을 꿉 채우는 흰 칸이었는데, 파일이 많아지면
+        끝까지 내려야 보였습니다. 앨범 화면·모임 탭이 쓰는 것과 같은 값입니다.
+        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다.
 
-          <p className="mt-2 text-center text-[12px] text-ink-faint">
-            한 개에 {formatBytes(MAX_UPLOAD_FILE_BYTES)}까지
-          </p>
-        </>
+        올리기는 원우 누구나. 사진 앨범 만들기와 달리 운영진만이 아닙니다.
+
+        <button>이 아니라 <label>인 이유: 안의 숨긴 <input type="file">을
+        누르게 하는 것이 label입니다. 올리는 동안은 input을 disabled로
+        막아, 다시 눌러도 고르기 창이 뜨지 않습니다.
+
+        예전에 단추 밑에 있던 "한 개에 10MB까지"는 떠 있는 알약에는 붙일
+        자리가 없어 부렸습니다. 너무 큰 파일을 고르면 아래 오류 문구가
+        크기를 짚어 알려 줍니다.
+      */}
+      {isCloudinaryConfigured ? (
+        <label
+          className={`fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95 ${uploading ? "opacity-60" : ""}`}
+        >
+          {uploading ? (
+            `올리는 중… ${Math.round(progress * 100)}%`
+          ) : (
+            <>
+              <PlusIcon className="h-5 w-5" />
+              파일 올리기
+            </>
+          )}
+          <input
+            type="file"
+            multiple
+            disabled={uploading}
+            onChange={handlePick}
+            className="hidden"
+          />
+        </label>
       ) : null}
 
       {uploadError ? (
@@ -634,12 +648,16 @@ function AlbumList() {
         </ul>
       )}
 
-      {/* 앨범 만들기는 운영진만 */}
+      {/*
+        앨범 만들기 — 운영진만. 위 파일 칸의 "파일 올리기"와 같은 자리·같은
+        모양의 떠 있는 주황 알약입니다 (2026-09-14). 두 칸은 한 번에 하나만
+        보이므로 알약끼리 겹칠 일은 없습니다.
+      */}
       {isAdmin ? (
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-4 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
         >
           <PlusIcon className="h-5 w-5" />
           앨범 만들기
