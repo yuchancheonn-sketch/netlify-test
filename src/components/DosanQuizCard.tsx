@@ -154,6 +154,11 @@ export default function DosanQuizCard() {
           <span className="break-keep">{quiz.question}</span>
         </p>
 
+        {/*
+          고른 칸을 한 번 더 누르면 고르기가 풀립니다 (2026-09-14, 사용자 요청).
+          아무것도 안 고른 상태로 돌아가므로 아래 "정답 제출하기"도 함께 사라집니다.
+          제출한 뒤에는 단추가 disabled라 풀리지 않습니다.
+        */}
         <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
           {CHOICES.map(({ value, label }) => (
             <button
@@ -162,7 +167,7 @@ export default function DosanQuizCard() {
               role="radio"
               aria-checked={(answer ?? picked) === value}
               disabled={Boolean(answer)}
-              onClick={() => setPickedFor({ key: quizKey, value })}
+              onClick={() => setPickedFor(picked === value ? null : { key: quizKey, value })}
               className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-2 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
                 value,
               )}`}
