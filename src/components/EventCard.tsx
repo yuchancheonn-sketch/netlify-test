@@ -27,7 +27,9 @@ import type { EventDoc } from "@/lib/types";
  *   --shadow-card는 연회색 헤어라인이 이미 박혀 있어서 주황 테두리와 겹쳐 두 줄이 됩니다.
  *   --shadow-float는 색 있는 것들(주황 FAB·검은 드롭다운) 전용이라 일부러 헤어라인을
  *   넣지 않았는데, 그 덕에 여기서 주황 링과 깨끗하게 겹칩니다(globals.css 주석 참고).
- *   굵기 1.5px은 원우수첩 검색 알약의 주황 테두리와 같은 값입니다.
+ *   굵기는 2px입니다 — 1.5px로 시작했다가 2026-09-14에 한 단 올렸습니다.
+ *   원우수첩 검색 알약의 주황 테두리는 아직 1.5px이라 둘이 다릅니다. 맞출 일이
+ *   생기면 members/page.tsx의 ring-[1.5px]도 같이 올리세요.
  *
  * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
  * 큰 주황 상자(EventHeroCard)에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
@@ -50,7 +52,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
     */
     <Link
       href="/events"
-      className="flex items-center gap-4 rounded-3xl bg-surface py-4 pl-4 shadow-[var(--shadow-float)] ring-[1.5px] ring-brand-500 transition active:scale-[0.99]"
+      className="flex items-center gap-4 rounded-3xl bg-surface py-4 pl-4 shadow-[var(--shadow-float)] ring-2 ring-brand-500 transition active:scale-[0.99]"
     >
       <DdayRing date={event.date} />
       <span className="min-w-0 flex-1">
@@ -60,11 +62,16 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         {/*
           둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
           자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
-          아이콘·글씨 모두 흐린 먹색 — 흰 카드로 돌아오면서(2026-09-14) 흰색에서 옮겼습니다.
-          참고 사진처럼 제목은 진하고 이 줄은 한 단 흐려, 둘의 차례가 한눈에 읽힙니다.
+
+          색은 제목과 같은 먹색(ink)입니다. 흰 카드로 돌아오면서 흐린 먹색으로
+          두었다가 같은 날 사용자가 검은색으로 바꿨습니다(2026-09-14).
+          아이콘은 색을 따로 적지 않습니다 — currentColor라 이 줄의 색을 그대로
+          따라오므로, 글씨 색만 고치면 핀·시계도 함께 바뀝니다.
+          제목과 같은 색이 된 대신 글씨 크기(18px ↔ 14px)와 굵기(bold ↔ medium)가
+          둘의 차례를 가릅니다.
         */}
         {event.location || time ? (
-          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink-muted">
+          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[15px] w-[15px] shrink-0" />
