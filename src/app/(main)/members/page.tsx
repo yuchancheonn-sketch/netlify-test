@@ -204,15 +204,15 @@ export default function MembersPage() {
           gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
 
-          overflow-x-auto + shrink-0 — 30px에서 셋을 늘어놓으면 약 380px입니다.
-          (16px로 그려지던 때 실제 화면을 재서 얻은 값을 비례로 올린 것이라,
-           글자 폭을 눈대중으로 셈한 값보다 믿을 만합니다.)
-          폭이 411px인 폰에서 쓸 수 있는 자리가 367px이니 십몇 px쯤 넘칩니다 —
-          "대학생 원우"의 끝 글자만 살짝 밀어야 나옵니다. 한 칸도 안 들어오는
-          정도는 아닙니다. 밀지 않고 다 보이게 하려면 28px까지 내리면 됩니다.
+          overflow-x-auto + shrink-0 — 22px에서 셋을 늘어놓으면 약 280px이라
+          폭이 411px인 폰에서 쓸 수 있는 자리(367px)에 넉넉히 들어옵니다.
+          (16px로 그려지던 때 실제 화면을 재 보니 셋이 약 203px였고, 그 값을
+           비례로 올린 것입니다. 글자 폭을 눈대중으로 셈하면 크게 빗나갑니다 —
+           한글 한 자를 1em으로 잡았다가 두 배 가까이 틀린 적이 있습니다.)
 
-          넘친 것을 받아 주는 장치입니다. body가 overflow-x: hidden이라 이게
-          없으면 넘친 글자가 잘려 나가고 밀 수도 없습니다. 막대는
+          그래도 가로로 밀 수 있게 남겨 둡니다. 320px짜리 좁은 폰이거나 보기
+          설정이 "크게"(zoom 1.15)면 넘치는데, body가 overflow-x: hidden이라
+          이게 없으면 넘친 글자가 잘려 나가고 밀 수도 없습니다. 막대는
           no-scrollbar로 숨깁니다(globals.css).
           shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
 
@@ -266,7 +266,7 @@ export default function MembersPage() {
                   leading-none(1배)까지 가지 않은 것은 한글 내림 부분이
                   글자 상자에 닿아 답답해 보이기 때문입니다.
                 */}
-                <span className="text-[30px] leading-tight font-bold">{label}</span>
+                <span className="text-[22px] leading-tight font-bold">{label}</span>
               </button>
             );
           })}
