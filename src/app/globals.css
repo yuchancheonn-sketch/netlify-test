@@ -564,19 +564,15 @@ button {
  * 지나온 값 (모두 2026-09-14): 6px → 2px(제목을 위로 올려 달라고 해서)
  * → 8px → 다시 6px. 돌고 돌아 처음 값으로 왜습니다. 눈으로 고른 값입니다.
  *
- * 아래 짧은 화면 규칙에도 padding-top을 다시 적지 않습니다 — 거기서는
- * padding-bottom만 줄이고 위는 이 값을 그대로 씁니다. 같은 값을 두 곳에
- * 적어 두면 한쪽만 고쳐져 어긋납니다.
+ * 아래 짧은 화면 규칙에는 아래 여백도 위 여백도 다시 적지 않습니다.
+ * 아래는 PageHeader의 pb-1.5(6px)가 이미 그만큼이라 줄일 것이 없고, 위는
+ * 이 값을 그대로 씁니다. 같은 값을 두 곳에 적어 두면 한쪽만 고쳐져 어긋납니다.
  */
 .page-header {
   padding-top: calc(6px + env(safe-area-inset-top));
 }
 
 @media (max-height: 480px) {
-  .page-header {
-    padding-bottom: 6px;
-  }
-
   /* 22px → 18px. 본문 글씨(15~16px)보다는 확실히 커서 제목으로 읽힙니다. */
   .page-header h1 {
     font-size: 18px;
