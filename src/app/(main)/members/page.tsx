@@ -118,7 +118,7 @@ export default function MembersPage() {
   );
 
   /**
-   * 고르개 칸 이름표 — **고른 칸에만** 이름 뒤에 인원 수를 답니다 ("전체 50").
+   * 고르개 칸 이름표 — **고른 칸에만** 이름 뒤에 인원 수를 답니다 ("전체 50명").
    * 안 고른 칸은 이름만 있습니다 (2026-09-14 사용자 요청).
    *
    * ★ 숫자가 붙고 떨어지므로 고를 때 칸 폭이 달라집니다.
@@ -145,11 +145,17 @@ export default function MembersPage() {
           value === activeFilter ? (
             <>
               {label}{" "}
+              {/*
+                숫자에만 고정폭을 걸고 "명"은 밖에 둡니다. 안에 같이 넣으면
+                min-w-[2ch]가 "50명"을 통째로 오른쪽에 붙여, 한 자리일 때
+                "명"까지 밀려 들어가 자리가 어긋납니다.
+              */}
               <span className="inline-block min-w-[2ch] text-right tabular-nums">
                 {value === "all"
                   ? searched.length
                   : searched.filter((entry) => entry.memberType === value).length}
               </span>
+              명
             </>
           ) : (
             label
