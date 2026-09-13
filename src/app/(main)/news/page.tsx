@@ -69,7 +69,8 @@ function NewsFallback() {
         title={<Skeleton className="h-[37px] w-[165px] rounded-lg" />}
         right={<HeaderActions />}
       />
-      <div className="px-4 pb-8">
+      {/* pt-4는 아래 NewsTabs의 본문 상자와 같은 값이어야 합니다 — 그쪽 주석 참고. */}
+      <div className="px-4 pt-4 pb-8">
         <Skeleton className="aspect-video rounded-2xl" />
       </div>
     </>
@@ -102,7 +103,20 @@ function NewsTabs() {
         right={<HeaderActions />}
       />
 
-      <div className="px-4 pb-8">{subtab === "videos" ? <VideoList /> : <NewsList />}</div>
+      {/*
+        pt-4 — 맨 위 게시물과 제목 줄 사이 16px. 제목 줄의 pb(6px)에 더해 22px입니다.
+        홈·원우수첩과 같은 값이라 세 탭의 첫 칸이 같은 높이에서 시작합니다.
+
+        ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
+          제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
+          여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
+
+        ★ 위 NewsFallback의 같은 상자에도 같은 pt-4가 있어야 합니다.
+          한쪽만 주면 기다리는 화면과 채워진 화면의 첫 칸 위치가 달라 튀어 보입니다.
+      */}
+      <div className="px-4 pt-4 pb-8">
+        {subtab === "videos" ? <VideoList /> : <NewsList />}
+      </div>
     </>
   );
 }
