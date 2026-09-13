@@ -67,33 +67,38 @@ export default function LibraryPage() {
 
   return (
     <>
+      {/*
+        제목 자리에 고르개를 넣습니다 (2026-09-14, 소식 탭과 같은 방식).
+        예전에는 제목이 "자료"이고 본문 맨 위에 고르개가 따로 한 줄 서 있었습니다.
+        공용 TextTabs의 variant="header"가 글씨를 22px로 키워 다른 화면의 제목과
+        같은 크기·같은 자리(화면 끝에서 16px)에 세웁니다.
+
+        ★ 기수 고르개(운영진만 보임)는 그대로 옆에 답니다.
+          "자료"가 있던 자리를 고르개가 대신하는 것이지, 기수를 바꾸는 길이
+          없어지면 안 됩니다. min-w-0은 폭이 모자랄 때 탭 쪽이 먼저 줄어들며
+          가로로 밀리게 하려는 것입니다 — 없으면 기수 고르개가 밀려 잘립니다.
+      */}
       <PageHeader
         title={
           canSwitch ? (
-            <span className="flex items-center gap-2">
-              자료
+            <span className="flex min-w-0 items-center gap-2">
+              <TextTabs
+                variant="header"
+                items={SUBTABS}
+                value={subtab}
+                onChange={setSubtab}
+                className="min-w-0"
+              />
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            "자료"
+            <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
           )
         }
         right={<HeaderActions />}
       />
 
-      <div className="px-4 pb-8">
-        {/*
-          행사 사진 / 파일 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
-          원우수첩·소식 탭의 고르개와 **같은 컴포넌트**를 씁니다.
-          모양을 고치려면 그 파일만 고치세요.
-          (2026-09-14에 흰 알약 하나 안에 둘을 담던 방식에서 바꿨습니다.)
-        */}
-        <TextTabs items={SUBTABS} value={subtab} onChange={setSubtab} />
-
-        <div className="mt-5">
-          {subtab === "photos" ? <AlbumList /> : <FileList />}
-        </div>
-      </div>
+      <div className="px-4 pb-8">{subtab === "photos" ? <AlbumList /> : <FileList />}</div>
     </>
   );
 }
