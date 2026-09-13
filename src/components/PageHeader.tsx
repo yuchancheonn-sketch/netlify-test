@@ -69,9 +69,26 @@ export default function PageHeader({
      *   덮어씁니다 — 그 규칙은 레이어 밖이라 Tailwind 유틸리티를 이깁니다.
      *   눕힌 폰이나 자판이 올라온 화면에서 제목 줄이 본문을 밀어내지 않게
      *   하려는 것이니, 그대로 두세요.
+     *
+     * ★ 스크롤해도 위에 붙어 있습니다 (sticky top-0, 2026-09-14).
+     *   모든 화면이 이 컴포넌트를 쓰므로 한 줄로 앱 전체가 따라옵니다.
+     *
+     *   bg-canvas — 바탕을 깔아야 본문이 뒤로 지나갑니다. 안 깔면 글자가
+     *   제목과 겹쳐 보입니다.
+     *
+     *   z-30 — 하단 탭바와 같은 층입니다. 본문 위에 뜨는 것들(FAB·스크림 z-10~20)
+     *   보다는 위, 시트·사진 크게보기(z-50)와 드롭다운(z-40)보다는 아래라
+     *   그것들이 열리면 제목 줄을 덮습니다. 자료 탭에서 드롭다운을 닫으려고
+     *   까는 투명 덮개도 z-30이라, 열려 있을 때 제목 줄을 누르면 닫힙니다.
+     *
+     *   ★ sticky는 감싸는 상자에 overflow나 transform이 있으면 조용히 죽습니다.
+     *     지금은 MainShell의 flex 상자와 <main>뿐이라 괜찮습니다. body의
+     *     overflow-x: hidden도 html이 visible이라 뷰포트로 넘어가고 body는
+     *     visible로 남아 영향이 없습니다(globals.css의 body 주석).
+     *     나중에 어느 화면이 제 스크롤 상자를 만들면 그 화면만 안 붙습니다.
      */
     <header
-      className={`page-header flex gap-3 px-4 pb-5 ${
+      className={`page-header sticky top-0 z-30 flex gap-3 bg-canvas px-4 pb-5 ${
         eyebrow ? "items-start" : "items-center"
       }`}
     >
