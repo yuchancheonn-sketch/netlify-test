@@ -128,14 +128,16 @@ export default function MembersPage() {
    *   (text-transparent) 보이지만 않게 하면 폭이 못 박힙니다 — 대신 안 고른
    *   이름 뒤에 빈 자리가 남아 칸 사이가 들쭉날쭉해 보입니다.
    *
-   * ★ 반면 **검색어를 칠 때는** 흔들리지 않습니다. 그쪽이 훨씬 자주 일어나므로
-   *   두 가지로 막아 두었습니다.
-   *   tabular-nums  숫자마다 폭이 같아집니다. 없으면 1과 8의 폭이 달라 같은
-   *                 두 자리여도 칸이 미세하게 흔들립니다.
-   *   min-w-[2ch]   숫자 자리를 늘 두 자리만큼 잡습니다. 50 → 8 → 12로 자릿수가
-   *                 오가도 폭이 그대로입니다.
-   *                 (100을 넘는 것은 "전체 기수" 수첩뿐이고, 그때는 세 자리로
-   *                  한 번 넓어진 뒤 그대로입니다.)
+   * ★ 숫자에는 tabular-nums만 겁니다.
+   *   숫자마다 폭이 같아져, 같은 자릿수 안에서는(50 → 38) 칸이 흔들리지 않습니다.
+   *
+   *   한때 min-w-[2ch]로 숫자 자리를 늘 두 자리만큼 잡아 자릿수가 바뀔 때도
+   *   (50 → 6) 폭이 그대로이게 했는데, **한 자리일 때 숫자 앞에 빈 자리가 남아
+   *   "대학생 원우␣␣6명"처럼 벌어져 보였습니다.** 눈에 보이는 흠이 더 커서
+   *   2026-09-14에 걷어냈습니다. 대신 자릿수가 바뀌는 순간(9 ↔ 10)에는 고른
+   *   칸이 한 글자만큼 넓어졌다 좁아집니다.
+   *   다시 넣고 싶으면 빈 자리가 "명" 쪽이 아니라 이름 쪽으로 가도록
+   *   text-right가 아닌 다른 방법을 찾아야 합니다.
    */
   const filterItems = useMemo(
     () =>
@@ -145,12 +147,7 @@ export default function MembersPage() {
           value === activeFilter ? (
             <>
               {label}{" "}
-              {/*
-                숫자에만 고정폭을 걸고 "명"은 밖에 둡니다. 안에 같이 넣으면
-                min-w-[2ch]가 "50명"을 통째로 오른쪽에 붙여, 한 자리일 때
-                "명"까지 밀려 들어가 자리가 어긋납니다.
-              */}
-              <span className="inline-block min-w-[2ch] text-right tabular-nums">
+              <span className="tabular-nums">
                 {value === "all"
                   ? searched.length
                   : searched.filter((entry) => entry.memberType === value).length}
@@ -183,7 +180,20 @@ export default function MembersPage() {
         right={<HeaderActions />}
       />
 
-      <div className="px-4">
+      {/*
+        검색칸·고르개까지 제목 줄과 함께 붙박이입니다 (2026-09-14).
+
+        제목 줄만 붙박이였을 때는 스크롤하면 검색 알약이 그 밑으로 지나가면서
+        **주황 테두리 윗변이 잘려** 부서져 보였습니다. 1.5px짜리 엇가다랑 선이라
+        조금만 가려도 망가짐으로 읽힙니다. 아예 같이 붙박이로 두면 지나갈 일이 없습니다.
+
+        원우가 378명까지 가는 목록이라 검색칸이 늘 손에 닿는 편이 낫기도 합니다.
+        대신 목록이 쓰는 세로가 100px쯤 줄어듭니다.
+
+        z-30은 PageHeader와 같은 층입니다. 안에 들어있는 PageHeader도 sticky지만,
+        부모가 이미 붙어 있어 제자리에 멈춤 — 것으로 보이는 모양은 같습니다.
+      */}
+      <div className="sticky top-0 z-30 bg-canvas px-4 pb-4">
         {/* 검색 */}
         <div className="relative">
           {/*
@@ -280,8 +290,14 @@ export default function MembersPage() {
           }
         />
 
-        {/* 목록 */}
-        <div className="mt-4 pb-6">
+      </div>
+
+      <div className="px-4">
+        {/*
+          목록. 위 간격은 붙박이 상자의 pb-4(16px)가 이미 내고 있으므로
+          여기서 또 mt를 주지 않습니다 — 둘 다 주면 28px로 벌어집니다.
+        */}
+        <div className="pb-6">
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 줄 사이 선, 위아래 12px, 63px 사진 칸. */
             <ul className="flex flex-col">
