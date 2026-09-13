@@ -92,7 +92,13 @@ export default function SessionPage({
         title={`${week}주차 수업`}
         backHref="/sessions"
         right={
-          /* 원우수첩의 수정 버튼과 같은 모양입니다 — 누구나 함께 채우는 자리라는 뜻. */
+          /*
+            "누구나 함께 채우는 자리"라는 뜻으로 원우수첩의 수정 단추와 같은 모양을
+            썼는데, 2026-09-14에 원우수첩 쪽이 연필 아이콘(PencilIcon)만 남기고
+            글씨·테두리를 걷어내서 지금은 둘이 다릅니다. 여기는 목록의 한 줄이
+            아니라 제목 줄에 서는 단추라 그대로 뒀습니다 — 맞추고 싶으면
+            members/page.tsx의 수정 단추를 그대로 옮겨 오면 됩니다.
+          */
           <button
             type="button"
             onClick={() => setEditing(true)}

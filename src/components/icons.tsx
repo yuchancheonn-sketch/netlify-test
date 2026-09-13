@@ -315,6 +315,32 @@ export function CameraIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+/**
+ * 연필 — "고치기". 원우수첩 줄 오른쪽의 수정 단추가 씁니다.
+ *
+ * 몸통은 기울어진 네모 하나로 그리고, 위쪽을 가로지르는 짧은 선이 지우개 쪽
+ * 쇠테입니다. 그 선이 없으면 작게 줄였을 때 그냥 기울어진 막대로 보입니다.
+ * 아래 끝(3.3, 21)은 닫지 않고 뾰족하게 모아 심으로 읽히게 했습니다.
+ */
+export function PencilIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M16.5 3.9a2.55 2.55 0 1 1 3.6 3.6L7.9 19.7l-4.6 1.3 1.3-4.6L16.5 3.9Z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <path
+        d="m14.7 5.8 3.6 3.6"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function SearchIcon({ className, strokeWidth = 1.9 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">

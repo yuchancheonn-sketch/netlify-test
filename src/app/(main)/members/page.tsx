@@ -7,7 +7,7 @@ import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
+import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
@@ -577,44 +577,33 @@ function MemberRow({
 
       {/* 원우 누구나 서로 채워줄 수 있어서, 내 칸이라고 달리 보이지 않습니다. */}
       {/*
-        테두리 색을 글씨와 같은 --color-ink-muted로 둡니다. 예전에는 텍스트만
-        이 색이고 테두리는 stone-200이었는데, 그건 화면 색을 따라가지 않는
-        고정 팔레트라 어두운 화면에서 흰 테두리처럼 도드라졌습니다.
-      */}
-      {/*
-        ★ 글씨 크기 뒤의 !가 꼭 필요합니다.
+        "수정" 글씨 + 테두리 단추였던 것을 연필 아이콘 하나로 바꿨습니다
+        (2026-09-14, 사용자 제안). 목록에서 카드를 걷어낸 뒤라 테두리 단추만
+        줄마다 남아 혼자 상자처럼 보였습니다.
 
-        globals.css의 `button { font-size: 16px }`는 레이어 밖에 있어서
-        @layer utilities 안의 text-[12px]를 이깁니다. 그래서 이 단추는
-        12px이 아니라 **16px로 그려지고 있었고**, 의도보다 20px 가까이
-        넓어져 이름이 설 자리를 빼앗고 있었습니다.
-        (그 규칙은 아이폰에서 입력칸을 눌렀을 때 화면이 확대되는 것을
-         막는 것이라 없앨 수 없습니다.)
+        ★ 덤으로 이름 자리가 넓어졌습니다.
+          옛 단추는 글씨(13px) + 좌우 여백(px-2.5) + 테두리로 60px 가까이
+          차지했는데, 지금은 -mr-2까지 더해 32px만 씁니다. 네 글자 직위
+          (정무특보)가 붙어도 이름이 밀리던 자리가 그만큼 풀렸습니다.
+          (그래서 이름과 자리를 다투느라 한 단 좁혀 뒀던 직위 배지는
+           그대로 둡니다 — 이제 여유가 있으니 넓히고 싶으면 넓혀도 됩니다.)
 
-        앞에 붙어 있던 연필 기호(✎)는 뺐습니다. 기호 하나가 16px인데 그게 곧
-        이름 한 글자라, 네 글자 직위(정무특보)가 붙었을 때 마지막까지 모자라던
-        자리였습니다. 무엇을 하는 단추인지는 글씨와 aria-label로 충분합니다.
+        ★ 누르는 자리는 40px, 아이콘은 20px입니다.
+          손끝이 닿는 자리는 아이콘보다 넉넉해야 합니다. -mr-2로 8px 당기는
+          것은 그 빈 여백 때문입니다 — 안 당기면 아이콘이 화면 가장자리에서
+          27px 안쪽에 서서, 16px에 맞춰 선 사진·검색칸보다 혼자 들어가
+          보입니다. 헤더 아이콘(PageHeader의 last:-mr-1)과 같은 셈법입니다.
 
-        ★ 크기는 가로와 세로를 따로 봅니다.
-
-          가로만 이름과 자리를 다툽니다. 그래서 글씨(13px)와 좌우 여백
-          (px-2.5)은 넉넉히 두되, 늘어난 만큼은 아래 직위 배지를 한 단
-          좁혀 벌충했습니다.
-
-          세로는 아무것도 밀어내지 않지만, 그렇다고 키울 이유도 아닙니다.
-          한때 py-2까지 올렸다가 단추가 카드 안에서 혼자 두툼해 보여
-          py-1로 되돌렸습니다. 이 줄에서 눈에 먼저 들어와야 하는 것은
-          이름이고, 수정은 그 다음입니다.
-
-          테두리·글씨는 ink-faint — 2026-09-11에 ink-muted에서 한 단계 연하게 바꿨습니다.
+        색은 ink-faint 그대로입니다 — 이 줄에서 먼저 읽혀야 하는 것은
+        이름이고 수정은 그 다음입니다.
       */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="shrink-0 rounded-lg border border-ink-faint px-2.5 py-1 text-[13px]! font-bold text-ink-faint transition active:scale-95"
+        className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill active:scale-95"
       >
-        수정
+        <PencilIcon className="h-5 w-5" />
       </button>
     </div>
   );
