@@ -196,11 +196,13 @@ export default function MembersPage() {
         {showTypeFilter ? (
         /*
           pl-3 — 왼쪽으로 12px 들여 씁니다. 바깥 px-4(16px)에 더해 28px입니다.
-          아래 원우 목록의 줄(MemberRow도 pl-3)과 구분선이 서는 자리와 같아서,
-          고르개 첫 글자와 사진 왼쪽 끝이 한 줄로 섭니다.
           화면 끝(16px)에 바짝 붙이면 글자만 있는 줄이라 허전해 보였습니다.
-          ★ 이 값을 바꾸면 MemberRow의 pl-3과 구분선의 ml-3도 같이 바꿔야
-            셋이 계속 한 줄에 섭니다.
+
+          ★ 아래 목록의 줄은 이보다 덜 들어갑니다(pl-1.5, 22px). 일부러 어긋나게
+            둔 것입니다 — 여기는 글자라 양옆에 제 여백을 달고 있지만 목록 쪽
+            맨 앞은 사진(112px)이라 가장자리가 꽉 찬 면이어서, 같은 자리에 두면
+            사진이 더 오른쪽으로 나온 것처럼 보입니다. 숫자를 맞추기보다
+            눈에 맞춘 값이니 한쪽을 고칠 때 다른 쪽을 따라 고치지 마세요.
 
           gap-[14px] — 셋 사이 간격. 20px에서 16px, 다시 14px로 좁혀 왔습니다.
           Tailwind의 단계(gap-3=12px, gap-4=16px) 사이 값이라 직접 적습니다.
@@ -287,8 +289,8 @@ export default function MembersPage() {
             <ul className="flex flex-col">
               {[0, 1, 2, 3].map((key, index) => (
                 <li key={key}>
-                  {index > 0 ? <div className="ml-3 border-t border-line" /> : null}
-                  <div className="py-3 pl-3">
+                  {index > 0 ? <div className="ml-1.5 border-t border-line" /> : null}
+                  <div className="py-3 pl-1.5">
                     <Skeleton className="h-[63px] rounded-2xl" />
                   </div>
                 </li>
@@ -328,8 +330,9 @@ export default function MembersPage() {
               맨 윗줄 위에는 선을 긋지 않습니다. 위쪽은 구분 고르개가 이미
               갈라 주고 있어서, 선을 그으면 고르개를 가두는 상자처럼 보입니다.
 
-              선은 왼쪽만 12px 들입니다(ml-3) — 줄 내용이 서는 자리와 같게
-              맞춘 것입니다. 안 들이면 선만 사진 왼쪽으로 12px 삐져나옵니다.
+              선은 왼쪽만 6px 들입니다(ml-1.5) — 줄 내용(MemberRow의 pl-1.5)이
+              서는 자리와 같게 맞춘 것입니다. 안 들이면 선만 사진 왼쪽으로
+              삐져나옵니다. 줄의 들여쓰기를 고치면 이 값도 같이 고쳐야 합니다.
               사진 칸(112px) 뒤부터 긋는 방법도 있지만, 그렇게까지 들이면
               이번에는 사진이 선 밖으로 튀어나온 것처럼 읽힙니다.
               오른쪽은 본문 끝까지 긋습니다.
@@ -337,7 +340,7 @@ export default function MembersPage() {
             <ul className="flex flex-col">
               {visible.map((entry, index) => (
                 <li key={entry.key}>
-                  {index > 0 ? <div className="ml-3 border-t border-line" /> : null}
+                  {index > 0 ? <div className="ml-1.5 border-t border-line" /> : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -444,11 +447,15 @@ function MemberRow({
      * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
      *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
      *   가르는 일은 목록 쪽의 border-t가 맡습니다.
-     *   카드의 안쪽 여백(옛 p-3)은 걷었지만, 왼쪽은 pl-3으로 12px 다시
+     *   카드의 안쪽 여백(옛 p-3)은 걷었지만, 왼쪽은 pl-1.5로 6px 다시
      *   들였습니다 (2026-09-14 — 내용이 왼쪽에 몰려 보인다는 사용자 말).
-     *   바깥 px-4(16px)에 더해 **28px**에서 시작하는데, 이 자리가 바로 위
-     *   구분 고르개("전체 / 일반 원우 / 대학생 원우")가 서는 자리와 같습니다.
-     *   그래서 고르개의 첫 글자와 사진 왼쪽 끝이 한 줄로 섭니다.
+     *   바깥 px-4(16px)에 더해 **22px**에서 시작합니다.
+     *
+     *   처음에는 위 구분 고르개와 같은 28px(pl-3)로 맞췄는데 "너무 오른쪽으로
+     *   왔다"고 해서 6px로 줄였습니다. 숫자를 맞추면 오히려 어긋나 보이는
+     *   자리입니다 — 고르개는 글자라 양옆에 제 여백을 달고 있지만 여기 맨 앞은
+     *   사진(112px)이라 가장자리가 꽉 찬 면이어서, 같은 x에 둬도 사진이 더
+     *   오른쪽으로 나온 것처럼 보입니다.
      *   (검색 알약은 폭을 꽉 채우는 칸이라 16px 그대로입니다 — 알약은
      *    테두리가 있어 제 경계를 스스로 보이므로 같이 들일 필요가 없습니다.)
      *
@@ -457,7 +464,7 @@ function MemberRow({
      *
      *   위아래는 12px입니다.
      */
-    <div className="flex items-center gap-3 py-3 pl-3">
+    <div className="flex items-center gap-3 py-3 pl-1.5">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
