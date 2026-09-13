@@ -575,7 +575,6 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
 
 /** 행사(앨범) 목록 */
 function AlbumList() {
-  const { isAdmin } = useAuth();
   const { data: allAlbums, loading, error } = useAlbums();
   /** 보고 있는 기수의 앨범만. 만들 때도 이 기수로 적습니다. */
   const { cohort } = useViewCohort();
@@ -603,11 +602,7 @@ function AlbumList() {
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
             title="아직 앨범이 없어요"
-            description={
-              isAdmin
-                ? "아래 '앨범 만들기'로 첫 행사 앨범을 만들어 보세요."
-                : "운영진이 행사 앨범을 만들면 여기에 표시됩니다."
-            }
+            description="아래 '앨범 만들기'로 첫 행사 앨범을 만들어 보세요."
           />
         </div>
       ) : (
@@ -649,20 +644,22 @@ function AlbumList() {
       )}
 
       {/*
-        앨범 만들기 — 운영진만. 위 파일 칸의 "파일 올리기"와 같은 자리·같은
+        앨범 만들기 — 위 파일 칸의 "파일 올리기"와 같은 자리·같은
         모양의 떠 있는 주황 알약입니다 (2026-09-14). 두 칸은 한 번에 하나만
         보이므로 알약끼리 겹칠 일은 없습니다.
+
+        원우 누구나 봅니다 (2026-09-14, 예전엔 운영진만). 보안 규칙도 원래
+        photoAlbums 쓰기를 원우 누구에게나 열어 두었습니다. 새 앨범은 보고 있는
+        기수로 적히고, 원우는 자기 기수로 고정이라 늘 자기 기수에 만들어집니다.
       */}
-      {isAdmin ? (
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
-        >
-          <PlusIcon className="h-5 w-5" />
-          앨범 만들기
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onClick={() => setCreating(true)}
+        className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+      >
+        <PlusIcon className="h-5 w-5" />
+        앨범 만들기
+      </button>
 
       {creating ? <AlbumCreateSheet onClose={() => setCreating(false)} /> : null}
     </>
@@ -705,7 +702,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
       onClose();
     } catch (caught) {
       setError(
-        saveErrorMessage(caught, "앨범을 만들지 못했어요. 운영진 권한인지 확인해 주세요."),
+        saveErrorMessage(caught, "앨범을 만들지 못했어요."),
       );
       setSaving(false);
     }
