@@ -118,14 +118,22 @@ export default function MembersPage() {
   );
 
   /**
-   * 고르개 칸 이름표 — 이름 뒤에 인원 수를 답니다 ("전체 50").
+   * 고르개 칸 이름표 — **고른 칸에만** 이름 뒤에 인원 수를 답니다 ("전체 50").
+   * 안 고른 칸은 이름만 있습니다 (2026-09-14 사용자 요청).
    *
-   * ★ 숫자 때문에 칸 폭이 출렁이지 않게 두 가지를 겁니다.
-   *   tabular-nums  숫자마다 폭이 같아집니다. 이게 없으면 1과 8의 폭이 달라
-   *                 같은 두 자리여도 칸이 미세하게 흔들립니다.
-   *   min-w-[2ch]   숫자 자리를 늘 두 자리만큼 잡습니다. 검색어를 칠 때마다
-   *                 50 → 8 → 12로 자릿수가 오가는데, 이게 없으면 그때마다
-   *                 옆 칸들이 좌우로 밀립니다.
+   * ★ 숫자가 붙고 떨어지므로 고를 때 칸 폭이 달라집니다.
+   *   고른 칸이 30px쯤 넓어지면서 그 오른쪽 칸들이 밀립니다. 이 화면이 글씨
+   *   굵기까지 고정해 둔 것과는 어긋나지만, 손으로 누른 그 순간에만 일어나는
+   *   일이라 그대로 둡니다. 거슬리면 안 고른 칸에도 숫자 자리를 잡아 두고
+   *   (text-transparent) 보이지만 않게 하면 폭이 못 박힙니다 — 대신 안 고른
+   *   이름 뒤에 빈 자리가 남아 칸 사이가 들쭉날쭉해 보입니다.
+   *
+   * ★ 반면 **검색어를 칠 때는** 흔들리지 않습니다. 그쪽이 훨씬 자주 일어나므로
+   *   두 가지로 막아 두었습니다.
+   *   tabular-nums  숫자마다 폭이 같아집니다. 없으면 1과 8의 폭이 달라 같은
+   *                 두 자리여도 칸이 미세하게 흔들립니다.
+   *   min-w-[2ch]   숫자 자리를 늘 두 자리만큼 잡습니다. 50 → 8 → 12로 자릿수가
+   *                 오가도 폭이 그대로입니다.
    *                 (100을 넘는 것은 "전체 기수" 수첩뿐이고, 그때는 세 자리로
    *                  한 번 넓어진 뒤 그대로입니다.)
    */
@@ -133,18 +141,21 @@ export default function MembersPage() {
     () =>
       FILTERS.map(({ value, label }) => ({
         value,
-        label: (
-          <>
-            {label}{" "}
-            <span className="inline-block min-w-[2ch] text-right tabular-nums">
-              {value === "all"
-                ? searched.length
-                : searched.filter((entry) => entry.memberType === value).length}
-            </span>
-          </>
-        ),
+        label:
+          value === activeFilter ? (
+            <>
+              {label}{" "}
+              <span className="inline-block min-w-[2ch] text-right tabular-nums">
+                {value === "all"
+                  ? searched.length
+                  : searched.filter((entry) => entry.memberType === value).length}
+              </span>
+            </>
+          ) : (
+            label
+          ),
       })),
-    [searched],
+    [searched, activeFilter],
   );
 
   function openEntry(entry: DirectoryEntry, playVideo = false) {
@@ -238,10 +249,12 @@ export default function MembersPage() {
 
           mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
 
-          ★ 인원 수는 칸 이름 뒤에 붙어 있습니다 ("전체 50 / 일반 원우 45 /
-            대학생 원우 5"). 2026-09-14에 오른쪽 끝의 "원우 N명" 한 덩어리에서
-            이리로 옮겼습니다 — 칸마다 몇 명인지 바로 보이고, 고르개 옆에 따로
-            떠 있던 숫자가 사라집니다. 세는 자리는 위 filterItems입니다.
+          ★ 인원 수는 **고른 칸에만** 이름 뒤에 붙습니다 ("전체 50").
+            2026-09-14에 두 번 옮겼습니다: 오른쪽 끝의 "원우 N명" 한 덩어리
+            → 세 칸 모두에 숫자 → 고른 칸에만 숫자.
+            세 칸 모두에 달았을 때는 20px에서 줄이 약 340px이라 390px 폰에서
+            거의 꽉 찼는데, 한 칸만 달면서 약 300px로 내려와 여유가 생겼습니다.
+            세는 자리는 위 filterItems입니다.
 
           1·2기 수첩에는 대학생 원우가 없어 고르개를 숨깁니다. 그러면 칸에 붙은
           숫자도 함께 사라지므로, **그때만** 오른쪽 끝에 "원우 N명"을 세웁니다
