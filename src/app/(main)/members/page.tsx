@@ -282,10 +282,11 @@ export default function MembersPage() {
         {/* 목록 */}
         <div className="mt-4 pb-6">
           {busy ? (
-            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 선 없이 위아래 12px, 63px 사진 칸. */
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 줄 사이 선, 위아래 12px, 63px 사진 칸. */
             <ul className="flex flex-col">
-              {[0, 1, 2, 3].map((key) => (
+              {[0, 1, 2, 3].map((key, index) => (
                 <li key={key}>
+                  {index > 0 ? <div className="border-t border-line" /> : null}
                   <div className="py-3">
                     <Skeleton className="h-[63px] rounded-2xl" />
                   </div>
@@ -314,19 +315,26 @@ export default function MembersPage() {
             </div>
           ) : (
             /*
-              줄을 가르는 것이 아무것도 없습니다 — 카드도, 구분선도 (2026-09-14).
-              같은 날 두 번 바뀌었습니다: 흰 카드 → 줄 사이 회색 선 → 여백만.
-              유튜브 목록처럼 그림이 각 줄의 닻 노릇을 하므로, 선을 그으면
-              오히려 줄마다 칸막이가 생겨 목록이 답답해집니다.
+              카드 대신 줄 사이 선으로 나눕니다 (2026-09-14, 사용자 제안).
+              예전에는 원우마다 흰 카드(rounded-3xl · 그림자)를 세우고 12px씩
+              띄웠는데, 배경이 흰색이 된 뒤로는 카드마다 헤어라인이 둘려
+              378명을 훑을 때 상자 테두리만 눈에 밟혔습니다.
 
-              대신 위아래 여백이 유일한 구분이라 MemberRow의 py-3(위아래 12px,
-              줄 사이 24px)을 함부로 줄이면 두 줄이 한 덩어리로 붙어 보입니다.
-              줄을 촘촘히 하고 싶으면 여백을 줄이기 전에 선을 되살리는 쪽이
-              낫습니다.
+              ★ 선을 아예 빼고 여백만으로 나눠 보기도 했습니다(같은 날, 유튜브
+                목록을 본떠서). 사용자가 둘을 실제로 견줘 보고 "선이 있는 게
+                훨씬 낫다"고 해서 되돌렸습니다. 다시 빼자고 제안하지 마세요.
+
+              맨 윗줄 위에는 선을 긋지 않습니다. 위쪽은 구분 고르개가 이미
+              갈라 주고 있어서, 선을 그으면 고르개를 가두는 상자처럼 보입니다.
+
+              선은 좌우로 들이지 않고 본문 폭을 꽉 채웁니다. 사진 칸(112px)
+              뒤부터 긋는 방법도 있지만, 그러면 사진이 선 밖으로 튀어나온
+              것처럼 읽혀서 그냥 끝까지 긋습니다.
             */
             <ul className="flex flex-col">
-              {visible.map((entry) => (
+              {visible.map((entry, index) => (
                 <li key={entry.key}>
+                  {index > 0 ? <div className="border-t border-line" /> : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -431,16 +439,11 @@ function MemberRow({
      * 자리를 여기서 8px(양옆 두 칸) 냈습니다.
      *
      * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
-     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어냈고, 줄 사이
-     *   구분선도 없습니다.
+     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
+     *   가르는 일은 목록 쪽의 border-t가 맡습니다.
      *   좌우 여백(옛 p-3의 12px)도 함께 걷었습니다 — 카드가 없으니 안쪽
      *   여백을 둘 이유가 없고, 걷어야 사진 왼쪽 끝이 바깥 px-4(16px)에 맞아
-     *   위의 검색칸·고르개와 한 줄로 섭니다.
-     *
-     *   ★ 그래서 py-3이 줄을 가르는 **유일한** 장치입니다.
-     *     위아래 12px씩이라 줄 사이가 24px입니다. 이 값을 줄이면 두 줄이
-     *     한 덩어리로 붙어 보이니, 촘촘히 하고 싶으면 여백을 깎기 전에
-     *     구분선을 되살리세요.
+     *   위의 검색칸·고르개와 한 줄로 섭니다. 위아래 12px만 남깁니다.
      */
     <div className="flex items-center gap-3 py-3">
       {/* 사진 · 영상 썸네일 */}
