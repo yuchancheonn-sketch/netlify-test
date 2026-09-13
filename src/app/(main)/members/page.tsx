@@ -227,7 +227,10 @@ export default function MembersPage() {
               모서리는 알약(rounded-full)입니다. 알약은 위아래 가운데가 가장
               넓은 자리라, 돋보기가 앉는 높이에서는 둥글기가 글자를 밀지 않습니다.
 
-              위아래 여백은 10px(py-2.5)에서 12px(py-3)로 2px씩 올렸습니다.
+              위아래 여백은 12.5px씩입니다. 10px(py-2.5) → 12px(py-3) → 지금 값으로
+              올려 왔습니다. 마지막 0.5px은 "높이를 1px만 늘려 달라"는 요청이라
+              위아래로 반씩 나눈 것입니다 — 한쪽에만 1px을 주면 글자가 가운데에서
+              벗어납니다. 폰은 화소 밀도가 2배 이상이라 0.5px도 또렷하게 나옵니다.
               돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
               따라옵니다.
 
@@ -248,7 +251,7 @@ export default function MembersPage() {
                 눈에 걸리되, 2px까지 가면 칸이 주황 테로 갇힌 것처럼 답답해
                 집니다. 폰은 화소 밀도가 2배 이상이라 0.5px도 또렷하게 나옵니다.
             */
-            className="w-full rounded-full bg-surface py-3 pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-[12.5px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
           />
         </div>
 
