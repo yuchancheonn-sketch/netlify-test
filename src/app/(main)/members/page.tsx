@@ -204,13 +204,13 @@ export default function MembersPage() {
           gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
 
-          overflow-x-auto + shrink-0 — ★ 45px에서는 셋을 늘어놓으면 약 560px라
-          **한 화면에 하나 반쯤만 보입니다.** 390px 폰에서 쓸 수 있는 폭이
-          346px이니, 처음에는 "전체"와 "일반 원우"의 앞부분만 보이고 나머지는
+          overflow-x-auto + shrink-0 — ★ 60px에서는 셋을 늘어놓으면 약 730px라
+          **한 화면에 하나 남짓만 보입니다.** 390px 폰에서 쓸 수 있는 폭이
+          346px이니, 처음에는 "전체"와 "일반 원우"의 앞글자만 보이고 나머지는
           옆으로 밀어야 나옵니다. 칸이 있는 줄 모르고 지나칠 수 있습니다.
+          ("대학생 원우" 한 칸만 해도 321px이라, 한 칸이 화면을 거의 채웁니다.)
           줄이려면 글씨를 24px 아래로 내리거나 이름을 줄이세요 —
-          "전체 / 일반 / 대학생"이면 45px에서도 약 360px라 거의 들어옵니다
-          (FILTERS의 label).
+          "전체 / 일반 / 대학생"이면 60px에서도 약 480px입니다(FILTERS의 label).
 
           가로로 미는 것 자체는 막아 뒀습니다. body가 overflow-x: hidden이라
           이게 없으면 넘친 글자가 잘려 나가고 밀 수도 없습니다. 막대는
@@ -241,13 +241,13 @@ export default function MembersPage() {
                 */
                 /*
                   leading-tight — 글줄 높이를 글자 크기의 1.25배로 조입니다.
-                  적지 않으면 글꼴이 정한 기본값(1.4~1.5배)이 걸려, 45px에서는
-                  글자 위아래로 10px씩 빈 자리가 생깁니다. 글씨가 클수록 그
+                  적지 않으면 글꼴이 정한 기본값(1.4~1.5배)이 걸려, 60px에서는
+                  글자 위아래로 13px씩 빈 자리가 생깁니다. 글씨가 클수록 그
                   빈 자리도 같이 커져서, 줄만 껑충해 보입니다.
                   leading-none(1배)까지 조이지 않은 것은 한글의 내림 부분이
                   글자 상자에 닿아 답답해 보이기 때문입니다.
                 */
-                className={`shrink-0 text-[45px] leading-tight font-bold transition ${
+                className={`shrink-0 text-[60px] leading-tight font-bold transition ${
                   active ? "text-ink" : "text-ink-muted"
                 }`}
               >
