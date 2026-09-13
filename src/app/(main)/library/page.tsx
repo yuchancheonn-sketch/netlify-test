@@ -98,7 +98,17 @@ export default function LibraryPage() {
         right={<HeaderActions />}
       />
 
-      <div className="px-4 pb-8">{subtab === "photos" ? <AlbumList /> : <FileList />}</div>
+      {/*
+        pt-4 — 첫 줄과 제목 줄 사이 16px. 제목 줄의 pb(6px)에 더해 22px입니다.
+        홈·원우수첩·소식과 같은 값이라 네 탭의 첫 칸이 같은 높이에서 시작합니다.
+
+        ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
+          제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
+          여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
+      */}
+      <div className="px-4 pt-4 pb-8">
+        {subtab === "photos" ? <AlbumList /> : <FileList />}
+      </div>
     </>
   );
 }
@@ -179,10 +189,10 @@ function FileList() {
   }
 
   if (loading) {
-    /* 아래 진짜 목록과 같은 짜임 — 3열, 세로로 선 3:4 종이. */
+    /* 아래 진짜 목록과 같은 짜임 — 2열, 세로로 선 3:4 종이. */
     return (
-      <ul className="grid grid-cols-3 gap-x-3 gap-y-5">
-        {[0, 1, 2, 3, 4, 5].map((key) => (
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
+        {[0, 1, 2, 3].map((key) => (
           <li key={key}>
             <Skeleton className="aspect-[3/4] rounded-lg" />
           </li>
@@ -213,12 +223,13 @@ function FileList() {
         </div>
       ) : (
         /*
-          3열 격자 (2026-09-14, 아이폰 파일 앱처럼).
+          2열 격자. 아이폰 파일 앱을 본떠 3열로 두었다가 같은 날 2열로
+          바꿨습니다 — 3열은 한 칸이 110px밖에 안 되어 문서 첫 장이 너무 작게
+          들어갑니다. 2열이면 165px쯤입니다. 행사 사진 앨범과도 열 수가 맞습니다.
           가로 12px·세로 20px로 다르게 둡니다 — 칸 아래에 글씨가 석 줄까지
           붙으므로, 세로를 가로만큼만 두면 윗칸 글씨와 아랫칸 그림이 붙어 보입니다.
-          (행사 사진 앨범은 2열 그대로입니다 — 그쪽은 사진이라 크게 보여야 합니다.)
         */
-        <ul className="grid grid-cols-3 gap-x-3 gap-y-5">
+        <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
           {files.map((file) => (
             <FileCard
               key={file.id}
@@ -363,8 +374,8 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
 
         {/*
           그림 아래 석 줄 — 이름 / 날짜 / 올린 사람·크기.
-          가운데로 모읍니다. 칸이 좁아(한 칸 110px 안팎) 왼쪽으로 붙이면
-          두 줄짜리 이름의 둘째 줄이 짧게 끝나 들쭉날쭉해 보입니다.
+          가운데로 모읍니다. 왼쪽으로 붙이면 두 줄짜리 이름의 둘째 줄이
+          짧게 끝나 칸마다 들쭉날쭉해 보입니다.
 
           이름은 두 줄까지 보이고 넘치면 "…"입니다(line-clamp-2). 파일 이름은
           길고 끝에 의미가 몰려 있는 일이 많아, 한 줄로 자르면 구별이 안 됩니다.
