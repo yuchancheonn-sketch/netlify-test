@@ -442,11 +442,14 @@ function MemberRow({
 
   return (
     /*
-     * gap-3 = 썸네일과 이름 사이 12px. 이 값이 이름 줄의 왼쪽 자리를 정합니다.
+     * gap-[13px] = 썸네일과 이름 사이 13px. 이 값이 이름 줄의 왼쪽 자리를 정합니다.
      *
      * 예전에는 gap-4(16px)였습니다. 썸네일 폭(112px)은 16:9를 지켜야 해서
      * 줄일 수 없으므로, 네 글자 직위(정무특보)가 붙어도 이름이 안 잘리게 할
-     * 자리를 여기서 8px(양옆 두 칸) 냈습니다.
+     * 자리를 gap-3(12px)으로 줄여 냈습니다.
+     * 2026-09-14에 글씨가 사진에 붙어 보인다고 해서 1px 되돌렸습니다 —
+     * Tailwind 단계(12px·16px) 사이 값이라 직접 적습니다. 그때 빌린 1px은
+     * 같은 날 "수정" 글씨 단추를 연필 아이콘으로 바꾸며 번 28px에서 나옵니다.
      *
      * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
      *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
@@ -468,7 +471,7 @@ function MemberRow({
      *
      *   위아래는 12px입니다.
      */
-    <div className="flex items-center gap-3 py-3 pl-0.5">
+    <div className="flex items-center gap-[13px] py-3 pl-0.5">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
