@@ -101,9 +101,12 @@ function NewsTabs() {
               /*
                 고른 것과 아닌 것의 차이는 색 하나뿐입니다. 굵기까지 바꾸면
                 고를 때마다 글자 폭이 달라져 옆 칸이 좌우로 밀립니다.
+
+                안 고른 칸의 ink-faint는 원우수첩 구분 고르개와 같은 값입니다
+                (2026-09-14에 ink-muted에서 함께 옮겼습니다). 한쪽만 고치지 마세요.
               */
               className={`transition ${
-                subtab === value ? "text-ink" : "text-ink-muted"
+                subtab === value ? "text-ink" : "text-ink-faint"
               }`}
             >
               {/*
