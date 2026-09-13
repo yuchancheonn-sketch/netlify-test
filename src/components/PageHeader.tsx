@@ -59,8 +59,19 @@ export default function PageHeader({
      *   뒤로가기 화살표가 아래로 내려앉습니다. eyebrow를 쓰는 화면(운영진·앨범)
      *   에는 오른쪽 요소가 없어서 이 갈래로 손해 보는 것이 없습니다.
      */
+    /*
+     * pb-5 — 제목 줄과 본문 사이 20px. 12px(pb-3)에서 넓혔습니다
+     * (2026-09-14, 모든 탭에서 제목 아래가 답답하다는 사용자 말).
+     * 이 컴포넌트를 모든 화면이 쓰므로 여기 한 줄이 앱 전체를 정합니다.
+     *
+     * ★ 세로가 짧을 때는 이 값이 안 먹습니다. globals.css의
+     *   `@media (max-height: 480px)`가 .page-header의 padding-bottom을 6px로
+     *   덮어씁니다 — 그 규칙은 레이어 밖이라 Tailwind 유틸리티를 이깁니다.
+     *   눕힌 폰이나 자판이 올라온 화면에서 제목 줄이 본문을 밀어내지 않게
+     *   하려는 것이니, 그대로 두세요.
+     */
     <header
-      className={`page-header flex gap-3 px-4 pb-3 ${
+      className={`page-header flex gap-3 px-4 pb-5 ${
         eyebrow ? "items-start" : "items-center"
       }`}
     >
