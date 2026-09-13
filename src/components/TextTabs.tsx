@@ -119,7 +119,7 @@ export default function TextTabs<T extends string>({
               고른 칸 아래 검은 바.
 
               ★ 안 고른 칸에도 같은 크기로 두고 색만 없앱니다.
-                아예 빼 버리면 고를 때마다 줄 높이가 3px씩 오르내려 아래 목록이
+                아예 빼 버리면 고를 때마다 줄 높이가 2.5px씩 오르내려 아래 목록이
                 통째로 들썩입니다.
 
               ★ 폭은 글자 폭에서 좌우 4px씩만 들인 값입니다 (self-stretch + mx-1).
@@ -131,12 +131,14 @@ export default function TextTabs<T extends string>({
                 글자 가운데께에만 바가 걸렸습니다. 고정값이라야 "글씨보다
                 아주 조금 작다"가 모든 칸에서 똑같이 보입니다.
 
-              두께 3px. rounded-full이라 양 끝이 둥근데, 2px 이하로 줄이면
-              그 둥근 끝이 뭉개져 그냥 선처럼 보입니다.
+              두께 2.5px (5px → 3px → 2.5px로 줄여 왔습니다).
+              rounded-full이라 양 끝이 둥근데, 2px 아래로 내려가면 그 둥근 끝이
+              뭉개져 그냥 선처럼 보입니다. 폰은 화소 밀도가 2배 이상이라
+              0.5px 차이도 또렷하게 나옵니다.
             */}
             <span
               aria-hidden
-              className={`mx-1 h-[3px] self-stretch rounded-full transition ${
+              className={`mx-1 h-[2.5px] self-stretch rounded-full transition ${
                 active ? "bg-ink" : "bg-transparent"
               }`}
             />
