@@ -204,17 +204,21 @@ export default function MembersPage() {
           gap-4 — 셋 사이는 16px. 글자를 키우면서 20px에서 좁혔습니다.
           글자가 커지면 사이가 같은 값이어도 더 벌어져 보입니다.
 
-          overflow-x-auto + shrink-0 — 글씨가 22px이라 셋을 늘어놓으면 약 290px,
-          보통 폰(390·360px)에서는 그대로 들어오지만 여유가 크지 않습니다.
-          320px짜리 좁은 폰이거나 보기 설정이 "크게"(zoom 1.15)면 줄이 넘치는데,
-          body가 overflow-x: hidden이라 그냥 두면 "대학생 원우"의 끝이 잘려
-          나갑니다. 넘칠 때만 가로로 밀 수 있게 해 두고, 막대는 no-scrollbar로
-          숨깁니다(globals.css).
+          overflow-x-auto + shrink-0 — ★ 32px에서는 셋을 늘어놓으면 약 408px라
+          **어느 폰에서도 한 줄에 다 들어오지 않습니다.** 390px 폰 기준으로 쓸 수
+          있는 폭이 346px이니 "대학생 원우"의 뒷부분이 화면 밖에 있고, 원우가
+          옆으로 밀어야 보입니다. 이게 싫으면 글씨를 24px 아래로 내리거나
+          이름을 줄이세요 — "전체 / 일반 / 대학생"이면 32px로도 약 256px라
+          한 줄에 들어옵니다(FILTERS의 label).
+
+          가로로 미는 것 자체는 막아 뒀습니다. body가 overflow-x: hidden이라
+          이게 없으면 넘친 글자가 잘려 나가고 밀 수도 없습니다. 막대는
+          no-scrollbar로 숨깁니다(globals.css).
           shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
 
-          ★ 글씨를 여기서 더 키우면 보통 폰에서도 밀어야 셋째가 보입니다.
+          mt-3 — 윗 여백은 16px에서 12px로 줄였습니다.
         */
-        <div className="no-scrollbar mt-4 flex gap-4 overflow-x-auto pl-3">
+        <div className="no-scrollbar mt-3 flex gap-4 overflow-x-auto pl-3">
           {FILTERS.map(({ value, label }) => {
             const active = activeFilter === value;
             return (
@@ -233,7 +237,15 @@ export default function MembersPage() {
                   2.4:1까지 떨어져, 원우 연령대를 생각하면 안 고른 칸이
                   "눌리지 않는 칸"처럼 보일 만큼 흐려집니다.
                 */
-                className={`shrink-0 text-[22px] font-bold transition ${
+                /*
+                  leading-tight — 글줄 높이를 글자 크기의 1.25배로 조입니다.
+                  적지 않으면 글꼴이 정한 기본값(1.4~1.5배)이 걸려, 32px에서는
+                  글자 위아래로 7~8px씩 빈 자리가 생깁니다. 글씨가 클수록 그
+                  빈 자리도 같이 커져서, 줄만 껑충해 보입니다.
+                  leading-none(1배)까지 조이지 않은 것은 한글의 내림 부분이
+                  글자 상자에 닿아 답답해 보이기 때문입니다.
+                */
+                className={`shrink-0 text-[32px] leading-tight font-bold transition ${
                   active ? "text-ink" : "text-ink-muted"
                 }`}
               >
