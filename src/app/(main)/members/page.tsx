@@ -144,8 +144,14 @@ export default function MembersPage() {
               있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
               오른쪽은 인원 수 자리만큼(pr-24) 비워 글자와 겹치지 않게 합니다.
               (인원 수 글씨를 13px → 16px로 키우면서 pr-16에서 넓혔습니다.)
+
+              모서리는 알약(rounded-full)입니다. 바로 아래 필터 알약과 대화방
+              입력칸이 같은 모양이라 셋이 나란히 읽힙니다.
+              좌우 여백(pl-10 / pr-24)은 그대로 둡니다 — 알약은 위아래 가운데가
+              가장 넓은 자리라, 아이콘과 인원 수가 앉는 높이에서는 둥글기가
+              글자를 밀지 않습니다.
             */
-            className="w-full rounded-xl bg-surface py-2.5 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-2.5 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
           {!busy && !error ? (
