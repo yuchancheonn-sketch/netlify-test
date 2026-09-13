@@ -155,19 +155,24 @@ export default function MembersPage() {
               돋보기와 "원우 N명"은 top-1/2로 가운데에 매달려 있어서 높이를
               건드려도 저절로 따라옵니다.
 
-              ★ 주황 테두리 하나뿐이고, 그림자는 없습니다.
-                다른 카드는 shadow-[var(--shadow-card)] 한 줄로 연회색 헤어라인과
-                글로우를 함께 받지만, 이 칸은 테두리 색이 달라 ring으로 따로
-                두릅니다. 글로우도 한동안 같이 받았는데(--shadow-card-glow),
-                2026-09-14에 사용자가 "이 박스에는 글로우 넣지 마"라고 해서
-                뺐습니다. 다시 넣자고 제안하지 마세요.
-                테두리가 또렷해서 칸의 경계는 그림자 없이도 충분히 보입니다.
+              ★ 테두리만 주황입니다.
+                다른 카드는 shadow-[var(--shadow-card)] 한 줄로 연회색 헤어라인
+                까지 함께 받지만, 이 칸은 테두리 색이 달라야 해서 글로우
+                (--shadow-card-glow)만 받고 테두리는 ring으로 따로 두릅니다.
+                --shadow-card를 통째로 다시 적으면 글로우 값을 베껴 쓰게 되고
+                나중에 글로우를 고칠 때 이 칸만 옛 값으로 남습니다.
+                Tailwind가 ring을 그림자보다 위에 그려 주므로, 테두리가 맨 위에
+                온다는 순서(globals.css의 --shadow-card 주석)도 그대로입니다.
+
+                ★ 글로우를 빼고 주황 테두리만 남겨 보기도 했지만(2026-09-14),
+                  사용자가 둘을 견줘 보고 "글로우 있는 게 낫다"고 해서
+                  되돌렸습니다. 다시 빼자고 제안하지 마세요.
 
                 굵기는 1.5px입니다. 다른 카드의 헤어라인(1px)보다 조금 굵어
                 눈에 걸리되, 2px까지 가면 칸이 주황 테로 갇힌 것처럼 답답해
                 집니다. 폰은 화소 밀도가 2배 이상이라 0.5px도 또렷하게 나옵니다.
             */
-            className="w-full rounded-full bg-surface py-3 pr-24 pl-10 text-[16px] text-ink ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-3 pr-24 pl-10 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
           />
           {/* -mt-px: 가운데(top-1/2)에서 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다. */}
           {!busy && !error ? (
