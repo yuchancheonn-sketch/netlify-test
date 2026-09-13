@@ -60,9 +60,14 @@ export default function PageHeader({
      *   에는 오른쪽 요소가 없어서 이 갈래로 손해 보는 것이 없습니다.
      */
     /*
-     * pb-5 — 제목 줄과 본문 사이 20px. 12px(pb-3)에서 넓혔습니다
-     * (2026-09-14, 모든 탭에서 제목 아래가 답답하다는 사용자 말).
+     * pb-3 — 제목 줄과 본문 사이 12px.
      * 이 컴포넌트를 모든 화면이 쓰므로 여기 한 줄이 앱 전체를 정합니다.
+     *
+     * ★ 붙박이가 된 뒤로 이 값은 "여백"이 아니라 **본문을 가리는 띠**입니다.
+     *   바탕이 아래 padding까지 칠해지므로, 스크롤할 때 이 값만큼의 본문이
+     *   제목 아래에 숨습니다. 12px → 20px로 넓혔다가 글이 잘려 보인다고 해서
+     *   같은 날 되돌렸습니다(2026-09-14). 더 넓히고 싶으면 이 값 대신 각
+     *   화면 본문의 위 여백을 늘리세요 — 그쪽은 같이 스크롤되어 안 가립니다.
      *
      * ★ 세로가 짧을 때는 이 값이 안 먹습니다. globals.css의
      *   `@media (max-height: 480px)`가 .page-header의 padding-bottom을 6px로
@@ -88,7 +93,7 @@ export default function PageHeader({
      *     나중에 어느 화면이 제 스크롤 상자를 만들면 그 화면만 안 붙습니다.
      */
     <header
-      className={`page-header sticky top-0 z-30 flex gap-3 bg-canvas px-4 pb-5 ${
+      className={`page-header sticky top-0 z-30 flex gap-3 bg-canvas px-4 pb-3 ${
         eyebrow ? "items-start" : "items-center"
       }`}
     >
