@@ -204,7 +204,7 @@ export default function MembersPage() {
           gap-[14px] — 셋 사이 간격. 20px에서 16px, 다시 14px로 좁혀 왔습니다.
           Tailwind의 단계(gap-3=12px, gap-4=16px) 사이 값이라 직접 적습니다.
 
-          overflow-x-auto + shrink-0 — 20px에서 셋을 늘어놓으면 약 250px이라
+          overflow-x-auto + shrink-0 — 19px에서 셋을 늘어놓으면 약 240px이라
           폭이 411px인 폰에서 쓸 수 있는 자리(367px)에 넉넉히 들어옵니다.
           (16px로 그려지던 때 실제 화면을 재 보니 셋이 약 203px였고, 그 값을
            비례로 올린 것입니다. 글자 폭을 눈대중으로 셈하면 크게 빗나갑니다 —
@@ -272,7 +272,7 @@ export default function MembersPage() {
                   leading-none(1배)까지 가지 않은 것은 한글 내림 부분이
                   글자 상자에 닿아 답답해 보이기 때문입니다.
                 */}
-                <span className="text-[20px] leading-tight font-bold">{label}</span>
+                <span className="text-[19px] leading-tight font-bold">{label}</span>
               </button>
             );
           })}
