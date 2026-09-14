@@ -861,7 +861,6 @@ function MemberDetailSheet({
                     {formatBirthday(
                       member.birthdayMonthDay,
                       member.birthdayYear,
-                      member.birthdayYearPublic,
                     )}
                   </dd>
                 </div>

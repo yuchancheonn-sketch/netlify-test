@@ -87,16 +87,16 @@ export function ddayLabel(value: string): string {
   return "지난 일정";
 }
 
-/** 생일 표시. 연도가 비공개면 월·일만 보여줍니다. */
-export function formatBirthday(
-  monthDay: string,
-  year: number | null,
-  yearPublic: boolean,
-): string {
+/**
+ * 생일 표시. 연도를 넣었으면 연도까지, 안 넣었으면 월·일만 보여줍니다.
+ * (2026-09-15에 "연도는 비공개로 하기"를 기능째 없애며 공개 여부 인자를 뺐습니다 —
+ *  Firestore에 남아 있는 옛 birthdayYearPublic 값은 이제 읽지 않습니다.)
+ */
+export function formatBirthday(monthDay: string, year: number | null): string {
   const match = /^(\d{2})-(\d{2})$/.exec(monthDay);
   if (!match) return "생일 미입력";
   const label = `${Number(match[1])}월 ${Number(match[2])}일`;
-  return year && yearPublic ? `${year}년 ${label}` : label;
+  return year ? `${year}년 ${label}` : label;
 }
 
 /**

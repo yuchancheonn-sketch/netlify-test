@@ -20,10 +20,12 @@ export interface UserDoc {
   photoURL: string | null;
   /** "MM-DD" 형식. 예: "03-21" */
   birthdayMonthDay: string;
-  /** 태어난 연도 (선택 입력) */
+  /**
+   * 태어난 연도 (선택 입력). 넣으면 원우수첩에 늘 보입니다.
+   * (옛 birthdayYearPublic — "연도는 비공개로 하기" — 은 2026-09-15에 기능째 없앴습니다.
+   *  예전에 가입한 원우의 문서에는 그 칸이 남아 있지만 앱은 더 이상 읽지도 쓰지도 않습니다.)
+   */
   birthdayYear: number | null;
-  /** 연도를 다른 원우에게 공개할지 여부 */
-  birthdayYearPublic: boolean;
   memberType: MemberType;
   /** 소속 회사·기관. 원우수첩 카드에 이름 아래로 보입니다. */
   company: string;

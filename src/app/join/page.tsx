@@ -48,7 +48,6 @@ function SignUpScreen() {
           photoURL: user.photoURL ?? null,
           birthdayMonthDay: "",
           birthdayYear: null,
-          birthdayYearPublic: false,
           memberType: "general",
           company: "",
           position: "",

@@ -52,8 +52,6 @@ interface FormState {
   month: string;
   day: string;
   birthdayYear: string;
-  /** 체크박스는 "비공개로 하기"지만 저장은 공개 여부로 하므로 뒤집어 씁니다. */
-  birthdayYearPublic: boolean;
   memberType: MemberType | "";
   company: string;
   position: string;
@@ -93,7 +91,6 @@ export default function ProfileForm({
       month: month ? String(Number(month)) : "",
       day: day ? String(Number(day)) : "",
       birthdayYear: profile?.birthdayYear ? String(profile.birthdayYear) : "",
-      birthdayYearPublic: profile?.birthdayYearPublic ?? false,
       // 최초 설정에서는 일부러 비워 두어 원우가 직접 고르게 합니다.
       memberType: profile?.profileCompleted ? profile.memberType : "",
       company: profile?.company ?? "",
@@ -272,7 +269,6 @@ export default function ProfileForm({
               ? `${form.month.padStart(2, "0")}-${form.day.padStart(2, "0")}`
               : "",
           birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
-          birthdayYearPublic: form.birthdayYear ? form.birthdayYearPublic : false,
           // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
           // 1·2기엔 대학생 원우가 없어 고르개를 숨기고 늘 일반 원우로 적습니다(lib/cohort.ts).
           memberType: hasYouthMembers(form.cohort) ? form.memberType || "general" : "general",
@@ -451,18 +447,11 @@ export default function ProfileForm({
           />
         </div>
         {errors.birthdayYear ? <FieldError>{errors.birthdayYear}</FieldError> : null}
-
-        {form.birthdayYear ? (
-          <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-[14px] text-ink-soft">
-            <input
-              type="checkbox"
-              checked={!form.birthdayYearPublic}
-              onChange={(event) => update("birthdayYearPublic", !event.target.checked)}
-              className="h-5 w-5 shrink-0 rounded-md accent-brand-500"
-            />
-            연도는 비공개로 하기
-          </label>
-        ) : null}
+        {/*
+          "연도는 비공개로 하기" 체크박스는 2026-09-15 사용자 요청으로 기능째 없앴습니다.
+          연도를 넣으면 원우수첩에 늘 함께 보입니다(lib/format.ts의 formatBirthday).
+          숨기고 싶은 원우는 연도 칸을 비워 두면 됩니다 — 연도는 원래 선택 칸입니다.
+        */}
       </div>
 
       {/* 구분 */}
