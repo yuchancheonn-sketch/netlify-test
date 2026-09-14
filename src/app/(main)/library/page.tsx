@@ -35,7 +35,7 @@ import {
   thumbnailUrl,
   uploadFile,
 } from "@/lib/cloudinary";
-import { dotDate, formatDotDate, todayString } from "@/lib/format";
+import { dotDate, todayString } from "@/lib/format";
 import { useAlbums, useFiles } from "@/lib/hooks";
 import { MAX_UPLOAD_FILE_BYTES } from "@/lib/constants";
 import type { FileDoc } from "@/lib/types";
@@ -586,7 +586,7 @@ function AlbumList() {
       <ul className="grid grid-cols-2 gap-3">
         {[0, 1, 2, 3].map((key) => (
           <li key={key}>
-            <Skeleton className="aspect-[4/3] rounded-2xl" />
+            <Skeleton className="aspect-square rounded-[20px]" />
           </li>
         ))}
       </ul>
@@ -606,37 +606,52 @@ function AlbumList() {
           />
         </div>
       ) : (
+        /*
+          앨범 칸 — 아이폰 사진 앱 "고정됨" 모음 모양 (2026-09-14, 사용자가 보여 준 화면을 따름).
+          정사각형 칸을 대표 사진이 가득 채우고, 아래쪽만 어둡게 번지는 막 위에
+          흰 굵은 제목을 왼쪽 아래에 얹습니다. 칸 아래에 따로 있던 흰 글씨 상자
+          (제목 + 날짜 · N장)는 걷었습니다 — 그림에 제목 말고는 글이 없어서입니다.
+
+          - aspect-square: 예전 4:3 → 정사각형. 그림의 칸이 정사각형입니다.
+          - rounded-[20px]: 그림의 둥글기. 앱의 다른 카드(12~16px)보다 둥급니다.
+          - shadow-card-glow: 헤어라인 없는 옅은 그림자만. 사진이 칸 끝까지 차므로
+            회색 테두리를 두르면 사진 가장자리에 선이 낍니다.
+          - 어두운 막: 아래에서 위로 45% 높이까지 검정 55% → 0. 밝은 사진(흰 벽·하늘)
+            위에서도 흰 제목이 읽히도록 한 최소한입니다. 사진 전체를 어둡게 하지 않습니다.
+          - 대표 사진이 없는 앨범은 그림의 "최근 삭제된 항목"처럼 위는 옅고 아래로
+            짙어지는 회색 칸에 📷을 가운데 둡니다. 흰 제목이 앉을 아래쪽이 짙어야 해서
+            단색 fill이 아니라 흐름(gradient)입니다.
+        */
         <ul className="grid grid-cols-2 gap-3">
           {albums.map((album) => (
             <li key={album.id}>
               <Link
                 href={`/albums/${album.id}`}
-                className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.98]"
+                className="relative block aspect-square overflow-hidden rounded-[20px] bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] shadow-[var(--shadow-card-glow)] transition active:scale-[0.98]"
               >
-                <div className="aspect-[4/3] w-full bg-brand-50">
-                  {album.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={thumbnailUrl(album.coverImageUrl, 500)}
-                      alt={`${album.title} 대표 사진`}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      className="flex h-full w-full items-center justify-center text-[32px]"
-                      aria-hidden="true"
-                    >
-                      📷
-                    </span>
-                  )}
-                </div>
-                <div className="px-3.5 py-3">
-                  <p className="truncate text-[15px] font-bold text-ink">{album.title}</p>
-                  <p className="mt-0.5 text-[12px] text-ink-faint">
-                    {formatDotDate(album.eventDate)} · {album.photoCount ?? 0}장
-                  </p>
-                </div>
+                {album.coverImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={thumbnailUrl(album.coverImageUrl, 500)}
+                    alt={`${album.title} 대표 사진`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <span
+                    className="absolute inset-0 flex items-center justify-center text-[36px]"
+                    aria-hidden="true"
+                  >
+                    📷
+                  </span>
+                )}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.55),rgba(0,0,0,0)_45%)]"
+                />
+                <p className="absolute right-3.5 bottom-3 left-3.5 truncate text-[17px] font-bold text-white">
+                  {album.title}
+                </p>
               </Link>
             </li>
           ))}
