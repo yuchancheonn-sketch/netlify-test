@@ -69,7 +69,7 @@
   --color-danger: #dc2626;
 
   /*
-   * 배경: 흰색. **홈 탭만** 아주아주 연한 회색 #FAFAF9 (2026-09-14 사용자 요청).
+   * 배경: 흰색. **홈 탭만** 아주 연한 회색 #F6F6F5 (2026-09-14 사용자 요청, #FAFAF9에서 한 단 진하게).
    *   홈 덮어쓰기는 아래 "홈 탭 바탕" 규칙에 있습니다.
    *
    * 카드도 흰색(--color-surface)이라 흰 바탕에서는 배경과 카드가 같은 색입니다.
@@ -283,7 +283,10 @@
 }
 
 /*
- * 홈 탭 바탕 — 밝은 화면에서 홈에 있는 동안만 바탕을 아주아주 연한 회색(#FAFAF9)으로 (2026-09-14).
+ * 홈 탭 바탕 — 밝은 화면에서 홈에 있는 동안만 바탕을 아주 연한 회색(#F6F6F5)으로 (2026-09-14).
+ * #FAFAF9로 시작했다가 같은 날 "아주 조금만 더 진한 회색"으로 한 단 내렸습니다.
+ * ★ --color-fill(#F5F5F4)보다 한 끗 밝게 멈췄습니다. 같아지면 홈에서 bg-fill을 바탕에 바로 까는
+ *   칸이 바탕에 녹아 사라집니다. 더 진하게 하려면 그런 칸이 있는지 먼저 보세요.
  * ---------------------------------------------------------------------------
  * 홈 화면(app/(main)/home/page.tsx)이 보이지 않는 표시 <span data-home-canvas hidden>을 하나 품고,
  * 그 표시가 문서에 있는 동안만 :has()가 --color-canvas를 덮어씁니다.
@@ -298,12 +301,12 @@
  */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]):has([data-home-canvas]) {
-    --color-canvas: #fafaf9;
+    --color-canvas: #f6f6f5;
   }
 }
 
 :root[data-theme="light"]:has([data-home-canvas]) {
-  --color-canvas: #fafaf9;
+  --color-canvas: #f6f6f5;
 }
 
 html {
