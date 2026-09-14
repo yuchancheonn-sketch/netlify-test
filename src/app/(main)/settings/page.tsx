@@ -95,7 +95,8 @@ export default function SettingsPage() {
             href="/admin"
             className="flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
-            <span className="text-[17px] font-bold text-ink">운영진 화면</span>
+            {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
+            <span className="-translate-y-[2px] text-[17px] font-bold text-ink">운영진 화면</span>
             <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
           </Link>
         ) : null}
@@ -118,7 +119,11 @@ export default function SettingsPage() {
             }}
             className="w-full rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
-            로그아웃
+            {/*
+              글씨만 2px 위로 (2026-09-15, 위 고르개들과 같이). 이 단추는 flex가 아니라서 그냥 span에는
+              transform이 안 먹습니다(글줄 안 인라인 요소) — inline-block이 꼭 필요합니다.
+            */}
+            <span className="inline-block -translate-y-[2px]">로그아웃</span>
           </button>
         </section>
       </div>

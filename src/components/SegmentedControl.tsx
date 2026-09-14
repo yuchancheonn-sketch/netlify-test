@@ -93,7 +93,11 @@ export default function SegmentedControl<T extends string>({
             } ${selected ? "text-white" : "text-ink-soft"}`}
           >
             {option.icon}
-            {option.label}
+            {/*
+              -translate-y-[2px]: 글씨만 2px 위로 (2026-09-15 사용자 요청 — 칸 한가운데보다 살짝 아래로 앉아 보였습니다).
+              단추가 flex라 이 span은 flex 칸이 되어 transform이 먹습니다. 스피너(icon)는 그대로입니다.
+            */}
+            <span className="-translate-y-[2px]">{option.label}</span>
           </button>
         );
       })}
