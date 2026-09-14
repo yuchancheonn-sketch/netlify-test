@@ -287,11 +287,10 @@ export default function MembersPage() {
         {/* 목록 */}
         <div className="mt-4 pb-6">
           {busy ? (
-            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 줄 사이 선, 위아래 12px, 63px 사진 칸. */
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 위아래 12px, 63px 사진 칸 (줄 사이 선은 없앴습니다). */
             <ul className="flex flex-col">
-              {[0, 1, 2, 3].map((key, index) => (
+              {[0, 1, 2, 3].map((key) => (
                 <li key={key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
                   <div className="py-3 pl-0.5">
                     <Skeleton className="h-[63px] rounded-2xl" />
                   </div>
@@ -325,24 +324,18 @@ export default function MembersPage() {
               띄웠는데, 배경이 흰색이 된 뒤로는 카드마다 헤어라인이 둘려
               378명을 훑을 때 상자 테두리만 눈에 밟혔습니다.
 
-              ★ 선을 아예 빼고 여백만으로 나눠 보기도 했습니다(같은 날, 유튜브
-                목록을 본떠서). 사용자가 둘을 실제로 견줘 보고 "선이 있는 게
-                훨씬 낫다"고 해서 되돌렸습니다. 다시 빼자고 제안하지 마세요.
-
-              맨 윗줄 위에는 선을 긋지 않습니다. 위쪽은 구분 고르개가 이미
-              갈라 주고 있어서, 선을 그으면 고르개를 가두는 상자처럼 보입니다.
-
-              선은 왼쪽만 2px 들입니다(ml-0.5) — 줄 내용(MemberRow의 pl-0.5)이
-              서는 자리와 같게 맞춘 것입니다. 안 들이면 선만 사진 왼쪽으로
-              삐져나옵니다. 줄의 들여쓰기를 고치면 이 값도 같이 고쳐야 합니다.
-              사진 칸(112px) 뒤부터 긋는 방법도 있지만, 그렇게까지 들이면
-              이번에는 사진이 선 밖으로 튀어나온 것처럼 읽힙니다.
-              오른쪽은 본문 끝까지 긋습니다.
+              ★ 지금은 줄 사이 선도 없이 여백(MemberRow의 py-3, 위아래 12px)만으로 나눕니다.
+                선과 여백 사이를 오간 기록 (모두 2026-09-14):
+                선 → 여백만(유튜브 목록을 본떠) → 사용자가 견줘 보고 "선이 있는 게 훨씬 낫다"로 선
+                → 같은 날 늦게 사용자가 "선 없애봐봐"로 다시 여백만.
+                되살리려면 <li> 안 MemberRow 앞에
+                {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
+                (ml-0.5는 줄 내용의 pl-0.5와 맞춘 값, 맨 윗줄 위에는 긋지 않음)와
+                위 자리 표시 목록에 같은 줄을 넣으면 됩니다.
             */
             <ul className="flex flex-col">
-              {visible.map((entry, index) => (
+              {visible.map((entry) => (
                 <li key={entry.key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -450,8 +443,9 @@ function MemberRow({
      * 같은 날 "수정" 글씨 단추를 연필 아이콘으로 바꾸며 번 28px에서 나옵니다.
      *
      * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
-     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
-     *   가르는 일은 목록 쪽의 border-t가 맡습니다.
+     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어냈습니다. 줄을
+     *   가르는 일은 한때 목록 쪽의 border-t가 맡았지만, 지금은 이 줄의 위아래
+     *   여백(py-3)만으로 나눕니다(2026-09-14, 목록 주석 참고).
      *   카드의 안쪽 여백(옛 p-3)은 걷었지만, 왼쪽은 pl-0.5로 2px 다시
      *   들였습니다 (2026-09-14 — 내용이 왼쪽에 몰려 보인다는 사용자 말).
      *   바깥 px-4(16px)에 더해 **18px**에서 시작합니다.
