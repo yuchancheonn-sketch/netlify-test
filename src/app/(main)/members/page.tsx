@@ -560,7 +560,12 @@ function MemberRow({
             이름 하나가 칸보다 길 때만(글씨 크게 + 아주 긴 이름) 띄어쓰기에서,
             그래도 안 되면 글자 사이에서 다음 줄로 넘깁니다. 잘리거나 옆 단추를 덮지는 않습니다.
           */}
-          <span className="max-w-full shrink-0 text-[17px] font-bold break-keep text-ink [overflow-wrap:anywhere]">
+          {/*
+            굵기 medium(500) — 2026-09-14 사용자가 "아주 조금만 더 얇게"라고 해서 bold(700)에서 내렸습니다.
+            600은 layout.tsx가 받지 않아(400·500·700·900) 적어도 700으로 그려지므로 500이 한 단 아래입니다.
+            아래 회사·직책 줄(normal, 13px)과는 크기로 갈립니다.
+          */}
+          <span className="max-w-full shrink-0 text-[17px] font-medium break-keep text-ink [overflow-wrap:anywhere]">
             {/* 번호와 이름 사이 5px — 6px(mr-1.5)에서 사용자 요청으로 조금 붙였습니다(2026-09-14). */}
             <span className="mr-[5px] tabular-nums">{number}.</span>
             {entry.name}
@@ -599,7 +604,7 @@ function MemberRow({
 
           2026-09-14에 주황(brand-500)에서 먹색(ink)으로 바꿨습니다.
           바로 위 이름과 같은 색이 되었지만, 글씨 크기(17px ↔ 13px)와
-          굵기(bold ↔ normal)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
+          굵기(이름 medium ↔ 이 줄 normal)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
           굵기는 원래 medium(500)이었고 같은 날 사용자가 "아주 조금만 더 얇게"
           해 달라고 해서 normal(400)로 내렸습니다. 450 같은 사잇값은 안 됩니다 —
           layout.tsx가 Noto Sans KR을 400·500·700·900 네 벌만 받아서, 450을 적어도
