@@ -52,7 +52,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 칩 줄. 15px bold, 알약 높이 약 39px, 칩 사이 8px.
+   * "body"   본문 맨 위에 놓이는 칩 줄. 14px bold, 알약 높이 약 34px, 칩 사이 8px.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다.
    * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식·자료 탭). 22px에 들여쓰기 없음 —
    *          다른 화면의 제목("원우수첩")과 같은 크기·같은 자리에 서야 하므로
@@ -66,7 +66,7 @@ export default function TextTabs<T extends string>({
 }) {
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[15px]";
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[14px]";
 
   /* "header"는 고른 칸을 맨 앞에, 나머지는 원래 순서대로 뒤에 둡니다. */
   const ordered = header
@@ -193,14 +193,15 @@ export default function TextTabs<T extends string>({
                   - 안 고른 칩: bg-fill(#F5F5F4) + text-ink. 그림의 옅은 회색 알약에 검은 글씨.
                   - 모든 칩이 같은 굵기(bold)라 고를 때 글자 폭이 흔들리지 않습니다.
                     (고른 칩만 인원 수가 붙어 넓어지는 것은 원우수첩 쪽 filterItems 주석 참고)
-                  - px-4(16px) · py-[10px] — 글줄 약 19px(15px × 1.25) + 20px = 약 39px.
-                    그림의 칩 높이·좌우 여백 비율에 맞춘 값입니다.
+                  - px-3.5(14px) · py-2(8px) — 글줄 17.5px(14px × 1.25) + 16px = 약 34px.
+                    처음엔 그림 비율대로 15px · px-4 · py-[10px](약 39px)였다가 같은 날
+                    사용자가 "크기 좀 줄여줘"라고 해서 글씨·여백을 한 단씩 줄였습니다.
                 */
                 style={header ? { transitionDuration: `${SWAP_MS}ms` } : undefined}
                 className={`flex shrink-0 items-center ${
                   header
                     ? `transition-colors ${active ? "text-ink" : "text-ink-faint"}`
-                    : `rounded-full px-4 py-[10px] transition-colors active:scale-[0.97] ${
+                    : `rounded-full px-3.5 py-2 transition-colors active:scale-[0.97] ${
                         active ? "bg-ink text-surface" : "bg-fill text-ink"
                       }`
                 }`}
