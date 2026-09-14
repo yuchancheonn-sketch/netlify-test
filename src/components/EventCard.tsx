@@ -1,9 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, ClockIcon, PeopleCountIcon, PinIcon } from "@/components/icons";
 import {
+  daysUntil,
   ddayLabel,
   formatDotDate,
   formatTime,
@@ -13,19 +14,12 @@ import {
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 홈 맨 위의 다가오는 모임 — 흰 카드 왼쪽에 주황 D-day 뱃지, 옆에 두 줄
+ * 홈 맨 위의 다가오는 모임 — 주황 카드 왼쪽에 둘레가 차오르는 흰 D-day 원, 옆에 두 줄
  * (이름 / 장소·시간), 오른쪽 끝에 ">".
- *
- * ★ 흰 카드 + 주황 뱃지 (2026-09-14, 사용자가 세 방향 가운데 "A"를 고름).
- *   그 전에는 주황 카드에 둘레가 차오르는 흰 D-day 원(2026-09-11, 네 시안 가운데 "흰 둘레 원")이었는데,
- *   ① 거의 찬 둘레가 로딩 표시처럼 보이고 ② 제목·장소·시간·아이콘·꺾쇠가 모두 흰색이라 강약이 없고
- *   ③ 같은 날 하단 탭·원우 칩·검색칸이 흰색·회색·먹색으로 가라앉은 가운데 진한 주황 덩어리만 튀어서
- *   바꿨습니다. 주황은 뱃지 한 곳에만 남겨 여전히 가장 먼저 눈에 들어옵니다.
- *   (B: 주황 카드에 링만 걷기, C: 일정 목록과 같은 날짜 칸 — 둘은 고르지 않았습니다.)
- *   지나온 모양: 주황 카드 → 흰 카드(원 둘레만 주황) → 주황 카드 + 흰 둘레 원 → 흰 카드 + 주황 뱃지.
- *
- * 카드 바탕·그림자는 원우수첩 검색칸과 같은 값입니다 — 흰 판 + 옅고 넓은 그림자 +
- * ring-black/[0.04]. 한쪽을 바꾸면 같이 봐 주세요.
+ * 주황 카드 → 흰 카드(원 둘레만 주황) → 다시 주황 카드로 왔습니다(2026-09-11).
+ * 주황 위 D-day는 네 시안(흰 둘레 원 / 흰 알+둘레 / 진한 주황 원 / 숫자만 크게) 가운데
+ * 사용자가 "흰 둘레 원"을 골랐습니다 — 흰 카드 때 모양 그대로 색만 뒤집은 것.
+ * 주황 위 흰 글씨는 대비가 2.7:1이라 제목은 굵게, 장소·시간은 font-medium을 지킵니다.
  *
  * 나만의닥터의 "다음 주사일" 카드 짜임새를 따랐습니다 (2026-09-11). 예전 홈은
  * 큰 주황 상자(EventHeroCard)에 "주요 일정" 이름표를 달고, 그 아래 "모임 일정 전체 보기"
@@ -39,39 +33,22 @@ import type { EventDoc } from "@/lib/types";
  */
 export function EventDdayCard({ event }: { event: EventDoc }) {
   const time = event.startTime ? formatTime(event.startTime) : "";
-  const date = parseDateString(event.date);
 
   return (
     <Link
       href="/events"
-      className="flex items-center gap-4 rounded-3xl bg-surface py-4 pl-4 shadow-[0_1px_2px_rgba(28,25,23,0.04),0_6px_24px_rgba(28,25,23,0.07)] ring-1 ring-black/[0.04] transition active:scale-[0.99]"
+      className="flex items-center gap-4 rounded-3xl bg-brand-500 py-4 pl-4 text-white shadow-[var(--shadow-float)] transition active:opacity-80"
     >
-      <DdayBadge date={event.date} />
+      <DdayRing date={event.date} />
       <span className="min-w-0 flex-1">
-        {/*
-          제목 옆 날짜 "9월 15일" (2026-09-14 사용자 요청) — D-숫자만으로는 무슨 날인지 셈해야 해서.
-          제목보다 한 단 작고 옅게(15px · ink-muted) 둬 제목이 먼저 읽힙니다. items-baseline으로
-          크기가 다른 두 글씨의 아랫선을 맞춥니다.
-          자리가 모자라면 제목만 "…"로 줄고 날짜는 끝까지 보입니다(shrink-0) — 둘째 줄의 장소·시간과 같은 규칙.
-        */}
-        <span className="flex min-w-0 items-baseline gap-2">
-          <span className="truncate text-[18px] leading-tight font-bold text-ink">
-            {event.title}
-          </span>
-          {date ? (
-            <span className="shrink-0 text-[15px] leading-tight font-medium text-ink-muted">
-              {date.getMonth() + 1}월 {date.getDate()}일
-            </span>
-          ) : null}
-        </span>
+        <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
         {/*
           둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
           자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
-          아이콘·글씨 모두 중간 회색(ink-muted) — 흰 카드로 바꾸면서(2026-09-14) 흰색에서 옮겨,
-          먹색 제목 → 회색 둘째 줄로 읽는 차례가 생겼습니다.
+          아이콘·글씨 모두 흰색 — 주황 카드로 바꾸면서(2026-09-11) 검정(ink)에서 옮겼습니다.
         */}
         {event.location || time ? (
-          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-ink-muted">
+          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[15px] w-[15px] shrink-0" />
@@ -90,41 +67,103 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
       {/*
         오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
         맞췄습니다. 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
-        색은 ink-faint — 흰 카드 위라 흰색 80%에서 옮겼습니다(2026-09-14). 일정 목록 카드의 ">"와 같은 색입니다.
       */}
-      <span className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint">
+      <span className="flex shrink-0 items-center pr-4 pl-3 text-white/80">
         <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
     </Link>
   );
 }
 
-/**
- * 주황 D-day 뱃지 — 48px 둥근 네모(rounded-[14px]) 주황 바탕에 흰 굵은 글씨 (2026-09-14).
- *
- * 예전에는 둘레가 2주 전부터 차오르는 원(DdayRing, 나만의닥터 "다음 주사일" 카드의 원)이었습니다.
- * 거의 다 찬 둘레가 로딩 표시처럼 읽혀서 둘레를 걷고 판 하나로 바꿨습니다. 그래서 "얼마나
- * 다가왔는지"는 이제 숫자만 말합니다. 되살리려면 git 기록의 DdayRing을 보세요.
- *
- * - 크기 48px은 옛 원 지름 그대로 — 카드 높이와 옆 두 줄의 자리가 바뀌지 않습니다.
- * - 둥근 네모인 까닭: 원이면 옛 링과 같은 모양으로 읽히고, 알약이면 옆 칩·단추와 헷갈립니다.
- * - 글씨 크기는 글자 수로 줄입니다 — "D-5" 17px, "D-12" 15px, "D-DAY"·"D-100" 13px.
- *   둘레가 빠져 안쪽 폭이 40px → 48px로 넓어진 만큼 옛 값(16·14·11)보다 한 단씩 키웠습니다.
- * - 주황 위 흰 글씨는 대비가 약해(약 2.6:1) 늘 굵게(bold) 둡니다.
- *   어두운 화면에서도 brand-500은 그대로라 뱃지 모양이 같습니다.
- */
-const DDAY_BADGE_SIZE = 48;
+/** 둘레가 이만큼 전부터 채워지기 시작합니다(일). D-14 이전은 빈 둘레, D-DAY는 꽉 찬 둘레. */
+const DDAY_RING_DAYS = 14;
+/** 원 지름과 둘레 두께(px) — 나만의닥터 화면을 재어 옮긴 값 (아래 설명) */
+const RING_SIZE = 48;
+const RING_STROKE = 4;
 
-function DdayBadge({ date }: { date: string }) {
+/**
+ * 흰 원 안의 D-day. 둘레는 모임이 다가올수록 회색에서 주황으로 채워집니다.
+ * 나만의닥터 "다음 주사일" 카드의 원을 따랐습니다 (2026-09-11).
+ *
+ * ★ 크기는 나만의닥터 화면(아이폰 3배 스크린샷)을 픽셀로 재어 3으로 나눴습니다 —
+ *   원 지름 144px → 48px, 둘레 두께 12px → 4px. D-day 글씨는 사진대로 옮기면 13px이지만
+ *   작게 보여서 키웠습니다(세 글자 16px, 네 글자 14px). "D-DAY"처럼 다섯 글자는 원 안(40px)에
+ *   들도록 11px입니다.
+ *   카드가 주황(brand-500)이라 둘레 바탕은 흰색을 32%만, 채워지는 둘레와 글씨는 흰색입니다
+ *   (주황 카드 위 "흰 둘레 원" 시안, 2026-09-11). 어두운 화면에서도 카드가 주황이라 그대로입니다.
+ *
+ * ★ 얼마나 채울지는 "2주 전부터"로 고정했습니다. 일정을 올린 날을 기준으로 삼으면
+ *   하루 전에 올린 번개는 D-1에도 빈 원이라, 같은 D-숫자가 일정마다 다르게 보입니다.
+ *
+ * 처음 그려질 때 빈 둘레에서 제자리까지 한 번 차오릅니다(animate — 기수 고르기
+ * 목록과 같은 방식). "움직임 줄이기"를 켠 폰에서는 건너뜁니다.
+ */
+function DdayRing({ date }: { date: string }) {
   const label = ddayLabel(date);
-  const fontSize = label.length <= 3 ? 17 : label.length === 4 ? 15 : 13;
+  const days = daysUntil(date) ?? DDAY_RING_DAYS;
+  const progress = Math.min(1, Math.max(0, (DDAY_RING_DAYS - days) / DDAY_RING_DAYS));
+  const center = RING_SIZE / 2;
+  const radius = (RING_SIZE - RING_STROKE) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - progress);
+
+  const ringRef = useCallback(
+    (node: SVGCircleElement | null) => {
+      if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      node.animate([{ strokeDashoffset: circumference }, { strokeDashoffset: offset }], {
+        duration: 800,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      });
+    },
+    [circumference, offset],
+  );
+
+  /*
+   * 원 안쪽 폭이 40px라 글자 수가 늘수록 줄입니다 — "D-5" 16px, "D-12" 14px, "D-DAY"·"D-100" 11px.
+   * 네 글자를 15px, 다섯 글자를 12px로 그려 보니 글자 끝이 둘레에 닿았습니다.
+   */
+  const fontSize = label.length <= 3 ? 16 : label.length === 4 ? 14 : 11;
 
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-[14px] bg-brand-500"
-      style={{ width: DDAY_BADGE_SIZE, height: DDAY_BADGE_SIZE }}
+      className="relative flex shrink-0 items-center justify-center rounded-full"
+      style={{ width: RING_SIZE, height: RING_SIZE }}
     >
-      <span className="leading-none font-bold tracking-tight text-white" style={{ fontSize }}>
+      {/* -rotate-90: SVG 원은 3시 방향에서 시작하므로 12시에서 시계 방향으로 차오르게 돌립니다. */}
+      <svg
+        viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+        className="absolute inset-0 h-full w-full -rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.32)"
+          strokeWidth={RING_STROKE}
+        />
+        {/* 하나도 안 찼을 때 그리면 둥근 끝(round cap)이 점 하나로 남습니다. */}
+        {progress > 0 ? (
+          <circle
+            ref={ringRef}
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={RING_STROKE}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+          />
+        ) : null}
+      </svg>
+      <span
+        /* -translate-y-px: 원 한가운데에서 글씨만 1px 위로 — 가운데에 두면 눈에는 살짝 아래로 보였습니다(2026-09-11). */
+        className="relative -translate-y-px leading-none font-bold tracking-tight text-white"
+        style={{ fontSize }}
+      >
         {label}
       </span>
     </span>
@@ -156,8 +195,7 @@ export function EventListItem({
         날짜 칸 — 주황으로 꽉 채우고 글씨는 흰색 (2026-09-11).
         예전엔 연한 주황(brand-50) 바탕에 주황 글씨였는데, 어두운 화면에서 그 바탕이 탁한 갈색으로
         보여 네 시안(주황 채움 / 달력 한 장 / 주황 테두리 / 상자 없이) 가운데 사용자가 "주황 채움"을 골랐습니다.
-        홈 맨 위 D-day 카드의 주황 뱃지(2026-09-14부터 흰 카드 + 주황 뱃지)와 같은 결이고,
-        밝은·어두운 화면에서 똑같이 보입니다.
+        홈 맨 위 D-day 카드(주황 바탕 + 흰 글씨)와 같은 결이고, 밝은·어두운 화면에서 똑같이 보입니다.
         요일·월은 흰색을 조금 풀어 가운데 날짜가 먼저 읽히게 합니다.
       */}
       <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-500">
