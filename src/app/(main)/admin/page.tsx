@@ -56,7 +56,11 @@ export default function AdminPage() {
     <>
       <PageHeader title="운영진" eyebrow="가입 승인과 명단 관리" back />
 
-      <div className="px-4 pb-8">
+      {/*
+        pt-4 — 제목 줄과 탭 알약 사이 16px (2026-09-15 사용자 "좀 아래로 내려줘", 예전엔 0이라 제목 줄에 붙어 보였습니다).
+        홈·원우수첩·알림 화면의 첫 칸과 같은 간격입니다.
+      */}
+      <div className="px-4 pt-4 pb-8">
         <div className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]">
           {tabs.map(({ value, label }) => (
             <button
@@ -64,9 +68,9 @@ export default function AdminPage() {
               type="button"
               onClick={() => setTab(value)}
               aria-pressed={activeTab === value}
-              /* 위 8px + 아래 12px. 합(20px)이 py-2.5와 같아 알약 높이는
-                 그대로이고 글씨만 2px 위에 앉습니다. 다른 서브탭과 같은 방식. */
-              className={`flex-1 rounded-full pt-2 pb-3 text-[13px] font-bold transition ${
+              /* 위 7px + 아래 11px. 위보다 아래가 4px 넓어 글씨가 가운데에서 2px 위에 앉습니다(다른 서브탭과 같은 방식).
+                 2026-09-15 사용자 요청으로 8px/12px에서 1px씩 줄여 알약 높이를 2px 낮췄습니다. */
+              className={`flex-1 rounded-full pt-[7px] pb-[11px] text-[13px] font-bold transition ${
                 activeTab === value ? "bg-brand-500 text-white" : "text-ink-muted"
               }`}
             >
