@@ -5,6 +5,8 @@
  * 모두 currentColor를 따르므로 부모의 text-* 색상이 그대로 적용됩니다.
  */
 
+import { useId } from "react";
+
 interface IconProps {
   className?: string;
   /** 선 굵기. 하단 탭바에서 선택됐을 때 살짝 굵게 쓰기 위해 열어둡니다. */
@@ -133,7 +135,49 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps)
   );
 }
 
+/**
+ * 채팅 — 종이비행기 (2026-09-14 사용자가 준 그림 그대로).
+ *
+ * 윗변이 가로로 누운 세모에, 가운데서 오른쪽 위 꼭짓점을 향해 짧게 뻗은
+ * 접힌 선 하나. 접힌 선은 테두리에 닿지 않고 떠 있습니다.
+ * 채울 때는 접힌 선 자리를 마스크로 도려내 선이 빈 틈으로 보이게 합니다.
+ */
 export function ChatIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+  const maskId = `chat-fold-${useId()}`;
+  // 세 꼭짓점을 각각 1.4씩 둥글렸습니다 — 그림의 모서리가 선 끝보다 더 부드럽습니다.
+  const outline =
+    "M4.6 4H19.4Q20.8 4 20.02 5.17L10.88 18.93Q10.1 20.1 9.55 18.81L3.75 5.29Q3.2 4 4.6 4Z";
+  const fold = "M10 12.2 15.2 8.5";
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      {filled ? (
+        <>
+          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <rect width="24" height="24" fill="white" />
+            <path d={fold} stroke="black" strokeWidth={strokeWidth} strokeLinecap="round" />
+          </mask>
+          <path
+            d={outline}
+            mask={`url(#${maskId})`}
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            strokeLinejoin="round"
+          />
+        </>
+      ) : (
+        <>
+          <path d={outline} stroke="currentColor" strokeWidth={strokeWidth} strokeLinejoin="round" />
+          <path d={fold} stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** 수업 느낀점(댓글) — 말풍선. 채팅이 종이비행기로 바뀌기 전의 채팅 아이콘입니다. */
+export function CommentIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       {/* 말풍선은 닫힌 모양 하나라 그대로 칠하면 됩니다. */}
