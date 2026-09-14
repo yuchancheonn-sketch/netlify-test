@@ -56,7 +56,12 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
           2026-09-14 사용자 요청 — 처음엔 날짜만 흰색 90%로 한 단 물렸었고, D-day는 3행에 있었습니다).
           자리가 모자라면 이름만 "…"로 줄고 D-day·날짜는 끝까지 보입니다(shrink-0).
         */}
-        <span className="mt-1 flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
+        {/*
+          줄 사이 간격: 1행→2행 8px(mt-2), 2행→3행 4px(mt-1) — 2행(D-day·날짜·이름)이 3행(장소·시간)과
+          한 덩어리로 읽히고 1행 "주요 일정" 이름표와는 떨어져 보이게 (2026-09-15 사용자 요청, 예전엔 4px/8px 반대).
+          두 간격의 합(12px)은 그대로라 카드 높이·홈 스켈레톤 높이는 바뀌지 않았습니다.
+        */}
+        <span className="mt-2 flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
           {/* D-day — 날짜 왼쪽, 날짜·이름과 같은 18px bold 흰색 (2026-09-14 사용자 요청으로 3행에서 옮김) */}
           <span className="shrink-0">{ddayLabel(event.date)}</span>
           {date ? (
@@ -76,7 +81,7 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         */}
         {event.location || time ? (
           /* 글씨 15px · 아이콘 18px — 2026-09-15 사용자 요청으로 14px · 15px에서 키웠다가(16px), 같은 날 글씨만 15px로 줄였습니다. */
-          <span className="mt-2 flex min-w-0 items-center gap-3 text-[15px] font-medium text-white">
+          <span className="mt-1 flex min-w-0 items-center gap-3 text-[15px] font-medium text-white">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[18px] w-[18px] shrink-0" />
