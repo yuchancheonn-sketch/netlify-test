@@ -65,13 +65,14 @@ interface FormState {
  * 이 폼의 한 줄 입력칸·선택 상자 모양 (2026-09-15 사용자 요청 — 자기소개만 빼고 박스 높이를 줄이고 글씨를 2px 올림).
  *
  * 공용 inputClassName(ui.tsx, 위아래 16px)은 다른 시트들도 쓰므로 건드리지 않고, 이 폼에서만 바꿔 씁니다.
- * - 높이: 위 10px + 아래 14px = 24px — 예전 16px + 16px(32px)보다 8px 낮습니다.
+ * - 높이: 위 11px + 아래 15px = 26px — 예전 16px + 16px(32px)보다 6px 낮습니다.
+ *   (같은 날 10/14px로 8px 줄였다가 "2px 만큼 다 높여줘"로 1px씩 더했습니다.)
  * - 글씨 2px 위로: 입력칸(input·select)은 글씨만 따로 transform할 수 없어서(칸째 움직입니다)
- *   위 여백에서 2px을 빼 아래로 옮기는 식으로 올립니다. 그래서 위아래가 12px씩이 아니라 10/14px입니다.
+ *   위 여백에서 2px을 빼 아래로 옮기는 식으로 올립니다. 그래서 위아래가 13px씩이 아니라 11/15px입니다.
  * - 자기소개(textarea)는 사용자가 "아무것도 수정하지마"라고 해서 공용 inputClassName을 그대로 씁니다.
- * - 이 문자열의 "pt-[10px] pb-[14px]"는 소스에 글자 그대로 있어야 Tailwind가 CSS를 만듭니다(replace로 넣어도 괜찮은 이유).
+ * - 이 문자열의 "pt-[11px] pb-[15px]"는 소스에 글자 그대로 있어야 Tailwind가 CSS를 만듭니다(replace로 넣어도 괜찮은 이유).
  */
-const fieldClassName = inputClassName.replace("py-4", "pt-[10px] pb-[14px]");
+const fieldClassName = inputClassName.replace("py-4", "pt-[11px] pb-[15px]");
 
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
@@ -482,11 +483,11 @@ export default function ProfileForm({
                 aria-checked={selected}
                 onClick={() => update("memberType", value)}
                 /*
-                  py-3 — 위아래 12px (2026-09-15 사용자 요청으로 py-4 16px에서 줄임).
+                  py-[13px] — 위아래 13px (2026-09-15 사용자 요청으로 py-4 16px → 12px로 줄였다가 1px씩 되올림).
                   안의 그림 글자·이름은 둘 다 2px 위로(-translate-y-[2px]) — 둘 사이 간격은 그대로 두려고 함께 올립니다.
                   단추가 flex라 두 span이 flex 칸이 되어 transform이 먹습니다.
                 */
-                className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-3 transition ${
+                className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[13px] transition ${
                   selected
                     ? "border-brand-500 bg-brand-50"
                     : "border-transparent bg-surface shadow-[var(--shadow-card)]"
@@ -667,7 +668,7 @@ export default function ProfileForm({
       ) : null}
 
       {/*
-        size="field" — 위아래 12px로 입력칸들과 비슷한 높이(약 48px) (2026-09-15, md 16px에서 줄임).
+        size="field" — 위아래 13px로 입력칸들과 비슷한 높이(약 50px) (2026-09-15, md 16px에서 줄임 — 12px였다가 2px 되올림).
         글씨는 2px 위로 — PrimaryButton이 flex라 span에 건 transform이 먹습니다.
       */}
       <PrimaryButton type="submit" disabled={submitDisabled} loading={saving} size="field">

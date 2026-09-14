@@ -116,8 +116,8 @@ export function PrimaryButton({
    * 만든 CSS 순서로 이깁니다.
    */
   /**
-   * field — 위아래 12px(약 48px). 내 프로필 폼의 "저장하기"·"시작하기"가 줄인 입력칸들과 높이를 맞추려고 씁니다
-   * (2026-09-15). compact(8px, 퀴즈)와 md(16px) 사이입니다.
+   * field — 위아래 13px(약 50px). 내 프로필 폼의 "저장하기"·"시작하기"가 줄인 입력칸들과 높이를 맞추려고 씁니다
+   * (2026-09-15, 12px로 만들었다가 같은 날 1px씩 되올림). compact(8px, 퀴즈)와 md(16px) 사이입니다.
    */
   size?: "md" | "field" | "compact" | "sm";
   className?: string;
@@ -128,7 +128,7 @@ export function PrimaryButton({
       : size === "compact"
         ? "px-5 py-2 text-[16px]"
         : size === "field"
-          ? "px-5 py-3 text-[16px]"
+          ? "px-5 py-[13px] text-[16px]"
           : "px-5 py-4 text-[16px]";
 
   return (
