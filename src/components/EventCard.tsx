@@ -75,16 +75,17 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
           자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
         */}
         {event.location || time ? (
-          <span className="mt-2 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
+          /* 글씨 16px · 아이콘 18px — 2026-09-15 사용자 요청으로 14px · 15px에서 키웠습니다. */
+          <span className="mt-2 flex min-w-0 items-center gap-3 text-[16px] font-medium text-white">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
-                <PinIcon className="h-[15px] w-[15px] shrink-0" />
+                <PinIcon className="h-[18px] w-[18px] shrink-0" />
                 <span className="truncate">{event.location}</span>
               </span>
             ) : null}
             {time ? (
               <span className="flex shrink-0 items-center gap-1">
-                <ClockIcon className="h-[15px] w-[15px]" />
+                <ClockIcon className="h-[18px] w-[18px]" />
                 {time}
               </span>
             ) : null}
