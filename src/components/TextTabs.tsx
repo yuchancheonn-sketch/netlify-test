@@ -188,8 +188,11 @@ export default function TextTabs<T extends string>({
                   DOM 칸은 key로 그대로 이어지므로 순서가 바뀌어도 색 전환이 끊기지 않습니다.
 
                   "body" — 칩. 그림(당근 필터 칩)을 따른 값들:
-                  - 고른 칩: bg-ink + text-surface. 흰 화면에서는 먹색 알약에 흰 글씨,
-                    어두운 화면에서는 두 토큰이 뒤바뀌어 밝은 알약에 어두운 글씨가 됩니다.
+                  - 고른 칩: bg-brand-500 + 흰 글씨 (2026-09-14 사용자가 "한번 주황색으로 해봐").
+                    그림대로 먹색(bg-ink + text-surface)이었다가 바꿔 보는 중입니다.
+                    ★ 흰 글씨 대비가 약합니다(#FF7210 위 흰색 약 2.6:1). 앱의 다른 주황 단추
+                      (정답 제출하기·앨범 만들기)와 같은 짝이라 같은 약점을 공유합니다.
+                    되돌리려면 "bg-ink text-surface" — 어두운 화면에서 토큰이 뒤바뀌어 밝은 알약이 됩니다.
                   - 안 고른 칩: bg-fill(#F5F5F4) + text-ink. 그림의 옅은 회색 알약에 검은 글씨.
                   - 모든 칩이 같은 굵기(bold)라 고를 때 글자 폭이 흔들리지 않습니다.
                     (고른 칩만 인원 수가 붙어 넓어지는 것은 원우수첩 쪽 filterItems 주석 참고)
@@ -201,7 +204,7 @@ export default function TextTabs<T extends string>({
                   header
                     ? `transition-colors ${active ? "text-ink" : "text-ink-faint"}`
                     : `rounded-full px-4 py-[10px] transition-colors active:scale-[0.97] ${
-                        active ? "bg-ink text-surface" : "bg-fill text-ink"
+                        active ? "bg-brand-500 text-white" : "bg-fill text-ink"
                       }`
                 }`}
               >
