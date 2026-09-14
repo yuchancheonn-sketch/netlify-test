@@ -500,14 +500,14 @@ export default function BottomTabBar() {
                   {/*
                     아이콘 오른쪽 위에 얹는 빨간 점.
 
-                    둘레의 흰 테는 점을 아이콘에서 떼어놓는 역할입니다 —
-                    테가 없으면 아이콘 선과 붙어 한 덩어리로 보입니다.
-                    (숫자 배지였을 때부터 같은 이유로 두르고 있었습니다.)
+                    흰 테는 2026-09-14 사용자 요청으로 없앴습니다. 테를 두르던 때는
+                    9px 상자에 테 2px씩이라 빨간 부분이 5px이었는데, 지금은 빨간 원만
+                    7px로 조금 키웠습니다. 가운데 자리는 예전과 같습니다.
                   */}
                   {showDot ? (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-0.5 left-[calc(50%+5px)] h-[9px] w-[9px] rounded-full border-2 border-white bg-red-500"
+                      className="absolute -top-px left-[calc(50%+6px)] h-[7px] w-[7px] rounded-full bg-red-500"
                     />
                   ) : null}
                 </span>
