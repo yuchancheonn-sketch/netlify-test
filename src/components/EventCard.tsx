@@ -70,7 +70,8 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
               {String(date.getMonth() + 1).padStart(2, "0")}.{String(date.getDate()).padStart(2, "0")}.
             </span>
           ) : null}
-          <span className="truncate">{event.title}</span>
+          {/* 일정 이름만 17px — 2026-09-15 사용자 요청으로 D-day·날짜(18px)보다 1px 작게. 줄은 items-baseline이라 아랫선이 맞습니다. */}
+          <span className="truncate text-[17px]">{event.title}</span>
         </span>
 
         {/*
