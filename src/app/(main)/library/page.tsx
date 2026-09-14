@@ -616,8 +616,14 @@ function AlbumList() {
           - rounded-[20px]: 그림의 둥글기. 앱의 다른 카드(12~16px)보다 둥급니다.
           - shadow-card-glow: 헤어라인 없는 옅은 그림자만. 사진이 칸 끝까지 차므로
             회색 테두리를 두르면 사진 가장자리에 선이 낍니다.
-          - 어두운 막: 아래에서 위로 45% 높이까지 검정 55% → 0. 밝은 사진(흰 벽·하늘)
-            위에서도 흰 제목이 읽히도록 한 최소한입니다. 사진 전체를 어둡게 하지 않습니다.
+          - 제목은 **자르지 않습니다** (2026-09-14 사용자 요청). 처음엔 17px 한 줄 + 말줄임(…)이었는데
+            긴 행사 이름이 잘려서, 15px로 줄이고 필요한 만큼 여러 줄로 접습니다(보통 두 줄 안).
+            break-keep으로 낱말 중간에서 끊지 않고, 낱말 하나가 칸보다 길 때만 글자 사이에서 넘깁니다.
+            줄 수를 묶는 line-clamp는 일부러 안 겁니다 — 걸면 세 줄째부터 다시 잘립니다.
+            제목은 bottom-3에 붙어 있어 줄이 늘면 위로 자랍니다.
+          - 어두운 막: 아래에서 위로 60% 높이까지 검정 60% → 0. 제목이 두세 줄로 위로
+            자라도 흰 글씨 뒤가 어둡도록 처음(45%·55%)보다 넓고 조금 짙게 했습니다.
+            사진 윗부분은 어둡게 하지 않습니다.
           - 대표 사진이 없는 앨범은 그림의 "최근 삭제된 항목"처럼 위는 옅고 아래로
             짙어지는 회색 칸에 📷을 가운데 둡니다. 흰 제목이 앉을 아래쪽이 짙어야 해서
             단색 fill이 아니라 흐름(gradient)입니다.
@@ -647,9 +653,9 @@ function AlbumList() {
                 )}
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.55),rgba(0,0,0,0)_45%)]"
+                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.6),rgba(0,0,0,0)_60%)]"
                 />
-                <p className="absolute right-3.5 bottom-3 left-3.5 truncate text-[17px] font-bold text-white">
+                <p className="absolute right-3 bottom-3 left-3.5 text-[15px] leading-snug font-bold break-keep text-white [overflow-wrap:anywhere]">
                   {album.title}
                 </p>
               </Link>
