@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Avatar from "@/components/Avatar";
-import { ArrowUpIcon, CommentIcon } from "@/components/icons";
+import { ArrowUpIcon, ChatIcon } from "@/components/icons";
 import { EmptyState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { formatChatListTime } from "@/lib/format";
@@ -100,7 +100,7 @@ export default function SessionComments({
       ) : threads.length === 0 ? (
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
-            icon={<CommentIcon className="h-10 w-10" />}
+            icon={<ChatIcon className="h-10 w-10" />}
             title="아직 남긴 느낀점이 없어요"
             description="이 수업에서 마음에 남은 것을 먼저 나눠보세요."
           />

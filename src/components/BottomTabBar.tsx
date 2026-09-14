@@ -498,15 +498,16 @@ export default function BottomTabBar() {
                   />
 
                   {/*
-                    종이비행기 오른쪽 아래 빈자리에 앉는 빨간 점 (2026-09-14 사용자가 준 그림 그대로).
+                    아이콘 오른쪽 위에 얹는 빨간 점.
 
-                    비행기 오른쪽 변이 왼쪽 아래로 비스듬히 빠져나가 그 자리가 비어 있어서,
-                    흰 테 없이도 점이 아이콘 선에 닿지 않습니다.
+                    둘레의 흰 테는 점을 아이콘에서 떼어놓는 역할입니다 —
+                    테가 없으면 아이콘 선과 붙어 한 덩어리로 보입니다.
+                    (숫자 배지였을 때부터 같은 이유로 두르고 있었습니다.)
                   */}
                   {showDot ? (
                     <span
                       aria-hidden="true"
-                      className="absolute top-[15.5px] left-[20px] h-[7px] w-[7px] rounded-full bg-[#E5383B]"
+                      className="absolute -top-0.5 left-[calc(50%+5px)] h-[9px] w-[9px] rounded-full border-2 border-white bg-red-500"
                     />
                   ) : null}
                 </span>
