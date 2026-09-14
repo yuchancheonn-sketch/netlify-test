@@ -52,7 +52,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 20px, 왼쪽 12px 들여씀.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 16px, 왼쪽 12px 들여씀, 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -66,7 +66,7 @@ export default function TextTabs<T extends string>({
 }) {
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[20px]";
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[16px]";
 
   return (
     /*
@@ -90,20 +90,36 @@ export default function TextTabs<T extends string>({
      * no-scrollbar로 숨깁니다(globals.css).
      * shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
      */
-    <span
-      className={`no-scrollbar flex gap-[14px] overflow-x-auto ${
-        header ? "" : "pl-3"
-      } ${className}`}
-    >
-      {items.map((item) => {
-        const active = item.value === value;
-        return (
-          <button
-            key={item.value}
-            type="button"
-            onClick={() => onChange(item.value)}
-            aria-pressed={active}
-            /*
+    <span className={`relative flex ${className}`}>
+      {/*
+        "body" 갈래(원우수첩)에만 까는 회색 헤어라인 (2026-09-14 사용자 요청).
+        검은 바와 같은 높이에서 화면 왼쪽 끝부터 오른쪽 끝까지 이어집니다.
+
+        ★ 스크롤 칸 바깥에 둡니다. 안에 두면 overflow-x-auto에 잘려 화면 끝까지 못 갑니다.
+        -inset-x-4 — 쓰는 쪽의 px-4(16px)만큼 양옆으로 빼냅니다.
+        bottom-[0.75px] — 1px 선을 2.5px 바의 세로 가운데에 맞춘 값입니다.
+        아래 스크롤 칸에 relative를 줘서 검은 바가 이 선 위에 그려집니다.
+      */}
+      {header ? null : (
+        <span
+          aria-hidden
+          className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line"
+        />
+      )}
+      <span
+        className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
+          header ? "" : "pl-3"
+        }`}
+      >
+        {items.map((item) => {
+          const active = item.value === value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onChange(item.value)}
+              aria-pressed={active}
+              /*
               ★ 모든 칸을 늘 굵게 두고 색만 바꿉니다.
                 굵기까지 바꾸면 고를 때마다 글자 폭이 달라져 옆 칸이 좌우로
                 밀립니다. 색만 바뀌면 글자는 제자리에 못 박힙니다.
@@ -113,11 +129,11 @@ export default function TextTabs<T extends string>({
               대신 고른 칸이 먹색이라 "지금 어디에 서 있는지"는 또렷합니다.
               너무 흐려 못 누르는 칸처럼 보인다는 이야기가 나오면 ink-muted로.
             */
-            className={`flex shrink-0 flex-col items-center gap-1.5 transition ${
-              active ? "text-ink" : "text-ink-faint"
-            }`}
-          >
-            {/*
+              className={`flex shrink-0 flex-col items-center gap-1.5 transition ${
+                active ? "text-ink" : "text-ink-faint"
+              }`}
+            >
+              {/*
               ★ 글씨 크기를 <button>이 아니라 이 <span>에 겁니다. 반드시.
 
               globals.css 맨 아래의 `input, textarea, select, button {
@@ -132,8 +148,10 @@ export default function TextTabs<T extends string>({
               안 적으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래에 빈 자리가
               생기고, 글씨가 클수록 그 자리도 같이 커집니다.
             */}
-            <span className={`leading-tight font-bold ${textClass}`}>{item.label}</span>
-            {/*
+              <span className={`leading-tight font-bold ${textClass}`}>
+                {item.label}
+              </span>
+              {/*
               고른 칸 아래 검은 바.
 
               ★ 안 고른 칸에도 같은 크기로 두고 색만 없앱니다.
@@ -154,17 +172,17 @@ export default function TextTabs<T extends string>({
               뭉개져 그냥 선처럼 보입니다. 폰은 화소 밀도가 2배 이상이라
               0.5px 차이도 또렷하게 나옵니다.
             */}
-            <span
-              aria-hidden
-              className={`mx-1 h-[2.5px] self-stretch rounded-full transition ${
-                active ? "bg-ink" : "bg-transparent"
-              }`}
-            />
-          </button>
-        );
-      })}
+              <span
+                aria-hidden
+                className={`mx-1 h-[2.5px] self-stretch rounded-full transition ${
+                  active ? "bg-ink" : "bg-transparent"
+                }`}
+              />
+            </button>
+          );
+        })}
 
-      {/*
+        {/*
         오른쪽 끝 읽을거리. 위 단추와 띄어내기 위해 ml-auto로 밀어붙입니다 —
         탭이 하나도 없을 때도 제자리에 서도록.
 
@@ -173,12 +191,13 @@ export default function TextTabs<T extends string>({
         어긋납니다. 같은 짜임으로 두면 두 덩어리가 마치 같은 모양이라
         어떤 정렬을 쓰든 글자 줄이 정확히 맞습니다.
       */}
-      {trailing ? (
-        <span className="ml-auto flex shrink-0 flex-col items-center gap-1.5">
-          <span className={`leading-tight ${textClass}`}>{trailing}</span>
-          <span aria-hidden className="mx-1 h-[2.5px] self-stretch" />
-        </span>
-      ) : null}
+        {trailing ? (
+          <span className="ml-auto flex shrink-0 flex-col items-center gap-1.5">
+            <span className={`leading-tight ${textClass}`}>{trailing}</span>
+            <span aria-hidden className="mx-1 h-[2.5px] self-stretch" />
+          </span>
+        ) : null}
+      </span>
     </span>
   );
 }
