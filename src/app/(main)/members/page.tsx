@@ -718,12 +718,17 @@ function MemberDetailSheet({
         onClick={(event) => event.stopPropagation()}
         style={sheetStyle}
       >
+        {/*
+          손잡이 바 — 가로 48px(w-12) · 세로 5px, 사진과의 사이 12px(pb-3) (2026-09-15 사용자 요청:
+          가로 좀 늘리고 높이는 아주 조금 줄이고 사진과 사이를 조금 더). 예전엔 40px × 6px, 사이 8px(pb-2).
+          원우 상세 시트에만 해당합니다 — 수정 시트(MemberEditSheet)의 손잡이는 그대로입니다.
+        */}
         <div
           {...handleTouchHandlers}
           aria-hidden="true"
-          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-3"
         >
-          <div className="h-1.5 w-10 rounded-full bg-line" />
+          <div className="h-[5px] w-12 rounded-full bg-line" />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7">
