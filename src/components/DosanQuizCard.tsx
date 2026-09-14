@@ -88,17 +88,18 @@ export default function DosanQuizCard() {
    * 풀기 전에는 고른 칸만 주황 테두리. 푼 뒤에는 정답 칸이 주황 테두리이고, 내가 틀리게 고른
    * 칸은 빨간 테두리, 나머지는 흐리게 둡니다.
    *
-   * ★ 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50), 글씨는 검정입니다(2026-09-11).
-   *   처음엔 글씨까지 주황이었고, 한때 바탕을 걷어 테두리만 남겼다가, 사용자 요청으로
-   *   연한 바탕은 되살리고 글씨만 검정으로 두었습니다.
+   * ★ 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50) + **주황 글씨**입니다(2026-09-15 사용자 요청).
+   *   푼 뒤 정답 칸도 같은 모양이라 주황 글씨입니다. O·X 아이콘 색(파랑·빨강)은 그대로입니다.
+   *   지나온 모양: 처음엔 글씨까지 주황 → 바탕을 걷어 테두리만 → 연한 바탕을 되살리고 글씨는 검정(2026-09-11)
+   *   → 다시 글씨 주황(2026-09-15).
    */
   function choiceClassName(value: OxAnswer): string {
     if (!answer) {
       return picked === value
-        ? "border-brand-500 bg-brand-50 text-ink"
+        ? "border-brand-500 bg-brand-50 text-brand-500"
         : "border-line bg-surface text-ink";
     }
-    if (value === quiz.answer) return "border-brand-500 bg-brand-50 text-ink";
+    if (value === quiz.answer) return "border-brand-500 bg-brand-50 text-brand-500";
     if (value === answer) return "border-danger bg-surface text-danger";
     return "border-line bg-surface text-ink-faint";
   }
@@ -159,7 +160,9 @@ export default function DosanQuizCard() {
           아무것도 안 고른 상태로 돌아가므로 아래 "정답 제출하기"도 함께 사라집니다.
           제출한 뒤에는 단추가 disabled라 풀리지 않습니다.
 
-          높이: 위아래 6px(py-1.5) + 테두리 2px씩 + 글줄 24px ≈ 40px.
+          높이: 위아래 6.5px(py-[6.5px]) + 테두리 1.5px씩 + 글줄 24px ≈ 40px.
+          테두리는 2026-09-15 사용자 요청으로 2px → 1.5px로 얇게 했고, 줄어든 0.5px씩을 위아래 여백에
+          더해 높이는 그대로 40px입니다(아래 "정답 제출하기"와 같은 높이를 지키려고).
           2026-09-14 사용자 요청으로 py-2(≈44px)에서 4px 낮췄습니다. 아래 "정답 제출하기"
           (PrimaryButton compact)도 같은 날 같은 높이로 낮췄으니, 한쪽을 바꾸면 같이 바꿔 주세요.
         */}
@@ -172,7 +175,7 @@ export default function DosanQuizCard() {
               aria-checked={(answer ?? picked) === value}
               disabled={Boolean(answer)}
               onClick={() => setPickedFor(picked === value ? null : { key: quizKey, value })}
-              className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-1.5 text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
+              className={`flex items-center justify-center gap-2 rounded-2xl border-[1.5px] py-[6.5px] text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
                 value,
               )}`}
             >
