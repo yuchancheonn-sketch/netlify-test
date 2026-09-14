@@ -46,8 +46,12 @@ export default function StageGate({
 /**
  * 인증 상태를 확인하는 동안 잠깐 보이는 화면.
  *
- * 흰 바탕 한가운데에 도산아카데미 로고만 둡니다. 도는 동그라미도, 점도,
- * 글씨도 없습니다 — 잠깐 스쳐 가는 화면이라 조용할수록 좋습니다.
+ * 앱 바탕(bg-canvas, 아주 연한 회색 #FAFAF9) 한가운데에 도산아카데미 로고만 둡니다.
+ * 도는 동그라미도, 점도, 글씨도 없습니다 — 잠깐 스쳐 가는 화면이라 조용할수록 좋습니다.
+ *
+ * ★ 바탕은 bg-surface(흰색)가 아니라 bg-canvas입니다 (2026-09-14). 탭 화면과 같은 색이라
+ *   로딩이 끝나 탭이 나타날 때 바탕이 흰색 → 회색으로 한 번 깜빡이지 않습니다.
+ *   홈 화면에 추가한 앱의 스플래시(manifest의 BRAND_BACKGROUND)도 같은 값입니다.
  *
  * 로고는 public/brand/goose.png입니다. 파일 이름이 로고 같지 않은 것은
  * 앱 아이콘의 기러기 무늬를 이 그림에서 따내느라 먼저 들어온 파일이기
@@ -56,7 +60,7 @@ export default function StageGate({
  */
 export function SplashScreen() {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-surface px-8">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-canvas px-8">
       {/*
         원본이 700×700이라 화면에 그리는 140px의 다섯 배입니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
