@@ -78,8 +78,8 @@ export default function HomePage() {
         */}
         <section>
           {upcoming.loading ? (
-            /* 세 줄 카드(주요 일정 / 날짜·이름 / D-day·장소·시간)와 같은 높이 — 위아래 16px + 세 줄 ≈ 104px. */
-            <Skeleton className="h-[104px] rounded-3xl" />
+            /* 세 줄 카드(주요 일정 18px / 날짜·이름 18px / D-day·장소·시간 14px)와 같은 높이 — 위아래 16px + 세 줄 ≈ 108px. */
+            <Skeleton className="h-[108px] rounded-3xl" />
           ) : nextEvent ? (
             <EventDdayCard event={nextEvent} />
           ) : (
