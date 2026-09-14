@@ -199,12 +199,17 @@ export default function MembersPage() {
             색은 주황(brand-500) — 알약의 주황 테두리(ring-brand-500)와 같은 색입니다
             (2026-09-15 사용자 요청: 테두리를 주황으로 바꾼 뒤 돋보기도 맞춤). 테두리 색을 바꾸면 이것도 같이 바꿔 주세요.
             지나온 색: 주황 → ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황(시험, 되돌림) → 먹색 → ink-muted → ink-faint → 주황.
+            높이는 가운데보다 1px 위(top-[calc(50%-1px)]), 선 두께는 기본 1.9보다 살짝 얇은 1.75 — 둘 다 2026-09-15 사용자 요청.
+            선 두께는 이 화면에서만 넘깁니다(icons.tsx 기본값을 바꾸면 다른 돋보기도 같이 얇아집니다).
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
             안 올라옵니다.
           */}
-          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500" />
+          <SearchIcon
+            strokeWidth={1.75}
+            className="pointer-events-none absolute top-[calc(50%-1px)] right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500"
+          />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
