@@ -391,15 +391,17 @@ export default function ProfileForm({
           태어난 해를 먼저 적고 월·일을 고르는 순서가 말로 생일을 부르는 순서와 같습니다.
 
           ★ 폭이 좁아서 세 가지를 맞췄습니다.
-            - gap-2(8px) · 칸마다 flex-1 min-w-0 — min-w-0이 없으면 입력칸·선택 상자가 제 기본 폭을 고집해
-              390px 폰에서 줄 밖으로 밀려납니다.
+            - 폭 비율 연도 1.3 : 월 1 : 일 1 (grid-cols-[1.3fr_1fr_1fr], gap-2) — 2026-09-15 사용자 "연도박스가 제일 크게".
+              flex-1로 똑같이 나눴을 때는 선택 상자가 제 기본 폭을 고집해 오히려 연도 칸이 가장 좁았습니다.
+              grid의 fr은 그런 기본 폭과 상관없이 비율대로 나눕니다. 칸마다 min-w-0은 그래도 남겨 넘치지 않게 합니다.
+              390px 폰에서 연도 약 128px, 월·일 약 103px씩입니다.
             - 좌우 여백을 공용 px-5(20px) 대신 16px(pl-4!·px-4!)로, 선택 상자는 화살표 자리 pr-9!(36px) +
               화살표를 끝에서 12px(bg-[right_0.75rem_center])로 당겼습니다. ! 는 fieldClassName 안의 px-5를
               확실히 이기려는 것입니다(같은 속성이면 적은 순서가 아니라 Tailwind CSS 순서로 이기므로).
             - 그래도 360px 폰에서 칸 속 글자 자리가 약 49px이라 "12월"·"31일"(약 36px)이 들어갑니다.
           높이·글씨 2px 올림은 fieldClassName 그대로입니다.
         */}
-        <div className="flex gap-2">
+        <div className="grid grid-cols-[1.3fr_1fr_1fr] gap-2">
           <input
             id="birthdayYear"
             aria-label="태어난 연도 (선택)"
@@ -409,7 +411,7 @@ export default function ProfileForm({
             }
             inputMode="numeric"
             placeholder="연도"
-            className={`${fieldClassName} min-w-0 flex-1 px-4!`}
+            className={`${fieldClassName} min-w-0 px-4!`}
           />
           <select
             id="month"
@@ -421,7 +423,7 @@ export default function ProfileForm({
               const maxDay = daysInMonth(Number(event.target.value));
               if (Number(form.day) > maxDay) update("day", "");
             }}
-            className={`${fieldClassName} min-w-0 flex-1 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4!`}
+            className={`${fieldClassName} min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4!`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">월</option>
@@ -436,7 +438,7 @@ export default function ProfileForm({
             value={form.day}
             onChange={(event) => update("day", event.target.value)}
             disabled={!form.month}
-            className={`${fieldClassName} min-w-0 flex-1 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4! disabled:text-ink-faint`}
+            className={`${fieldClassName} min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4! disabled:text-ink-faint`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">일</option>
