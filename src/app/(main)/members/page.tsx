@@ -195,7 +195,8 @@ export default function MembersPage() {
             돋보기 — 오른쪽 끝, 주황, 26px (2026-09-14에 셋 다 바뀌었습니다).
             예전에는 왼쪽 끝의 18px 연회색이었고 오른쪽에는 "원우 N명"이 앉아
             있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
-            옮겼습니다. 색도 테두리와 같은 주황으로 맞췄습니다.
+            옮겼습니다. 색은 그때 테두리와 맞춘 주황인데, 테두리가 회색 바탕으로
+            바뀐 뒤(2026-09-14)에도 돋보기는 주황 그대로 둡니다.
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
@@ -237,24 +238,13 @@ export default function MembersPage() {
               돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
               따라옵니다.
 
-              ★ 테두리만 주황입니다.
-                다른 카드는 shadow-[var(--shadow-card)] 한 줄로 연회색 헤어라인
-                까지 함께 받지만, 이 칸은 테두리 색이 달라야 해서 글로우
-                (--shadow-card-glow)만 받고 테두리는 ring으로 따로 두릅니다.
-                --shadow-card를 통째로 다시 적으면 글로우 값을 베껴 쓰게 되고
-                나중에 글로우를 고칠 때 이 칸만 옛 값으로 남습니다.
-                Tailwind가 ring을 그림자보다 위에 그려 주므로, 테두리가 맨 위에
-                온다는 순서(globals.css의 --shadow-card 주석)도 그대로입니다.
-
-                ★ 글로우를 빼고 주황 테두리만 남겨 보기도 했지만(2026-09-14),
-                  사용자가 둘을 견줘 보고 "글로우 있는 게 낫다"고 해서
-                  되돌렸습니다. 다시 빼자고 제안하지 마세요.
-
-                굵기는 1.5px입니다. 다른 카드의 헤어라인(1px)보다 조금 굵어
-                눈에 걸리되, 2px까지 가면 칸이 주황 테로 갇힌 것처럼 답답해
-                집니다. 폰은 화소 밀도가 2배 이상이라 0.5px도 또렷하게 나옵니다.
+              ★ 테두리도 그림자도 없이 옅은 회색 바탕(bg-fill)만 깝니다.
+                2026-09-14 사용자 요청으로 흰 바탕 + 주황 1.5px 테두리(ring) +
+                글로우(--shadow-card-glow)에서 바꿨습니다. 페이지 바탕이 흰색이라
+                회색 한 겹만으로도 칸이 드러납니다(globals.css의 --color-fill 주석).
+                어두운 화면에서는 --dark-fill이 바탕보다 밝아 그대로 떠오릅니다.
             */
-            className="w-full rounded-full bg-surface py-[12.25px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-fill py-[12.25px] pr-14 pl-5 text-[16px] text-ink outline-none placeholder:text-ink-faint"
           />
         </div>
 
