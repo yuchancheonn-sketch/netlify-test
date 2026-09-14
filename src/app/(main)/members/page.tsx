@@ -506,11 +506,15 @@ function MemberRow({
         )}
       </button>
 
-      {/* 이름 · 회사 · 직책 */}
+      {/*
+        이름 · 회사 · 직책
+        위아래 여백 3px / 5px — 합(8px)은 예전 py-1과 같아 박스 높이는 그대로이고,
+        글씨 두 줄만 1px 위로 올라갑니다 (2026-09-15 사용자 요청).
+      */}
       <button
         type="button"
         onClick={onOpen}
-        className="min-w-0 flex-1 py-1 text-left transition active:opacity-70"
+        className="min-w-0 flex-1 pt-[3px] pb-[5px] text-left transition active:opacity-70"
       >
         {/*
           ★ 이름은 절대 자르지 않습니다.
@@ -650,7 +654,8 @@ function MemberRow({
         aria-label={`${entry.name} 정보 수정`}
         className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill active:scale-95"
       >
-        <PencilIcon className="h-5 w-5" />
+        {/* 아이콘만 1px 위로 (2026-09-15, 옆 글씨와 같이). 누르는 40px 자리는 그대로입니다. */}
+        <PencilIcon className="h-5 w-5 -translate-y-px" />
       </button>
     </div>
   );
