@@ -386,7 +386,31 @@ export default function ProfileForm({
       {/* 생일 */}
       <div className="mb-6">
         <FieldLabel hint="선택">생일</FieldLabel>
-        <div className="flex gap-3">
+        {/*
+          연도 → 월 → 일, 세 칸을 한 줄에 (2026-09-15 사용자 요청 — 예전엔 월·일 한 줄 + 아래 연도 한 줄).
+          태어난 해를 먼저 적고 월·일을 고르는 순서가 말로 생일을 부르는 순서와 같습니다.
+
+          ★ 폭이 좁아서 세 가지를 맞췄습니다.
+            - gap-2(8px) · 칸마다 flex-1 min-w-0 — min-w-0이 없으면 입력칸·선택 상자가 제 기본 폭을 고집해
+              390px 폰에서 줄 밖으로 밀려납니다.
+            - 좌우 여백을 공용 px-5(20px) 대신 16px(pl-4!·px-4!)로, 선택 상자는 화살표 자리 pr-9!(36px) +
+              화살표를 끝에서 12px(bg-[right_0.75rem_center])로 당겼습니다. ! 는 fieldClassName 안의 px-5를
+              확실히 이기려는 것입니다(같은 속성이면 적은 순서가 아니라 Tailwind CSS 순서로 이기므로).
+            - 그래도 360px 폰에서 칸 속 글자 자리가 약 49px이라 "12월"·"31일"(약 36px)이 들어갑니다.
+          높이·글씨 2px 올림은 fieldClassName 그대로입니다.
+        */}
+        <div className="flex gap-2">
+          <input
+            id="birthdayYear"
+            aria-label="태어난 연도 (선택)"
+            value={form.birthdayYear}
+            onChange={(event) =>
+              update("birthdayYear", event.target.value.replace(/\D/g, "").slice(0, 4))
+            }
+            inputMode="numeric"
+            placeholder="연도"
+            className={`${fieldClassName} min-w-0 flex-1 px-4!`}
+          />
           <select
             id="month"
             aria-label="생일 월"
@@ -397,7 +421,7 @@ export default function ProfileForm({
               const maxDay = daysInMonth(Number(event.target.value));
               if (Number(form.day) > maxDay) update("day", "");
             }}
-            className={`${fieldClassName} flex-1 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+            className={`${fieldClassName} min-w-0 flex-1 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4!`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">월</option>
@@ -412,7 +436,7 @@ export default function ProfileForm({
             value={form.day}
             onChange={(event) => update("day", event.target.value)}
             disabled={!form.month}
-            className={`${fieldClassName} flex-1 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11 disabled:text-ink-faint`}
+            className={`${fieldClassName} min-w-0 flex-1 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4! disabled:text-ink-faint`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">일</option>
@@ -425,22 +449,8 @@ export default function ProfileForm({
             )}
           </select>
         </div>
-        {errors.month ? <FieldError>{errors.month}</FieldError> : null}
-
-        <div className="mt-3 flex gap-3">
-          <input
-            id="birthdayYear"
-            aria-label="태어난 연도 (선택)"
-            value={form.birthdayYear}
-            onChange={(event) =>
-              update("birthdayYear", event.target.value.replace(/\D/g, "").slice(0, 4))
-            }
-            inputMode="numeric"
-            placeholder="연도 (선택)"
-            className={`${fieldClassName} flex-1`}
-          />
-        </div>
         {errors.birthdayYear ? <FieldError>{errors.birthdayYear}</FieldError> : null}
+        {errors.month ? <FieldError>{errors.month}</FieldError> : null}
         {/*
           "연도는 비공개로 하기" 체크박스는 2026-09-15 사용자 요청으로 기능째 없앴습니다.
           연도를 넣으면 원우수첩에 늘 함께 보입니다(lib/format.ts의 formatBirthday).
