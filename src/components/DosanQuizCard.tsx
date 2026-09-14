@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
-import { PrimaryButton } from "@/components/ui";
+import { PrimaryButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { kstDateString, quizForDay, type DosanQuiz, type OxAnswer } from "@/lib/dosan-quiz";
+import { kstDateString, quizForDay, type OxAnswer } from "@/lib/dosan-quiz";
+import type { QuizStats, QuizTodayResult } from "@/lib/quiz-types";
 import { useKstDay } from "@/lib/use-kst-day";
-import { resetQuizAnswers, useQuizAnswer } from "@/lib/use-quiz-answer";
+import { QuizRequestError, sendQuizAnswer, useQuizStatus } from "@/lib/use-quiz";
 
-/** "채점 중이에요" 화면을 보여주는 시간(ms). 너무 짧으면 번쩍하고, 길면 답답합니다. */
+/** "채점 중이에요" 화면을 보여주는 가장 짧은 시간(ms). 서버가 빨리 답해도 이만큼은 보여줍니다. */
 const GRADING_MS = 1600;
 
 const CHOICES: { value: OxAnswer; label: string }[] = [
@@ -22,25 +23,32 @@ function choiceLabel(value: OxAnswer): string {
 }
 
 /**
- * 홈 맨 위 "오늘의 OX 퀴즈" 카드.
+ * 홈 "오늘의 OX 퀴즈" 카드.
  *
  * 나만의닥터의 매일 퀴즈 흐름을 따랐습니다.
  *   1. 그렇다/아니다 중 하나를 누르면 "정답 제출하기"가 나타납니다.
  *   2. 제출하면 잠깐 "채점 중이에요" 화면이 뜹니다.
- *   3. 이어서 전체 화면 해설이 뜹니다. 닫으면 카드에 결과가 남고,
- *      "해설 보기"로 다시 열 수 있습니다.
+ *   3. 이어서 전체 화면 해설이 뜹니다.
  *
- * 문제와 해설은 lib/dosan-quiz.ts, 고른 답은 이 폰의 내 계정에만(lib/use-quiz-answer.ts).
- * 누가 먼저 풀어도 다른 원우에게 정답·해설이 열리지 않습니다 — 각자 한 번씩 풉니다.
+ * ★ 푼 뒤에는 카드 속이 **내 성적**으로 바뀝니다 (2026-09-15 사용자 요청).
+ *   오늘 결과 한 줄 + "맞힌 문제 N개 / 푼 문제" + "N기 원우 중 N등 / 참여 N명". "해설 보기"로 오늘 해설을 다시 엽니다.
+ *   오른쪽 위 ">"(역대 퀴즈)는 그대로 — 지나간 문제의 정답·해설을 모두 봅니다.
+ *
+ * ★ 채점은 서버가 합니다 (lib/quiz-server.ts, /api/quiz).
+ *   정답·해설은 앱 코드에 없고 제출한 뒤에야 받습니다. 한 계정은 어느 폰에서든 하루 한 번만 풉니다.
+ *   예전의 폰 저장(use-quiz-answer.ts)과 "?quiz-reset" 다시 풀기 뒷문은 이때 없앴습니다.
  */
 export default function DosanQuizCard() {
   // 한국 시간 새벽 12시에 다음 문제로 — 홈을 켜 둔 채여도 그 순간 바뀝니다(use-kst-day.ts).
   const day = useKstDay();
   const quiz = quizForDay(day);
   const quizKey = `${kstDateString(day)}:${quiz.id}`;
-  // 퀴즈는 원우마다 각자 풉니다 — 같은 폰이라도 계정이 다르면 따로입니다(use-quiz-answer.ts).
   const { user } = useAuth();
-  const [answer, saveAnswer] = useQuizAnswer(user?.uid, quizKey);
+  const quizStatus = useQuizStatus(user?.uid, day);
+  // 자정 경계에서 서버가 본 오늘 문제와 화면의 문제가 다르면, 서버 값을 아직 쓰지 않습니다.
+  const status = quizStatus.status?.quizId === quiz.id ? quizStatus.status : null;
+  const today = status?.today ?? null;
+
   /**
    * 제출 전에 눌러 둔 답. 어느 문제에 고른 것인지(key)와 함께 둡니다 —
    * 고르기만 하고 자정을 넘기면 새 문제에 어제 고른 답이 켜져 있지 않게 합니다.
@@ -48,25 +56,9 @@ export default function DosanQuizCard() {
   const [pickedFor, setPickedFor] = useState<{ key: string; value: OxAnswer } | null>(null);
   const picked = pickedFor?.key === quizKey ? pickedFor.value : null;
   const [screen, setScreen] = useState<"none" | "grading" | "explanation">("none");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const gradingTimer = useRef<number | null>(null);
-
-  /*
-   * 주소 끝에 ?quiz-reset을 붙여 홈을 열면 이 폰에 적어 둔 답을 지워 다시 풀게 합니다.
-   * 문제를 고치거나 흐름을 다시 볼 때 쓰는 뒷문이라 화면에는 단추가 없습니다.
-   * 지운 뒤에는 주소에서 떼어 새로고침해도 또 지워지지 않게 합니다.
-   */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has("quiz-reset")) return;
-    resetQuizAnswers();
-    params.delete("quiz-reset");
-    const query = params.toString();
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
-    );
-  }, []);
 
   // 채점 화면이 떠 있는 동안 홈을 벗어나면 타이머만 치웁니다.
   useEffect(
@@ -76,35 +68,40 @@ export default function DosanQuizCard() {
     [],
   );
 
-  function submit() {
-    if (!picked || answer) return;
-    saveAnswer(picked);
+  async function submit() {
+    if (!picked || today || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
     setScreen("grading");
-    gradingTimer.current = window.setTimeout(() => setScreen("explanation"), GRADING_MS);
+    const startedAt = Date.now();
+    try {
+      const next = await sendQuizAnswer(quiz.id, picked);
+      quizStatus.setStatus(next);
+      // 서버가 빨리 답해도 "채점 중이에요"를 잠깐은 보여줍니다 — 번쩍하고 지나가지 않게.
+      const wait = Math.max(0, GRADING_MS - (Date.now() - startedAt));
+      gradingTimer.current = window.setTimeout(() => setScreen("explanation"), wait);
+    } catch (caught) {
+      setScreen("none");
+      setSubmitError(
+        caught instanceof QuizRequestError && caught.reason === "stale-quiz"
+          ? "자정이 지나 새 문제로 바뀌었어요. 새 문제를 풀어 주세요."
+          : "제출하지 못했어요. 잠시 후 다시 눌러 주세요.",
+      );
+      quizStatus.refresh();
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   /*
-   * 버튼 색.
-   * 풀기 전에는 고른 칸만 주황 테두리. 푼 뒤에는 정답 칸이 주황 테두리이고, 내가 틀리게 고른
-   * 칸은 빨간 테두리, 나머지는 흐리게 둡니다.
-   *
-   * ★ 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50) + **주황 글씨**입니다(2026-09-15 사용자 요청).
-   *   푼 뒤 정답 칸도 같은 모양이라 주황 글씨입니다. O·X 아이콘 색(파랑·빨강)은 그대로입니다.
-   *   지나온 모양: 처음엔 글씨까지 주황 → 바탕을 걷어 테두리만 → 연한 바탕을 되살리고 글씨는 검정(2026-09-11)
-   *   → 다시 글씨 주황(2026-09-15).
+   * 버튼 색 — 푸는 동안만 씁니다(푼 뒤에는 카드가 성적으로 바뀝니다).
+   * 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50) + 주황 글씨(2026-09-15 사용자 요청), 나머지는 흰 칸.
    */
   function choiceClassName(value: OxAnswer): string {
-    if (!answer) {
-      return picked === value
-        ? "border-brand-500 bg-brand-50 text-brand-500"
-        : "border-line bg-surface text-ink";
-    }
-    if (value === quiz.answer) return "border-brand-500 bg-brand-50 text-brand-500";
-    if (value === answer) return "border-danger bg-surface text-danger";
-    return "border-line bg-surface text-ink-faint";
+    return picked === value
+      ? "border-brand-500 bg-brand-50 text-brand-500"
+      : "border-line bg-surface text-ink";
   }
-
-  const correct = answer === quiz.answer;
 
   return (
     <>
@@ -122,11 +119,10 @@ export default function DosanQuizCard() {
           */}
           <div className="-mr-1.5 flex shrink-0 items-center gap-1">
             {/*
-              푼 뒤에 해설을 다시 여는 단추. 바로 옆에 ">"가 서므로 꺾쇠를 떼고 글자만 둡니다(2026-09-11) —
-              꺾쇠 둘이 나란히 서면 어느 것이 무엇인지 헷갈립니다.
+              푼 뒤에 해설을 다시 여는 단추. 바로 옆에 ">"가 서므로 꺾쇠를 떼고 글자만 둡니다(2026-09-11).
               크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다.
             */}
-            {answer ? (
+            {today ? (
               <button
                 type="button"
                 onClick={() => setScreen("explanation")}
@@ -141,82 +137,140 @@ export default function DosanQuizCard() {
               className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
             >
               {/*
-                홈 D-day 카드의 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠(20px·2, 28px·2.2)의
-                가운데 값으로 맞췄습니다. 한쪽을 바꾸면 EventCard.tsx의 EventDdayCard도 같이 바꿔 주세요.
+                홈 D-day 카드의 ">"와 같은 크기·굵기(24px·2.1) — 한쪽을 바꾸면 EventCard.tsx도 같이 바꿔 주세요.
               */}
               <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
             </Link>
           </div>
         </div>
 
-        {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
-        <p className="flex gap-2 pt-4 text-[17px] leading-relaxed font-medium text-ink">
-          <span className="shrink-0 font-bold text-brand-500">Q.</span>
-          <span className="break-keep">{quiz.question}</span>
-        </p>
-
-        {/*
-          고른 칸을 한 번 더 누르면 고르기가 풀립니다 (2026-09-14, 사용자 요청).
-          아무것도 안 고른 상태로 돌아가므로 아래 "정답 제출하기"도 함께 사라집니다.
-          제출한 뒤에는 단추가 disabled라 풀리지 않습니다.
-
-          높이: 위아래 6.5px(py-[6.5px]) + 테두리 1.5px씩 + 글줄 24px ≈ 40px.
-          테두리는 2026-09-15 사용자 요청으로 2px → 1.5px로 얇게 했고, 줄어든 0.5px씩을 위아래 여백에
-          더해 높이는 그대로 40px입니다(아래 "정답 제출하기"와 같은 높이를 지키려고).
-          2026-09-14 사용자 요청으로 py-2(≈44px)에서 4px 낮췄습니다. 아래 "정답 제출하기"
-          (PrimaryButton compact)도 같은 날 같은 높이로 낮췄으니, 한쪽을 바꾸면 같이 바꿔 주세요.
-        */}
-        <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
-          {CHOICES.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={(answer ?? picked) === value}
-              disabled={Boolean(answer)}
-              onClick={() => setPickedFor(picked === value ? null : { key: quizKey, value })}
-              className={`flex items-center justify-center gap-2 rounded-2xl border-[1.5px] py-[6.5px] text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
-                value,
-              )}`}
-            >
-              {value === "O" ? (
-                /*
-                  O는 파랑, X는 빨강 — OX 퀴즈에서 흔히 쓰는 짝입니다(2026-09-11, 예전엔 O가 주황).
-                  -translate-y-px: 아이콘만 1px 위로 (2026-09-15 사용자 요청). 옆 글씨는 따로 2px 올라가 있습니다.
-                */
-                <OMarkIcon className="h-5 w-5 -translate-y-px text-blue-500" />
-              ) : (
-                <XMarkIcon className="h-5 w-5 -translate-y-px text-danger" />
-              )}
-              {/*
-                -translate-y-[2px]: 글씨를 2px 위로 — 아이콘 옆에서 살짝 아래로 앉아 보였습니다.
-                (처음 1px, 2026-09-15 사용자 요청으로 1px 더 올렸습니다. 같은 날 O·X 아이콘도 따로 1px 올렸습니다.)
-              */}
-              <span className="-translate-y-[2px]">{label}</span>
-            </button>
-          ))}
-        </div>
-
-        {answer ? (
-          <p
-            className={`mt-4 text-center text-[15px] font-bold ${
-              correct ? "text-brand-500" : "text-danger"
-            }`}
-          >
-            {correct ? "정답이에요!" : `아쉬워요, 정답은 ${quiz.answer}예요`}
-          </p>
-        ) : picked ? (
-          <div className="mt-3">
-            <PrimaryButton onClick={submit} size="compact">
-              정답 제출하기
-            </PrimaryButton>
+        {quizStatus.loading && !status ? (
+          /* 서버에서 풀었는지·성적을 받아 오는 동안. 문제+두 칸 자리만큼. */
+          <div className="pt-4">
+            <Skeleton className="h-[52px] rounded-2xl" />
+            <Skeleton className="mt-4 h-10 rounded-2xl" />
           </div>
-        ) : null}
+        ) : today ? (
+          <QuizResultView today={today} stats={status?.stats ?? null} />
+        ) : quizStatus.error && !status ? (
+          <div className="pt-4 text-center">
+            <p className="text-[14px] text-ink-muted">{quizStatus.error}</p>
+            <button
+              type="button"
+              onClick={quizStatus.refresh}
+              className="mt-2 text-[14px]! font-bold text-brand-500"
+            >
+              다시 불러오기
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
+            <p className="flex gap-2 pt-4 text-[17px] leading-relaxed font-medium text-ink">
+              <span className="shrink-0 font-bold text-brand-500">Q.</span>
+              <span className="break-keep">{quiz.question}</span>
+            </p>
+
+            {/*
+              고른 칸을 한 번 더 누르면 고르기가 풀립니다 (2026-09-14, 사용자 요청).
+              아무것도 안 고른 상태로 돌아가므로 아래 "정답 제출하기"도 함께 사라집니다.
+
+              높이: 위아래 6.5px(py-[6.5px]) + 테두리 1.5px씩 + 글줄 24px ≈ 40px.
+              테두리는 2026-09-15 사용자 요청으로 2px → 1.5px로 얇게 했고, 줄어든 0.5px씩을 위아래 여백에
+              더해 높이는 그대로 40px입니다(아래 "정답 제출하기"(PrimaryButton compact)와 같은 높이를 지키려고).
+            */}
+            <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
+              {CHOICES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={picked === value}
+                  disabled={submitting}
+                  onClick={() => setPickedFor(picked === value ? null : { key: quizKey, value })}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border-[1.5px] py-[6.5px] text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
+                    value,
+                  )}`}
+                >
+                  {value === "O" ? (
+                    /*
+                      O는 파랑, X는 빨강 — OX 퀴즈에서 흔히 쓰는 짝입니다(2026-09-11, 예전엔 O가 주황).
+                      -translate-y-px: 아이콘만 1px 위로 (2026-09-15 사용자 요청). 옆 글씨는 따로 2px 올라가 있습니다.
+                    */
+                    <OMarkIcon className="h-5 w-5 -translate-y-px text-blue-500" />
+                  ) : (
+                    <XMarkIcon className="h-5 w-5 -translate-y-px text-danger" />
+                  )}
+                  {/* -translate-y-[2px]: 글씨를 2px 위로 — 아이콘 옆에서 살짝 아래로 앉아 보였습니다(2026-09-15). */}
+                  <span className="-translate-y-[2px]">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {picked ? (
+              <div className="mt-3">
+                <PrimaryButton onClick={submit} size="compact" loading={submitting}>
+                  정답 제출하기
+                </PrimaryButton>
+              </div>
+            ) : null}
+            {submitError ? (
+              <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
+                {submitError}
+              </p>
+            ) : null}
+          </>
+        )}
       </section>
 
       {screen === "grading" ? <GradingScreen /> : null}
-      {screen === "explanation" && answer ? (
-        <ExplanationScreen quiz={quiz} answer={answer} onClose={() => setScreen("none")} />
+      {screen === "explanation" && today ? (
+        <ExplanationScreen
+          question={quiz.question}
+          today={today}
+          onClose={() => setScreen("none")}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * 푼 뒤 카드 속 — 오늘 결과 한 줄과 성적 두 칸 (2026-09-15).
+ *
+ * 왼쪽 "맞힌 문제": 지금까지 맞힌 개수 / 푼 문제 수. 오른쪽 "N기 원우 중": 기수 안 등수 / 참여 원우 수.
+ * 등수는 본인 화면에만 보이고 다른 원우의 이름은 나오지 않습니다. 맞힌 수가 같으면 "공동 N등".
+ * 두 칸은 흰 카드 위의 옅은 회색(bg-fill) 상자로, 오늘의 도산·원우 상세 정보 상자와 같은 결입니다.
+ */
+function QuizResultView({ today, stats }: { today: QuizTodayResult; stats: QuizStats | null }) {
+  return (
+    <>
+      <p className={`pt-4 text-[15px] font-bold ${today.correct ? "text-brand-500" : "text-danger"}`}>
+        {today.correct ? "오늘 퀴즈 정답이에요!" : `아쉽게 틀렸어요 · 정답은 ${today.answer}`}
+      </p>
+
+      {stats ? (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-fill px-4 py-3">
+            <p className="text-[13px] text-ink-muted">맞힌 문제</p>
+            <p className="mt-1 text-[22px] leading-tight font-bold text-ink">
+              <span className="tabular-nums">{stats.correct}</span>개
+              <span className="ml-1 text-[14px] font-medium text-ink-faint">
+                / <span className="tabular-nums">{stats.answered}</span>문제
+              </span>
+            </p>
+          </div>
+          <div className="rounded-2xl bg-fill px-4 py-3">
+            <p className="text-[13px] text-ink-muted">{stats.cohort} 원우 중</p>
+            <p className="mt-1 text-[22px] leading-tight font-bold text-brand-500">
+              {stats.tied ? <span className="text-[16px]">공동 </span> : null}
+              <span className="tabular-nums">{stats.rank}</span>등
+              <span className="ml-1 text-[14px] font-medium text-ink-faint">
+                / <span className="tabular-nums">{stats.participants}</span>명
+              </span>
+            </p>
+          </div>
+        </div>
       ) : null}
     </>
   );
@@ -257,18 +311,16 @@ function GradingScreen() {
   );
 }
 
-/** 전체 화면 해설. 위에 제목과 닫기, 가운데 문제·정답·해설, 아래에 확인 단추. */
+/** 전체 화면 해설. 위에 제목과 닫기, 가운데 문제·정답·해설, 아래에 확인 단추. 정답·해설은 서버가 준 값입니다. */
 function ExplanationScreen({
-  quiz,
-  answer,
+  question,
+  today,
   onClose,
 }: {
-  quiz: DosanQuiz;
-  answer: OxAnswer;
+  question: string;
+  today: QuizTodayResult;
   onClose: () => void;
 }) {
-  const correct = answer === quiz.answer;
-
   return (
     <div
       role="dialog"
@@ -291,28 +343,28 @@ function ExplanationScreen({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-6">
-        <p className={`text-[15px] font-bold ${correct ? "text-brand-500" : "text-danger"}`}>
-          {correct ? "정답이에요!" : "아쉽게 틀렸어요"}
+        <p className={`text-[15px] font-bold ${today.correct ? "text-brand-500" : "text-danger"}`}>
+          {today.correct ? "정답이에요!" : "아쉽게 틀렸어요"}
         </p>
         <h3 className="mt-2 text-[24px] leading-snug font-bold tracking-tight break-keep text-ink">
-          {quiz.question}
+          {question}
         </h3>
 
         <dl className="mt-5 flex flex-col gap-2 rounded-2xl bg-fill px-5 py-4 text-[15px]">
           <div className="flex items-center justify-between gap-4">
             <dt className="text-ink-muted">정답</dt>
-            <dd className="font-bold text-brand-500">{choiceLabel(quiz.answer)}</dd>
+            <dd className="font-bold text-brand-500">{choiceLabel(today.answer)}</dd>
           </div>
           <div className="flex items-center justify-between gap-4">
             <dt className="text-ink-muted">내 답</dt>
-            <dd className={`font-bold ${correct ? "text-brand-500" : "text-danger"}`}>
-              {choiceLabel(answer)}
+            <dd className={`font-bold ${today.correct ? "text-brand-500" : "text-danger"}`}>
+              {choiceLabel(today.myAnswer)}
             </dd>
           </div>
         </dl>
 
         <div className="mt-6 flex flex-col gap-4 text-[16px] leading-[1.8] break-keep text-ink-soft">
-          {quiz.explanation.map((paragraph) => (
+          {today.explanation.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
         </div>
