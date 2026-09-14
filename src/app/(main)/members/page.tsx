@@ -629,16 +629,16 @@ function MemberRow({
           27px 안쪽에 서서, 16px에 맞춰 선 사진·검색칸보다 혼자 들어가
           보입니다. 헤더 아이콘(PageHeader의 last:-mr-1)과 같은 셈법입니다.
 
-        색은 주황(brand-500) 선입니다 (2026-09-14 사용자 요청). 흰 박스·먹색 글씨뿐이던 원우 목록에
-        애기애타 주황을 조금 섞는 자리로 사용자가 직접 골랐습니다. 그 전에는 ink-faint(연회색)였고,
-        같은 날 "▶ 영상" 딱지를 주황으로 해 봤다가 "별로"라서 딱지는 반투명 검정으로 되돌렸습니다.
-        아이콘은 선만 있는 모양이라 주황이어도 이름보다 가볍게 읽힙니다.
+        색은 ink-faint(연회색) 그대로입니다 — 이 줄에서 먼저 읽혀야 하는 것은
+        이름이고 수정은 그 다음입니다.
+        (2026-09-14에 이 아이콘을 주황 선으로 해 봤다가, 소속·직책 줄을 주황으로 바꾼 뒤
+         사용자가 "원래대로 되돌려놔줘"라고 해서 연회색으로 돌아왔습니다.)
       */}
       <button
         type="button"
         onClick={onEdit}
         aria-label={`${entry.name} 정보 수정`}
-        className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-500 transition active:bg-fill active:scale-95"
+        className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill active:scale-95"
       >
         <PencilIcon className="h-5 w-5" />
       </button>
