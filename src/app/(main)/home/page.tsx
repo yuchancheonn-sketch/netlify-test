@@ -5,7 +5,7 @@ import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
-import { CalendarIcon, ChevronRightIcon } from "@/components/icons";
+import { CalendarIcon, ChevronRightIcon, PlusIcon } from "@/components/icons";
 import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
@@ -78,19 +78,27 @@ export default function HomePage() {
             <EventDdayCard event={nextEvent} />
           ) : (
             /*
-              모임이 없어도 전체 일정 화면으로 갈 길은 남겨 둡니다 —
-              "일정 등록" 단추(원우 누구나)가 그 화면에 있습니다.
+              모임이 없을 때 — 안내 아래 "모임 등록하기" 단추로 바로 일정 등록 화면(/events/new)에 갑니다
+              (2026-09-15 사용자 요청). 일정 등록은 원우 누구나 할 수 있습니다.
+              예전에는 카드 전체가 모임 목록(/events)으로 가는 링크였는데, 링크 안에 또 링크(단추)를 둘 수 없어
+              카드는 그냥 상자로 두고 단추만 누르게 했습니다. 모임 목록도 비어 있을 때라 잃는 길은 없습니다.
             */
-            <Link
-              href="/events"
-              className="block rounded-3xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-            >
+            <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<CalendarIcon className="h-9 w-9" />}
                 title="다가오는 모임이 아직 없어요"
                 description="일정을 올리면 여기에 D-day로 표시됩니다."
+                action={
+                  <Link
+                    href="/events/new"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-[15px] font-bold text-white transition active:scale-95"
+                  >
+                    <PlusIcon className="h-[18px] w-[18px]" />
+                    모임 등록하기
+                  </Link>
+                }
               />
-            </Link>
+            </div>
           )}
         </section>
 
