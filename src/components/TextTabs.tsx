@@ -52,7 +52,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 10px 들여씀, 화면 끝까지 회색 헤어라인.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 8px 들여씀, 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -76,8 +76,8 @@ export default function TextTabs<T extends string>({
      *   HTML이 됩니다. span에 display:flex를 주면 자리잡는 방식은 div와 같으면서
      *   h1 안에서도 올바릅니다. (제목 옆 기수 고르개도 같은 이유로 span입니다.)
      *
-     * pl-[10px] — 왼쪽으로 10px 들여 씁니다(2026-09-14 사용자 요청으로 12px에서 2px 당김).
-     * 쓰는 쪽이 px-4(16px) 안에 두므로 화면 끝에서 26px입니다. 끝에 바짝 붙이면 글자만 있는 줄이라 허전합니다.
+     * pl-2 — 왼쪽으로 8px 들여 씁니다(2026-09-14 사용자 요청으로 12px → 10px → 8px).
+     * 쓰는 쪽이 px-4(16px) 안에 두므로 화면 끝에서 24px입니다. 끝에 바짝 붙이면 글자만 있는 줄이라 허전합니다.
      * "header" 갈래에서는 들이지 않습니다 — 다른 화면의 제목이 서는 자리(16px)에
      * 그대로 서야 하기 때문입니다.
      *
@@ -108,7 +108,7 @@ export default function TextTabs<T extends string>({
       )}
       <span
         className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
-          header ? "" : "pl-[10px]"
+          header ? "" : "pl-2"
         }`}
       >
         {items.map((item) => {
@@ -120,7 +120,11 @@ export default function TextTabs<T extends string>({
               onClick={() => onChange(item.value)}
               aria-pressed={active}
               /*
-              ★ 모든 칸을 늘 굵게 두고 색만 바꿉니다.
+              ★ 모든 칸을 늘 같은 굵기로 두고 색만 바꿉니다.
+                굵기는 "header"가 bold(700), "body"(원우수첩)가 medium(500)입니다 —
+                2026-09-14 사용자가 "아주 조금만 더 얇게"라고 해서 body만 내렸습니다.
+                600은 layout.tsx가 받지 않아(400·500·700·900) 적어도 700으로 그려지므로
+                500이 한 단 아래입니다.
                 굵기까지 바꾸면 고를 때마다 글자 폭이 달라져 옆 칸이 좌우로
                 밀립니다. 색만 바뀌면 글자는 제자리에 못 박힙니다.
 
@@ -148,7 +152,9 @@ export default function TextTabs<T extends string>({
               안 적으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래에 빈 자리가
               생기고, 글씨가 클수록 그 자리도 같이 커집니다.
             */}
-              <span className={`leading-tight font-bold ${textClass}`}>
+              <span
+                className={`leading-tight ${header ? "font-bold" : "font-medium"} ${textClass}`}
+              >
                 {item.label}
               </span>
               {/*
