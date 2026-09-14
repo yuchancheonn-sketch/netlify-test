@@ -478,7 +478,13 @@ function MemberRow({
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-            <span className="absolute right-1.5 bottom-1.5 flex h-5 items-center rounded-md bg-black/65 px-1.5 text-[11px] font-bold text-white">
+            {/*
+              "▶ 영상" 딱지 — 주황(brand-500) 바탕 + 흰 글씨 (2026-09-14, 사용자가 추천 중 2번을 고름).
+              흰 박스·먹색 글씨뿐이던 원우 목록에 애기애타 주황을 조금 섞으려고, 크게 튀지 않는
+              사진 위 작은 딱지에 넣었습니다. 예전에는 반투명 검정(bg-black/65)이었습니다.
+              ★ 주황 위 흰 11px 글씨는 대비가 약해(약 2.6:1) 늘 굵게 둡니다.
+            */}
+            <span className="absolute right-1.5 bottom-1.5 flex h-5 items-center rounded-md bg-brand-500 px-1.5 text-[11px] font-bold text-white">
               ▶ 영상
             </span>
           </>
