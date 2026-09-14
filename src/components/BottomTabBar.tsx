@@ -297,10 +297,10 @@ export default function BottomTabBar() {
   }
 
   /*
-   * 지금 주황으로 켜둘 탭 — 손을 떼면 가게 될 그 탭입니다.
+   * 지금 켜둘 탭(속이 꽉 찬 아이콘 + 굵은 글씨) — 손을 떼면 가게 될 그 탭입니다.
    *
    * 손을 뗐을 때와 똑같은 셈법(지나온 칸까지만)을 씁니다. 여기만 반올림하면
-   * 한 칸 반쯤 끌었을 때 두 칸째가 주황으로 켜졌다가 손을 떼면 한 칸째로
+   * 한 칸 반쯤 끌었을 때 두 칸째가 켜졌다가 손을 떼면 한 칸째로
    * 가버려서, 보이는 것과 벌어지는 일이 어긋납니다.
    */
   const coveredIndex =
@@ -364,11 +364,14 @@ export default function BottomTabBar() {
       {/*
         알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다.
 
-        바탕은 불투명한 흰색이 아니라 유리처럼 둡니다 — 흰색 75%에
-        뒤를 흐리는 backdrop-blur를 얹어, 알약 아래로 지나가는 글과 사진이
-        희미하게 비칩니다. 인스타·당근의 하단 바와 같은 방식입니다.
-        흰색을 이보다 더 묽게 하면 글씨가 뒷 내용과 겹쳐 읽기 힘들어지고,
-        알약 아래쪽 절반에 깔린 흐림 층(MainShell)과의 경계도 드러납니다.
+        바탕은 불투명한 흰색(bg-surface)입니다 — 2026-09-14 사용자가 보여 준 당근
+        하단 바 그림을 따랐습니다. 그 전에는 흰색 75% + backdrop-blur 유리였습니다.
+        그림은 뒤가 비치지 않는 흰 판이 넓고 옅은 그림자 위에 떠 있고, 둘레에 아주
+        옅은 선이 한 겹 있습니다.
+        - 그림자: 가까운 층(0 2px 8px, 6%)이 가장자리를, 먼 층(0 12px 40px, 10%)이
+          넓은 번짐을 맡습니다. --shadow-float(7%/13%)보다 옅고 넓게.
+        - ring-1 ring-black/[0.04]: 흰 본문 위에서 흰 판의 윤곽이 그림자에만 기대면
+          위쪽 가장자리가 흐려서 한 겹 둘렀습니다.
       */}
       <ul
         ref={listRef}
@@ -384,21 +387,16 @@ export default function BottomTabBar() {
           그만큼 미리 들여두어야 알약이 사방 4px 자리에 멈춥니다.
           두 상수를 고치면 이 값도 같이 고쳐야 합니다.
         */
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface/75 py-1 px-[7px] shadow-[var(--shadow-float)] backdrop-blur-xl backdrop-saturate-150"
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[0_2px_8px_rgba(28,25,23,0.06),0_12px_40px_rgba(28,25,23,0.10)] ring-1 ring-black/[0.04]"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
 
-          이것도 탭바와 같은 유리입니다. 불투명한 회색을 깔면 그 자리만
-          유리가 아니게 보입니다. 유리로 보이게 하는 것은 네 가지입니다 —
-           · 먹색 7% 반투명 (뒤가 비칩니다)
-           · 뒤를 한 번 더 세게 흐리기(backdrop-blur-xl). 탭바가 이미 흐리므로
-             여기서 한 번 더 흐려야 두 겹이 구분되어 유리판처럼 보입니다.
-           · 색을 진하게 살리기(saturate). 흐리면 색이 바래는데, 진짜 유리는
-             뒤 색을 죽이지 않습니다.
-           · 윗변의 흰 실선과 둘레의 옅은 흰 테. 빛이 위에서 떨어져 유리
-             모서리에 걸린 것처럼 보입니다. 유리 느낌은 사실 이 선에서 가장
-             많이 나옵니다.
+          판판한 옅은 회색입니다(먹색 7% — 흰 탭바 위에서 #EEEEED쯤). 2026-09-14
+          사용자가 보여 준 당근 하단 바 그림을 따라, 그 전의 유리 효과(뒤 흐리기·
+          색 살리기·윗변 흰 실선·옅은 흰 테·작은 그림자)를 모두 걷었습니다.
+          탭바가 불투명한 흰색이 된 뒤라 유리로 둘 까닭도 없습니다.
+          어두운 화면에서는 ink가 밝은 색이라 어두운 탭바 위에 옅게 밝은 알약이 됩니다.
 
           자리는 left로 잡고 움직임은 translate로 줍니다. left는 주소에서
           바로 나오는 값이라 애니메이션 없이 즉시 자리를 잡아야 하고,
@@ -416,7 +414,7 @@ export default function BottomTabBar() {
         */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute rounded-full bg-ink/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.35),0_1px_2px_rgba(17,20,24,0.07)] backdrop-blur-xl backdrop-saturate-200"
+          className="pointer-events-none absolute rounded-full bg-ink/[0.07]"
           style={{
             top: BAR_PADDING + PILL_DROP,
             bottom: BAR_PADDING - PILL_DROP,
@@ -454,10 +452,14 @@ export default function BottomTabBar() {
            */
           const showDot = href === "/chat" && hasUnreadChat;
           /*
-           * 회색 알약이 덮은 탭은 아이콘과 글씨가 브랜드 주황이 되고 아이콘 속까지
-           * 꽉 찹니다. 알약을 끌면 색이 알약을 따라 옮겨 다닙니다.
+           * 모든 탭이 먹색(ink)입니다. 고른 탭은 색이 아니라 뒤의 회색 알약 + 속이 꽉 찬
+           * 아이콘 + 굵은 글씨로 드러납니다. 알약을 끌면 채움·굵기가 알약을 따라 옮겨 다닙니다.
+           *
+           * 2026-09-14 사용자가 보여 준 당근 하단 바 그림을 따른 것입니다. 그 전에는
+           * 고른 탭이 브랜드 주황(brand-500), 나머지가 ink-soft(갈색 도는 회색)였습니다.
+           * 그림은 안 고른 탭도 검정이라 둘 다 ink로 맞췄습니다.
            */
-          const itemClassName = covered ? "text-brand-500" : "text-ink-soft";
+          const itemClassName = "text-ink";
           /*
            * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
            * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
@@ -491,9 +493,14 @@ export default function BottomTabBar() {
                 className={`flex h-full flex-col items-center justify-center rounded-full pt-1.5 pb-2.5 transition ${itemClassName}`}
               >
                 <span className="relative flex items-center justify-center">
+                  {/*
+                    선 굵기는 모든 탭이 2입니다. 그림(당근 하단 바)의 안 고른 아이콘이 가는 선이
+                    아니라 굵은 검은 선이라, 예전 1.7(안 고른 탭)에서 올렸습니다.
+                    고른 탭은 굵기가 아니라 속 채움(filled)으로만 달라집니다.
+                  */}
                   <Icon
                     className="h-[27px] w-[27px]"
-                    strokeWidth={covered ? 2 : 1.7}
+                    strokeWidth={2}
                     filled={covered}
                   />
 
@@ -515,12 +522,12 @@ export default function BottomTabBar() {
                   아이콘 SVG는 24 단위 도형을 27px 상자에 그려서 아래쪽에 4px쯤
                   빈 공간이 딸려 옵니다. 그래서 여기 간격이 0이어도 눈에는
                   4px쯤 떨어져 보입니다. 더 붙이려면 -mt-, 더 벌리려면 mt-.
+
+                  글씨는 모든 탭이 굵게(bold)입니다 — 그림의 탭 이름이 고른 것·안 고른 것
+                  모두 같은 굵기라서입니다(예전엔 안 고른 탭 medium). 덤으로 알약을 끌 때
+                  굵기가 바뀌며 글자 폭이 흔들리던 일도 없어졌습니다.
                 */}
-                <span
-                  className={`text-[13px] leading-none ${
-                    covered ? "font-bold" : "font-medium"
-                  }`}
-                >
+                <span className="text-[13px] leading-none font-bold">
                   {label}
                   {/* 빨간 점은 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
                   {showDot ? <span className="sr-only">, 새 메시지 있음</span> : null}
