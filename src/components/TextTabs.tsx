@@ -197,11 +197,14 @@ export default function TextTabs<T extends string>({
             <Fragment key={item.value}>
             {/*
               칸 사이 세로 줄 — "header"(소식·자료)에만 (2026-09-14 사용자 요청).
-              아주 옅게(line, #E4E6E9) 1.5px(처음 1px에서 사용자 요청으로 굵힘), 높이는 글씨 크기와 같은
-              22px이고 줄 가운데(self-center)에 섭니다.
+              아주 옅게(line, #E4E6E9) 2px(1px → 1.5px → 2px, 사용자 요청으로 굵힘), 높이는 글씨 크기와 같은
+              22px이고 줄 가운데(self-center)에서 1px 내려 섭니다(사용자 요청).
+              ★ 1px 내리기는 transform(translate-y)이 아니라 relative top-px로 합니다.
+                자리 바꾸기 애니메이션이 transform을 통째로 덮어써서, translate로 내리면
+                움직이는 동안만 줄이 1px 튀어 올랐다가 끝나면 내려앉습니다.
               글줄 높이(27.5px)가 아니라 글씨 크기에 맞춘 것은, 글줄에는 글자 위아래 빈 자리가
               들어 있어 그만큼 줄이 글자보다 길어 보이기 때문입니다.
-              양옆 간격은 gap-2(8px)씩이라 글씨와 글씨 사이가 8 + 1.5 + 8 = 17.5px입니다.
+              양옆 간격은 gap-2(8px)씩이라 글씨와 글씨 사이가 8 + 2 + 8 = 18px입니다.
               처음엔 body와 같은 gap-[14px]을 그대로 걸어 29px로 벌어졌고, 사용자 요청으로
               줄 없던 때(14px)와 비슷하게 좁혔습니다.
               순서가 바뀌면 줄 요소는 새 칸 앞에 새로 생기지만, 재는 이름표가 자리 번호
@@ -211,7 +214,7 @@ export default function TextTabs<T extends string>({
               <span
                 aria-hidden
                 ref={trackRef(`divider-${index}`)}
-                className="h-[22px] w-[1.5px] shrink-0 self-center rounded-full bg-line"
+                className="relative top-px h-[22px] w-0.5 shrink-0 self-center rounded-full bg-line"
               />
             ) : null}
             <button
