@@ -243,9 +243,10 @@ export default function MembersPage() {
               ★ 흰 알약이 넓고 옅은 그림자 위에 떠 있는 모양 (2026-09-14, 사용자가 보여 준
                 쇼핑 앱 검색창 그림을 따름). 지나온 모양: 흰 바탕 + 주황 테두리 + 글로우
                 → 옅은 회색 바탕(bg-fill)만 → 지금.
-                - 그림자·테두리: 아래 원우 목록 박스(MemberRow)와 **같은 shadow-[var(--shadow-card)]**
-                  (1px 헤어라인 + 글로우) — 2026-09-15 사용자 요청으로 목록 박스의 글로우와 똑같이 맞췄습니다.
-                  한쪽을 바꾸려면 globals.css의 --shadow-card를 고치세요, 둘이 같이 따라옵니다.
+                - 테두리: 1px 주황(ring-1 ring-brand-500) — 2026-09-15 사용자 요청으로 회색 헤어라인에서 바꿈.
+                  글로우는 목록 박스(MemberRow)와 같은 --shadow-card-glow만 따로 씁니다(globals.css 주석의 방식) —
+                  --shadow-card를 그대로 쓰면 회색 헤어라인이 주황 테두리와 겹칩니다.
+                  (그 전에는 목록 박스와 같은 shadow-[var(--shadow-card)] = 회색 1px 헤어라인 + 글로우였습니다.)
                   (그 전에는 그림을 따른 옅은 그림자 0 1px 2px 4% + 0 6px 24px 7%와 ring-black/[0.04]를 따로 둘렀습니다.)
                 - 안내 글씨는 ink-muted(중간 회색) — 그림의 안내 글씨가 연회색이 아니라
                   또렷한 회색이라 ink-faint에서 한 단 올렸습니다.
@@ -253,7 +254,7 @@ export default function MembersPage() {
                 검은 그림자·선은 거의 안 보이지만 해가 되지 않습니다.
                 높이(py-[12.25px])와 좌우 여백은 그림에 맞춰 바꾸지 않았습니다 — 여러 번 맞춘 값입니다.
             */
-            className="w-full rounded-full bg-surface py-[12.5px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-muted"
+            className="w-full rounded-full bg-surface py-[12.5px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-1 ring-brand-500 outline-none placeholder:text-ink-muted"
           />
         </div>
 
