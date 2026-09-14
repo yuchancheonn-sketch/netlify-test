@@ -93,7 +93,7 @@ export default function SettingsPage() {
         {isAdmin ? (
           <Link
             href="/admin"
-            className="flex items-center justify-between rounded-2xl bg-surface px-5 py-4 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            className="flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             <span className="text-[17px] font-bold text-ink">운영진 화면</span>
             <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
@@ -102,20 +102,25 @@ export default function SettingsPage() {
 
         {/*
           로그아웃 — 설정 맨 아래, 원우 누구에게나 보입니다 (2026-09-14 사용자 요청으로 내 프로필에서 옮김).
-          모양은 내 프로필에 있던 단추 그대로(주황 채움, 폭 가득)입니다. 위아래 간격은 이 목록의 gap-7이 줍니다.
+          위에 "계정" 제목을 답니다 — 알림·글씨 크기·화면처럼 칸마다 제목이 있는 짜임에 맞춰
+          (2026-09-15 사용자 요청). 위아래 간격은 이 목록의 gap-7이 줍니다.
+          단추는 주황 채움·폭 가득, 위아래 12px(py-3) — 위 고르개들과 같은 약 48px 높이(2026-09-15에 py-4에서 줄임).
           나간 뒤 기록에 설정 화면이 남지 않도록 push가 아니라 replace로 로그인 화면에 갑니다.
           (가입 대기 화면 /pending에는 따로 로그아웃이 있습니다 — 그 화면엔 설정으로 가는 길이 없어서입니다.)
         */}
-        <button
-          type="button"
-          onClick={async () => {
-            await logOut();
-            router.replace("/login");
-          }}
-          className="w-full rounded-2xl bg-brand-500 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-        >
-          로그아웃
-        </button>
+        <section>
+          <SectionTitle>계정</SectionTitle>
+          <button
+            type="button"
+            onClick={async () => {
+              await logOut();
+              router.replace("/login");
+            }}
+            className="w-full rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+          >
+            로그아웃
+          </button>
+        </section>
       </div>
     </div>
   );

@@ -83,8 +83,12 @@ export default function SegmentedControl<T extends string>({
             /*
              * relative로 주황 상자보다 위에 세웁니다. 바탕색은 주지 않습니다 —
              * 칠하면 뒤에서 미끄러져 오는 주황 상자를 가려 버립니다.
+             *
+             * py-2 — 칸 위아래 8px (2026-09-15 사용자 "박스들 높이 다 줄여줘", py-3 12px에서).
+             * 바깥 p-1 4px + 8px + 글줄 약 24px + 8px + 4px ≈ 48px. 설정 화면의 로그아웃 단추(py-3)와 같은 높이입니다.
+             * 이 고르개를 쓰는 수업 기록 주차 화면의 교시 고르개도 같이 낮아졌습니다.
              */
-            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 font-bold whitespace-nowrap transition-colors ${
+            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 font-bold whitespace-nowrap transition-colors ${
               option.textClassName ?? "text-[15px]"
             } ${selected ? "text-white" : "text-ink-soft"}`}
           >
