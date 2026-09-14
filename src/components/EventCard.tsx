@@ -39,6 +39,7 @@ import type { EventDoc } from "@/lib/types";
  */
 export function EventDdayCard({ event }: { event: EventDoc }) {
   const time = event.startTime ? formatTime(event.startTime) : "";
+  const date = parseDateString(event.date);
 
   return (
     <Link
@@ -47,8 +48,21 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
     >
       <DdayBadge date={event.date} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[18px] leading-tight font-bold text-ink">
-          {event.title}
+        {/*
+          제목 옆 날짜 "9월 15일" (2026-09-14 사용자 요청) — D-숫자만으로는 무슨 날인지 셈해야 해서.
+          제목보다 한 단 작고 옅게(15px · ink-muted) 둬 제목이 먼저 읽힙니다. items-baseline으로
+          크기가 다른 두 글씨의 아랫선을 맞춥니다.
+          자리가 모자라면 제목만 "…"로 줄고 날짜는 끝까지 보입니다(shrink-0) — 둘째 줄의 장소·시간과 같은 규칙.
+        */}
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="truncate text-[18px] leading-tight font-bold text-ink">
+            {event.title}
+          </span>
+          {date ? (
+            <span className="shrink-0 text-[15px] leading-tight font-medium text-ink-muted">
+              {date.getMonth() + 1}월 {date.getDate()}일
+            </span>
+          ) : null}
         </span>
         {/*
           둘째 줄 — 장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
