@@ -192,17 +192,20 @@ export default function MembersPage() {
         {/* 검색 */}
         <div className="relative">
           {/*
-            돋보기 — 오른쪽 끝, 주황, 26px (2026-09-14에 셋 다 바뀌었습니다).
-            예전에는 왼쪽 끝의 18px 연회색이었고 오른쪽에는 "원우 N명"이 앉아
+            돋보기 — 오른쪽 끝, 26px (2026-09-14에 자리·크기가 바뀌었습니다).
+            예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
             있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
-            옮겼습니다. 색은 그때 테두리와 맞춘 주황인데, 테두리가 회색 바탕으로
-            바뀐 뒤(2026-09-14)에도 돋보기는 주황 그대로 둡니다.
+            옮겼습니다.
+            색은 안내 글씨("이름·회사·직책으로 찾기", placeholder:text-ink-faint)와
+            같은 ink-faint입니다. 같은 날 주황 테두리에 맞춰 주황으로 했다가, 칸이
+            회색 바탕으로 바뀐 뒤 사용자 요청으로 안내 글씨 색에 맞췄습니다.
+            둘 중 하나를 고치면 다른 쪽도 같이 고치세요.
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
             안 올라옵니다.
           */}
-          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-ink-faint" />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
