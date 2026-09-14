@@ -230,12 +230,12 @@ export default function MembersPage() {
               모서리는 알약(rounded-full)입니다. 알약은 위아래 가운데가 가장
               넓은 자리라, 돋보기가 앉는 높이에서는 둥글기가 글자를 밀지 않습니다.
 
-              위아래 여백은 12.25px씩입니다. 10px(py-2.5) → 12px(py-3) → 12.5px →
-              지금 값으로 오갔습니다. 1px·0.5px 같은 잔조정은 늘 위아래로 반씩
-              나눕니다 — 한쪽에만 주면 글자가 가운데에서 벗어납니다.
+              위아래 여백은 12.5px씩입니다. 10px(py-2.5) → 12px(py-3) → 12.5px → 12.25px →
+              다시 12.5px(2026-09-15 사용자 "0.5px 더 늘려줘")로 오갔습니다. 1px·0.5px 같은 잔조정은
+              늘 위아래로 반씩 나눕니다 — 한쪽에만 주면 글자가 가운데에서 벗어납니다.
 
-              ★ 여기가 사실상 바닥입니다. 화소 밀도가 3배인 폰에서 12.25px은
-                36.75 화소라 브라우저가 37로 반올림합니다. 이보다 잘게 나눠도
+              ★ 0.25px 단위가 사실상 바닥입니다. 화소 밀도가 3배인 폰에서 12.5px은 37.5 화소,
+                12.25px은 36.75 화소라 반올림하면 한 화소 안팎 차이입니다. 이보다 잘게 나누면
                 같은 화소에 떨어져 화면에서는 달라지지 않습니다.
               돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
               따라옵니다.
@@ -253,7 +253,7 @@ export default function MembersPage() {
                 검은 그림자·선은 거의 안 보이지만 해가 되지 않습니다.
                 높이(py-[12.25px])와 좌우 여백은 그림에 맞춰 바꾸지 않았습니다 — 여러 번 맞춘 값입니다.
             */
-            className="w-full rounded-full bg-surface py-[12.25px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-muted"
+            className="w-full rounded-full bg-surface py-[12.5px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-muted"
           />
         </div>
 
