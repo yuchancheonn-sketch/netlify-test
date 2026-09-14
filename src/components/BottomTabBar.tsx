@@ -523,11 +523,14 @@ export default function BottomTabBar() {
                   빈 공간이 딸려 옵니다. 그래서 여기 간격이 0이어도 눈에는
                   4px쯤 떨어져 보입니다. 더 붙이려면 -mt-, 더 벌리려면 mt-.
 
-                  글씨는 모든 탭이 굵게(bold)입니다 — 그림의 탭 이름이 고른 것·안 고른 것
-                  모두 같은 굵기라서입니다(예전엔 안 고른 탭 medium). 덤으로 알약을 끌 때
-                  굵기가 바뀌며 글자 폭이 흔들리던 일도 없어졌습니다.
+                  글씨는 모든 탭이 같은 굵기입니다 — 그림의 탭 이름이 고른 것·안 고른 것
+                  모두 같은 굵기라서입니다. 덤으로 알약을 끌 때 굵기가 바뀌며 글자 폭이
+                  흔들리던 일도 없어졌습니다.
+                  크기·굵기: 13px bold → 12.5px medium(500) (2026-09-14 "아주 조금 줄여줘").
+                  600은 layout.tsx가 받지 않아 700으로 그려지므로 500이 한 단 아래입니다.
+                  이 글씨는 <button>이 아니라 <Link> 안 <span>이라 크기가 그대로 먹습니다.
                 */}
-                <span className="text-[13px] leading-none font-bold">
+                <span className="text-[12.5px] leading-none font-medium">
                   {label}
                   {/* 빨간 점은 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
                   {showDot ? <span className="sr-only">, 새 메시지 있음</span> : null}
