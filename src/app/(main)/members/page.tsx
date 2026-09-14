@@ -196,15 +196,15 @@ export default function MembersPage() {
             예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
             있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
             옮겼습니다.
-            색은 연한 회색(ink-faint, #A8A29E) — 안내 글씨("이름·회사·직책으로 찾기", ink-muted)보다 한 단 옅습니다
-            (2026-09-15 사용자 요청: 먹색 → 안내 글씨와 같은 ink-muted → "더 연한 회색").
-            지나온 색: 주황 → ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황(시험, 되돌림) → 먹색 → ink-muted → ink-faint.
+            색은 주황(brand-500) — 알약의 주황 테두리(ring-brand-500)와 같은 색입니다
+            (2026-09-15 사용자 요청: 테두리를 주황으로 바꾼 뒤 돋보기도 맞춤). 테두리 색을 바꾸면 이것도 같이 바꿔 주세요.
+            지나온 색: 주황 → ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황(시험, 되돌림) → 먹색 → ink-muted → ink-faint → 주황.
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
             안 올라옵니다.
           */}
-          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-ink-faint" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500" />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
