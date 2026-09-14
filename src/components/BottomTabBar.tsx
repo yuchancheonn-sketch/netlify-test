@@ -502,12 +502,12 @@ export default function BottomTabBar() {
 
                     흰 테는 2026-09-14 사용자 요청으로 없앴습니다. 테를 두르던 때는
                     9px 상자에 테 2px씩이라 빨간 부분이 5px이었는데, 지금은 빨간 원만
-                    7px로 조금 키웠습니다. 가운데 자리는 예전과 같습니다.
+                    7px로 조금 키웠습니다. 같은 날 사용자 요청으로 2px 더 내렸습니다.
                   */}
                   {showDot ? (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-px left-[calc(50%+6px)] h-[7px] w-[7px] rounded-full bg-red-500"
+                      className="absolute top-px left-[calc(50%+6px)] h-[7px] w-[7px] rounded-full bg-red-500"
                     />
                   ) : null}
                 </span>
