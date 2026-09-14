@@ -671,7 +671,7 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
       >
         <ChatIcon className="h-5 w-5" />
         {name} 원우와 1:1 채팅
@@ -775,13 +775,13 @@ function MemberDetailSheet({
             <div className="mt-3 flex gap-3">
               <a
                 href={`tel:${phoneHref(entry.phone)}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
               >
                 📞 전화
               </a>
               <a
                 href={`sms:${phoneHref(entry.phone)}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-[13.5px] text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
               >
                 ✉️ 문자
               </a>
@@ -837,7 +837,8 @@ function MemberDetailSheet({
 
           {/* 한 줄 소개 줄을 없애서 적힌 것이 하나도 없을 수 있습니다. 그땐 빈 상자를 그리지 않습니다. */}
           {entry.company || entry.position || entry.phone || member ? (
-            <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-fill p-5">
+            /* 박스들 높이 1px씩 낮춤 (2026-09-15) — 이 상자는 위아래 20px → 19.5px, 좌우 20px 그대로 */
+            <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-fill px-5 py-[19.5px]">
               {entry.company ? (
                 <div className="flex items-start justify-between gap-4">
                   <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
@@ -872,7 +873,7 @@ function MemberDetailSheet({
 
           {/* 본인이 쓴 자기소개 전문 */}
           {entry.introduction ? (
-            <div className="mt-4 rounded-2xl bg-fill p-5">
+            <div className="mt-4 rounded-2xl bg-fill px-5 py-[19.5px]">
               <p className="mb-2 text-[14px] text-ink-faint">자기소개</p>
               <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
                 {entry.introduction}
@@ -890,7 +891,7 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onEdit}
-            className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-500"
+            className="mt-4 w-full rounded-2xl bg-brand-50 py-[15.5px] text-[15px] font-bold text-brand-500"
           >
             {/* 남의 칸도 "정보 수정하기" (2026-09-15 사용자 요청 — 예전엔 "정보 채워주기") */}
             ✎ {isMe ? "내 정보 수정하기" : "정보 수정하기"}
@@ -899,7 +900,7 @@ function MemberDetailSheet({
           {isMe ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[15.5px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               사진·자기소개까지 고치기
             </Link>
@@ -908,7 +909,7 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onClose}
-            className="mt-3 w-full rounded-2xl bg-fill py-4 text-[15px] font-bold text-ink-soft"
+            className="mt-3 w-full rounded-2xl bg-fill py-[15.5px] text-[15px] font-bold text-ink-soft"
           >
             닫기
           </button>
