@@ -4,11 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
-import { useAuth } from "@/lib/auth-context";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 
 export default function ProfilePage() {
-  const { isAdmin, profile } = useAuth();
   const router = useRouter();
   const [saved, setSaved] = useState(false);
 
@@ -64,31 +62,13 @@ export default function ProfilePage() {
 
       <ProfileForm mode="edit" onSaved={handleSaved} />
 
-      <div className="px-4 pb-10">
-        <div className="rounded-2xl bg-surface p-5 shadow-[var(--shadow-card)]">
-          {/* 기수는 위 폼에서 고치므로 여기에 다시 적지 않습니다. */}
-          <dl className="flex items-center justify-between text-[14px]">
-            <dt className="text-ink-faint">권한</dt>
-            <dd className="font-bold text-ink">{isAdmin ? "운영진" : "원우"}</dd>
-          </dl>
-          <dl className="mt-3 flex items-center justify-between gap-4 text-[14px]">
-            <dt className="shrink-0 text-ink-faint">로그인 계정</dt>
-            <dd className="truncate text-ink-soft">{profile?.email}</dd>
-          </dl>
-        </div>
-
-        {/*
-          운영진 화면으로 가는 길과 로그아웃은 설정 화면에 있습니다.
-          (로그아웃은 2026-09-14 사용자 요청으로 이 화면에서 설정 맨 아래로 옮겼습니다 —
-           여기는 내 정보를 고치는 곳이라, 앱 전체에 걸리는 동작은 설정에 모았습니다.)
-        */}
-
-        <p className="mt-5 text-center text-[12px] leading-relaxed text-ink-faint">
-          탈퇴를 원하시면 운영진에게 알려주세요.
-          <br />
-          작성한 글과 사진을 함께 정리해 드릴게요.
-        </p>
-      </div>
+      {/*
+        권한·로그인 계정 상자, 탈퇴 안내, 로그아웃, 운영진 화면 입구는 모두 설정 화면의 "계정"·아래쪽에 있습니다.
+        (로그아웃은 2026-09-14, 권한·계정 상자와 탈퇴 안내는 2026-09-15 사용자 요청으로 옮겼습니다 —
+         여기는 내 정보를 고치는 곳이라, 계정에 관한 것은 설정에 모았습니다.)
+        pb-10은 폼 아래 여백으로 남겨 둡니다.
+      */}
+      <div className="pb-10" />
     </div>
   );
 }

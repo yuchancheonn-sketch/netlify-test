@@ -25,7 +25,7 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  */
 export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
-  const { user, isAdmin, logOut } = useAuth();
+  const { user, profile, isAdmin, logOut } = useAuth();
   const router = useRouter();
 
   /*
@@ -111,6 +111,20 @@ export default function SettingsPage() {
         */}
         <section>
           <SectionTitle>계정</SectionTitle>
+          {/*
+            권한·로그인 계정 상자 — 2026-09-15 사용자 요청으로 내 프로필 화면에서 옮겨 왔습니다(모양 그대로).
+            로그아웃 단추가 그 아래 12px(mt-3), 탈퇴 안내가 맨 아래에 옵니다 — 내 프로필에 있던 순서와 같습니다.
+          */}
+          <div className="mb-3 rounded-2xl bg-surface p-5 shadow-[var(--shadow-card)]">
+            <dl className="flex items-center justify-between text-[14px]">
+              <dt className="text-ink-faint">권한</dt>
+              <dd className="font-bold text-ink">{isAdmin ? "운영진" : "원우"}</dd>
+            </dl>
+            <dl className="mt-3 flex items-center justify-between gap-4 text-[14px]">
+              <dt className="shrink-0 text-ink-faint">로그인 계정</dt>
+              <dd className="truncate text-ink-soft">{profile?.email}</dd>
+            </dl>
+          </div>
           <button
             type="button"
             onClick={async () => {
@@ -125,6 +139,13 @@ export default function SettingsPage() {
             */}
             <span className="inline-block -translate-y-[2px]">로그아웃</span>
           </button>
+
+          {/* 탈퇴 안내 — 내 프로필에서 함께 옮겨 왔습니다(2026-09-15). */}
+          <p className="mt-5 text-center text-[12px] leading-relaxed text-ink-faint">
+            탈퇴를 원하시면 운영진에게 알려주세요.
+            <br />
+            작성한 글과 사진을 함께 정리해 드릴게요.
+          </p>
         </section>
       </div>
     </div>
