@@ -84,11 +84,11 @@ export default function HomePage() {
               단추 모양(주황 알약)을 걷고 글자만 두어 홈에서 눈길을 끌지 않으면서, 필요한 원우는 바로 찾게 했습니다.
               높이는 위아래 16px + 한 줄 ≈ 56px (예전 가운데 정렬 빈 화면은 약 170px).
               "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 둡니다.
-              위치: 상자 오른쪽 여백 pr-3(12px) + 단추 안쪽 8px → 글자가 카드 끝에서 20px 안쪽 (2026-09-15 사용자 지정).
-              같은 날 12px(pr-3 + -mr-2) → 44px(pr-9, "왼쪽으로 많이") → 20px로 맞췄습니다.
+              위치: 상자 오른쪽 여백 pr-[11px] + 단추 안쪽 8px → 글자가 카드 끝에서 19px 안쪽 (2026-09-15 사용자 지정).
+              같은 날 12px(pr-3 + -mr-2) → 44px(pr-9, "왼쪽으로 많이") → 20px → 19px로 맞췄습니다.
               지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
-            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-3 pl-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-[11px] pl-5 shadow-[var(--shadow-card)]">
               {/* 달력 그림은 앱의 기본 주황(brand-500) — 처음엔 옅은 brand-300이라 흐린 주황으로 보인다고 해서 바꿨습니다(2026-09-15). */}
               <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-500" />
               <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-soft">
