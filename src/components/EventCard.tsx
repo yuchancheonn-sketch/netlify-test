@@ -15,7 +15,7 @@ import type { EventDoc } from "@/lib/types";
 /**
  * 홈의 다가오는 모임(주요 일정) — 주황 카드에 세 줄, 오른쪽 끝에 ">".
  *   1행  "주요 일정"
- *   2행  날짜 + 일정 이름      "9월 15일  아구찜 번개"
+ *   2행  날짜 + 일정 이름      "09.15.  아구찜 번개"
  *   3행  D-day + 장소 + 시간   [D-1]  📍마산아구찜  🕒오후 6:30
  *
  * ★ 세 줄 짜임 (2026-09-14 사용자 요청). 그 전에는 왼쪽에 둘레가 차오르는 흰 D-day 원
@@ -59,7 +59,8 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         <span className="mt-1 flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
           {date ? (
             <span className="shrink-0">
-              {date.getMonth() + 1}월 {date.getDate()}일
+              {/* "09.15." — 월·일 모두 두 자리 + 끝에 점 (2026-09-14 사용자 요청, "9월 15일"에서 바꿈) */}
+              {String(date.getMonth() + 1).padStart(2, "0")}.{String(date.getDate()).padStart(2, "0")}.
             </span>
           ) : null}
           <span className="truncate">{event.title}</span>
