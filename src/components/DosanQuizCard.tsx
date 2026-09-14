@@ -180,14 +180,17 @@ export default function DosanQuizCard() {
               )}`}
             >
               {value === "O" ? (
-                /* O는 파랑, X는 빨강 — OX 퀴즈에서 흔히 쓰는 짝입니다(2026-09-11, 예전엔 O가 주황). */
-                <OMarkIcon className="h-5 w-5 text-blue-500" />
+                /*
+                  O는 파랑, X는 빨강 — OX 퀴즈에서 흔히 쓰는 짝입니다(2026-09-11, 예전엔 O가 주황).
+                  -translate-y-px: 아이콘만 1px 위로 (2026-09-15 사용자 요청). 옆 글씨는 따로 2px 올라가 있습니다.
+                */
+                <OMarkIcon className="h-5 w-5 -translate-y-px text-blue-500" />
               ) : (
-                <XMarkIcon className="h-5 w-5 text-danger" />
+                <XMarkIcon className="h-5 w-5 -translate-y-px text-danger" />
               )}
               {/*
-                -translate-y-[2px]: 글씨만 2px 위로 — 아이콘 옆에서 살짝 아래로 앉아 보였습니다. 아이콘은 그대로.
-                (처음 1px, 2026-09-15 사용자 요청으로 1px 더 올렸습니다.)
+                -translate-y-[2px]: 글씨를 2px 위로 — 아이콘 옆에서 살짝 아래로 앉아 보였습니다.
+                (처음 1px, 2026-09-15 사용자 요청으로 1px 더 올렸습니다. 같은 날 O·X 아이콘도 따로 1px 올렸습니다.)
               */}
               <span className="-translate-y-[2px]">{label}</span>
             </button>
