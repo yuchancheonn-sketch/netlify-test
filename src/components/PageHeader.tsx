@@ -131,8 +131,19 @@ export default function PageHeader({
           쪽이 낫다는 판단입니다. 다시 옮기자고 제안하지 마세요.
           (뒤로가기 화살표와 제목 옆 기수 고르개도 같은 먹색입니다. 셋은
            제목 줄에서 한 덩어리로 읽히므로 늘 같이 움직여야 합니다.)
+
+          pl-0.5 — 뒤로가기가 없는 화면(다섯 탭의 첫 화면)에서만 제목을 2px 오른쪽으로
+          들입니다(2026-09-14 사용자 요청). 화면 끝에서 18px. 제목 안에 든 것
+          (원우수첩의 기수 고르개, 소식·자료의 서브탭)도 함께 옮겨 갑니다.
+          뒤로가기가 있는 화면은 화살표와 제목 사이가 벌어지지 않게 그대로 둡니다.
         */}
-        <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1
+          className={`truncate text-[22px] font-bold tracking-tight text-ink ${
+            showBack ? "" : "pl-0.5"
+          }`}
+        >
+          {title}
+        </h1>
       </div>
 
       {/* mt-0.5를 뺐습니다 — 위 header가 가운데를 맞추므로 2px을 더하면 오히려 내려앉습니다. */}
