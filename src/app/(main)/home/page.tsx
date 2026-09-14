@@ -83,17 +83,19 @@ export default function HomePage() {
               왼쪽 달력 그림 · 가운데 "다가오는 모임이 아직 없어요" · 오른쪽 끝에 옅은 회색 "+ 등록" 글자 링크(/events/new).
               단추 모양(주황 알약)을 걷고 글자만 두어 홈에서 눈길을 끌지 않으면서, 필요한 원우는 바로 찾게 했습니다.
               높이는 위아래 16px + 한 줄 ≈ 56px (예전 가운데 정렬 빈 화면은 약 170px).
-              "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 두고 -mr-2로 끝을 맞춥니다.
+              "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 둡니다.
+              위치: 상자 오른쪽 여백 pr-9(36px) + 단추 안쪽 8px → 글자가 카드 끝에서 약 44px 안쪽 (2026-09-15 사용자
+              "왼쪽으로 많이 이동" — 처음엔 pr-3 + -mr-2로 끝에서 12px이었습니다).
               지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
-            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-3 pl-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-9 pl-5 shadow-[var(--shadow-card)]">
               <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-300" />
               <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-soft">
                 다가오는 모임이 아직 없어요
               </p>
               <Link
                 href="/events/new"
-                className="-mr-2 flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px] font-medium text-ink-faint transition active:bg-fill"
+                className="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px] font-medium text-ink-faint transition active:bg-fill"
               >
                 <PlusIcon className="h-4 w-4" />
                 등록
