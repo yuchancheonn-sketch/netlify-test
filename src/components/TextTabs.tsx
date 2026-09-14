@@ -90,10 +90,13 @@ export default function TextTabs<T extends string>({
      * no-scrollbar로 숨깁니다(globals.css).
      * shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
      */
-    <span className={`relative flex ${className}`}>
+    <span className={`relative flex ${header ? "" : "pt-[7px]"} ${className}`}>
       {/*
-        "body" 갈래(원우수첩)에만 까는 회색 헤어라인 (2026-09-14 사용자 요청).
-        검은 바와 같은 높이에서 화면 왼쪽 끝부터 오른쪽 끝까지 이어집니다.
+        "body" 갈래(원우수첩)에만 까는 회색 헤어라인 두 줄 (2026-09-14 사용자 요청).
+        아래 줄은 검은 바와 같은 높이, 위 줄은 글자 위에 — 둘 다 화면 왼쪽 끝부터 오른쪽 끝까지.
+
+        pt-[7px] — 위 줄과 글자 사이. 아래쪽이 글자 → 6px(gap-1.5) → 바 가운데의 선
+        (1.25px 더)이라, 위쪽도 선에서 글자까지 7px 남짓으로 맞춰 글자가 두 줄 한가운데에 섭니다.
 
         ★ 스크롤 칸 바깥에 둡니다. 안에 두면 overflow-x-auto에 잘려 화면 끝까지 못 갑니다.
         -inset-x-4 — 쓰는 쪽의 px-4(16px)만큼 양옆으로 빼냅니다.
@@ -101,10 +104,13 @@ export default function TextTabs<T extends string>({
         아래 스크롤 칸에 relative를 줘서 검은 바가 이 선 위에 그려집니다.
       */}
       {header ? null : (
-        <span
-          aria-hidden
-          className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line"
-        />
+        <>
+          <span aria-hidden className="absolute -inset-x-4 top-0 h-px bg-line" />
+          <span
+            aria-hidden
+            className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line"
+          />
+        </>
       )}
       <span
         className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
