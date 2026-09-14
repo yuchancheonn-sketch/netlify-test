@@ -196,15 +196,16 @@ export default function MembersPage() {
             예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
             있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
             옮겼습니다.
-            색은 먹색(ink)입니다. 2026-09-14 사용자가 보여 준 쇼핑 앱 검색창 그림에서
-            오른쪽 아이콘만 진하고 안내 글씨는 중간 회색이라 그대로 따랐습니다.
-            (그 전에는 주황 → 안내 글씨와 같은 ink-faint를 거쳤습니다.)
+            색은 주황(brand-500)이고, 안내 글씨("이름·회사·직책으로 찾기")와 같은 색입니다
+            (2026-09-14 늦게 사용자 요청 — 원우 목록 연필 아이콘과 함께 이 탭에 주황을 섞는 자리).
+            지나온 색: 주황 → 안내 글씨와 같은 ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황.
+            안내 글씨 색을 바꾸면 이것도 같이 바꿔 주세요.
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
             안 올라옵니다.
           */}
-          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-ink" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500" />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
@@ -248,13 +249,15 @@ export default function MembersPage() {
                   그림자가 거의 안개처럼 퍼져 있습니다.
                 - ring-1 ring-black/[0.04]: 흰 페이지 위에서 흰 알약의 윤곽이 그림자에만
                   기대면 위쪽 가장자리가 흐려서 아주 옅은 선을 한 겹 더 둘렀습니다.
-                - 안내 글씨는 ink-muted(중간 회색) — 그림의 안내 글씨가 연회색이 아니라
-                  또렷한 회색이라 ink-faint에서 한 단 올렸습니다.
+                - 안내 글씨는 주황(placeholder:text-brand-500) — 2026-09-14 늦게 사용자 요청으로
+                  돋보기와 함께 주황으로 바꿨습니다(그 전엔 그림을 따른 ink-muted 중간 회색).
+                  ★ 치는 글씨(text-ink)는 먹색 그대로라, 안내 글씨가 실제로 친 글씨처럼 보이지 않습니다.
+                  ★ 흰 바탕 위 #FF7210 16px는 대비가 약해(약 2.6:1) 안내 글씨로는 조금 옅게 읽힙니다.
                 어두운 화면에서는 bg-surface가 바탕보다 밝아 알약이 스스로 떠오르고,
                 검은 그림자·선은 거의 안 보이지만 해가 되지 않습니다.
                 높이(py-[12.25px])와 좌우 여백은 그림에 맞춰 바꾸지 않았습니다 — 여러 번 맞춘 값입니다.
             */
-            className="w-full rounded-full bg-surface py-[12.25px] pr-14 pl-5 text-[16px] text-ink shadow-[0_1px_2px_rgba(28,25,23,0.04),0_6px_24px_rgba(28,25,23,0.07)] ring-1 ring-black/[0.04] outline-none placeholder:text-ink-muted"
+            className="w-full rounded-full bg-surface py-[12.25px] pr-14 pl-5 text-[16px] text-ink shadow-[0_1px_2px_rgba(28,25,23,0.04),0_6px_24px_rgba(28,25,23,0.07)] ring-1 ring-black/[0.04] outline-none placeholder:text-brand-500"
           />
         </div>
 
