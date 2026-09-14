@@ -568,7 +568,8 @@ function MemberRow({
             그래도 안 되면 글자 사이에서 다음 줄로 넘깁니다. 잘리거나 옆 단추를 덮지는 않습니다.
           */}
           <span className="max-w-full shrink-0 text-[17px] font-bold break-keep text-ink [overflow-wrap:anywhere]">
-            <span className="mr-1.5 tabular-nums">{number}.</span>
+            {/* 번호와 이름 사이 5px — 6px(mr-1.5)에서 사용자 요청으로 조금 붙였습니다(2026-09-14). */}
+            <span className="mr-[5px] tabular-nums">{number}.</span>
             {entry.name}
           </span>
           {/*
