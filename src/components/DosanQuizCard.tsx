@@ -268,7 +268,7 @@ function QuizResultView({ today, stats }: { today: QuizTodayResult; stats: QuizS
             <div className="rounded-2xl bg-fill px-4 py-3">
               <p className="text-[13px] text-ink-muted">{stats.cohort} 원우 중</p>
               <p className="mt-1 text-[22px] leading-tight font-bold text-brand-500">
-                {stats.tied ? <span className="text-[16px]">공동 </span> : null}
+                {/* 동점이어도 "공동" 없이 등수만 (2026-09-15 사용자 요청) — 공동 1등도 그냥 "1등" */}
                 <span className="tabular-nums">{stats.rank}</span>등
                 <span className="ml-1 text-[14px] font-medium text-ink-faint">
                   / <span className="tabular-nums">{stats.participants}</span>명

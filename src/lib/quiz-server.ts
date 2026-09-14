@@ -27,7 +27,8 @@ import type { QuizHistoryItem, QuizStats, QuizStatus } from "@/lib/quiz-types";
  *   - quizScores/{uid}: { uid, cohort, correct, answered, lastDate, updatedAt }
  *     답을 적을 때 같은 트랜잭션에서 맞힌 수·푼 수를 1씩 올립니다.
  *
- * ★ 등수 = 1 + (같은 기수에서 나보다 많이 맞힌 원우 수). 같은 수면 같은 등수(공동).
+ * ★ 등수 = 1 + (같은 기수에서 나보다 많이 맞힌 원우 수). 같은 수면 같은 등수이고, 화면에는 "공동" 없이
+ *   그 등수만 적습니다(2026-09-15 사용자 요청 — 공동 1등도 "1등"). 10등 안일 때만 보냅니다(RANK_SHOWN_UP_TO).
  *   "참여 원우"는 quizScores가 있는(한 번이라도 푼) 같은 기수 원우입니다.
  *   기수는 원우가 프로필에서 바꿀 수 있어, 성적을 읽을 때마다 지금 기수로 맞춰 둡니다.
  *
@@ -83,11 +84,9 @@ async function readStats(db: Firestore, uid: string, cohort: string): Promise<Qu
   // select("correct") — 같은 기수 원우들의 맞힌 수만 받습니다(기수당 수십 건).
   const peers = await db.collection(SCORES).where("cohort", "==", cohort).select("correct").get();
   let higher = 0;
-  let same = 0;
   for (const peer of peers.docs) {
     const peerCorrect = peer.id === uid ? correct : Number(peer.get("correct") ?? 0);
     if (peerCorrect > correct) higher += 1;
-    else if (peerCorrect === correct) same += 1;
   }
   // 방금 기수를 맞춘 경우 질의 결과에 내가 아직 안 들어 있을 수 있어, 참여 수에 나를 꼭 넣습니다.
   const includesMe = peers.docs.some((peer) => peer.id === uid);
@@ -100,7 +99,6 @@ async function readStats(db: Firestore, uid: string, cohort: string): Promise<Qu
     answered,
     cohort,
     rank: shown ? rank : null,
-    tied: shown && (includesMe ? same : same + 1) > 1,
     participants: peers.size + (includesMe ? 0 : 1),
   };
 }

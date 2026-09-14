@@ -19,8 +19,7 @@ export interface QuizStats {
    * 그때 카드는 맞힌 문제 수만 보여줍니다.
    */
   rank: number | null;
-  /** 나와 같은 등수가 더 있으면 true — "공동 3등". rank가 null이면 늘 false. */
-  tied: boolean;
+  /* 동점 여부(tied, "공동 N등")는 2026-09-15 사용자 요청으로 뺐습니다 — 동점이어도 그냥 "N등"으로만 보입니다. */
   /** 이 기수에서 퀴즈를 한 번이라도 푼 원우 수 */
   participants: number;
 }
