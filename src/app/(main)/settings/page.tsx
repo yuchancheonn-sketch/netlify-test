@@ -109,7 +109,8 @@ export default function SettingsPage() {
           </div>
 
           {/*
-            운영진 화면 입구 — 운영진에게만 보입니다. 원우 눈에는 이 자리가 아예 없습니다.
+            관리자 화면(/admin) 입구 — 운영진에게만 보입니다. 원우 눈에는 이 자리가 아예 없습니다.
+            줄 이름은 2026-09-15 사용자 요청으로 "운영진 화면" → "관리자 화면"으로 바꿨습니다.
             2026-09-15 사용자 요청으로 "화면" 칸 아래 따로 서 있던 줄을 "계정" 칸 안(권한 상자와 로그아웃 사이)으로 옮겼습니다.
             눌러서 넘어가는 문이라 칸에 적힌 이름이 곧 제목입니다. 아래 로그아웃과 12px(mb-3) 띄웁니다.
           */}
@@ -119,7 +120,7 @@ export default function SettingsPage() {
               className="mb-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
-              <span className="-translate-y-[2px] text-[17px] font-bold text-ink">운영진 화면</span>
+              <span className="-translate-y-[2px] text-[17px] font-bold text-ink">관리자 화면</span>
               <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
             </Link>
           ) : null}

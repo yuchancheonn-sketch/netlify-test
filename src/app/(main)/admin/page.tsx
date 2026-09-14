@@ -476,7 +476,11 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                       : "bg-fill text-ink-muted"
                   }`}
                 >
-                  {member.role === "admin" ? "운영진" : "원우"}
+                  {/*
+                    운영진이 아닌 원우 옆에는 "운영진 지정" — 누르면 무엇이 되는지 적습니다(2026-09-15 사용자 요청, 예전엔 "원우").
+                    이미 운영진인 사람은 "운영진" 그대로(주황). 누르면 확인창 뒤에 권한을 주거나 뺍니다(toggleAdmin).
+                  */}
+                  {member.role === "admin" ? "운영진" : "운영진 지정"}
                 </button>
                 {!isMe ? (
                   <button
