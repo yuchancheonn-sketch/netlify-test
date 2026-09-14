@@ -68,11 +68,11 @@ export default function ChatListPage() {
       */}
       <div className="px-4 pt-4 pb-8">
         {loading ? (
-          /* 아래 진짜 목록과 같은 짜임 — 12px씩 띄운 박스, 칸 높이 86px(사진 62px + 안쪽 위아래 12px씩). */
+          /* 아래 진짜 목록과 같은 짜임 — 12px씩 띄운 박스, 칸 높이 85px(사진 62px + 안쪽 위아래 11.5px씩). */
           <ul className="flex flex-col gap-3">
             {[0, 1, 2].map((key) => (
               <li key={key}>
-                <Skeleton className="h-[86px] rounded-3xl" />
+                <Skeleton className="h-[85px] rounded-3xl" />
               </li>
             ))}
           </ul>
@@ -144,7 +144,8 @@ function ChatRoomRow({
 
         가운데 글 두 줄(17px + 14px)을 합쳐도 50px 남짓이라, 사진이 칸 높이를
         혼자 정합니다. 글씨나 줄 간격을 건드려도 칸은 꿈쩍하지 않습니다.
-        지금은 12 + 62 + 12 = 86px입니다.
+        지금은 11.5 + 62 + 11.5 = 85px입니다.
+        (2026-09-15 사용자 "박스들 높이 1px 만큼 줄여줘"로 위아래 12px → 11.5px씩. 좌우는 12px(px-3) 그대로.)
 
         ★ 흰 박스입니다 (2026-09-15 사용자 요청 — 원우수첩 목록처럼).
           bg-surface · shadow-[var(--shadow-card)](헤어라인 포함) · rounded-3xl · 안쪽 여백 p-3(12px) —
@@ -152,7 +153,7 @@ function ChatRoomRow({
           줄 사이 선으로 지낼 때(2026-09-14)는 py-2만 두고 좌우 여백을 걷어 사진을 바깥 px-4에 맞췄습니다.
         (위 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
       */
-      className="flex items-center gap-3.5 rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-3.5 rounded-3xl bg-surface px-3 py-[11.5px] shadow-[var(--shadow-card)] transition active:scale-[0.99]"
     >
       {/*
         동그라미가 아니라 스쿼클(네 변이 부드럽게 부푼 둥근 네모)입니다 — globals.css의 squircle.
