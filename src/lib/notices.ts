@@ -31,3 +31,50 @@ export interface NewNotice {
 export async function addNotice(db: Firestore, notice: NewNotice): Promise<void> {
   await db.collection("notices").add({ ...notice, createdAt: new Date() });
 }
+
+/**
+ * 알림을 알림함에 남겨 두는 기간(일). 이보다 오래된 알림은 목록에서 빠지고, 서버가 지웁니다 (2026-09-15 사용자 요청).
+ *
+ * 두 곳이 같은 값을 봅니다.
+ *  - 앱: lib/hooks.ts의 useNotices가 이 기간 안의 알림만 받아 보여줍니다(헤더 종의 빨간 점도 같은 목록).
+ *    그래서 서버가 아직 안 지웠어도 7일 지난 알림은 화면에 안 보입니다.
+ *  - 서버: 아래 pruneOldNotices를 매시 도는 예약 함수(netlify/functions/feed-push.mts)가 불러 실제 문서를 지웁니다.
+ *
+ * 이 파일의 firebase-admin은 타입만 가져오므로(import type) 앱 쪽에서 이 상수를 가져다 써도 서버 코드가 딸려 가지 않습니다.
+ */
+export const NOTICE_KEEP_DAYS = 7;
+
+/** 한 번에 지우는 최대 건수 — Firestore 일괄 쓰기 한도(500) 안쪽. 알림은 하루 몇 건이라 보통 한 번에 끝납니다. */
+const PRUNE_BATCH_SIZE = 400;
+
+/**
+ * NOTICE_KEEP_DAYS보다 오래된 notices 문서를 지웁니다. 지운(dryRun이면 지울) 건수를 돌려줍니다.
+ * 예약 함수는 30초 안에 끝나야 해서, 많이 쌓였을 때도 몇 묶음까지만 지우고 나머지는 다음 시간에 넘깁니다.
+ */
+export async function pruneOldNotices(
+  db: Firestore,
+  { dryRun = false }: { dryRun?: boolean } = {},
+): Promise<number> {
+  const cutoff = new Date(Date.now() - NOTICE_KEEP_DAYS * 24 * 60 * 60 * 1000);
+  let total = 0;
+
+  for (let round = 0; round < 5; round += 1) {
+    const snapshot = await db
+      .collection("notices")
+      .where("createdAt", "<", cutoff)
+      .limit(PRUNE_BATCH_SIZE)
+      .get();
+    if (snapshot.empty) break;
+
+    total += snapshot.size;
+    if (dryRun) break;
+
+    const batch = db.batch();
+    snapshot.docs.forEach((document) => batch.delete(document.ref));
+    await batch.commit();
+
+    if (snapshot.size < PRUNE_BATCH_SIZE) break;
+  }
+
+  return total;
+}

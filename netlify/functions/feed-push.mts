@@ -3,6 +3,7 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { checkFeedsAndNotify } from "../../src/lib/feed-watch";
+import { pruneOldNotices } from "../../src/lib/notices";
 import { parseServiceAccount } from "../../src/lib/service-account";
 
 /**
@@ -26,12 +27,26 @@ const feedPush = async () => {
   }
 
   const app = getApps()[0] ?? initializeApp({ credential: cert(account) });
+  const db = getFirestore(app);
+  const dryRun = process.env.FEED_PUSH_DRY_RUN === "1";
   const results = await checkFeedsAndNotify({
-    db: getFirestore(app),
+    db,
     messaging: getMessaging(app),
-    dryRun: process.env.FEED_PUSH_DRY_RUN === "1",
+    dryRun,
   });
   console.log("[feed-push]", JSON.stringify(results));
+
+  /*
+   * 알림함 정리 — 일주일(NOTICE_KEEP_DAYS) 지난 알림 문서를 지웁니다 (2026-09-15).
+   * 앱은 이미 7일 안의 알림만 보여주므로, 여기서 늦게 지워지거나 한 번 실패해도 원우 화면에는 차이가 없습니다.
+   * 그래서 실패해도 위 피드 알림 결과는 그대로 두고 로그만 남깁니다.
+   */
+  try {
+    const pruned = await pruneOldNotices(db, { dryRun });
+    console.log("[feed-push] 오래된 알림", dryRun ? "지울 예정" : "지움", pruned);
+  } catch (error) {
+    console.log("[feed-push] 오래된 알림 정리 실패", error);
+  }
 };
 
 export default feedPush;

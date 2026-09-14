@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Timestamp,
   collection,
   doc,
   limit,
@@ -11,6 +12,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { NOTICE_KEEP_DAYS } from "@/lib/notices";
 import { markChatRead } from "@/lib/chat-read";
 import { ALL_COHORTS, parseSessionDocId, sessionDocId } from "@/lib/cohort";
 import { otherUidOf, toChatRoom } from "@/lib/chat-rooms";
@@ -843,22 +845,32 @@ const NOTICE_LIMIT = 50;
  * 기수로 거르는 것은 화면에서 합니다. `where("cohort","in",…)`와 `orderBy("createdAt")`를 함께 걸면
  * 콘솔에서 복합 색인을 따로 만들어야 해서, 최근 50건을 받아 거릅니다(알림은 하루 몇 건뿐입니다).
  * 헤더의 종과 알림 화면이 같이 씁니다 — 같은 질의라 Firestore가 한 번만 받아 나눠 줍니다.
+ *
+ * ★ 최근 NOTICE_KEEP_DAYS(7)일 안의 알림만 받습니다 (2026-09-15 사용자 요청 — 일주일 지나면 목록에서 사라짐).
+ *   질의에 createdAt >= 7일 전을 걸어 오래된 것은 아예 안 받고(읽기도 아낌), 받은 뒤에도 한 번 더 거릅니다 —
+ *   질의의 기준 시각은 구독을 시작한 때라, 앱을 오래 켜 둔 동안 7일을 넘긴 알림도 다음 갱신 때 빠지게 하려고.
+ *   같은 칸(createdAt)에 부등호와 orderBy를 함께 거는 것이라 복합 색인이 따로 필요 없습니다.
+ *   실제 문서는 서버 예약 함수가 지웁니다(lib/notices.ts의 pruneOldNotices). 헤더 종의 빨간 점도 이 목록으로 셉니다.
  */
 export function useNotices(cohort: string): ListState<NoticeDoc> {
   const [state, setState] = useState<ListState<NoticeDoc>>(EMPTY);
 
   useEffect(() => {
+    const keepMs = NOTICE_KEEP_DAYS * 24 * 60 * 60 * 1000;
     const noticesQuery = query(
       collection(db, "notices"),
+      where("createdAt", ">=", Timestamp.fromMillis(Date.now() - keepMs)),
       orderBy("createdAt", "desc"),
       limit(NOTICE_LIMIT),
     );
     return onSnapshot(
       noticesQuery,
       (snapshot) => {
-        const notices = snapshot.docs.map(
-          (document) => ({ id: document.id, ...document.data() }) as NoticeDoc,
-        );
+        const cutoff = Date.now() - keepMs;
+        const notices = snapshot.docs
+          .map((document) => ({ id: document.id, ...document.data() }) as NoticeDoc)
+          // 서버가 방금 적어 시각이 아직 비어 있는 알림(createdAt null)은 새것이므로 남깁니다.
+          .filter((notice) => !notice.createdAt || notice.createdAt.toMillis() >= cutoff);
         setState({ data: notices, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "알림을 불러오지 못했어요." }),
