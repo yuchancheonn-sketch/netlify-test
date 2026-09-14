@@ -13,9 +13,13 @@ export interface QuizStats {
   answered: number;
   /** "10기"처럼 — 등수를 매긴 기수 */
   cohort: string;
-  /** 기수 안 등수(1부터). 맞힌 개수가 같으면 같은 등수입니다. */
-  rank: number;
-  /** 나와 같은 등수가 더 있으면 true — "공동 3등" */
+  /**
+   * 기수 안 등수(1부터). 맞힌 개수가 같으면 같은 등수입니다.
+   * **10등 안일 때만** 값이 오고, 11등부터는 null입니다(2026-09-15 사용자 요청 — 서버가 아예 안 보냄).
+   * 그때 카드는 맞힌 문제 수만 보여줍니다.
+   */
+  rank: number | null;
+  /** 나와 같은 등수가 더 있으면 true — "공동 3등". rank가 null이면 늘 false. */
   tied: boolean;
   /** 이 기수에서 퀴즈를 한 번이라도 푼 원우 수 */
   participants: number;

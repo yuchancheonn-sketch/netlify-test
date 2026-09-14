@@ -249,8 +249,12 @@ function QuizResultView({ today, stats }: { today: QuizTodayResult; stats: QuizS
         {today.correct ? "오늘 퀴즈 정답이에요!" : `아쉽게 틀렸어요 · 정답은 ${today.answer}`}
       </p>
 
+      {/*
+        ★ 등수 칸은 기수 안 10등까지만 (2026-09-15 사용자 요청).
+          서버가 11등부터는 rank를 null로 보내고, 그때는 맞힌 문제 칸 하나만 폭 가득(grid-cols-1) 둡니다.
+      */}
       {stats ? (
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className={`mt-3 grid gap-3 ${stats.rank !== null ? "grid-cols-2" : "grid-cols-1"}`}>
           <div className="rounded-2xl bg-fill px-4 py-3">
             <p className="text-[13px] text-ink-muted">맞힌 문제</p>
             <p className="mt-1 text-[22px] leading-tight font-bold text-ink">
@@ -260,16 +264,18 @@ function QuizResultView({ today, stats }: { today: QuizTodayResult; stats: QuizS
               </span>
             </p>
           </div>
-          <div className="rounded-2xl bg-fill px-4 py-3">
-            <p className="text-[13px] text-ink-muted">{stats.cohort} 원우 중</p>
-            <p className="mt-1 text-[22px] leading-tight font-bold text-brand-500">
-              {stats.tied ? <span className="text-[16px]">공동 </span> : null}
-              <span className="tabular-nums">{stats.rank}</span>등
-              <span className="ml-1 text-[14px] font-medium text-ink-faint">
-                / <span className="tabular-nums">{stats.participants}</span>명
-              </span>
-            </p>
-          </div>
+          {stats.rank !== null ? (
+            <div className="rounded-2xl bg-fill px-4 py-3">
+              <p className="text-[13px] text-ink-muted">{stats.cohort} 원우 중</p>
+              <p className="mt-1 text-[22px] leading-tight font-bold text-brand-500">
+                {stats.tied ? <span className="text-[16px]">공동 </span> : null}
+                <span className="tabular-nums">{stats.rank}</span>등
+                <span className="ml-1 text-[14px] font-medium text-ink-faint">
+                  / <span className="tabular-nums">{stats.participants}</span>명
+                </span>
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>

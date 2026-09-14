@@ -92,15 +92,21 @@ async function readStats(db: Firestore, uid: string, cohort: string): Promise<Qu
   // 방금 기수를 맞춘 경우 질의 결과에 내가 아직 안 들어 있을 수 있어, 참여 수에 나를 꼭 넣습니다.
   const includesMe = peers.docs.some((peer) => peer.id === uid);
 
+  // 10등 안일 때만 등수를 알려 줍니다(2026-09-15 사용자 요청). 11등부터는 앱에 등수 숫자 자체를 보내지 않습니다.
+  const rank = higher + 1;
+  const shown = rank <= RANK_SHOWN_UP_TO;
   return {
     correct,
     answered,
     cohort,
-    rank: higher + 1,
-    tied: (includesMe ? same : same + 1) > 1,
+    rank: shown ? rank : null,
+    tied: shown && (includesMe ? same : same + 1) > 1,
     participants: peers.size + (includesMe ? 0 : 1),
   };
 }
+
+/** 카드에 등수를 보여주는 마지막 등수 — 이보다 아래면 맞힌 문제 수만 보입니다(동점으로 공동 10등이면 보임). */
+const RANK_SHOWN_UP_TO = 10;
 
 /** 오늘 문제를 풀었는지(풀었으면 정답·해설까지)와 내 성적. 승인된 원우가 아니면 null. */
 export async function readQuizStatus(db: Firestore, uid: string): Promise<QuizStatus | null> {
