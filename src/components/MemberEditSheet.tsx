@@ -36,6 +36,13 @@ const MEMBER_TYPES: { value: MemberType; label: string }[] = [
   { value: "youth", label: "대학생 원우" },
 ];
 
+/**
+ * 이 시트의 입력칸·선택 상자 모양 (2026-09-15 사용자 요청 — 박스들 높이를 1px씩 줄임).
+ * 공용 inputClassName(ui.tsx, 위아래 16px)은 다른 화면도 쓰므로 건드리지 않고 여기서만 15.5px씩으로 바꿔 씁니다.
+ * "py-[15.5px]"가 소스에 글자 그대로 있어야 Tailwind가 CSS를 만듭니다.
+ */
+const fieldClassName = inputClassName.replace("py-4", "py-[15.5px]");
+
 const SELECT_ARROW_STYLE = {
   backgroundImage:
     "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
@@ -263,7 +270,7 @@ export default function MemberEditSheet({
                 setNameError(null);
               }}
               placeholder="예) 홍길동"
-              className={inputClassName}
+              className={fieldClassName}
             />
             {nameError ? <FieldError>{nameError}</FieldError> : null}
           </div>
@@ -278,7 +285,7 @@ export default function MemberEditSheet({
                 setCohort(event.target.value);
                 setNameError(null);
               }}
-              className={`${inputClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+              className={`${fieldClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
               style={SELECT_ARROW_STYLE}
             >
               {/* 새로 올릴 때는 10기만, 이미 있는 칸을 고칠 때는 모든 기수(옮기기) */}
@@ -303,7 +310,8 @@ export default function MemberEditSheet({
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setMemberType(value)}
-                    className={`flex-1 rounded-2xl border-2 py-3 text-[14px] font-bold transition ${
+                    /* py-[11.5px] — 위아래 11.5px (2026-09-15, py-3 12px에서 1px 낮춤) */
+                    className={`flex-1 rounded-2xl border-2 py-[11.5px] text-[14px] font-bold transition ${
                       selected
                         ? "border-brand-500 bg-brand-50 text-brand-500"
                         : "border-transparent bg-surface text-ink-soft shadow-[var(--shadow-card)]"
@@ -325,7 +333,7 @@ export default function MemberEditSheet({
               value={company}
               onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
               placeholder="예) (주)착한부자"
-              className={inputClassName}
+              className={fieldClassName}
             />
           </div>
 
@@ -338,7 +346,7 @@ export default function MemberEditSheet({
               value={position}
               onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
               placeholder="예) 대표 / 본부장"
-              className={inputClassName}
+              className={fieldClassName}
             />
           </div>
 
@@ -352,7 +360,7 @@ export default function MemberEditSheet({
               onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
               inputMode="tel"
               placeholder="010-1234-5678"
-              className={inputClassName}
+              className={fieldClassName}
             />
           </div>
 
@@ -372,7 +380,7 @@ export default function MemberEditSheet({
                 setCouncilRole(event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
               }
               placeholder="예) 회장 / 총무 / 문화위원장"
-              className={inputClassName}
+              className={fieldClassName}
             />
           </div>
 
@@ -393,7 +401,7 @@ export default function MemberEditSheet({
               autoCorrect="off"
               spellCheck={false}
               placeholder="https://youtu.be/..."
-              className={inputClassName}
+              className={fieldClassName}
             />
             {videoError ? (
               <FieldError>{videoError}</FieldError>
@@ -425,14 +433,18 @@ export default function MemberEditSheet({
             </p>
           ) : null}
 
-          <PrimaryButton type="submit" loading={saving}>
+          {/*
+            className="py-[15.5px]!" — 기본(md) 위아래 16px에서 1px 낮춤 (2026-09-15).
+            PrimaryButton 안의 py-4를 이기려면 !(important)가 필요합니다 — 같은 속성은 적은 순서가 아니라 CSS 순서로 이깁니다.
+          */}
+          <PrimaryButton type="submit" loading={saving} className="py-[15.5px]!">
             {entry ? "저장하기" : duplicatePending ? "동명이인으로 추가하기" : "수첩에 추가하기"}
           </PrimaryButton>
 
           {isMine ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-4 text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[15.5px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               사진·자기소개까지 고치기
             </Link>

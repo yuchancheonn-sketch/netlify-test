@@ -887,7 +887,8 @@ function MemberDetailSheet({
             onClick={onEdit}
             className="mt-4 w-full rounded-2xl bg-brand-50 py-4 text-[15px] font-bold text-brand-500"
           >
-            ✎ {isMe ? "내 정보 수정하기" : "정보 채워주기"}
+            {/* 남의 칸도 "정보 수정하기" (2026-09-15 사용자 요청 — 예전엔 "정보 채워주기") */}
+            ✎ {isMe ? "내 정보 수정하기" : "정보 수정하기"}
           </button>
 
           {isMe ? (
