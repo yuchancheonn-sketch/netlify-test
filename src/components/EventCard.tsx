@@ -15,8 +15,8 @@ import type { EventDoc } from "@/lib/types";
 /**
  * 홈의 다가오는 모임(주요 일정) — 주황 카드에 세 줄, 오른쪽 끝에 ">".
  *   1행  "주요 일정"
- *   2행  날짜 + 일정 이름      "09.15.  아구찜 번개"
- *   3행  D-day + 장소 + 시간   [D-1]  📍마산아구찜  🕒오후 6:30
+ *   2행  D-day + 날짜 + 일정 이름   "D-1  09.15.  아구찜 번개"
+ *   3행  장소 + 시간                📍마산아구찜  🕒오후 6:30
  *
  * ★ 세 줄 짜임 (2026-09-14 사용자 요청). 그 전에는 왼쪽에 둘레가 차오르는 흰 D-day 원
  *   (2026-09-11, 네 시안 가운데 "흰 둘레 원")과 두 줄(이름 / 장소·시간)이었습니다.
@@ -52,11 +52,13 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         <span className="block text-[18px] leading-tight font-bold">주요 일정</span>
 
         {/*
-          2행 — 날짜 + 일정 이름. 날짜는 이름과 크기·굵기·색이 모두 같습니다(18px bold 흰색,
-          2026-09-14 사용자 요청 — 처음엔 날짜만 흰색 90%로 한 단 물렸었습니다).
-          자리가 모자라면 이름만 "…"로 줄고 날짜는 끝까지 보입니다(shrink-0).
+          2행 — D-day + 날짜 + 일정 이름. 셋 다 크기·굵기·색이 같습니다(18px bold 흰색,
+          2026-09-14 사용자 요청 — 처음엔 날짜만 흰색 90%로 한 단 물렸었고, D-day는 3행에 있었습니다).
+          자리가 모자라면 이름만 "…"로 줄고 D-day·날짜는 끝까지 보입니다(shrink-0).
         */}
         <span className="mt-1 flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
+          {/* D-day — 날짜 왼쪽, 날짜·이름과 같은 18px bold 흰색 (2026-09-14 사용자 요청으로 3행에서 옮김) */}
+          <span className="shrink-0">{ddayLabel(event.date)}</span>
           {date ? (
             <span className="shrink-0">
               {/* "09.15." — 월·일 모두 두 자리 + 끝에 점 (2026-09-14 사용자 요청, "9월 15일"에서 바꿈) */}
@@ -67,15 +69,13 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
         </span>
 
         {/*
-          3행 — D-day + 장소 + 시간.
-          D-day는 흰 글씨만 — 바탕 없이 굵게(bold)만 두어 옆 장소·시간(medium)보다 살짝 먼저 읽힙니다.
-          (2026-09-14에 흰 알약 + 주황 글씨로 했다가 같은 날 사용자 요청으로 바탕을 걷었습니다.)
-          줄이 모자라도 줄어들지 않습니다(shrink-0).
+          3행 — 장소 + 시간. 둘 다 없는 일정이면 이 줄을 통째로 그리지 않습니다.
+          (D-day는 2026-09-14까지 이 줄 맨 앞에 있다가 사용자 요청으로 2행 날짜 왼쪽으로 옮겼습니다.)
           장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
-          자리가 모자라면 장소만 "…"로 줄고 D-day·시간은 끝까지 보입니다.
+          자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
         */}
-        <span className="mt-2 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
-          <span className="shrink-0 font-bold">{ddayLabel(event.date)}</span>
+        {event.location || time ? (
+          <span className="mt-2 flex min-w-0 items-center gap-3 text-[14px] font-medium text-white">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[15px] w-[15px] shrink-0" />
@@ -88,7 +88,8 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
                 {time}
               </span>
             ) : null}
-        </span>
+          </span>
+        ) : null}
       </span>
       {/*
         오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
