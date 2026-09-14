@@ -115,7 +115,11 @@ export function PrimaryButton({
    * 이기지 못합니다. 같은 속성이면 클래스를 적은 순서가 아니라 Tailwind가
    * 만든 CSS 순서로 이깁니다.
    */
-  size?: "md" | "compact" | "sm";
+  /**
+   * field — 위아래 12px(약 48px). 내 프로필 폼의 "저장하기"·"시작하기"가 줄인 입력칸들과 높이를 맞추려고 씁니다
+   * (2026-09-15). compact(8px, 퀴즈)와 md(16px) 사이입니다.
+   */
+  size?: "md" | "field" | "compact" | "sm";
   className?: string;
 }) {
   const sizeClassName =
@@ -123,7 +127,9 @@ export function PrimaryButton({
       ? "px-5 py-2.5 text-[15px]"
       : size === "compact"
         ? "px-5 py-2 text-[16px]"
-        : "px-5 py-4 text-[16px]";
+        : size === "field"
+          ? "px-5 py-3 text-[16px]"
+          : "px-5 py-4 text-[16px]";
 
   return (
     <button
