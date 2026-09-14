@@ -63,7 +63,7 @@ export async function addSessionComment({
   await addDoc(collection(db, "sessions", sessionId, "comments"), {
     text,
     authorId: author.uid,
-    authorName: author.profile?.name || author.profile?.nickname || "원우",
+    authorName: author.profile?.name || "원우",
     parentId,
     period,
     createdAt: serverTimestamp(),

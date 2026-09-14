@@ -80,7 +80,7 @@ export async function createPoll({
     question,
     options,
     createdBy: author.uid,
-    createdByName: author.profile?.name || author.profile?.nickname || "원우",
+    createdByName: author.profile?.name || "원우",
     createdAt: serverTimestamp(),
     closed: false,
   });

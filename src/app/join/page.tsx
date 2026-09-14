@@ -44,7 +44,6 @@ function SignUpScreen() {
           uid: user.uid,
           email: user.email ?? "",
           name: user.displayName ?? "",
-          nickname: "",
           photoURL: user.photoURL ?? null,
           birthdayMonthDay: "",
           birthdayYear: null,

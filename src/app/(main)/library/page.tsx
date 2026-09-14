@@ -181,7 +181,7 @@ function FileList() {
           bytes: uploaded.bytes,
           cohort,
           uploadedBy: user.uid,
-          uploadedByName: profile?.name || profile?.nickname || "원우",
+          uploadedByName: profile?.name || "원우",
           uploadedAt: serverTimestamp(),
         });
       }

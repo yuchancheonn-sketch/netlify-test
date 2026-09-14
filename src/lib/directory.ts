@@ -21,7 +21,6 @@ export interface DirectoryEntry {
   member: UserDoc | null;
   roster: RosterDoc | null;
   name: string;
-  nickname: string;
   /** "10기"처럼. 비어 있던 예전 값은 10기로 채워져 있습니다. */
   cohort: string;
   memberType: MemberType;
@@ -61,8 +60,7 @@ function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry 
     kind: "joined",
     member,
     roster: matched,
-    name: member.name || member.nickname,
-    nickname: member.nickname ?? "",
+    name: member.name,
     cohort: cohortOf(member.cohort),
     memberType: member.memberType,
     company: member.company || matched?.company || "",
@@ -86,7 +84,6 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
     member: null,
     roster: entry,
     name: entry.name,
-    nickname: "",
     cohort: cohortOf(entry.cohort),
     memberType: entry.memberType,
     company: entry.company ?? "",
@@ -153,10 +150,10 @@ export function buildDirectory(
   return entries.sort((a, b) => a.name.localeCompare(b.name, "ko"));
 }
 
-/** 검색어가 이 항목에 걸리는지 (이름·별칭·회사·직책·직위) */
+/** 검색어가 이 항목에 걸리는지 (이름·회사·직책·직위 — 별칭은 2026-09-15에 기능째 없앰) */
 export function entryMatches(entry: DirectoryEntry, needle: string): boolean {
   if (!needle) return true;
-  return [entry.name, entry.nickname, entry.company, entry.position, entry.councilRole]
+  return [entry.name, entry.company, entry.position, entry.councilRole]
     .filter(Boolean)
     .some((field) => field.toLowerCase().includes(needle));
 }

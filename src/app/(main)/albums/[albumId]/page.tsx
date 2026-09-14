@@ -69,7 +69,8 @@ export default function AlbumPage() {
             height: uploaded.height,
             caption: "",
             uploadedBy: user.uid,
-            uploadedByNickname: profile?.nickname || profile?.name || "원우",
+            // 칸 이름은 옛 그대로 uploadedByNickname이지만(사진 보기 화면이 이 이름으로 읽음), 별칭 기능을 없앤 2026-09-15부터 본명을 적습니다.
+            uploadedByNickname: profile?.name || "원우",
             uploadedAt: serverTimestamp(),
             likes: [],
           }),

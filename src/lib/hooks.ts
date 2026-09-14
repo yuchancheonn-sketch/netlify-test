@@ -59,7 +59,7 @@ export function useApprovedMembers(): ListState<UserDoc> {
           .map((document) => document.data() as UserDoc)
           // 아직 온보딩을 마치지 않은 사람은 소개에 띄우지 않습니다.
           .filter((member) => member.profileCompleted)
-          .sort((a, b) => (a.name || a.nickname).localeCompare(b.name || b.nickname, "ko"));
+          .sort((a, b) => a.name.localeCompare(b.name, "ko"));
         setState({ data: members, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
@@ -127,7 +127,7 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
           .map((document) => document.data() as UserDoc)
           // 아직 온보딩을 마치지 않은 사람은 수첩에 띄우지 않습니다.
           .filter((member) => member.profileCompleted)
-          .sort((a, b) => (a.name || a.nickname).localeCompare(b.name || b.nickname, "ko"));
+          .sort((a, b) => a.name.localeCompare(b.name, "ko"));
         setEntry({ cohort, state: { data: members, loading: false, error: null } });
       },
       () =>

@@ -335,7 +335,7 @@ function RosterSection({
                       <p className="truncate text-[15px] font-bold text-ink">{entry.name}</p>
                       <p className="text-[12px] text-ink-faint">
                         {cohortOf(entry.cohort)} · {MEMBER_TYPE_LABEL[entry.memberType]} ·{" "}
-                        {linked ? `가입 완료 (${linked.nickname || linked.name})` : "아직 가입 전"}
+                        {linked ? `가입 완료 (${linked.name})` : "아직 가입 전"}
                       </p>
                     </div>
                     <button
@@ -453,13 +453,13 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
             >
               <Avatar
                 src={member.photoURL}
-                name={member.nickname || member.name}
+                name={member.name}
                 seed={member.uid}
                 size={40}
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-bold text-ink">
-                  {member.nickname || member.name}
+                  {member.name}
                   {isMe ? " (나)" : ""}
                 </p>
                 <p className="truncate text-[12px] text-ink-faint">{member.email}</p>
@@ -482,7 +482,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
                   <button
                     type="button"
                     onClick={() => blockMember(member)}
-                    aria-label={`${member.nickname || member.name} 접근 막기`}
+                    aria-label={`${member.name} 접근 막기`}
                     className="rounded-full px-2.5 py-2 text-[13px] font-bold text-ink-faint transition active:bg-fill"
                   >
                     차단

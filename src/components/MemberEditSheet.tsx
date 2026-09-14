@@ -161,7 +161,7 @@ export default function MemberEditSheet({
     // 누가 정리했는지 남겨야 규칙에서도 통과합니다.
     const stamp = {
       updatedBy: profile.uid,
-      updatedByName: profile.name || profile.nickname,
+      updatedByName: profile.name,
       updatedAt: serverTimestamp(),
     };
     const fields = {

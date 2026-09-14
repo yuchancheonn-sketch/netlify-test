@@ -54,10 +54,7 @@ export async function POST(request: Request) {
 
   // 보낸 사람 이름은 서버가 직접 확인합니다.
   const senderSnap = await db.collection("users").doc(senderUid).get();
-  const senderName =
-    (senderSnap.get("name") as string | undefined) ||
-    (senderSnap.get("nickname") as string | undefined) ||
-    "원우";
+  const senderName = (senderSnap.get("name") as string | undefined) || "원우";
 
   const result = await sendPushToUsers({
     recipientUids,

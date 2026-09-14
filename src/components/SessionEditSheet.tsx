@@ -73,7 +73,7 @@ export default function SessionEditSheet({
             videoUrl: videoUrl.trim(),
             videoUrl2: videoUrl2.trim(),
             updatedBy: user.uid,
-            updatedByName: profile?.name || profile?.nickname || "원우",
+            updatedByName: profile?.name || "원우",
             updatedAt: serverTimestamp(),
           },
           { merge: true },

@@ -748,9 +748,6 @@ function MemberDetailSheet({
             {affiliation ? (
               <p className="mt-1 text-[15px] text-ink-muted">{affiliation}</p>
             ) : null}
-            {entry.nickname && entry.nickname !== entry.name ? (
-              <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
-            ) : null}
             <div className="mt-3 flex items-center gap-1.5">
               <Badge tone="neutral">{entry.cohort}</Badge>
               {/* 1·2기엔 대학생 원우가 없어 구분 배지를 달지 않습니다. */}

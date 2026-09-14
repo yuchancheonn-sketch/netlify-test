@@ -119,7 +119,7 @@ export async function sendChatMessage({
     throw new Error("대화방을 찾지 못했어요.");
   }
 
-  const senderName = sender.profile?.name || sender.profile?.nickname || "원우";
+  const senderName = sender.profile?.name || "원우";
 
   /*
    * 보낸 사람 사진은 일부러 넣지 않습니다.
@@ -131,7 +131,7 @@ export async function sendChatMessage({
    */
   await addDoc(collection(db, "chatRooms", roomId, "messages"), {
     senderId: sender.uid,
-    // 채팅에는 별칭이 아니라 본명으로 나옵니다.
+    // 채팅에는 본명으로 나옵니다. (별칭 기능은 2026-09-15에 없앴습니다)
     senderName,
     text,
     imageUrl: null,

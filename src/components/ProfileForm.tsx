@@ -22,7 +22,6 @@ import {
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLE_MAX_LENGTH,
   INTRODUCTION_MAX_LENGTH,
-  NICKNAME_MAX_LENGTH,
   POSITION_MAX_LENGTH,
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
@@ -47,7 +46,6 @@ interface FormState {
   name: string;
   /** "10기"처럼. 최초 설정에서는 비워 두어 원우가 꼭 직접 고르게 합니다. */
   cohort: string;
-  nickname: string;
   photoURL: string | null;
   month: string;
   day: string;
@@ -99,7 +97,6 @@ export default function ProfileForm({
         (user?.displayName && isKoreanName(user.displayName) ? user.displayName : ""),
       // 구분처럼 최초 설정에서는 비워 둡니다. 가입 직후 문서에 적힌 값을 그대로 믿지 않습니다.
       cohort: profile?.profileCompleted ? cohortOf(profile.cohort) : "",
-      nickname: profile?.nickname ?? "",
       photoURL: profile?.photoURL ?? user?.photoURL ?? null,
       month: month ? String(Number(month)) : "",
       day: day ? String(Number(day)) : "",
@@ -190,11 +187,10 @@ export default function ProfileForm({
 
     /*
      * 이름과 기수만 있으면 시작할 수 있습니다.
-     * 별칭·생일·구분·회사 같은 나머지는 나중에 프로필에서 채워도 되고,
+     * 생일·구분·회사 같은 나머지는 나중에 프로필에서 채워도 되고,
      * 원우수첩에서 다른 원우가 대신 채워줄 수도 있습니다.
+     * (별칭은 2026-09-15 사용자 요청으로 기능째 없앴습니다 — 앱 어디서나 본명만 씁니다.)
      */
-    if (form.nickname.trim().length > NICKNAME_MAX_LENGTH)
-      next.nickname = `별칭은 ${NICKNAME_MAX_LENGTH}자까지 넣을 수 있어요.`;
 
     // 월만 고르고 일을 안 고르면 반쪽짜리 생일이 되므로 그때만 알려줍니다.
     if (Boolean(form.month) !== Boolean(form.day))
@@ -274,7 +270,6 @@ export default function ProfileForm({
         updateDoc(doc(db, "users", user.uid), {
           name,
           cohort: form.cohort,
-          nickname: form.nickname.trim(),
           photoURL: form.photoURL,
           // 생일을 안 골랐으면 빈 값으로 둡니다. 수첩에는 "생일 미입력"으로 보입니다.
           birthdayMonthDay:
@@ -321,7 +316,7 @@ export default function ProfileForm({
     return { thumbnail: videoThumbnail(link) };
   }, [form.introVideoUrl]);
 
-  const displayName = form.nickname.trim() || form.name.trim() || "나";
+  const displayName = form.name.trim() || "나";
   const submitDisabled = mode === "edit" ? !dirty : false;
 
   return (
@@ -385,21 +380,6 @@ export default function ProfileForm({
           ))}
         </select>
         {errors.cohort ? <FieldError>{errors.cohort}</FieldError> : null}
-      </div>
-
-      {/* 별칭 */}
-      <div className="mb-6">
-        <FieldLabel htmlFor="nickname" hint="선택">
-          별칭
-        </FieldLabel>
-        <input
-          id="nickname"
-          value={form.nickname}
-          onChange={(event) => update("nickname", event.target.value.slice(0, NICKNAME_MAX_LENGTH))}
-          placeholder="앱에서 원우들에게 보여질 이름"
-          className={fieldClassName}
-        />
-        {errors.nickname ? <FieldError>{errors.nickname}</FieldError> : null}
       </div>
 
       {/* 생일 */}

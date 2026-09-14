@@ -15,8 +15,10 @@ export interface UserDoc {
   email: string;
   /** 실명 */
   name: string;
-  /** 앱에서 다른 원우들에게 보이는 별칭 */
-  nickname: string;
+  /*
+   * 별칭(nickname)은 2026-09-15 사용자 요청으로 기능째 없앴습니다 — 앱 어디서나 본명(name)만 씁니다.
+   * 예전에 가입한 원우의 문서에는 그 칸이 남아 있지만 앱은 더 이상 읽지도 쓰지도 않습니다.
+   */
   photoURL: string | null;
   /** "MM-DD" 형식. 예: "03-21" */
   birthdayMonthDay: string;
