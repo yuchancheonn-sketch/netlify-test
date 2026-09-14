@@ -1,44 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  updateDoc,
-  writeBatch,
-} from "firebase/firestore";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import PageHeader from "@/components/PageHeader";
-import { CheckIcon, PlusIcon, UsersIcon } from "@/components/icons";
-import {
-  EmptyState,
-  ErrorState,
-  FieldLabel,
-  SectionTitle,
-  Skeleton,
-  Spinner,
-  inputClassName,
-} from "@/components/ui";
+import { CheckIcon, UsersIcon } from "@/components/icons";
+import { EmptyState, ErrorState, SectionTitle, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
+import { cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
-import { isKoreanName } from "@/lib/format";
 import { useAllUsers, useRoster } from "@/lib/hooks";
 import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   general: "일반 원우",
   youth: "대학생 원우",
-};
-
-/** 선택 상자에 쓰는 화살표 배경 (프로필·수첩 수정 시트와 같은 모양) */
-const SELECT_ARROW_STYLE = {
-  backgroundImage:
-    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>\")",
 };
 
 type Tab = "pending" | "roster" | "members";
@@ -268,96 +245,19 @@ function RosterSection({
   roster: { data: RosterDoc[]; loading: boolean; error: string | null };
   approved: UserDoc[];
 }) {
-  const { user, profile } = useAuth();
-  const [names, setNames] = useState("");
-  /** 붙여넣은 이름들이 들어갈 기수. 처음에는 운영진 본인의 기수로 둡니다. */
-  const [cohort, setCohort] = useState<string>(() => cohortOf(profile?.cohort));
-  const [memberType, setMemberType] = useState<MemberType>("general");
-  const [saving, setSaving] = useState(false);
+  /*
+   * ★ "명단에 원우 추가"(이름 붙여넣기 → 기수·구분 골라 roster에 한꺼번에 넣기) 폼은
+   *   2026-09-15 사용자 요청으로 기능째 없앴습니다. 1~9기 공식 명단은 이미 Admin SDK로 다 넣었고,
+   *   10기 원우 추가는 원우수첩의 "원우 추가하기"(MemberEditSheet)로 합니다.
+   *   이 칸에는 등록된 명단 보기·지우기·가입 계정 연결만 남았습니다.
+   *   되살리려면 git 기록에서 이 함수의 handleAdd와 추가 폼을 보세요.
+   */
   const [error, setError] = useState<string | null>(null);
-  const [added, setAdded] = useState<number | null>(null);
 
   const userByUid = useMemo(
     () => new Map(approved.map((member) => [member.uid, member])),
     [approved],
   );
-
-  /** 이름을 줄바꿈이나 쉼표로 구분해 여러 명을 한 번에 넣을 수 있게 합니다. */
-  const parsedNames = useMemo(
-    () =>
-      names
-        .split(/[\n,]/)
-        .map((name) => name.trim())
-        .filter(Boolean),
-    [names],
-  );
-
-  /** 고른 기수의 명단에 이미 있는 이름. 기수가 다르면 같은 이름이어도 새로 넣습니다. */
-  const existingNames = useMemo(
-    () =>
-      new Set(
-        roster.data
-          .filter((entry) => cohortOf(entry.cohort) === cohort)
-          .map((entry) => entry.name),
-      ),
-    [roster.data, cohort],
-  );
-  const newNames = parsedNames.filter((name) => !existingNames.has(name));
-  /** 1·2기엔 대학생 원우가 없어 구분 단추를 숨기고 늘 일반 원우로 넣습니다(lib/cohort.ts). */
-  const typeForCohort: MemberType = hasYouthMembers(cohort) ? memberType : "general";
-
-  async function handleAdd(submitEvent: React.FormEvent) {
-    submitEvent.preventDefault();
-    if (!user || saving || newNames.length === 0) return;
-
-    // 프로필 이름이 한글만 받으므로, 명단도 한글이어야 가입했을 때 같은 이름으로 이어집니다.
-    const notKorean = newNames.filter((name) => !isKoreanName(name));
-    if (notKorean.length > 0) {
-      setAdded(null);
-      setError(`이름은 한글로만 적어 주세요. (${notKorean.join(", ")})`);
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-    setAdded(null);
-    try {
-      if (newNames.length === 1) {
-        await commitWrite(
-          addDoc(collection(db, "roster"), {
-            name: newNames[0],
-            cohort,
-            memberType: typeForCohort,
-            linkedUid: null,
-            note: "",
-            createdBy: user.uid,
-            createdAt: serverTimestamp(),
-          }),
-        );
-      } else {
-        // 여러 명을 한 번에 넣을 때는 한 묶음으로 보내 중간에 끊기지 않게 합니다.
-        const batch = writeBatch(db);
-        for (const name of newNames) {
-          batch.set(doc(collection(db, "roster")), {
-            name,
-            cohort,
-            memberType: typeForCohort,
-            linkedUid: null,
-            note: "",
-            createdBy: user.uid,
-            createdAt: serverTimestamp(),
-          });
-        }
-        await commitWrite(batch.commit());
-      }
-      setAdded(newNames.length);
-      setNames("");
-    } catch {
-      setError("명단에 추가하지 못했어요. 운영진 권한인지 확인해 주세요.");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleRemove(entry: RosterDoc) {
     if (!window.confirm(`명단에서 ${entry.name} 님을 지울까요?`)) return;
@@ -382,88 +282,15 @@ function RosterSection({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* 추가 폼 */}
-      <section className="rounded-3xl bg-surface p-5 shadow-[var(--shadow-card)]">
-        <form onSubmit={handleAdd}>
-          <FieldLabel htmlFor="roster-names" hint="여러 명은 줄바꿈으로">
-            명단에 원우 추가
-          </FieldLabel>
-          <textarea
-            id="roster-names"
-            value={names}
-            onChange={(changed) => {
-              setNames(changed.target.value);
-              setAdded(null);
-            }}
-            rows={4}
-            placeholder={"홍길동\n김철수\n이영희"}
-            className={`${inputClassName} resize-none leading-relaxed`}
-          />
-
-          {/* 붙여넣은 이름이 모두 이 기수의 수첩으로 들어갑니다. */}
-          <select
-            aria-label="추가할 원우의 기수"
-            value={cohort}
-            onChange={(changed) => {
-              setCohort(changed.target.value);
-              setAdded(null);
-            }}
-            className={`${inputClassName} mt-3 appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-            style={SELECT_ARROW_STYLE}
-          >
-            {COHORTS.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-
-          {hasYouthMembers(cohort) ? (
-          <div className="mt-3 flex gap-2">
-            {(Object.keys(MEMBER_TYPE_LABEL) as MemberType[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setMemberType(value)}
-                aria-pressed={memberType === value}
-                className={`flex-1 rounded-2xl py-2.5 text-[14px] font-bold transition ${
-                  memberType === value
-                    ? "bg-brand-50 text-brand-500 ring-2 ring-brand-500"
-                    : "bg-fill text-ink-muted"
-                }`}
-              >
-                {MEMBER_TYPE_LABEL[value]}
-              </button>
-            ))}
-          </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={newNames.length === 0 || saving}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-500 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200"
-          >
-            {saving ? <Spinner className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
-            {newNames.length > 1 ? `${newNames.length}명 한 번에 추가` : "명단에 추가"}
-          </button>
-
-          {parsedNames.length > newNames.length ? (
-            <p className="mt-2 text-center text-[12px] text-ink-faint">
-              이미 {cohort} 명단에 있는 {parsedNames.length - newNames.length}명은 건너뜁니다
-            </p>
-          ) : null}
-          {added ? (
-            <p role="status" className="mt-2 text-center text-[13px] font-bold text-brand-500">
-              {added}명을 명단에 추가했어요
-            </p>
-          ) : null}
-          {error ? (
-            <p role="alert" className="mt-2 text-center text-[13px] font-medium text-danger">
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </section>
+      {/*
+        지우기·계정 연결이 실패했을 때의 알림. 예전엔 위 추가 폼 아래에 떴는데, 폼을 없애며(2026-09-15)
+        목록 위로 옮겼습니다.
+      */}
+      {error ? (
+        <p role="alert" className="text-center text-[13px] font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
 
       {/* 명단 목록 */}
       <section>
@@ -480,7 +307,7 @@ function RosterSection({
             <EmptyState
               icon={<UsersIcon className="h-10 w-10" />}
               title="아직 등록한 명단이 없어요"
-              description="위에 이름을 붙여넣으면 아직 가입하지 않은 원우도 원우 소개에 보입니다."
+              description="원우수첩의 '원우 추가하기'로 넣은 원우가 여기에 보입니다."
             />
           </div>
         ) : (
