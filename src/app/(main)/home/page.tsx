@@ -34,12 +34,6 @@ export default function HomePage() {
   return (
     <>
       {/*
-        홈 탭만 바탕을 아주 연한 회색으로 칠하라는 표시 (2026-09-14). 보이지 않습니다.
-        globals.css의 "홈 탭 바탕" 규칙이 :has([data-home-canvas])로 이 표시를 찾아
-        --color-canvas를 덮어씁니다. 지우면 홈도 다른 탭처럼 흰색이 됩니다.
-      */}
-      <span data-home-canvas hidden />
-      {/*
         홈의 제목 자리는 앱 이름 하나로만 씁니다.
         글씨는 다른 탭 제목("원우수첩", "자료" …)과 크기·굵기까지 똑같습니다.
         운영진에게만 이름 옆에 기수 고르기가 붙습니다.
