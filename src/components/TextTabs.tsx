@@ -64,7 +64,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 6px 들여씀, 검은 바 + 화면 끝까지 회색 헤어라인.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 16px(20 → 16 → 17 → 16), 왼쪽 6px 들여씀, 검은 바 + 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -80,7 +80,7 @@ export default function TextTabs<T extends string>({
 }) {
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[17px]";
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[16px]";
 
   /* "header"는 고른 칸을 맨 앞에, 나머지는 원래 순서대로 뒤에 둡니다. */
   const ordered = header
@@ -224,10 +224,9 @@ export default function TextTabs<T extends string>({
               aria-pressed={active}
               /*
               ★ 모든 칸을 늘 같은 굵기로 두고 색만 바꿉니다.
-                굵기는 "header"가 bold(700), "body"(원우수첩)가 medium(500)입니다 —
-                2026-09-14 사용자가 "아주 조금만 더 얇게"라고 해서 body만 내렸습니다.
-                600은 layout.tsx가 받지 않아(400·500·700·900) 적어도 700으로 그려지므로
-                500이 한 단 아래입니다.
+                굵기는 두 갈래 모두 bold(700)입니다. 2026-09-14에 "body"(원우수첩)만
+                medium(500)으로 내려 봤다가 같은 날 사용자가 원상복구시켰습니다.
+                (600은 layout.tsx가 받지 않아 700으로 그려지므로 사잇값은 없습니다.)
                 굵기까지 바꾸면 고를 때마다 글자 폭이 달라져 옆 칸이 좌우로
                 밀립니다. 색만 바뀌면 글자는 제자리에 못 박힙니다.
 
@@ -260,7 +259,7 @@ export default function TextTabs<T extends string>({
               생기고, 글씨가 클수록 그 자리도 같이 커집니다.
             */}
               <span
-                className={`leading-tight ${header ? "font-bold" : "font-medium"} ${textClass}`}
+                className={`leading-tight font-bold ${textClass}`}
               >
                 {item.label}
               </span>
