@@ -89,7 +89,8 @@ export default function HomePage() {
               지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
             <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-9 pl-5 shadow-[var(--shadow-card)]">
-              <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-300" />
+              {/* 달력 그림은 앱의 기본 주황(brand-500) — 처음엔 옅은 brand-300이라 흐린 주황으로 보인다고 해서 바꿨습니다(2026-09-15). */}
+              <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-500" />
               <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-soft">
                 다가오는 모임이 아직 없어요
               </p>
