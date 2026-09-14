@@ -29,9 +29,10 @@ import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
-const MEMBER_TYPES: { value: MemberType; emoji: string; label: string }[] = [
-  { value: "general", emoji: "🌿", label: "일반 원우" },
-  { value: "youth", emoji: "🌱", label: "대학생 원우" },
+/* 구분 단추 — 이름만. 위에 얹던 풀 그림(🌿·🌱)은 2026-09-15 사용자 요청으로 없앴습니다. */
+const MEMBER_TYPES: { value: MemberType; label: string }[] = [
+  { value: "general", label: "일반 원우" },
+  { value: "youth", label: "대학생 원우" },
 ];
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -453,7 +454,7 @@ export default function ProfileForm({
       <div className="mb-6">
         <FieldLabel hint="선택">구분</FieldLabel>
         <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
-          {MEMBER_TYPES.map(({ value, emoji, label }) => {
+          {MEMBER_TYPES.map(({ value, label }) => {
             const selected = form.memberType === value;
             return (
               <button
@@ -464,18 +465,16 @@ export default function ProfileForm({
                 onClick={() => update("memberType", value)}
                 /*
                   py-[13px] — 위아래 13px (2026-09-15 사용자 요청으로 py-4 16px → 12px로 줄였다가 1px씩 되올림).
-                  안의 그림 글자·이름은 둘 다 2px 위로(-translate-y-[2px]) — 둘 사이 간격은 그대로 두려고 함께 올립니다.
-                  단추가 flex라 두 span이 flex 칸이 되어 transform이 먹습니다.
+                  이름은 2px 위로(-translate-y-[2px]) — 단추가 flex라 span이 flex 칸이 되어 transform이 먹습니다.
+                  ★ 이름 위의 풀 그림 글자(🌿 일반 원우 · 🌱 대학생 원우)는 2026-09-15 사용자 요청으로 없앴습니다.
+                    그래서 칸이 그 줄(약 33px + 사이 6px)만큼 낮아졌고, 이름 한 줄만 가운데 섭니다.
                 */
-                className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[13px] transition ${
+                className={`flex flex-1 items-center justify-center rounded-2xl border-2 py-[13px] transition ${
                   selected
                     ? "border-brand-500 bg-brand-50"
                     : "border-transparent bg-surface shadow-[var(--shadow-card)]"
                 }`}
               >
-                <span className="-translate-y-[2px] text-[22px]" aria-hidden="true">
-                  {emoji}
-                </span>
                 <span
                   className={`-translate-y-[2px] text-[14px] font-bold ${
                     selected ? "text-brand-500" : "text-ink-soft"
