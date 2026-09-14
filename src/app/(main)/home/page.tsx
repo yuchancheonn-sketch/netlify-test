@@ -78,8 +78,9 @@ export default function HomePage() {
             <EventDdayCard event={nextEvent} />
           ) : (
             /*
-              모임이 없을 때 — 안내 아래 "모임 등록하기" 단추로 바로 일정 등록 화면(/events/new)에 갑니다
+              모임이 없을 때 — 제목 아래 "모임 등록하기" 단추로 바로 일정 등록 화면(/events/new)에 갑니다
               (2026-09-15 사용자 요청). 일정 등록은 원우 누구나 할 수 있습니다.
+              "일정을 올리면 여기에 D-day로 표시됩니다." 안내 문장은 같은 날 사용자 요청으로 뺐습니다.
               예전에는 카드 전체가 모임 목록(/events)으로 가는 링크였는데, 링크 안에 또 링크(단추)를 둘 수 없어
               카드는 그냥 상자로 두고 단추만 누르게 했습니다. 모임 목록도 비어 있을 때라 잃는 길은 없습니다.
             */
@@ -87,7 +88,6 @@ export default function HomePage() {
               <EmptyState
                 icon={<CalendarIcon className="h-9 w-9" />}
                 title="다가오는 모임이 아직 없어요"
-                description="일정을 올리면 여기에 D-day로 표시됩니다."
                 action={
                   <Link
                     href="/events/new"
