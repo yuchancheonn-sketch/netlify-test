@@ -52,7 +52,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 12px 들여씀, 화면 끝까지 회색 헤어라인.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 10px 들여씀, 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -76,8 +76,8 @@ export default function TextTabs<T extends string>({
      *   HTML이 됩니다. span에 display:flex를 주면 자리잡는 방식은 div와 같으면서
      *   h1 안에서도 올바릅니다. (제목 옆 기수 고르개도 같은 이유로 span입니다.)
      *
-     * pl-3 — 왼쪽으로 12px 들여 씁니다. 쓰는 쪽이 px-4(16px) 안에 두므로
-     * 화면 끝에서 28px입니다. 끝에 바짝 붙이면 글자만 있는 줄이라 허전합니다.
+     * pl-[10px] — 왼쪽으로 10px 들여 씁니다(2026-09-14 사용자 요청으로 12px에서 2px 당김).
+     * 쓰는 쪽이 px-4(16px) 안에 두므로 화면 끝에서 26px입니다. 끝에 바짝 붙이면 글자만 있는 줄이라 허전합니다.
      * "header" 갈래에서는 들이지 않습니다 — 다른 화면의 제목이 서는 자리(16px)에
      * 그대로 서야 하기 때문입니다.
      *
@@ -108,7 +108,7 @@ export default function TextTabs<T extends string>({
       )}
       <span
         className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
-          header ? "" : "pl-3"
+          header ? "" : "pl-[10px]"
         }`}
       >
         {items.map((item) => {
