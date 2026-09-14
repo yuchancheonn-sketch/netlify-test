@@ -1,13 +1,15 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
+
 /**
- * 글자만으로 된 고르개 — 고른 칸은 먹색 글씨 + 아래 검은 바, 나머지는 연회색 글씨.
+ * 글자만으로 된 고르개 — 고른 칸은 먹색 글씨, 나머지는 연회색 글씨.
  * 바탕도 테두리도 없습니다.
  *
  * 쓰는 곳 (2026-09-14 기준 셋)
- *   - 원우수첩의 구분 고르개   전체 / 일반 원우 / 대학생 원우
- *   - 소식 탭의 서브탭        복습 영상 / 소식
- *   - 자료 탭의 서브탭        행사 사진 / 파일
+ *   - 원우수첩의 구분 고르개   전체 / 일반 원우 / 대학생 원우   ("body")
+ *   - 소식 탭의 서브탭        복습 영상 / 소식                ("header")
+ *   - 자료 탭의 서브탭        행사 사진 / 파일                ("header")
  *
  * ★ 컴포넌트로 뺀 이유
  *   원래는 화면마다 같은 마크업을 복붙해 두었는데, 그날 하루 만에 소식 탭은
@@ -20,8 +22,18 @@
  *   서면 어느 쪽이 고르개인지 갈라지지 않아서였습니다.
  *   바가 주황이 아니라 검은색인 것도 사용자가 정한 것입니다.
  *
+ * ★ 두 갈래가 고르는 모양이 다릅니다 (2026-09-14 사용자 요청)
+ *   "body"   칸 순서는 그대로, 고른 칸 아래에 검은 바.
+ *   "header" 검은 바 없음. 고른 칸이 **맨 앞(제목 자리)으로 옮겨 가고**,
+ *            자리가 바뀌는 움직임과 먹색으로 바뀌는 색이 함께 흐릅니다.
+ *            제목 자리에 서는 고르개라 "지금 보는 것 = 제목"이 되도록 한 것입니다.
+ *
  * 앱의 다른 고르개 세 곳(모임·투표·운영진)은 아직 알약입니다.
  */
+
+/** 자리 바꾸기·색 바꾸기에 같이 쓰는 시간. 둘이 어긋나면 색이 먼저 끝나 보입니다. */
+const SWAP_MS = 320;
+
 export default function TextTabs<T extends string>({
   items,
   value,
@@ -52,13 +64,15 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 6px 들여씀.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 6px 들여씀, 검은 바.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
-   * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식 탭). 22px에 들여쓰기 없음 —
-   *          다른 화면의 제목("자료"·"원우수첩")과 같은 크기·같은 자리에 서야 하므로
+   * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식·자료 탭). 22px에 들여쓰기 없음 —
+   *          다른 화면의 제목("원우수첩")과 같은 크기·같은 자리에 서야 하므로
    *          PageHeader의 h1이 쓰는 값(text-[22px] tracking-tight)을 그대로 맞췄습니다.
+   *          검은 바가 없어 높이는 글줄 하나(27.5px)뿐입니다 — 소식 탭의 기다리는
+   *          화면(NewsFallback) 회색 칸이 이 높이에 맞춰져 있습니다.
    */
   variant?: "body" | "header";
   /** 바깥 여백처럼 화면마다 다른 것만 여기로 받습니다 (예: "mt-4"). */
@@ -67,6 +81,58 @@ export default function TextTabs<T extends string>({
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
   const textClass = header ? "text-[22px] tracking-tight" : "text-[17px]";
+
+  /* "header"는 고른 칸을 맨 앞에, 나머지는 원래 순서대로 뒤에 둡니다. */
+  const ordered = header
+    ? [
+        ...items.filter((item) => item.value === value),
+        ...items.filter((item) => item.value !== value),
+      ]
+    : items;
+  const orderKey = ordered.map((item) => item.value).join("|");
+
+  /*
+   * 자리 바꾸기 움직임 — FLIP(처음 자리 재기 → 새 자리로 그리기 → 차이만큼 되돌려 놓고 풀기).
+   *
+   * ★ 처음 자리는 누르는 순간(select)에 잽니다.
+   *   그려진 뒤에 재면 이미 새 자리라 어디서 왔는지 모릅니다. 그래서 onChange를
+   *   부르기 직전에 칸마다 화면 왼쪽 끝에서의 거리를 적어 두고, 새 순서로 그려진
+   *   직후(useLayoutEffect — 화면에 칠해지기 전) 그 차이만큼 칸을 옛 자리로 밀어 둔
+   *   다음 0으로 풀어 줍니다. 칠하기 전에 밀어 두므로 새 자리가 한 번 번쩍이지 않습니다.
+   *
+   * ★ 주소(?tab=news)처럼 누르지 않고 값이 바뀔 때는 잰 자리가 없어 움직이지 않고 바로 섭니다.
+   * ★ 폰에 "동작 줄이기"가 켜져 있으면 움직이지 않습니다.
+   */
+  const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
+  const firstLefts = useRef<Map<T, number> | null>(null);
+
+  function select(next: T) {
+    if (header && next !== value) {
+      const lefts = new Map<T, number>();
+      buttonRefs.current.forEach((button, key) =>
+        lefts.set(key, button.getBoundingClientRect().left),
+      );
+      firstLefts.current = lefts;
+    }
+    onChange(next);
+  }
+
+  useLayoutEffect(() => {
+    const lefts = firstLefts.current;
+    firstLefts.current = null;
+    if (!lefts) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    buttonRefs.current.forEach((button, key) => {
+      const before = lefts.get(key);
+      if (before === undefined) return;
+      const dx = before - button.getBoundingClientRect().left;
+      if (Math.abs(dx) < 0.5) return;
+      button.animate(
+        [{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }],
+        { duration: SWAP_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    });
+  }, [orderKey]);
 
   return (
     /*
@@ -102,13 +168,17 @@ export default function TextTabs<T extends string>({
           header ? "" : "pl-1.5"
         }`}
       >
-        {items.map((item) => {
+        {ordered.map((item) => {
           const active = item.value === value;
           return (
             <button
               key={item.value}
+              ref={(button) => {
+                if (button) buttonRefs.current.set(item.value, button);
+                else buttonRefs.current.delete(item.value);
+              }}
               type="button"
-              onClick={() => onChange(item.value)}
+              onClick={() => select(item.value)}
               aria-pressed={active}
               /*
               ★ 모든 칸을 늘 같은 굵기로 두고 색만 바꿉니다.
@@ -123,10 +193,14 @@ export default function TextTabs<T extends string>({
               흰 바탕에서 대비가 2.4:1이라 읽기 기준(4.5:1)에는 못 미칩니다.
               대신 고른 칸이 먹색이라 "지금 어디에 서 있는지"는 또렷합니다.
               너무 흐려 못 누르는 칸처럼 보인다는 이야기가 나오면 ink-muted로.
+
+              "header"는 색 바뀜을 자리 바꾸기와 같은 시간(SWAP_MS)으로 늘립니다.
+              DOM 칸은 key로 그대로 이어지므로 순서가 바뀌어도 색 전환이 끊기지 않습니다.
             */
-              className={`flex shrink-0 flex-col items-center gap-1.5 transition ${
-                active ? "text-ink" : "text-ink-faint"
-              }`}
+              style={header ? { transitionDuration: `${SWAP_MS}ms` } : undefined}
+              className={`flex shrink-0 flex-col items-center ${
+                header ? "transition-colors" : "gap-1.5 transition"
+              } ${active ? "text-ink" : "text-ink-faint"}`}
             >
               {/*
               ★ 글씨 크기를 <button>이 아니라 이 <span>에 겁니다. 반드시.
@@ -149,7 +223,7 @@ export default function TextTabs<T extends string>({
                 {item.label}
               </span>
               {/*
-              고른 칸 아래 검은 바.
+              고른 칸 아래 검은 바 — "body"에만. "header"는 2026-09-14 사용자 요청으로 뺐습니다.
 
               ★ 안 고른 칸에도 같은 크기로 두고 색만 없앱니다.
                 아예 빼 버리면 고를 때마다 줄 높이가 2.5px씩 오르내려 아래 목록이
@@ -169,12 +243,14 @@ export default function TextTabs<T extends string>({
               뭉개져 그냥 선처럼 보입니다. 폰은 화소 밀도가 2배 이상이라
               0.5px 차이도 또렷하게 나옵니다.
             */}
-              <span
-                aria-hidden
-                className={`mx-1 h-[2.5px] self-stretch rounded-full transition ${
-                  active ? "bg-ink" : "bg-transparent"
-                }`}
-              />
+              {header ? null : (
+                <span
+                  aria-hidden
+                  className={`mx-1 h-[2.5px] self-stretch rounded-full transition ${
+                    active ? "bg-ink" : "bg-transparent"
+                  }`}
+                />
+              )}
             </button>
           );
         })}
@@ -186,12 +262,16 @@ export default function TextTabs<T extends string>({
         안에 바(투명)를 한 줄 더 두는 것이 핵심입니다. 탭 한 칸은
         글씨 + gap + 바만큼 높은데, 이쪽에 글씨만 두면 낮아서 세로로
         어긋납니다. 같은 짜임으로 두면 두 덩어리가 마치 같은 모양이라
-        어떤 정렬을 쓰든 글자 줄이 정확히 맞습니다.
+        어떤 정렬을 쓰든 글자 줄이 정확히 맞습니다. ("header"는 바가 없으니 글씨만.)
       */}
         {trailing ? (
-          <span className="ml-auto flex shrink-0 flex-col items-center gap-1.5">
+          <span
+            className={`ml-auto flex shrink-0 flex-col items-center ${header ? "" : "gap-1.5"}`}
+          >
             <span className={`leading-tight ${textClass}`}>{trailing}</span>
-            <span aria-hidden className="mx-1 h-[2.5px] self-stretch" />
+            {header ? null : (
+              <span aria-hidden className="mx-1 h-[2.5px] self-stretch" />
+            )}
           </span>
         ) : null}
       </span>

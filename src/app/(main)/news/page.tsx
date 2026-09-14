@@ -57,8 +57,9 @@ export default function NewsPage() {
  * 기다리는 동안의 화면.
  *
  * 머리줄과 첫 칸 자리만 회색으로 잡아 둡니다. 제목 자리의 회색 칸은
- * TextTabs("header" 갈래)와 같은 크기입니다 — 글씨 28px(22px × 글줄 1.25배)
- * + 사이 6px + 바 2.5px = 36.5px를 37px로 올림한 값. 크기를 안 맞추면 자리가
+ * TextTabs("header" 갈래)와 같은 크기입니다 — 글줄 27.5px(22px × 1.25배)를
+ * 28px로 올림한 값. 2026-09-14에 header 갈래의 검은 바(사이 6px + 바 2.5px)를
+ * 없애면서 37px에서 줄였습니다. 크기를 안 맞추면 자리가
  * 채워질 때 제목 줄 높이가 달라져 본문이 통째로 솟구칩니다.
  * (TextTabs의 글씨·바 크기를 고치면 이 값도 같이 고쳐 주세요.)
  */
@@ -66,7 +67,7 @@ function NewsFallback() {
   return (
     <>
       <PageHeader
-        title={<Skeleton className="h-[37px] w-[165px] rounded-lg" />}
+        title={<Skeleton className="h-[28px] w-[165px] rounded-lg" />}
         right={<HeaderActions />}
       />
       {/* pt-4는 아래 NewsTabs의 본문 상자와 같은 값이어야 합니다 — 그쪽 주석 참고. */}
