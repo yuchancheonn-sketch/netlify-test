@@ -196,16 +196,15 @@ export default function MembersPage() {
             예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
             있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
             옮겼습니다.
-            색은 안내 글씨("이름·회사·직책으로 찾기", placeholder:text-ink-faint)와
-            같은 ink-faint입니다. 같은 날 주황 테두리에 맞춰 주황으로 했다가, 칸이
-            회색 바탕으로 바뀐 뒤 사용자 요청으로 안내 글씨 색에 맞췄습니다.
-            둘 중 하나를 고치면 다른 쪽도 같이 고치세요.
+            색은 먹색(ink)입니다. 2026-09-14 사용자가 보여 준 쇼핑 앱 검색창 그림에서
+            오른쪽 아이콘만 진하고 안내 글씨는 중간 회색이라 그대로 따랐습니다.
+            (그 전에는 주황 → 안내 글씨와 같은 ink-faint를 거쳤습니다.)
 
             pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
             누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
             안 올라옵니다.
           */}
-          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-ink-faint" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 right-4 h-[26px] w-[26px] -translate-y-1/2 text-ink" />
           {/*
             글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
             16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
@@ -241,13 +240,21 @@ export default function MembersPage() {
               돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
               따라옵니다.
 
-              ★ 테두리도 그림자도 없이 옅은 회색 바탕(bg-fill)만 깝니다.
-                2026-09-14 사용자 요청으로 흰 바탕 + 주황 1.5px 테두리(ring) +
-                글로우(--shadow-card-glow)에서 바꿨습니다. 페이지 바탕이 흰색이라
-                회색 한 겹만으로도 칸이 드러납니다(globals.css의 --color-fill 주석).
-                어두운 화면에서는 --dark-fill이 바탕보다 밝아 그대로 떠오릅니다.
+              ★ 흰 알약이 넓고 옅은 그림자 위에 떠 있는 모양 (2026-09-14, 사용자가 보여 준
+                쇼핑 앱 검색창 그림을 따름). 지나온 모양: 흰 바탕 + 주황 테두리 + 글로우
+                → 옅은 회색 바탕(bg-fill)만 → 지금.
+                - 그림자: 가까운 층(0 1px 2px, 4%)이 가장자리를 잡고, 먼 층(0 6px 24px, 7%)이
+                  넓게 번져 떠 보이게 합니다. --shadow-card-glow(10%)보다 옅게 — 그림은
+                  그림자가 거의 안개처럼 퍼져 있습니다.
+                - ring-1 ring-black/[0.04]: 흰 페이지 위에서 흰 알약의 윤곽이 그림자에만
+                  기대면 위쪽 가장자리가 흐려서 아주 옅은 선을 한 겹 더 둘렀습니다.
+                - 안내 글씨는 ink-muted(중간 회색) — 그림의 안내 글씨가 연회색이 아니라
+                  또렷한 회색이라 ink-faint에서 한 단 올렸습니다.
+                어두운 화면에서는 bg-surface가 바탕보다 밝아 알약이 스스로 떠오르고,
+                검은 그림자·선은 거의 안 보이지만 해가 되지 않습니다.
+                높이(py-[12.25px])와 좌우 여백은 그림에 맞춰 바꾸지 않았습니다 — 여러 번 맞춘 값입니다.
             */
-            className="w-full rounded-full bg-fill py-[12.25px] pr-14 pl-5 text-[16px] text-ink outline-none placeholder:text-ink-faint"
+            className="w-full rounded-full bg-surface py-[12.25px] pr-14 pl-5 text-[16px] text-ink shadow-[0_1px_2px_rgba(28,25,23,0.04),0_6px_24px_rgba(28,25,23,0.07)] ring-1 ring-black/[0.04] outline-none placeholder:text-ink-muted"
           />
         </div>
 
