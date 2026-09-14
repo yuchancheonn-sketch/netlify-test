@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { Fragment, useLayoutEffect, useRef } from "react";
 
 /**
  * 글자만으로 된 고르개 — 고른 칸은 먹색 글씨, 나머지는 연회색 글씨.
@@ -102,15 +102,25 @@ export default function TextTabs<T extends string>({
    *
    * ★ 주소(?tab=news)처럼 누르지 않고 값이 바뀔 때는 잰 자리가 없어 움직이지 않고 바로 섭니다.
    * ★ 폰에 "동작 줄이기"가 켜져 있으면 움직이지 않습니다.
+   * ★ 칸 사이 세로 줄도 같이 잽니다. 칸 폭이 서로 달라("행사 사진" ↔ "파일")
+   *   순서가 바뀌면 줄 자리도 바뀌는데, 줄만 재지 않으면 글자는 미끄러지고
+   *   줄은 새 자리로 툭 떨어집니다.
    */
-  const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
-  const firstLefts = useRef<Map<T, number> | null>(null);
+  const movingRefs = useRef(new Map<string, HTMLElement>());
+  const firstLefts = useRef<Map<string, number> | null>(null);
+
+  function trackRef(key: string) {
+    return (element: HTMLElement | null) => {
+      if (element) movingRefs.current.set(key, element);
+      else movingRefs.current.delete(key);
+    };
+  }
 
   function select(next: T) {
     if (header && next !== value) {
-      const lefts = new Map<T, number>();
-      buttonRefs.current.forEach((button, key) =>
-        lefts.set(key, button.getBoundingClientRect().left),
+      const lefts = new Map<string, number>();
+      movingRefs.current.forEach((element, key) =>
+        lefts.set(key, element.getBoundingClientRect().left),
       );
       firstLefts.current = lefts;
     }
@@ -122,12 +132,12 @@ export default function TextTabs<T extends string>({
     firstLefts.current = null;
     if (!lefts) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    buttonRefs.current.forEach((button, key) => {
+    movingRefs.current.forEach((element, key) => {
       const before = lefts.get(key);
       if (before === undefined) return;
-      const dx = before - button.getBoundingClientRect().left;
+      const dx = before - element.getBoundingClientRect().left;
       if (Math.abs(dx) < 0.5) return;
-      button.animate(
+      element.animate(
         [{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }],
         { duration: SWAP_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
       );
@@ -168,15 +178,28 @@ export default function TextTabs<T extends string>({
           header ? "" : "pl-1.5"
         }`}
       >
-        {ordered.map((item) => {
+        {ordered.map((item, index) => {
           const active = item.value === value;
           return (
+            <Fragment key={item.value}>
+            {/*
+              칸 사이 세로 줄 — "header"(소식·자료)에만 (2026-09-14 사용자 요청).
+              아주 옅게(line, #E4E6E9) 1px, 높이는 글씨 크기와 같은 22px이고 줄 가운데(self-center)에 섭니다.
+              글줄 높이(27.5px)가 아니라 글씨 크기에 맞춘 것은, 글줄에는 글자 위아래 빈 자리가
+              들어 있어 그만큼 줄이 글자보다 길어 보이기 때문입니다.
+              양옆 간격은 칸 사이 gap-[14px]이 그대로 걸립니다.
+              순서가 바뀌면 줄 요소는 새 칸 앞에 새로 생기지만, 재는 이름표가 자리 번호
+              (divider-1)라 위 FLIP이 옛 줄 자리에서 새 자리로 미끄러뜨립니다.
+            */}
+            {header && index > 0 ? (
+              <span
+                aria-hidden
+                ref={trackRef(`divider-${index}`)}
+                className="h-[22px] w-px shrink-0 self-center bg-line"
+              />
+            ) : null}
             <button
-              key={item.value}
-              ref={(button) => {
-                if (button) buttonRefs.current.set(item.value, button);
-                else buttonRefs.current.delete(item.value);
-              }}
+              ref={trackRef(`item-${item.value}`)}
               type="button"
               onClick={() => select(item.value)}
               aria-pressed={active}
@@ -252,6 +275,7 @@ export default function TextTabs<T extends string>({
                 />
               )}
             </button>
+            </Fragment>
           );
         })}
 
