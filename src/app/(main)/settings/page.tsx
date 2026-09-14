@@ -20,8 +20,8 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  * 여기서 고른 값은 이 기기에만 남습니다(localStorage). 다른 기기에서 열면
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
  *
- * 아래쪽 두 개는 예외입니다 — 운영진 화면으로 가는 문(운영진에게만 보임)과,
- * 맨 끝의 로그아웃 단추(누구에게나 보임, 2026-09-14에 내 프로필에서 옮겨 옴)입니다.
+ * 맨 아래 "계정" 칸은 예외입니다 — 권한·로그인 계정, 운영진 화면으로 가는 문(운영진에게만 보임),
+ * 로그아웃, 탈퇴 안내가 모여 있습니다(2026-09-14~15에 내 프로필·설정 곳곳에서 옮겨 옴).
  */
 export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
@@ -84,24 +84,6 @@ export default function SettingsPage() {
         </section>
 
         {/*
-          운영진에게만 보이는 줄. 원우 눈에는 이 자리가 아예 없습니다.
-
-          제목(SectionTitle) 없이 칸 하나만 둡니다 — 위의 세 칸은 "무엇을
-          고를지" 정하는 자리라 이름이 필요하지만, 이건 눌러서 넘어가는
-          문이라 칸에 적힌 이름이 곧 제목입니다.
-        */}
-        {isAdmin ? (
-          <Link
-            href="/admin"
-            className="flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-          >
-            {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
-            <span className="-translate-y-[2px] text-[17px] font-bold text-ink">운영진 화면</span>
-            <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
-          </Link>
-        ) : null}
-
-        {/*
           로그아웃 — 설정 맨 아래, 원우 누구에게나 보입니다 (2026-09-14 사용자 요청으로 내 프로필에서 옮김).
           위에 "계정" 제목을 답니다 — 알림·글씨 크기·화면처럼 칸마다 제목이 있는 짜임에 맞춰
           (2026-09-15 사용자 요청). 위아래 간격은 이 목록의 gap-7이 줍니다.
@@ -125,6 +107,23 @@ export default function SettingsPage() {
               <dd className="truncate text-ink-soft">{profile?.email}</dd>
             </dl>
           </div>
+
+          {/*
+            운영진 화면 입구 — 운영진에게만 보입니다. 원우 눈에는 이 자리가 아예 없습니다.
+            2026-09-15 사용자 요청으로 "화면" 칸 아래 따로 서 있던 줄을 "계정" 칸 안(권한 상자와 로그아웃 사이)으로 옮겼습니다.
+            눌러서 넘어가는 문이라 칸에 적힌 이름이 곧 제목입니다. 아래 로그아웃과 12px(mb-3) 띄웁니다.
+          */}
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="mb-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            >
+              {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
+              <span className="-translate-y-[2px] text-[17px] font-bold text-ink">운영진 화면</span>
+              <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+            </Link>
+          ) : null}
+
           <button
             type="button"
             onClick={async () => {
