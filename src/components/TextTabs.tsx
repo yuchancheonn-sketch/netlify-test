@@ -157,8 +157,9 @@ export default function TextTabs<T extends string>({
      * "header" 갈래에서는 들이지 않습니다 — 다른 화면의 제목이 서는 자리(16px)에
      * 그대로 서야 하기 때문입니다.
      *
-     * gap-[14px] — 칸 사이. 20px → 16px → 14px로 좁혀 온 값이라
-     * Tailwind 단계(12px·16px) 사이입니다.
+     * gap-[14px] — 칸 사이("body"). 20px → 16px → 14px로 좁혀 온 값이라
+     * Tailwind 단계(12px·16px) 사이입니다. "header"는 칸 사이에 세로 줄이 끼어
+     * gap이 줄 양옆에 한 번씩 걸리므로 gap-2(8px)입니다 — 아래 세로 줄 주석 참고.
      *
      * overflow-x-auto + shrink-0 — 평소에는 다 들어옵니다. 좁은 폰이거나 보기
      * 설정이 "크게"(zoom 1.15)일 때만 넘치는데, body가 overflow-x: hidden이라
@@ -186,8 +187,8 @@ export default function TextTabs<T extends string>({
         />
       )}
       <span
-        className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
-          header ? "" : "pl-1.5"
+        className={`no-scrollbar relative flex min-w-0 flex-1 overflow-x-auto ${
+          header ? "gap-2" : "gap-[14px] pl-1.5"
         }`}
       >
         {ordered.map((item, index) => {
@@ -196,10 +197,13 @@ export default function TextTabs<T extends string>({
             <Fragment key={item.value}>
             {/*
               칸 사이 세로 줄 — "header"(소식·자료)에만 (2026-09-14 사용자 요청).
-              아주 옅게(line, #E4E6E9) 1px, 높이는 글씨 크기와 같은 22px이고 줄 가운데(self-center)에 섭니다.
+              아주 옅게(line, #E4E6E9) 1.5px(처음 1px에서 사용자 요청으로 굵힘), 높이는 글씨 크기와 같은
+              22px이고 줄 가운데(self-center)에 섭니다.
               글줄 높이(27.5px)가 아니라 글씨 크기에 맞춘 것은, 글줄에는 글자 위아래 빈 자리가
               들어 있어 그만큼 줄이 글자보다 길어 보이기 때문입니다.
-              양옆 간격은 칸 사이 gap-[14px]이 그대로 걸립니다.
+              양옆 간격은 gap-2(8px)씩이라 글씨와 글씨 사이가 8 + 1.5 + 8 = 17.5px입니다.
+              처음엔 body와 같은 gap-[14px]을 그대로 걸어 29px로 벌어졌고, 사용자 요청으로
+              줄 없던 때(14px)와 비슷하게 좁혔습니다.
               순서가 바뀌면 줄 요소는 새 칸 앞에 새로 생기지만, 재는 이름표가 자리 번호
               (divider-1)라 위 FLIP이 옛 줄 자리에서 새 자리로 미끄러뜨립니다.
             */}
@@ -207,7 +211,7 @@ export default function TextTabs<T extends string>({
               <span
                 aria-hidden
                 ref={trackRef(`divider-${index}`)}
-                className="h-[22px] w-px shrink-0 self-center bg-line"
+                className="h-[22px] w-[1.5px] shrink-0 self-center rounded-full bg-line"
               />
             ) : null}
             <button
