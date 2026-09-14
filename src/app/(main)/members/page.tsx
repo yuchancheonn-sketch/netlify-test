@@ -654,8 +654,8 @@ function MemberRow({
         aria-label={`${entry.name} 정보 수정`}
         className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill active:scale-95"
       >
-        {/* 아이콘만 1px 위로 (2026-09-15, 옆 글씨와 같이). 누르는 40px 자리는 그대로입니다. */}
-        <PencilIcon className="h-5 w-5 -translate-y-px" />
+        {/* 아이콘만 1px 위로(옆 글씨와 같이)·1px 왼쪽으로 (둘 다 2026-09-15 사용자 요청). 누르는 40px 자리는 그대로입니다. */}
+        <PencilIcon className="h-5 w-5 -translate-x-px -translate-y-px" />
       </button>
     </div>
   );
