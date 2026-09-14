@@ -293,14 +293,11 @@ export default function MembersPage() {
         {/* 목록 */}
         <div className="mt-4 pb-6">
           {busy ? (
-            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 줄 사이 선, 위아래 12px, 63px 사진 칸. */
-            <ul className="flex flex-col">
-              {[0, 1, 2, 3].map((key, index) => (
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 12px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
+            <ul className="flex flex-col gap-3">
+              {[0, 1, 2, 3].map((key) => (
                 <li key={key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
-                  <div className="py-3 pl-0.5">
-                    <Skeleton className="h-[63px] rounded-2xl" />
-                  </div>
+                  <Skeleton className="h-[87px] rounded-3xl" />
                 </li>
               ))}
             </ul>
@@ -326,29 +323,18 @@ export default function MembersPage() {
             </div>
           ) : (
             /*
-              카드 대신 줄 사이 선으로 나눕니다 (2026-09-14, 사용자 제안).
-              예전에는 원우마다 흰 카드(rounded-3xl · 그림자)를 세우고 12px씩
-              띄웠는데, 배경이 흰색이 된 뒤로는 카드마다 헤어라인이 둘려
-              378명을 훑을 때 상자 테두리만 눈에 밟혔습니다.
+              원우마다 흰 박스(MemberRow — rounded-3xl · 그림자)를 세우고 12px씩 띄워 나눕니다.
 
-              ★ 선을 아예 빼고 여백만으로 나눠 보기도 했습니다(같은 날, 유튜브
-                목록을 본떠서). 사용자가 둘을 실제로 견줘 보고 "선이 있는 게
-                훨씬 낫다"고 해서 되돌렸습니다. 다시 빼자고 제안하지 마세요.
-
-              맨 윗줄 위에는 선을 긋지 않습니다. 위쪽은 구분 고르개가 이미
-              갈라 주고 있어서, 선을 그으면 고르개를 가두는 상자처럼 보입니다.
-
-              선은 왼쪽만 2px 들입니다(ml-0.5) — 줄 내용(MemberRow의 pl-0.5)이
-              서는 자리와 같게 맞춘 것입니다. 안 들이면 선만 사진 왼쪽으로
-              삐져나옵니다. 줄의 들여쓰기를 고치면 이 값도 같이 고쳐야 합니다.
-              사진 칸(112px) 뒤부터 긋는 방법도 있지만, 그렇게까지 들이면
-              이번에는 사진이 선 밖으로 튀어나온 것처럼 읽힙니다.
-              오른쪽은 본문 끝까지 긋습니다.
+              ★ 박스 → 줄 사이 선 → 다시 박스 (모두 2026-09-14).
+                예전 박스를 줄 사이 선으로 바꿨었습니다(사용자 제안 — 배경이 흰색이던 때 카드마다
+                헤어라인이 둘려 상자 테두리만 눈에 밟힌다고 해서). 그 사이 선을 빼고 여백만으로도
+                나눠 봤다가 두 번 다 "선이 있는 게 낫다"로 되돌렸고, 같은 날 늦게 사용자가
+                "예전처럼 박스로 구분 짓도록 해봐"라고 해서 박스로 돌아왔습니다.
+                선으로 되돌리려면 git 기록에서 이 목록의 border-t(ml-0.5)와 MemberRow의 py-3 pl-0.5를 보세요.
             */
-            <ul className="flex flex-col">
-              {visible.map((entry, index) => (
+            <ul className="flex flex-col gap-3">
+              {visible.map((entry) => (
                 <li key={entry.key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -455,27 +441,14 @@ function MemberRow({
      * Tailwind 단계(12px·16px) 사이 값이라 직접 적습니다. 그때 빌린 1px은
      * 같은 날 "수정" 글씨 단추를 연필 아이콘으로 바꾸며 번 28px에서 나옵니다.
      *
-     * ★ 카드가 아니라 그냥 줄입니다 (2026-09-14).
-     *   rounded-3xl · bg-surface · shadow(헤어라인 포함)를 걷어내고, 줄을
-     *   가르는 일은 목록 쪽의 border-t가 맡습니다.
-     *   카드의 안쪽 여백(옛 p-3)은 걷었지만, 왼쪽은 pl-0.5로 2px 다시
-     *   들였습니다 (2026-09-14 — 내용이 왼쪽에 몰려 보인다는 사용자 말).
-     *   바깥 px-4(16px)에 더해 **18px**에서 시작합니다.
+     * ★ 흰 박스입니다 (2026-09-14 늦게 사용자 "예전처럼 박스로 구분 짓도록 해봐").
+     *   rounded-3xl · bg-surface · shadow-[var(--shadow-card)](헤어라인 포함) + 안쪽 여백 p-3(12px) —
+     *   줄 사이 선으로 바꾸기 전(c63fd03 이전) 박스와 같은 값입니다. 목록 쪽이 12px씩 띄웁니다.
+     *   같은 날 선으로 지낼 때는 py-3 pl-0.5(왼쪽 2px만 들임)였습니다.
      *
-     *   처음에는 위 구분 고르개와 같은 28px(pl-3)로 맞췄는데 "너무 오른쪽으로
-     *   왔다"고 해서 6px → 4px → 2px로 줄여 왔습니다. 숫자를 맞추면 오히려 어긋나 보이는
-     *   자리입니다 — 고르개는 글자라 양옆에 제 여백을 달고 있지만 여기 맨 앞은
-     *   사진(112px)이라 가장자리가 꽉 찬 면이어서, 같은 x에 둬도 사진이 더
-     *   오른쪽으로 나온 것처럼 보입니다.
-     *   (검색 알약은 폭을 꽉 채우는 칸이라 16px 그대로입니다 — 알약은
-     *    테두리가 있어 제 경계를 스스로 보이므로 같이 들일 필요가 없습니다.)
-     *
-     *   오른쪽은 들이지 않습니다. 끝에 선 것이 연필 아이콘 하나뿐이고,
-     *   그쪽은 -mr-2로 이미 화면 가장자리에 맞춰 두었습니다.
-     *
-     *   위아래는 12px입니다.
+     *   오른쪽 연필 단추의 -mr-2는 그대로라, 박스 안에서 끝 여백 12px 중 8px을 당겨 씁니다.
      */
-    <div className="flex items-center gap-[14px] py-3 pl-0.5">
+    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
