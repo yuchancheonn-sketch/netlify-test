@@ -608,12 +608,9 @@ function MemberRow({
         {/*
           회사·직책 줄.
 
-          색은 주황(brand-500)입니다. 2026-09-14에 주황 → 먹색(ink)으로 바꿨다가
-          같은 날 늦게 사용자가 "주황색으로 바꿔줘봐"라고 해서 다시 주황입니다.
-          ★ 흰 바탕 위 #FF7210 글씨는 대비가 약합니다(약 2.6:1). 게다가 지금은 13px에
-            normal(400)이라 예전 주황 시절(medium)보다 더 옅게 읽힙니다. 흐리다는 말이
-            나오면 굵기를 medium으로 올리는 것이 첫 번째 손잡이입니다.
-          이름(먹색·17px·bold)과는 색·크기·굵기 셋 다 갈립니다.
+          2026-09-14에 주황(brand-500)에서 먹색(ink)으로 바꿨습니다.
+          바로 위 이름과 같은 색이 되었지만, 글씨 크기(17px ↔ 13px)와
+          굵기(bold ↔ normal)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
           굵기는 원래 medium(500)이었고 같은 날 사용자가 "아주 조금만 더 얇게"
           해 달라고 해서 normal(400)로 내렸습니다. 450 같은 사잇값은 안 됩니다 —
           layout.tsx가 Noto Sans KR을 400·500·700·900 네 벌만 받아서, 450을 적어도
@@ -628,7 +625,7 @@ function MemberRow({
         */}
         <p
           className={`mt-0.5 truncate text-[13px] ${
-            affiliation ? "font-normal text-brand-500" : "text-ink-muted"
+            affiliation ? "font-normal text-ink" : "text-ink-muted"
           }`}
         >
           {/* "전체" 수첩에서만 앞에 기수를 붙입니다. 한 기수 수첩에서는 다 같은 값이라 자리만 먹습니다. */}
