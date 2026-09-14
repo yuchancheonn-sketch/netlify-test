@@ -69,18 +69,15 @@
   --color-danger: #dc2626;
 
   /*
-   * 배경: 아주아주 연한 회색 #FAFAF9 (stone-50, 2026-09-14 사용자 요청 — 로딩 화면 포함 모든 탭).
+   * 배경: 흰색. **홈 탭만** 아주아주 연한 회색 #FAFAF9 (2026-09-14 사용자 요청).
+   *   홈 덮어쓰기는 아래 "홈 탭 바탕" 규칙에 있습니다.
    *
-   * 카드(--color-surface)는 흰색이라 이제 바탕보다 아주 조금 밝아 스스로 떠오릅니다.
-   * 카드를 갈라주는 일은 여전히 **테두리**가 주로 맡습니다 —
+   * 카드도 흰색(--color-surface)이라 흰 바탕에서는 배경과 카드가 같은 색입니다.
+   * 그래서 카드를 갈라주는 일은 그림자가 아니라 **테두리**가 맡습니다 —
    * --shadow-card의 첫 줄에 1px 헤어라인을 넣어 두었으니 그쪽 주석을 보세요.
-   * 먹색 계열(ink)과 같은 따뜻한 회색 쪽으로 골랐습니다(차가운 #FAFAFA가 아니라).
    *
-   * ★ --color-fill(#F5F5F4)과 아주 가깝습니다. 바탕 위에 fill을 바로 까는 것
-   *   (원우수첩의 안 고른 칩 등)은 경계가 거의 안 보일 수 있습니다 — 흐리다는 말이
-   *   나오면 그 칸의 fill을 한 단 진하게 하세요.
-   *
-   * 지나온 색: 연회색 #ECEDEE(파란 쪽으로 기울임) → 상아색 #F7F3EA → 흰색 → #FAFAF9.
+   * 지나온 색: 연회색 #ECEDEE(파란 쪽으로 기울임) → 상아색 #F7F3EA → 흰색
+   *   → 모든 탭 #FAFAF9(2026-09-14) → 같은 날 홈만 #FAFAF9, 나머지 흰색.
    *
    *   ★ 흰 배경에서 조심할 것
    *     canvas는 "페이지 바탕"이면서, 예전에는 **흰 카드 위에 한 겹 옅게 깔는
@@ -97,7 +94,7 @@
    *   그쪽이 PWA 스플래시 색으로 쓰여서, 어긋나면 홈 화면에서 앱을 열 때
    *   첫 화면 색만 튑니다.
    */
-  --color-canvas: #fafaf9;
+  --color-canvas: #ffffff;
 
 
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,
@@ -283,6 +280,30 @@
   --shadow-card: var(--dark-shadow-card);
   --shadow-card-glow: var(--dark-shadow-card-glow);
   --shadow-float: var(--dark-shadow-float);
+}
+
+/*
+ * 홈 탭 바탕 — 밝은 화면에서 홈에 있는 동안만 바탕을 아주아주 연한 회색(#FAFAF9)으로 (2026-09-14).
+ * ---------------------------------------------------------------------------
+ * 홈 화면(app/(main)/home/page.tsx)이 보이지 않는 표시 <span data-home-canvas hidden>을 하나 품고,
+ * 그 표시가 문서에 있는 동안만 :has()가 --color-canvas를 덮어씁니다.
+ * 토큰 하나를 바꾸므로 body 바탕·붙박이 제목 줄(bg-canvas)·탭바 아래 흐림 층이 한꺼번에 따라오고,
+ * 탭을 옮기는 순간 표시가 사라져 같은 프레임에 흰색으로 돌아옵니다(효과·깜빡임 없음).
+ *
+ * ★ 밝은 화면에서만 겁니다. 규칙이 두 갈래인 이유:
+ *   - 시스템이 밝음이고 직접 어두움을 고르지 않았을 때 → 위 media 갈래
+ *   - 직접 밝음을 골랐을 때(시스템이 어두움이어도) → 아래 [data-theme="light"] 갈래
+ *   :has()가 붙어 선택자 우선순위가 어두운 화면 블록보다 높아서, 그냥 걸면 어두운 화면에서도
+ *   바탕이 밝은 회색으로 덮여 버립니다. 그래서 어두운 경우를 조건으로 먼저 걸러 냅니다.
+ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):has([data-home-canvas]) {
+    --color-canvas: #fafaf9;
+  }
+}
+
+:root[data-theme="light"]:has([data-home-canvas]) {
+  --color-canvas: #fafaf9;
 }
 
 html {
