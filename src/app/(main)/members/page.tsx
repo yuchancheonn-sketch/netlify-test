@@ -273,22 +273,21 @@ export default function MembersPage() {
             거의 꽉 찼는데, 한 칸만 달면서 약 300px로 내려와 여유가 생겼습니다.
             세는 자리는 위 filterItems입니다.
 
-          1·2기 수첩에는 대학생 원우가 없어 고르개를 숨깁니다. 그러면 칸에 붙은
-          숫자도 함께 사라지므로, **그때만** 오른쪽 끝에 "원우 N명"을 세웁니다
-          (trailing). 그 기수에서는 어차피 전체 = 일반이라 한 줄이면 충분합니다.
+          ★ 1·2기 수첩에는 대학생 원우가 없어 "전체 N명" 칩 **하나만** 세웁니다
+            (2026-09-14 사용자 요청 — 다른 기수와 같은 칩 모양으로 인원을 보이게).
+            일반 원우·대학생 원우 칩은 뺍니다. 그 기수에서는 전체 = 일반이고 대학생은
+            늘 0명이라, 눌러도 같은 목록이거나 빈 목록만 나옵니다.
+            예전에는 칩 줄을 통째로 숨기고 오른쪽 끝에 "원우 N명" 글씨(trailing)를 세웠습니다.
+            onChange를 비워 둔 것은, 이 칩을 눌러도 다른 기수에서 골라 둔 필터
+            (예: 대학생 원우)가 "전체"로 덮이지 않게 하려는 것입니다.
         */}
         <TextTabs
-          items={showTypeFilter ? filterItems : []}
-          value={activeFilter}
-          onChange={setFilter}
-          className="mt-4"
-          trailing={
-            !showTypeFilter && !busy && !error ? (
-              <span className="font-medium text-ink-soft">
-                원우 <span className="font-bold text-ink">{visible.length}</span>명
-              </span>
-            ) : null
+          items={
+            showTypeFilter ? filterItems : filterItems.filter((item) => item.value === "all")
           }
+          value={activeFilter}
+          onChange={showTypeFilter ? setFilter : () => {}}
+          className="mt-4"
         />
 
         {/* 목록 */}
