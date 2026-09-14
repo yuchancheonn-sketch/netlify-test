@@ -6,7 +6,7 @@ import { EventDdayCard, EventListItem } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
 import { CalendarIcon, ChevronRightIcon, PlusIcon } from "@/components/icons";
-import { EmptyState, SectionTitle, Skeleton } from "@/components/ui";
+import { SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
 import HomeShortcuts from "@/components/HomeShortcuts";
@@ -78,26 +78,26 @@ export default function HomePage() {
             <EventDdayCard event={nextEvent} />
           ) : (
             /*
-              모임이 없을 때 — 제목 아래 "모임 등록하기" 단추로 바로 일정 등록 화면(/events/new)에 갑니다
-              (2026-09-15 사용자 요청). 일정 등록은 원우 누구나 할 수 있습니다.
-              "일정을 올리면 여기에 D-day로 표시됩니다." 안내 문장은 같은 날 사용자 요청으로 뺐습니다.
-              예전에는 카드 전체가 모임 목록(/events)으로 가는 링크였는데, 링크 안에 또 링크(단추)를 둘 수 없어
-              카드는 그냥 상자로 두고 단추만 누르게 했습니다. 모임 목록도 비어 있을 때라 잃는 길은 없습니다.
+              모임이 없을 때 — 한 줄짜리 낮은 상자 (2026-09-15 사용자 요청: "박스 높이 훨씬 줄이고,
+              일정 추가 단추는 최대한 눈에 안 띄게·간소하게").
+              왼쪽 달력 그림 · 가운데 "다가오는 모임이 아직 없어요" · 오른쪽 끝에 옅은 회색 "+ 등록" 글자 링크(/events/new).
+              단추 모양(주황 알약)을 걷고 글자만 두어 홈에서 눈길을 끌지 않으면서, 필요한 원우는 바로 찾게 했습니다.
+              높이는 위아래 16px + 한 줄 ≈ 56px (예전 가운데 정렬 빈 화면은 약 170px).
+              "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 두고 -mr-2로 끝을 맞춥니다.
+              지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
-            <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-              <EmptyState
-                icon={<CalendarIcon className="h-9 w-9" />}
-                title="다가오는 모임이 아직 없어요"
-                action={
-                  <Link
-                    href="/events/new"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-[15px] font-bold text-white transition active:scale-95"
-                  >
-                    <PlusIcon className="h-[18px] w-[18px]" />
-                    모임 등록하기
-                  </Link>
-                }
-              />
+            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-3 pl-5 shadow-[var(--shadow-card)]">
+              <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-300" />
+              <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-soft">
+                다가오는 모임이 아직 없어요
+              </p>
+              <Link
+                href="/events/new"
+                className="-mr-2 flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px] font-medium text-ink-faint transition active:bg-fill"
+              >
+                <PlusIcon className="h-4 w-4" />
+                등록
+              </Link>
             </div>
           )}
         </section>
