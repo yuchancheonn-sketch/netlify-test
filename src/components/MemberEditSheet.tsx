@@ -416,7 +416,7 @@ export default function MemberEditSheet({
                 <p className="text-[13px] font-bold text-ink-soft">
                   영상을 찾았어요
                   <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
-                    수첩 카드에 이 장면이 보입니다
+                    원우수첩에서 영상 재생 가능해요
                   </span>
                 </p>
               </div>
