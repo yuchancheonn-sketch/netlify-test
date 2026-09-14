@@ -64,7 +64,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 6px 들여씀, 검은 바.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 6px 들여씀, 검은 바 + 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -168,11 +168,23 @@ export default function TextTabs<T extends string>({
      */
     <span className={`relative flex ${className}`}>
       {/*
-        2026-09-14에 "body" 갈래(원우수첩)에 화면 끝까지 이어지는 회색 헤어라인을
-        검은 바 높이와 글자 위에 두 줄 깔았다가, 같은 날 사용자 요청으로 둘 다 없앴습니다.
-        다시 넣는다면 스크롤 칸 바깥(이 자리)에 absolute -inset-x-4로 두어야
-        overflow-x-auto에 잘리지 않습니다.
+        "body" 갈래(원우수첩)에만 까는 회색 헤어라인 (2026-09-14 사용자 요청).
+        검은 바와 같은 높이에서 화면 왼쪽 끝부터 오른쪽 끝까지 이어집니다.
+
+        ★ 이 줄은 남겨 둡니다. 같은 날 글자 위에도 한 줄 더 깔았다가 "회색 바 없애줘"에
+          위아래를 함께 걷었는데, 사용자가 뜻한 것은 **위 줄만**이었습니다.
+
+        ★ 스크롤 칸 바깥에 둡니다. 안에 두면 overflow-x-auto에 잘려 화면 끝까지 못 갑니다.
+        -inset-x-4 — 쓰는 쪽의 px-4(16px)만큼 양옆으로 빼냅니다.
+        bottom-[0.75px] — 1px 선을 2.5px 바의 세로 가운데에 맞춘 값입니다.
+        아래 스크롤 칸에 relative를 줘서 검은 바가 이 선 위에 그려집니다.
       */}
+      {header ? null : (
+        <span
+          aria-hidden
+          className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line"
+        />
+      )}
       <span
         className={`no-scrollbar relative flex min-w-0 flex-1 gap-[14px] overflow-x-auto ${
           header ? "" : "pl-1.5"
