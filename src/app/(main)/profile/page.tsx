@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 
 export default function ProfilePage() {
-  const { logOut, isAdmin, profile } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const router = useRouter();
   const [saved, setSaved] = useState(false);
 
@@ -77,18 +77,11 @@ export default function ProfilePage() {
           </dl>
         </div>
 
-        {/* 운영진 화면으로 가는 길은 설정 화면에 있습니다. */}
-
-        <button
-          type="button"
-          onClick={async () => {
-            await logOut();
-            router.replace("/login");
-          }}
-          className="mt-5 w-full rounded-2xl bg-brand-500 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
-        >
-          로그아웃
-        </button>
+        {/*
+          운영진 화면으로 가는 길과 로그아웃은 설정 화면에 있습니다.
+          (로그아웃은 2026-09-14 사용자 요청으로 이 화면에서 설정 맨 아래로 옮겼습니다 —
+           여기는 내 정보를 고치는 곳이라, 앱 전체에 걸리는 동작은 설정에 모았습니다.)
+        */}
 
         <p className="mt-5 text-center text-[12px] leading-relaxed text-ink-faint">
           탈퇴를 원하시면 운영진에게 알려주세요.

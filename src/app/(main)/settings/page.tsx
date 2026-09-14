@@ -20,11 +20,12 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  * 여기서 고른 값은 이 기기에만 남습니다(localStorage). 다른 기기에서 열면
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
  *
- * 맨 아래 운영진 화면으로 가는 문만 예외입니다. 운영진에게만 보입니다.
+ * 아래쪽 두 개는 예외입니다 — 운영진 화면으로 가는 문(운영진에게만 보임)과,
+ * 맨 끝의 로그아웃 단추(누구에게나 보임, 2026-09-14에 내 프로필에서 옮겨 옴)입니다.
  */
 export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logOut } = useAuth();
   const router = useRouter();
 
   /*
@@ -98,6 +99,23 @@ export default function SettingsPage() {
             <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
           </Link>
         ) : null}
+
+        {/*
+          로그아웃 — 설정 맨 아래, 원우 누구에게나 보입니다 (2026-09-14 사용자 요청으로 내 프로필에서 옮김).
+          모양은 내 프로필에 있던 단추 그대로(주황 채움, 폭 가득)입니다. 위아래 간격은 이 목록의 gap-7이 줍니다.
+          나간 뒤 기록에 설정 화면이 남지 않도록 push가 아니라 replace로 로그인 화면에 갑니다.
+          (가입 대기 화면 /pending에는 따로 로그아웃이 있습니다 — 그 화면엔 설정으로 가는 길이 없어서입니다.)
+        */}
+        <button
+          type="button"
+          onClick={async () => {
+            await logOut();
+            router.replace("/login");
+          }}
+          className="w-full rounded-2xl bg-brand-500 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+        >
+          로그아웃
+        </button>
       </div>
     </div>
   );
