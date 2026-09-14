@@ -16,7 +16,7 @@ import { Fragment } from "react";
  *   움직이도록 여기로 모았습니다. 크기·간격·색을 바꾸려면 이 파일만 고치세요.
  *
  * ★ 두 갈래의 생김새
- *   "body"   고른 칸 아래 검은 바 + 그 높이에 화면 끝까지 옅은 회색 헤어라인. 16px bold, 왼쪽 6px 들임.
+ *   "body"   고른 칸 아래 검은 바. 19px bold, 왼쪽 6px 들임. (화면 끝까지 잇던 회색 헤어라인은 2026-09-14에 없앰)
  *            ★ 2026-09-14에 당근 필터 칩(먹색 알약 / 옅은 회색 알약)으로 바꿨다가 — 주황 칩 시험,
  *              크기 줄이기까지 거친 뒤 — 같은 날 사용자가 스크린샷을 보여 주며 "이 상태로 되돌려놔줘"라고
  *              해서 칩 이전 모양으로 되돌렸습니다. 다시 칩을 제안하지 마세요.
@@ -54,7 +54,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 16px, 왼쪽 6px 들여씀, 검은 바 + 화면 끝까지 회색 헤어라인.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 19px(20 → 16 → 17 → 16 → 19), 왼쪽 6px 들여씀, 고른 칸 아래 검은 바.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다.
    * "header" 제목 줄의 제목 자리를 대신하는 고르개 (소식·자료 탭). 22px에 들여쓰기 없음 —
    *          다른 화면의 제목("원우수첩")과 같은 크기·같은 자리에 서야 하므로
@@ -68,7 +68,7 @@ export default function TextTabs<T extends string>({
 }) {
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[16px]";
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[19px]";
 
   return (
     /*
@@ -94,20 +94,12 @@ export default function TextTabs<T extends string>({
      */
     <span className={`relative flex ${className}`}>
       {/*
-        "body" 갈래(원우수첩)에만 까는 회색 헤어라인 (2026-09-14 사용자 요청).
-        검은 바와 같은 높이에서 화면 왼쪽 끝부터 오른쪽 끝까지 이어집니다.
-
-        ★ 이 줄은 남겨 둡니다. 같은 날 글자 위에도 한 줄 더 깔았다가 "회색 바 없애줘"에
-          위아래를 함께 걷었는데, 사용자가 뜻한 것은 **위 줄만**이었습니다.
-
-        ★ 스크롤 칸 바깥에 둡니다. 안에 두면 overflow-x-auto에 잘려 화면 끝까지 못 갑니다.
-        -inset-x-4 — 쓰는 쪽의 px-4(16px)만큼 양옆으로 빼냅니다.
-        bottom-[0.75px] — 1px 선을 2.5px 바의 세로 가운데에 맞춘 값입니다.
-        아래 스크롤 칸에 relative를 줘서 검은 바가 이 선 위에 그려집니다.
+        ★ "body" 아래 화면 끝까지 잇던 회색 헤어라인은 2026-09-14 늦게 사용자 요청으로 없앴습니다
+          (그 전에 한 번 "그대로 남겨둬야지"로 되살렸던 줄이지만, 이번엔 사용자가 직접 없애 달라고 했습니다).
+          되살리려면 스크롤 칸 바깥(이 자리)에
+          <span aria-hidden className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line" />
+          를 "body"에만 두면 됩니다 — 안에 두면 overflow-x-auto에 잘려 화면 끝까지 못 갑니다.
       */}
-      {header ? null : (
-        <span aria-hidden className="absolute -inset-x-4 bottom-[0.75px] h-px bg-line" />
-      )}
       <span
         className={`no-scrollbar relative flex min-w-0 flex-1 overflow-x-auto ${
           header ? "items-center gap-2" : "gap-[14px] pl-1.5"
