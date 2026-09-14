@@ -60,7 +60,16 @@ export default function StageGate({
  */
 export function SplashScreen() {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-canvas px-8">
+    /*
+      ★ fixed inset-0 — 로고를 **보이는 화면의 정가운데**에 둡니다 (2026-09-15 사용자 요청).
+        예전에는 min-h-dvh 상자 안에서 가운데 정렬했는데, 설정의 글씨 크기가 "크게"(html zoom 1.15)나
+        "작게"(0.9)이면 그 100dvh 높이까지 함께 1.15배·0.9배로 늘거나 줄어, 상자가 화면보다 길어지거나
+        짧아지면서 상자 가운데(= 로고)가 화면 가운데에서 수십 px 아래·위로 밀렸습니다.
+        fixed + inset 0은 화면 네 끝에 붙어 zoom·body 높이와 상관없이 화면과 크기가 같으므로,
+        그 안의 flex 가운데 정렬이 곧 화면 정가운데입니다.
+      (로고 그림 goose.png 자체는 700×700 안에 좌우 26/27px·위아래 30/29px 여백으로 이미 가운데입니다.)
+    */
+    <div className="fixed inset-0 flex items-center justify-center bg-canvas px-8">
       {/*
         원본이 700×700이라 화면에 그리는 140px의 다섯 배입니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
