@@ -20,12 +20,11 @@ import { Fragment } from "react";
  *            2026-09-14 사용자가 보여 준 당근 필터 칩 그림을 따랐습니다.
  *            그 전(같은 날)에는 글자만 있고 고른 칸 아래 검은 바 + 화면 끝까지 회색 헤어라인이었고,
  *            그보다 전에는 흰 알약 하나 안에 담기 → 주황 밑줄 탭 → 색만 바뀌는 글자를 거쳤습니다.
- *   "header" 글자만. 검은 바 없음. 고른 칸이 **맨 앞(제목 자리)으로 옮겨 섭니다** —
- *            제목 자리에 서는 고르개라 "지금 보는 것 = 제목"이 되도록 한 것입니다.
+ *   "header" 글자만. 검은 바 없음. 칸 순서는 **늘 그대로**이고 고른 칸만 먹색이 됩니다.
  *            칸 사이에 옅은 세로 줄이 있습니다.
- *            ★ 자리 바꾸기는 **움직임 없이 바로** 바뀝니다. 2026-09-14에 자리가 미끄러지며
- *              바뀌는 애니메이션(FLIP, 320ms)과 같은 시간의 색 전환을 넣었다가 같은 날
- *              사용자 요청으로 둘 다 걷었습니다. 되살리려면 git 기록의 SWAP_MS를 보세요.
+ *            ★ 자리를 바꾸지 않습니다 (2026-09-14 사용자 "그냥 아예 자리를 바꾸지마").
+ *              같은 날 고른 칸을 맨 앞(제목 자리)으로 옮기고 → 미끄러지는 애니메이션을 붙였다가
+ *              → 애니메이션만 걷었다가 → 옮기기까지 걷었습니다. 다시 제안하지 마세요.
  */
 export default function TextTabs<T extends string>({
   items,
@@ -66,13 +65,6 @@ export default function TextTabs<T extends string>({
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
   const textClass = header ? "text-[22px] tracking-tight" : "text-[14px]";
 
-  /* "header"는 고른 칸을 맨 앞에, 나머지는 원래 순서대로 뒤에 둡니다. */
-  const ordered = header
-    ? [
-        ...items.filter((item) => item.value === value),
-        ...items.filter((item) => item.value !== value),
-      ]
-    : items;
 
   return (
     /*
@@ -97,7 +89,7 @@ export default function TextTabs<T extends string>({
      */
     <span className={`relative flex ${className}`}>
       <span className="no-scrollbar relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
-        {ordered.map((item, index) => {
+        {items.map((item, index) => {
           const active = item.value === value;
           return (
             <Fragment key={item.value}>
@@ -120,9 +112,7 @@ export default function TextTabs<T extends string>({
                 onClick={() => onChange(item.value)}
                 aria-pressed={active}
                 /*
-                  "header" — 글자만. 고른 칸은 먹색(ink), 나머지는 ink-faint(#A8A29E).
-                  색도 전환 없이 바로 바뀝니다 — 자리가 순간이동하는데 색만 천천히 바뀌면
-                  옮겨 간 칸이 잠깐 흐린 채로 제목 자리에 서 보여서, 애니메이션과 함께 걷었습니다.
+                  "header" — 글자만. 고른 칸은 먹색(ink), 나머지는 ink-faint(#A8A29E). 전환 없이 바로 바뀝니다.
 
                   "body" — 칩. 그림(당근 필터 칩)을 따른 값들:
                   - 고른 칩: bg-ink + text-surface. 흰 화면에서는 먹색 알약에 흰 글씨,
