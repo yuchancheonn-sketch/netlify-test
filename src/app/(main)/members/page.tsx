@@ -8,11 +8,22 @@ import CohortPicker from "@/components/CohortPicker";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import TextTabs from "@/components/TextTabs";
-import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
+import {
+  ChatIcon,
+  PencilIcon,
+  PlusIcon,
+  SearchIcon,
+  UsersIcon,
+} from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
-import { ALL_COHORTS, canAddMembers, cohortOf, hasYouthMembers } from "@/lib/cohort";
+import {
+  ALL_COHORTS,
+  canAddMembers,
+  cohortOf,
+  hasYouthMembers,
+} from "@/lib/cohort";
 import {
   affiliationLine,
   buildDirectory,
@@ -77,7 +88,9 @@ export default function MembersPage() {
    */
   const book = useMemo(
     () =>
-      cohort === ALL_COHORTS ? entries : entries.filter((entry) => entry.cohort === cohort),
+      cohort === ALL_COHORTS
+        ? entries
+        : entries.filter((entry) => entry.cohort === cohort),
     [entries, cohort],
   );
 
@@ -150,7 +163,8 @@ export default function MembersPage() {
               <span className="tabular-nums">
                 {value === "all"
                   ? searched.length
-                  : searched.filter((entry) => entry.memberType === value).length}
+                  : searched.filter((entry) => entry.memberType === value)
+                      .length}
               </span>
               명
             </>
@@ -285,7 +299,8 @@ export default function MembersPage() {
           trailing={
             !showTypeFilter && !busy && !error ? (
               <span className="font-medium text-ink-soft">
-                원우 <span className="font-bold text-ink">{visible.length}</span>명
+                원우{" "}
+                <span className="font-bold text-ink">{visible.length}</span>명
               </span>
             ) : null
           }
@@ -298,7 +313,9 @@ export default function MembersPage() {
             <ul className="flex flex-col">
               {[0, 1, 2, 3].map((key, index) => (
                 <li key={key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
+                  {index > 0 ? (
+                    <div className="ml-0.5 border-t border-line" />
+                  ) : null}
                   <div className="py-3 pl-0.5">
                     <Skeleton className="h-[63px] rounded-2xl" />
                   </div>
@@ -349,7 +366,9 @@ export default function MembersPage() {
             <ul className="flex flex-col">
               {visible.map((entry, index) => (
                 <li key={entry.key}>
-                  {index > 0 ? <div className="ml-0.5 border-t border-line" /> : null}
+                  {index > 0 ? (
+                    <div className="ml-0.5 border-t border-line" />
+                  ) : null}
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -410,7 +429,9 @@ export default function MembersPage() {
         <MemberEditSheet
           entry={editing.entry}
           existing={entries}
-          defaultCohort={cohort === ALL_COHORTS ? cohortOf(profile?.cohort) : cohort}
+          defaultCohort={
+            cohort === ALL_COHORTS ? cohortOf(profile?.cohort) : cohort
+          }
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -482,7 +503,9 @@ function MemberRow({
         type="button"
         onClick={videoLink?.id ? onOpenVideo : onEnlargePhoto}
         aria-label={
-          videoLink?.id ? `${entry.name} 소개 영상 보기` : `${entry.name} 사진 크게 보기`
+          videoLink?.id
+            ? `${entry.name} 소개 영상 보기`
+            : `${entry.name} 사진 크게 보기`
         }
         /*
           112×63 — 정확히 16:9입니다. 이 비율이어야 유튜브 미리보기의 위아래
@@ -505,7 +528,11 @@ function MemberRow({
         {thumbnail ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+            <img
+              src={thumbnail}
+              alt=""
+              className="h-full w-full object-cover"
+            />
             <span className="absolute right-1.5 bottom-1.5 flex h-5 items-center rounded-md bg-black/65 px-1.5 text-[11px] font-bold text-white">
               ▶ 영상
             </span>
@@ -606,10 +633,11 @@ function MemberRow({
 
           2026-09-14에 주황(brand-500)에서 먹색(ink)으로 바꿨습니다.
           바로 위 이름과 같은 색이 되었지만, 글씨 크기(17px ↔ 13px)와
-          굵기(bold ↔ medium)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
-          굵기를 medium으로 둔 것은 원래 "흰 바탕의 주황은 대비가 약해서"였는데,
-          먹색이 된 지금은 그 이유가 사라졌습니다. 그래도 되돌리지 않은 것은
-          13px 글씨가 한 줄로 눌려 있는 자리라 medium 쪽이 읽기 편해서입니다.
+          굵기(bold ↔ normal)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
+          굵기는 원래 medium(500)이었고 같은 날 사용자가 "아주 조금만 더 얇게"
+          해 달라고 해서 normal(400)로 내렸습니다. 450 같은 사잇값은 안 됩니다 —
+          layout.tsx가 Noto Sans KR을 400·500·700·900 네 벌만 받아서, 450을 적어도
+          브라우저가 500으로 그립니다. 400이 받아 둔 것 중 한 단 아래입니다.
 
           같은 자리에 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는 강조할
           내용이 아니라 흐린 회색(ink-muted) 그대로 둡니다.
@@ -620,7 +648,7 @@ function MemberRow({
         */}
         <p
           className={`mt-0.5 truncate text-[13px] ${
-            affiliation ? "font-medium text-ink" : "text-ink-muted"
+            affiliation ? "font-normal text-ink" : "text-ink-muted"
           }`}
         >
           {/* "전체" 수첩에서만 앞에 기수를 붙입니다. 한 기수 수첩에서는 다 같은 값이라 자리만 먹습니다. */}
@@ -673,7 +701,13 @@ function MemberRow({
  * 만듭니다. 그래야 들어와 보기만 하고 아무 말도 안 하면 채팅 목록에
  * 빈 방이 뜨지 않습니다. 여기서는 두 uid로 정해지는 방 id로 이동만 합니다.
  */
-function StartChatButton({ otherUid, name }: { otherUid: string; name: string }) {
+function StartChatButton({
+  otherUid,
+  name,
+}: {
+  otherUid: string;
+  name: string;
+}) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -765,13 +799,17 @@ function MemberDetailSheet({
               <p className="mt-1 text-[15px] text-ink-muted">{affiliation}</p>
             ) : null}
             {entry.nickname && entry.nickname !== entry.name ? (
-              <p className="mt-1 text-[13px] text-ink-faint">별칭 · {entry.nickname}</p>
+              <p className="mt-1 text-[13px] text-ink-faint">
+                별칭 · {entry.nickname}
+              </p>
             ) : null}
             <div className="mt-3 flex items-center gap-1.5">
               <Badge tone="neutral">{entry.cohort}</Badge>
               {/* 1·2기엔 대학생 원우가 없어 구분 배지를 달지 않습니다. */}
               {hasYouthMembers(entry.cohort) ? (
-                <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
+                <Badge
+                  tone={entry.memberType === "youth" ? "brand" : "neutral"}
+                >
                   {MEMBER_TYPE_LABEL[entry.memberType]}
                 </Badge>
               ) : null}
@@ -782,7 +820,9 @@ function MemberDetailSheet({
             앱 안에서 둘만의 대화 시작하기.
             계정이 있는 원우에게만, 그리고 나 자신에게는 보이지 않습니다.
           */}
-          {member && !isMe ? <StartChatButton otherUid={member.uid} name={entry.name} /> : null}
+          {member && !isMe ? (
+            <StartChatButton otherUid={member.uid} name={entry.name} />
+          ) : null}
 
           {/* 휴대폰 — 눌러서 바로 전화·문자 */}
           {entry.phone ? (
@@ -822,7 +862,11 @@ function MemberDetailSheet({
                 >
                   {thumbnail ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={thumbnail}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   ) : null}
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-[22px] text-white">
@@ -845,7 +889,10 @@ function MemberDetailSheet({
               rel="noopener noreferrer"
               className="mt-2 block text-center text-[13px] font-bold text-brand-500"
             >
-              {videoLink.kind === "vimeo" ? "비메오에서 보기" : "유튜브에서 보기"} ↗
+              {videoLink.kind === "vimeo"
+                ? "비메오에서 보기"
+                : "유튜브에서 보기"}{" "}
+              ↗
             </a>
           ) : null}
 
@@ -854,20 +901,28 @@ function MemberDetailSheet({
             <dl className="mt-6 flex flex-col gap-3 rounded-2xl bg-fill p-5">
               {entry.company ? (
                 <div className="flex items-start justify-between gap-4">
-                  <dt className="shrink-0 text-[14px] text-ink-faint">회사·소속</dt>
-                  <dd className="text-right text-[15px] font-bold text-ink">{entry.company}</dd>
+                  <dt className="shrink-0 text-[14px] text-ink-faint">
+                    회사·소속
+                  </dt>
+                  <dd className="text-right text-[15px] font-bold text-ink">
+                    {entry.company}
+                  </dd>
                 </div>
               ) : null}
               {entry.position ? (
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-[14px] text-ink-faint">직책</dt>
-                  <dd className="text-[15px] font-bold text-ink">{entry.position}</dd>
+                  <dd className="text-[15px] font-bold text-ink">
+                    {entry.position}
+                  </dd>
                 </div>
               ) : null}
               {entry.phone ? (
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-[14px] text-ink-faint">휴대폰</dt>
-                  <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
+                  <dd className="text-[15px] font-bold text-ink">
+                    {formatPhone(entry.phone)}
+                  </dd>
                 </div>
               ) : null}
               {member ? (
@@ -995,7 +1050,9 @@ function PhotoLightbox({
       >
         <p className="text-[17px] font-bold text-white">{entry.name}</p>
         {affiliationLine(entry) ? (
-          <p className="mt-1 text-[13px] text-white/60">{affiliationLine(entry)}</p>
+          <p className="mt-1 text-[13px] text-white/60">
+            {affiliationLine(entry)}
+          </p>
         ) : null}
       </div>
     </div>

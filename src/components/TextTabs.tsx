@@ -52,7 +52,7 @@ export default function TextTabs<T extends string>({
    */
   trailing?: React.ReactNode;
   /**
-   * "body"   본문 맨 위에 놓이는 보통 고르개. 16px, 왼쪽 12px 들여씀, 화면 끝까지 회색 헤어라인.
+   * "body"   본문 맨 위에 놓이는 보통 고르개. 17px, 왼쪽 12px 들여씀, 화면 끝까지 회색 헤어라인.
    *          2026-09-14 기준 이 갈래를 쓰는 곳은 원우수첩 하나뿐입니다
    *          (소식·자료는 제목 자리로 옮겨 가 "header"가 되었습니다).
    *          그래서 이 크기를 고치면 원우수첩만 바뀝니다.
@@ -66,7 +66,7 @@ export default function TextTabs<T extends string>({
 }) {
   const header = variant === "header";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[16px]";
+  const textClass = header ? "text-[22px] tracking-tight" : "text-[17px]";
 
   return (
     /*
