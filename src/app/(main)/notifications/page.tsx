@@ -70,7 +70,12 @@ export default function NotificationsPage() {
     >
       <PageHeader title="알림" back />
 
-      <div className="px-4 pb-8">
+      {/*
+        pt-4 — 제목 줄과 첫 칸 사이 16px (2026-09-14 사용자 요청, 예전엔 0이라 칸이 제목 줄에 붙어 보였습니다).
+        제목 줄의 pb(6px)에 더해 22px로, 홈·원우수첩·소식·자료의 본문 첫 칸과 같은 높이에서 시작합니다.
+        목록·빈 화면·오류 칸 모두 같은 자리에 섭니다.
+      */}
+      <div className="px-4 pt-4 pb-8">
         {loading ? (
           <ul className="flex flex-col gap-3">
             {[0, 1, 2].map((key) => (
