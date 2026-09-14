@@ -289,8 +289,12 @@ export default function MembersPage() {
           className="mt-4"
         />
 
-        {/* 목록 */}
-        <div className="mt-4 pb-6">
+        {/*
+          목록.
+          mt-[18px] — 위 구분 고르개와 첫 박스 사이 18px (2026-09-15 사용자 "밑에 여백 아주 조금만 더", 16px에서 2px).
+          고르개 아래 검은 바(바 2.5px + 사이 6px)를 걷으면서 줄이 그만큼 낮아져 사이가 좁아 보였습니다.
+        */}
+        <div className="mt-[18px] pb-6">
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 12px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
             <ul className="flex flex-col gap-3">
