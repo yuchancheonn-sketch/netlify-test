@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import type { ConfirmationResult } from "firebase/auth";
 import StageGate from "@/components/StageGate";
 import { GoogleIcon, KakaoIcon, LockIcon, PhoneIcon } from "@/components/icons";
@@ -154,20 +153,11 @@ function LoginScreen() {
         className="login-screen relative flex min-h-dvh w-full flex-col px-7 pt-14"
         style={{ paddingBottom: "calc(36px + env(safe-area-inset-bottom))" }}
       >
-        {/* 앱 아이콘 + 이름 */}
+        {/*
+          과정 이름 + 앱 이름. 위에 있던 앱 아이콘(愛己愛他 주황 네모)은 2026-09-22 사용자 요청으로 뺐습니다.
+        */}
         <div className="flex flex-col items-center text-center">
-          {/* 흰 테두리는 아이콘이 배경 사진에서 살짝 떠 보일 만큼만 얇게 둡니다. */}
-          <div className="rounded-[22px] bg-surface p-[3px] shadow-[var(--shadow-card)]">
-            <Image
-              src="/icon-192.png"
-              alt={`${APP_NAME} 아이콘`}
-              width={80}
-              height={80}
-              className="rounded-[19px]"
-              priority
-            />
-          </div>
-          <p className="mt-6 text-[13px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
+          <p className="text-[13px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
           <h1 className="mt-1 text-[30px] font-bold tracking-tight text-ink">{APP_NAME}</h1>
         </div>
 
