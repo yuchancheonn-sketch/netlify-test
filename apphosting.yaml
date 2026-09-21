@@ -1,0 +1,49 @@
+# Firebase App Hosting 설정 (백엔드 agikaeta, asia-east1 → https://aegiaeta.web.app)
+# 2026-09-22에 새 컴퓨터에서 다시 만들었습니다(예전 컴퓨터의 것은 저장소에 없었습니다).
+#
+# NEXT_PUBLIC_ 값은 빌드 때 코드에 박혀 브라우저로 나가는 공개값입니다(Firebase 웹 설정 등).
+# 진짜 비밀값은 여기 적지 않고 Secret Manager에 두고 이름만 가리킵니다(secret:).
+#   새 비밀값: firebase.cmd apphosting:secrets:set 이름 --project aegiaeta10
+#
+# 카카오 로그인을 켤 때 아래 주석을 풀고 값을 넣으세요(README "카카오 로그인 켜기").
+
+runConfig:
+  minInstances: 0
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyDM49nwo28yNwiOqGjaZOWgUWrVs-ysglw"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "aegiaeta10.firebaseapp.com"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "aegiaeta10"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "aegiaeta10.firebasestorage.app"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "152610870355"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:152610870355:web:096b2c0b25a3240746a2a6"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    value: "qz4f4bh5"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+    value: "aegiaeta10"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+    value: "BEFzswFhCNhyn363Na0lAygPAcHJFzn_SK0nKeLfj-cOUk7-TOAiLDRKYitURavtAkYW6nOAvFCloW76oE64DQA"
+    availability: [BUILD, RUNTIME]
+  - variable: FIREBASE_SERVICE_ACCOUNT
+    secret: FIREBASE_SERVICE_ACCOUNT
+    availability: [RUNTIME]
+  # - variable: NEXT_PUBLIC_KAKAO_REST_API_KEY
+  #   value: ""
+  #   availability: [BUILD, RUNTIME]
+  # - variable: KAKAO_CLIENT_SECRET
+  #   secret: KAKAO_CLIENT_SECRET
+  #   availability: [RUNTIME]
