@@ -3,7 +3,17 @@
 이 문서는 **이 앱을 이루는 프로그램들이 각각 무슨 일을 맡고, 서로 어떻게 물려 돌아가는지**를 적은 지도입니다.
 설치·설정 절차는 [README.md](README.md)에, 화면 디자인 규칙은 [src/app/globals.css](src/app/globals.css)에 있습니다.
 
-기준 시점: 2026-09-08 · 배포본 https://aegiaeta10.netlify.app
+기준 시점: 2026-09-08 · 배포본 **https://aegiaeta.web.app** (2026-09-22 고침)
+
+> ⚠️ **호스팅이 바뀌었습니다.** 2026-09에 Netlify 크레딧 한도 때문에 **Firebase App Hosting**으로 옮겼습니다
+> (옛 주소 aegiaeta10.netlify.app은 503으로 멈춤). 아래 본문에서 "Netlify 서버·Netlify CDN"이라고 적힌 자리는
+> 이제 App Hosting이 맡습니다 — 라우트 핸들러(`/api/*`)는 그대로 돕니다.
+> 예외: `netlify/functions/feed-push.mts`(매시 예약 함수)는 Netlify 전용이라 **App Hosting에서는 돌지 않습니다.**
+> push가 곧 배포인지, 환경변수를 어디에 두는지는 아직 확인되지 않았습니다 — [README 배포하기](README.md#배포하기-firebase-app-hosting) 참고.
+>
+> **로그인 (2026-09-22):** 구글 · 카카오 · 휴대폰 번호. 구글·휴대폰은 Firebase 기본 기능,
+> 카카오는 서버 `/api/auth/kakao`가 카카오 회원번호로 `kakao:<id>` 계정의 로그인 표(custom token)를 만들어 줍니다.
+> 세 방법은 서로 다른 계정입니다(이어 붙이기 없음).
 
 ---
 
@@ -423,8 +433,9 @@ npm run build        # 타입 검사 + 린트 + 빌드 (배포 전 확인)
 npm run icons        # sharp로 PWA 아이콘 PNG 재생성 (public/icon-*.png)
 ```
 
-**배포: `main`에 push → Netlify 자동 빌드 → 1~2분 뒤 반영.**
-무료 빌드 시간(월 300분)을 아끼려고 **push는 사용자가 "배포하자"고 할 때만** 합니다. 커밋은 작업 단위마다 쌓아둡니다. push는 하되 배포를 건너뛰려면 커밋 메시지에 `[skip netlify]`.
+**배포: Firebase App Hosting (https://aegiaeta.web.app).** push가 곧 배포인지는 확인 필요(맨 위 안내 참고).
+어느 쪽이든 **push는 사용자가 "배포하자"고 할 때만** 합니다. 커밋은 작업 단위마다 쌓아둡니다.
+(옛 기록: Netlify 시절에는 `main`에 push → 자동 빌드였고, `[skip netlify]`로 건너뛸 수 있었습니다.)
 
 **폰에서 안 열릴 때 의심 순서** (`npm run dev:phone`):
 1. 서버가 떠 있나 — `Get-NetTCPConnection -LocalPort 3000 -State Listen`. 이게 제일 흔한 원인

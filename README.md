@@ -6,8 +6,11 @@
 **"홈 화면에 추가"** 를 하면 앱처럼 전체 화면으로 열립니다. (PWA)
 
 - **기술 스택**: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Firebase(Auth/Firestore/Storage)
-- **로그인**: Google 계정 하나만 지원
-- **가입**: Google 로그인만 하면 바로 입장 (아래 [비공개성은 이렇게 지킵니다](#비공개성은-이렇게-지킵니다) 꼭 읽어보세요)
+- **배포 주소**: **https://aegiaeta.web.app** (Firebase App Hosting — 2026-09에 Netlify 크레딧 한도 때문에 옮겼습니다.
+  옛 주소 aegiaeta10.netlify.app은 멈춰 있습니다. 아래 [배포하기](#배포하기-firebase-app-hosting) 참고)
+- **로그인·가입**: 첫 화면에서 "로그인하기" / "회원가입하기" → 구글 · 카톡 · 휴대폰 번호 중 하나 (2026-09-22).
+  세 방법은 서로 **다른 계정**입니다(이어 붙이기 없음). 로그인하면 바로 입장
+  (아래 [비공개성은 이렇게 지킵니다](#비공개성은-이렇게-지킵니다) 꼭 읽어보세요)
 
 ---
 
@@ -27,10 +30,29 @@
 2. **Sign-in method** 탭 → **Google** 선택 → **사용 설정** → 지원 이메일 지정 → 저장
 3. **Settings → 승인된 도메인**에 배포 주소를 추가합니다.
    - `localhost`는 기본으로 들어 있습니다.
-   - 배포 주소인 **`aegiaeta10.netlify.app`** 을 꼭 추가하세요.
-     이게 빠지면 배포본에서 Google 로그인이 실패합니다.
+   - 배포 주소인 **`aegiaeta.web.app`** 이 들어 있어야 합니다.
+     이게 빠지면 배포본에서 Google·휴대폰 로그인이 실패합니다.
 
 > Google OAuth 클라이언트는 Firebase가 자동으로 만들어 주므로 따로 등록할 필요가 없습니다.
+
+### 2-1. 휴대폰 번호 로그인 켜기 (2026-09-22)
+
+1. **Authentication → Sign-in method** → **전화** → **사용 설정** → 저장
+2. 문자 한 통마다 요금이 붙습니다(Blaze 요금제의 휴대폰 인증 요금). 시험할 때는 같은 화면의
+   **테스트용 전화번호**에 번호·인증번호를 적어 두면 문자 없이 됩니다.
+3. 켜지 않으면 "휴대폰 번호 로그인이 아직 켜져 있지 않아요"가 뜹니다.
+
+### 2-2. 카카오 로그인 켜기 (2026-09-22)
+
+Firebase에는 카카오가 없어서 서버(`/api/auth/kakao`)가 카카오 확인 → Firebase 로그인 표를 만들어 줍니다.
+설정 순서는 [.env.local.example](.env.local.example)의 "카카오 로그인" 칸에 있습니다. 요약하면:
+
+1. [developers.kakao.com](https://developers.kakao.com)에서 앱을 만들고 **REST API 키**를 받습니다.
+2. 플랫폼 Web 사이트 도메인 `https://aegiaeta.web.app`, 카카오 로그인 **활성화**,
+   Redirect URI `https://aegiaeta.web.app/auth/kakao` 를 등록합니다.
+3. 동의항목에서 닉네임·프로필 사진을 켭니다(이메일은 비즈 앱 전환이 필요해서 받지 않습니다).
+4. `NEXT_PUBLIC_KAKAO_REST_API_KEY`(와 쓰면 `KAKAO_CLIENT_SECRET`)를 배포 환경변수에 넣고 다시 배포합니다.
+   로그인 표에 서명하는 `FIREBASE_SERVICE_ACCOUNT` 도 있어야 합니다.
 
 ### 3. Firestore 켜기
 
@@ -263,11 +285,23 @@ CPU를 계속 쓰고 있으면 그 상태입니다. 서버 창에
 
 ---
 
-## 배포하기 (Netlify)
+## 배포하기 (Firebase App Hosting)
 
-배포 주소는 **https://aegiaeta10.netlify.app** 입니다.
+배포 주소는 **https://aegiaeta.web.app** 입니다 (Firebase App Hosting, Next.js 서버까지 그쪽에서 돕니다).
 
-### 처음 한 번
+> **2026-09에 Netlify에서 옮겼습니다** — Netlify 무료 크레딧 한도 때문입니다.
+> 옛 주소 aegiaeta10.netlify.app은 503으로 멈춰 있습니다.
+>
+> ⚠️ **아직 문서로 옮기지 못한 것 (확인 필요)**
+> - App Hosting이 GitHub `main`에 연결돼 **push하면 자동 배포되는지**, 아니면 콘솔에서 직접 올리는지.
+>   저장소에는 `apphosting.yaml`이 없습니다.
+> - 환경변수(`NEXT_PUBLIC_…`, `FIREBASE_SERVICE_ACCOUNT`, 카카오 키)를 **어디에 넣었는지**(App Hosting 콘솔 / Secret Manager).
+> - `netlify/functions/feed-push.mts`(매시 새 영상·소식 알림)는 **Netlify 전용 예약 함수라 App Hosting에서는 돌지 않습니다.**
+>   따로 옮기지 않았다면 새 영상·소식 알림은 지금 멈춰 있습니다.
+>
+> 확인되면 이 칸을 고쳐 주세요. 아래 Netlify 절차는 옮기기 전 기록으로 남겨 둡니다.
+
+### (옛 기록) Netlify 처음 한 번
 
 1. [Netlify](https://app.netlify.com/) 로그인 → **Add new site → Import an existing project**
 2. **GitHub** 선택 → 이 저장소 선택
@@ -281,11 +315,11 @@ CPU를 계속 쓰고 있으면 그 상태입니다. 서버 창에
    `aegiaeta10.netlify.app` 을 추가합니다.
    **이걸 빠뜨리면 Google 로그인이 실패합니다.**
 
-### 그다음부터
+### (옛 기록) 그다음부터
 
-`main` 브랜치에 push하면 Netlify가 알아서 다시 배포합니다.
+`main` 브랜치에 push하면 Netlify가 알아서 다시 배포했습니다.
 
-### 배포를 모아서 하기 (빌드 시간 아끼기)
+### (옛 기록) 배포를 모아서 하기 (빌드 시간 아끼기)
 
 Netlify 무료 요금제는 **한 달 빌드 시간 300분**을 줍니다. 이 앱은 한 번 빌드에
 1~2분쯤 쓰므로, 고칠 때마다 push하면 금방 바닥납니다. 그래서 이렇게 씁니다.
@@ -324,7 +358,7 @@ Continuous deployment → Stop builds** 를 누르면 push해도 빌드가 안 �
 
 ## 비공개성은 이렇게 지킵니다
 
-> **지금은 문지기가 없습니다.** Google 계정으로 로그인하면 누구나 들어옵니다.
+> **지금은 문지기가 없습니다.** 구글·카카오·휴대폰 번호 중 하나로 로그인하면 누구나 들어옵니다.
 > 초대 코드 단계는 사용하기 번거로워 뺐습니다.
 
 그래서 **주소를 아는 사람은 들어올 수 있습니다.** 검색엔진에는 잡히지 않지만
