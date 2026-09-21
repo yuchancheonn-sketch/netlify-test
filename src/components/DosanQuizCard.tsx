@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRightIcon, OMarkIcon, XMarkIcon } from "@/components/icons";
+import { ChevronRightIcon, OMarkIcon, QMarkIcon, XMarkIcon } from "@/components/icons";
 import { PrimaryButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { kstDateString, quizForDay, type OxAnswer } from "@/lib/dosan-quiz";
@@ -144,16 +144,24 @@ export default function DosanQuizCard() {
           </div>
         </div>
 
+        {/*
+          ★ 제목("오늘의 OX 퀴즈") 아래 여백은 네 갈래가 모두 pt-2(8px)입니다
+            (16px → 12px → 8px, 2026-09-22 사용자 "줄여줘" → "더 줄여줘").
+            갈래는 ① 불러오는 중 ② 푼 뒤 성적(QuizResultView) ③ 못 불러왔을 때 ④ 문제입니다.
+            한 갈래만 고치면 상태가 바뀌는 순간 카드 속이 그 차이만큼 튑니다 — 특히 ①에서 ④로
+            넘어갈 때(불러오기가 끝나는 순간) 눈에 그대로 보입니다.
+          ★ 카드 맨 위 여백(위 section의 pt-[17px], 카드 테두리와 제목 사이)은 그대로입니다.
+        */}
         {quizStatus.loading && !status ? (
           /* 서버에서 풀었는지·성적을 받아 오는 동안. 문제+두 칸 자리만큼. */
-          <div className="pt-4">
+          <div className="pt-2">
             <Skeleton className="h-[52px] rounded-2xl" />
             <Skeleton className="mt-4 h-10 rounded-2xl" />
           </div>
         ) : today ? (
           <QuizResultView today={today} stats={status?.stats ?? null} />
         ) : quizStatus.error && !status ? (
-          <div className="pt-4 text-center">
+          <div className="pt-2 text-center">
             <p className="text-[14px] text-ink-muted">{quizStatus.error}</p>
             <button
               type="button"
@@ -166,8 +174,15 @@ export default function DosanQuizCard() {
         ) : (
           <>
             {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
-            <p className="flex gap-2 pt-4 text-[17px] leading-relaxed font-medium text-ink">
-              <span className="shrink-0 font-bold text-brand-500">Q.</span>
+            <p className="flex gap-2 pt-2 text-[17px] leading-relaxed font-medium text-ink">
+              {/*
+                Q는 글꼴 글자 대신 굵은 Q 아이콘(QMarkIcon) — 사진처럼 꼬리가 길게 뚫고 나가는 모양(2026-09-22).
+                align-[-0.11em]: 아이콘 속 고리 바닥을 글줄(baseline)에 맞추고, 꼬리만 그 아래로 살짝 내려갑니다.
+              */}
+              <span className="shrink-0 font-bold text-brand-500">
+                <QMarkIcon className="inline-block h-[0.9em] w-[0.9em] align-[-0.11em]" />
+                <span className="sr-only">Q</span>.
+              </span>
               <span className="break-keep">{quiz.question}</span>
             </p>
 
@@ -245,7 +260,8 @@ export default function DosanQuizCard() {
 function QuizResultView({ today, stats }: { today: QuizTodayResult; stats: QuizStats | null }) {
   return (
     <>
-      <p className={`pt-4 text-[15px] font-bold ${today.correct ? "text-brand-500" : "text-danger"}`}>
+      {/* 제목 아래 여백 8px — 위 DosanQuizCard의 다른 세 갈래와 같은 값이어야 합니다(거기 주석 참고). */}
+      <p className={`pt-2 text-[15px] font-bold ${today.correct ? "text-brand-500" : "text-danger"}`}>
         {today.correct ? "오늘 퀴즈 정답이에요!" : `아쉽게 틀렸어요 · 정답은 ${today.answer}`}
       </p>
 

@@ -405,6 +405,23 @@ export function OMarkIcon({ className, strokeWidth = 2.6 }: IconProps) {
   );
 }
 
+/**
+ * OX 퀴즈 문제 앞의 굵은 Q (2026-09-22 사용자 요청 — 사진의 Q처럼).
+ * 두꺼운 타원 고리에, 네모난 꼬리가 고리 안쪽에서 오른쪽 아래 바깥까지 비스듬히 뚫고 나갑니다.
+ * 고리 바닥이 y=21이라 글자 옆에 둘 때는 조금 내려 앉혀야 바닥이 글줄에 맞습니다.
+ */
+export function QMarkIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M11.5 1a9 10 0 1 0 0 20a9 10 0 1 0 0-20ZM11.5 4.7a5 6.3 0 1 0 0 12.6a5 6.3 0 1 0 0-12.6Z"
+      />
+      <path d="M13.69 12.65 22.19 20.15 19.81 22.85 11.31 15.35Z" />
+    </svg>
+  );
+}
+
 /** OX 퀴즈의 X. 전체 화면을 닫는 단추에도 가늘게 해서 씁니다. */
 export function XMarkIcon({ className, strokeWidth = 2.6 }: IconProps) {
   return (
