@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import type { ConfirmationResult } from "firebase/auth";
 import StageGate from "@/components/StageGate";
-import { GoogleIcon, LockIcon } from "@/components/icons";
-import { PrimaryButton } from "@/components/ui";
+import { GoogleIcon, KakaoIcon, LockIcon, PhoneIcon } from "@/components/icons";
+import { inputClassName, PrimaryButton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { formatPhoneInput } from "@/lib/format";
+import { isKakaoConfigured, startKakaoLogin } from "@/lib/kakao-login";
+import {
+  PHONE_RECAPTCHA_ID,
+  phoneErrorMessage,
+  resetVerifier,
+  sendPhoneCode,
+  toE164Korean,
+} from "@/lib/phone-login";
 import {
   APP_DEFINITION_BODY,
   APP_NAME,
@@ -21,11 +31,44 @@ export default function LoginPage() {
   );
 }
 
-function LoginScreen() {
-  const { signIn, authError } = useAuth();
-  const [submitting, setSubmitting] = useState(false);
+/**
+ * 첫 화면의 아래쪽 단추 자리가 지금 무엇을 보여 주는지 (2026-09-22 사용자 요청).
+ *   start  "로그인하기" / "회원가입하기" 두 단추
+ *   signup 가입 방법 셋 — 구글 / 카톡 / 휴대폰 번호 ("…으로 시작하기")
+ *   login  같은 셋을 "…으로 로그인"으로
+ *   phone  휴대폰 번호 → 인증번호
+ *
+ * ★ 로그인과 가입은 속으로는 같은 일입니다. 어느 쪽으로 들어가든 처음 보는 계정이면 가입(join)으로,
+ *   이미 있는 계정이면 홈으로 갑니다(StageGate). 단추 글씨만 다르게 보여 줍니다.
+ * ★ 같은 사람이라도 구글·카톡·휴대폰은 서로 **다른 계정**입니다(이어 붙이기 없음, 2026-09-22 사용자 결정).
+ *   그래서 로그인 목록 아래에 "가입할 때 쓴 방법으로" 안내를 붙입니다.
+ */
+type Step = "start" | "signup" | "login" | "phone";
 
-  async function handleSignIn() {
+/**
+ * 주황(PrimaryButton) 옆에 서는 흰 단추 — "회원가입하기", 구글, 휴대폰.
+ * 테두리 1px + 위아래 15px = PrimaryButton(md, 테두리 없이 16px)과 같은 높이라 줄지어 서도 들쭉날쭉하지 않습니다.
+ */
+const secondaryButtonClassName =
+  "flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-5 py-[15px] text-[16px] font-bold text-ink transition active:scale-[0.99] disabled:opacity-60";
+
+function LoginScreen() {
+  const { signIn, authError, clearAuthError } = useAuth();
+  const [step, setStep] = useState<Step>("start");
+  /** 휴대폰 단계로 들어오기 전 어느 목록에 있었는지 — 뒤로 갈 곳과 글씨("시작하기"/"로그인")를 정합니다. */
+  const [purpose, setPurpose] = useState<"signup" | "login">("signup");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function goTo(next: Step) {
+    if (next === "signup" || next === "login") setPurpose(next);
+    setError(null);
+    clearAuthError();
+    setStep(next);
+  }
+
+  async function handleGoogle() {
+    setError(null);
     setSubmitting(true);
     try {
       await signIn();
@@ -33,6 +76,31 @@ function LoginScreen() {
       setSubmitting(false);
     }
   }
+
+  function handleKakao() {
+    clearAuthError();
+    if (!isKakaoConfigured) {
+      setError("카카오 로그인이 아직 준비되지 않았어요. 운영진에게 알려주세요.");
+      return;
+    }
+    setSubmitting(true);
+    startKakaoLogin(); // 화면이 카카오로 넘어갑니다.
+  }
+
+  /*
+    카카오로 넘어갔다가 브라우저의 "뒤로"로 돌아오면, 페이지가 떠날 때 모습 그대로(bfcache) 되살아나
+    단추가 도는 채로 멈춰 있습니다. 되살아난 순간 풀어 줍니다.
+  */
+  useEffect(() => {
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted) setSubmitting(false);
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  const verb = purpose === "signup" ? "시작하기" : "로그인";
+  const shownError = error ?? authError;
 
   return (
     // 배경 사진을 본문과 같은 폭 안에 가두어, 넓은 화면에서 얼굴만 크게
@@ -115,14 +183,70 @@ function LoginScreen() {
         </p>
 
         <div className="mt-5">
-          <PrimaryButton onClick={handleSignIn} loading={submitting}>
-            {submitting ? null : <GoogleIcon className="h-5 w-5" />}
-            Google 계정으로 시작하기
-          </PrimaryButton>
+          {step === "start" ? (
+            <div className="flex flex-col gap-3">
+              <PrimaryButton onClick={() => goTo("login")}>로그인하기</PrimaryButton>
+              <button
+                type="button"
+                onClick={() => goTo("signup")}
+                className={secondaryButtonClassName}
+              >
+                회원가입하기
+              </button>
+            </div>
+          ) : step === "phone" ? (
+            <PhoneSignIn verb={verb} onBack={() => goTo(purpose)} />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {/* 구글 — 흰 단추에 구글 네 색 로고 */}
+              <button
+                type="button"
+                onClick={handleGoogle}
+                disabled={submitting}
+                className={secondaryButtonClassName}
+              >
+                {submitting ? <Spinner className="h-5 w-5" /> : <GoogleIcon className="h-5 w-5" />}
+                구글 계정으로 {verb}
+              </button>
+              {/* 카카오 — 카카오 안내대로 노란 바탕(#FEE500)에 검정 말풍선·글씨. 다크 모드에서도 그대로. */}
+              <button
+                type="button"
+                onClick={handleKakao}
+                disabled={submitting}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-5 py-4 text-[16px] font-bold text-black/85 transition active:scale-[0.99] disabled:opacity-60"
+              >
+                <KakaoIcon className="h-5 w-5" />
+                카톡으로 {verb}
+              </button>
+              <button
+                type="button"
+                onClick={() => goTo("phone")}
+                disabled={submitting}
+                className={secondaryButtonClassName}
+              >
+                <PhoneIcon className="h-5 w-5" />
+                휴대폰 번호로 {verb}
+              </button>
 
-          {authError ? (
+              <button
+                type="button"
+                onClick={() => goTo("start")}
+                className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
+              >
+                처음으로
+              </button>
+            </div>
+          )}
+
+          {shownError ? (
             <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
-              {authError}
+              {shownError}
+            </p>
+          ) : null}
+
+          {step === "login" ? (
+            <p className="mt-3 text-center text-[12px] text-ink-muted">
+              가입할 때 쓴 방법으로 로그인해 주세요. 다른 방법으로 들어오면 새 계정이 만들어져요.
             </p>
           ) : null}
 
@@ -132,6 +256,127 @@ function LoginScreen() {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 휴대폰 번호로 시작하기 / 로그인 (2026-09-22).
+ * 번호를 넣고 "인증번호 받기" → 문자로 온 6자리를 넣고 "확인". 로그인되면 StageGate가 다음 화면으로 보냅니다.
+ */
+function PhoneSignIn({ verb, onBack }: { verb: string; onBack: () => void }) {
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 이 화면을 떠나면 로봇 확인을 버립니다(이유는 lib/phone-login.ts의 resetVerifier).
+  useEffect(() => () => resetVerifier(), []);
+
+  async function handleSend(event: React.FormEvent) {
+    event.preventDefault();
+    const e164 = toE164Korean(phone);
+    if (!e164) {
+      setError("010으로 시작하는 휴대폰 번호를 넣어 주세요.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      setConfirmation(await sendPhoneCode(e164));
+    } catch (caught) {
+      setError(phoneErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleConfirm(event: React.FormEvent) {
+    event.preventDefault();
+    if (!confirmation) return;
+    if (!/^\d{6}$/.test(code)) {
+      setError("문자로 받은 6자리 숫자를 넣어 주세요.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await confirmation.confirm(code);
+      // 성공하면 로그인 상태가 바뀌면서 StageGate가 다음 화면으로 보냅니다. busy는 그대로 둡니다.
+    } catch (caught) {
+      setError(phoneErrorMessage(caught));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      {confirmation ? (
+        <form onSubmit={handleConfirm} className="flex flex-col gap-3">
+          <p className="text-center text-[14px] font-medium text-ink-soft">
+            {phone}로 보낸 인증번호 6자리를 넣어 주세요.
+          </p>
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="인증번호 6자리"
+            aria-label="인증번호"
+            autoFocus
+            className={`${inputClassName} text-center tracking-[0.3em]`}
+          />
+          <PrimaryButton type="submit" loading={busy}>
+            확인
+          </PrimaryButton>
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmation(null);
+              setCode("");
+              setError(null);
+              resetVerifier();
+            }}
+            className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
+          >
+            번호 다시 넣기
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSend} className="flex flex-col gap-3">
+          <input
+            value={phone}
+            onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="010-1234-5678"
+            aria-label="휴대폰 번호"
+            autoFocus
+            className={`${inputClassName} text-center`}
+          />
+          <PrimaryButton type="submit" loading={busy}>
+            {busy ? null : <PhoneIcon className="h-5 w-5" />}
+            인증번호 받기
+          </PrimaryButton>
+          <button
+            type="button"
+            onClick={onBack}
+            className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
+          >
+            다른 방법으로 {verb}
+          </button>
+        </form>
+      )}
+
+      {error ? (
+        <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
+
+      {/* 보이지 않는 로봇 확인(reCAPTCHA)이 붙는 자리. 의심스러울 때만 여기서 창이 뜹니다. */}
+      <div id={PHONE_RECAPTCHA_ID} />
     </div>
   );
 }

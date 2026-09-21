@@ -6,11 +6,13 @@ import StageGate, { SplashScreen } from "@/components/StageGate";
 import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
+import { fromE164Korean } from "@/lib/phone-login";
 
 /**
  * 처음 로그인한 사람의 계정 문서를 만드는 화면.
  *
- * 지금은 Google 로그인만 하면 바로 들어올 수 있어서, 사용자가 할 일이 없습니다.
+ * 구글·카카오·휴대폰 중 어느 것으로든 로그인하면 바로 들어올 수 있어서, 사용자가 할 일이 없습니다.
+ * (카카오·휴대폰 계정은 이메일이 비어 있습니다. 이름은 다음 프로필 설정에서 한글로 받습니다.)
  * 그래서 화면을 보여주지 않고 문서를 만든 뒤 곧바로 프로필 설정으로 넘어갑니다.
  * (실패했을 때 다시 시도할 자리가 필요해서 화면 자체는 남겨두었습니다.)
  *
@@ -50,7 +52,8 @@ function SignUpScreen() {
           memberType: "general",
           company: "",
           position: "",
-          phone: "",
+          // 휴대폰 번호로 가입했으면 인증한 번호를 미리 채워 둡니다(구글·카카오는 빈칸).
+          phone: fromE164Korean(user.phoneNumber),
           councilRole: "",
           introduction: "",
           introVideoUrl: "",

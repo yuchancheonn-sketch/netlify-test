@@ -551,3 +551,30 @@ export function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** 카카오 로그인 단추의 말풍선. 카카오 안내대로 노란 단추 위에 검정 말풍선입니다(색은 currentColor). */
+export function KakaoIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+      <path d="M12 3.5c-5.25 0-9.5 3.3-9.5 7.38 0 2.62 1.76 4.93 4.4 6.24l-.9 3.3c-.08.3.26.54.52.37l3.93-2.6c.5.07 1.02.1 1.55.1 5.25 0 9.5-3.3 9.5-7.4S17.25 3.5 12 3.5Z" />
+    </svg>
+  );
+}
+
+/** 휴대폰 — "휴대폰 번호로 시작하기" 단추. */
+export function PhoneIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <rect
+        x="6.5"
+        y="2.8"
+        width="11"
+        height="18.4"
+        rx="2.6"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+      />
+      <path d="M10.6 17.8h2.8" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  );
+}
