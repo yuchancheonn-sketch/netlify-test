@@ -133,8 +133,11 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
         isNew ? "bg-brand-50" : "bg-surface"
       }`}
     >
-      {/* 날짜 칸·D-day 카드와 같은 결로, 주황을 꽉 채우고 그림은 흰색 */}
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white">
+      {/*
+        연한 회색 칸(bg-fill)에 진한 회색 그림(ink-soft) — 2026-09-22 사용자 요청.
+        예전엔 날짜 칸·D-day 카드처럼 주황을 꽉 채우고 그림은 흰색이었습니다.
+      */}
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fill text-ink-soft">
         <NoticeGlyph type={notice.type} />
       </span>
 
