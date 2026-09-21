@@ -29,7 +29,6 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import {
-  fileThumbnailUrl,
   isCloudinaryConfigured,
   saveUrl,
   thumbnailUrl,
@@ -196,12 +195,12 @@ function FileList() {
   }
 
   if (loading) {
-    /* 아래 진짜 목록과 같은 짜임 — 2열, 세로로 선 3:4 종이. */
+    /* 아래 진짜 목록과 같은 짜임 — 1열, 한 줄짜리 박스. */
     return (
-      <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
+      <ul className="flex flex-col gap-3">
         {[0, 1, 2, 3].map((key) => (
           <li key={key}>
-            <Skeleton className="aspect-[3/4] rounded-lg" />
+            <Skeleton className="h-[72px] rounded-3xl" />
           </li>
         ))}
       </ul>
@@ -230,13 +229,11 @@ function FileList() {
         </div>
       ) : (
         /*
-          2열 격자. 아이폰 파일 앱을 본떠 3열로 두었다가 같은 날 2열로
-          바꿨습니다 — 3열은 한 칸이 110px밖에 안 되어 문서 첫 장이 너무 작게
-          들어갑니다. 2열이면 165px쯤입니다. 행사 사진 앨범과도 열 수가 맞습니다.
-          가로 12px·세로 20px로 다르게 둡니다 — 칸 아래에 글씨가 석 줄까지
-          붙으므로, 세로를 가로만큼만 두면 윗칸 글씨와 아랫칸 그림이 붙어 보입니다.
+          1열 목록 — 파일마다 흰 박스 한 줄 (2026-09-22 사용자 요청).
+          예전엔 아이폰 파일 앱처럼 첫 장 썸네일을 2열 격자로 늘어놓았습니다.
+          박스 사이 12px, 알림 목록과 같은 결입니다.
         */
-        <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
+        <ul className="flex flex-col gap-3">
           {files.map((file) => (
             <FileCard
               key={file.id}
@@ -295,21 +292,18 @@ function FileList() {
 }
 
 /**
- * 파일 한 칸 — 미리보기 그림, 이름, 올린 사람·크기.
+ * 파일 한 줄 — 확장자 칸, 이름, 올린 사람·크기·날짜.
  *
- * **칸을 누르면 열어서 봅니다.** 내려받기는 오른쪽 위 ⋯ 단추 안에 있고,
+ * **박스를 누르면 열어서 봅니다.** 내려받기는 오른쪽 ⋯ 단추 안에 있고,
  * 올린 본인과 운영진에게는 거기에 이름 바꾸기·지우기가 함께 붙습니다.
- * 행사 사진 앨범 칸과 같은 짜임새라 두 서브탭이 한 몸으로 읽힙니다.
  */
 function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const thumbnail = fileThumbnailUrl(file.url);
   /*
     올린 날짜. 방금 올린 파일은 서버가 시각을 적기 전이라 uploadedAt이 잠깐
-    비어 있습니다(serverTimestamp). 그때는 날짜 줄을 아예 그리지 않습니다 —
-    "-" 같은 빈 표를 두면 한 칸만 높이가 달라져 격자가 어긋납니다.
+    비어 있습니다(serverTimestamp). 그때는 날짜를 빼고 적습니다.
   */
   const uploadedOn = file.uploadedAt ? dotDate(file.uploadedAt.toDate()) : "";
 
@@ -345,64 +339,35 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
 
   return (
     <li className="relative">
+      {/*
+        한 줄 박스 (2026-09-22 사용자 요청 — 썸네일 격자 대신 1열 목록).
+        왼쪽 확장자 칸 / 가운데 이름·정보 / 오른쪽 ⋯ 자리(pr-12, 단추는 아래에서 위에 얹습니다).
+      */}
       <a
         href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="block transition active:scale-[0.97]"
+        className="flex items-center gap-3 rounded-3xl bg-surface p-3.5 pr-12 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
       >
-        {/*
-          미리보기 — 세로로 선 종이 한 장 (2026-09-14, 아이폰 파일 앱을 본떴습니다).
-
-          예전에는 가로 4:3 그림 + 글씨를 한 카드 안에 담았는데, 문서는 대부분
-          세로라 가로 칸에 담으면 위아래가 비고 글씨가 작아져 무슨 문서인지
-          알아보기 어려웠습니다. 3:4로 세우니 첫 장이 제 비례로 들어옵니다.
-
-          카드(흰 상자)를 씌우지 않고 그림만 둡니다. 아래 글씨는 카드 밖에
-          놓여, 종이 석 장이 늘어선 것처럼 보입니다.
-        */}
-        <div className="flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-lg bg-surface shadow-[var(--shadow-card)]">
-          {thumbnail ? (
-            /*
-              문서는 c_fit으로 통째로 담아 왔으므로(lib/cloudinary.ts) 여기서도
-              object-contain으로 둡니다. object-cover로 채우면 첫 장의 제목이
-              잘려 나가 무슨 문서인지 알아볼 수 없습니다.
-            */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={thumbnail}
-              alt={`${file.name} 미리보기`}
-              loading="lazy"
-              className="h-full w-full object-contain"
-            />
-          ) : (
-            /*
-              그림을 만들 수 없는 파일(한글·엑셀·워드·압축)은 확장자를 크게 답니다.
-              종류마다 아이콘을 그리지 않아도 무엇인지 한눈에 압니다.
-            */
-            <span className="text-[15px] font-bold tracking-wide text-brand-300 uppercase">
-              {file.format ? file.format.slice(0, 5) : "파일"}
-            </span>
-          )}
-        </div>
+        {/* 확장자 칸 — 알림 목록의 아이콘 칸과 같은 크기·색(연한 회색 바탕, 진한 회색 글씨). */}
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fill text-[11px] font-bold tracking-wide text-ink-soft uppercase">
+          {file.format ? file.format.slice(0, 4) : "파일"}
+        </span>
 
         {/*
-          그림 아래 석 줄 — 이름 / 날짜 / 올린 사람·크기.
-          가운데로 모읍니다. 왼쪽으로 붙이면 두 줄짜리 이름의 둘째 줄이
-          짧게 끝나 칸마다 들쭉날쭉해 보입니다.
-
           이름은 두 줄까지 보이고 넘치면 "…"입니다(line-clamp-2). 파일 이름은
           길고 끝에 의미가 몰려 있는 일이 많아, 한 줄로 자르면 구별이 안 됩니다.
+          아래 한 줄은 올린 사람 · 크기 · 날짜. 방금 올려 날짜가 아직 없으면 날짜만 뺍니다.
         */}
-        <p className="mt-2 line-clamp-2 text-center text-[13px] leading-snug font-bold text-ink">
-          {file.name}
-        </p>
-        {uploadedOn ? (
-          <p className="mt-0.5 text-center text-[12px] text-ink-faint">{uploadedOn}</p>
-        ) : null}
-        <p className="truncate text-center text-[12px] text-ink-faint">
-          {file.uploadedByName} · {formatBytes(file.bytes)}
-        </p>
+        <span className="min-w-0 flex-1">
+          <span className="line-clamp-2 text-[15px] leading-snug font-bold break-all text-ink">
+            {file.name}
+          </span>
+          <span className="mt-0.5 block truncate text-[12px] text-ink-faint">
+            {file.uploadedByName} · {formatBytes(file.bytes)}
+            {uploadedOn ? ` · ${uploadedOn}` : ""}
+          </span>
+        </span>
       </a>
 
       {/*
@@ -415,7 +380,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         type="button"
         onClick={() => setMenuOpen((open) => !open)}
         aria-label={`${file.name} 더보기`}
-        className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/45 text-[15px]! leading-none font-bold text-white backdrop-blur-sm transition active:scale-95"
+        className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[17px]! leading-none font-bold text-ink-muted transition active:bg-fill"
       >
         ⋯
       </button>
@@ -432,7 +397,8 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
             채팅 말풍선의 수정·삭제 박스와 같은 모양입니다.
             앱 안에서 "이 하나에 대해 뭘 할지" 고르는 자리는 늘 이 생김새입니다.
           */}
-          <div className="absolute top-9 right-1.5 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
+          {/* 박스 세로 가운데의 ⋯ 바로 아래(50% + 단추 반 높이 18px + 4px)에 펼칩니다. */}
+          <div className="absolute top-[calc(50%+22px)] right-2 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
             {/*
               받기 — 안드로이드·컴퓨터는 fl_attachment 주소로 곧바로 파일 저장, 아이폰은 원본 주소를 열어
               공유 단추로 "파일에 저장"(첨부 주소는 아이폰에서 흰 화면). 주소는 누르는 순간 handleSave가 고릅니다.
