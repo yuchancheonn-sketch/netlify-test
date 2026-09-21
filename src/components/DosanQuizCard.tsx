@@ -177,10 +177,12 @@ export default function DosanQuizCard() {
             <p className="flex gap-2 pt-2 text-[17px] leading-relaxed font-medium text-ink">
               {/*
                 Q는 글꼴 글자 대신 굵은 Q 아이콘(QMarkIcon) — 사진처럼 꼬리가 길게 뚫고 나가는 모양(2026-09-22).
-                align-[-0.11em]: 아이콘 속 고리 바닥을 글줄(baseline)에 맞추고, 꼬리만 그 아래로 살짝 내려갑니다.
+                크기: 0.9em(≈15px)에서 2px 키웠습니다(2026-09-22 사용자 요청).
+                align-[-2.2px]: 아이콘 속 고리 바닥(아이콘 높이의 1/8 위)을 글줄(baseline)에 맞추고,
+                꼬리만 그 아래로 살짝 내려갑니다. 크기를 바꾸면 이 값도 높이÷8로 같이 바꿔 주세요.
               */}
               <span className="shrink-0 font-bold text-brand-500">
-                <QMarkIcon className="inline-block h-[0.9em] w-[0.9em] align-[-0.11em]" />
+                <QMarkIcon className="inline-block h-[calc(0.9em+2px)] w-[calc(0.9em+2px)] align-[-2.2px]" />
                 <span className="sr-only">Q</span>.
               </span>
               <span className="break-keep">{quiz.question}</span>
