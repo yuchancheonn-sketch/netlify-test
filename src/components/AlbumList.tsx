@@ -18,7 +18,7 @@ import { inCohort } from "@/lib/cohort";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { thumbnailUrl } from "@/lib/cloudinary";
+import { viewerUrl } from "@/lib/cloudinary";
 import { dotDate, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
@@ -397,14 +397,31 @@ function AlbumCard({
       </div>
 
       <div className="relative min-h-0 flex-1 bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)]">
+        {/*
+          ★ 사진은 자르지 않고 원본 비율 그대로 (2026-09-22 사용자 요청).
+            예전엔 thumbnailUrl(c_fill — Cloudinary가 정사각형으로 잘라 줌) + object-cover(칸에 맞춰 또 자름)라
+            사진 가장자리가 잘렸습니다. 이제 viewerUrl(c_limit — 비율 그대로 줄이기만) + object-contain.
+            남는 위아래·양옆은 같은 사진을 흐리게 크게 깔아 채웁니다 — 빈 회색 띠보다 사진과 어울립니다.
+            두 장이 같은 주소라 한 번만 받습니다.
+        */}
         {album.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumbnailUrl(album.coverImageUrl, 1080)}
-            alt={`${album.title} 대표 사진`}
-            draggable={false}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewerUrl(album.coverImageUrl, 1200)}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewerUrl(album.coverImageUrl, 1200)}
+              alt={`${album.title} 대표 사진`}
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+          </>
         ) : (
           <span
             className="absolute inset-0 flex items-center justify-center text-[48px]"
