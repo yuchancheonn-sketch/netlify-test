@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "deploy": "node scripts/deploy.mjs"
   },
   "dependencies": {
     "firebase": "^12.18.0",

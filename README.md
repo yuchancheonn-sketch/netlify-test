@@ -312,17 +312,25 @@ PowerShell에서는 `firebase` 대신 **`firebase.cmd`** 라고 쳐야 합니다
 처음 한 번 `npm i -g firebase-tools` → `firebase.cmd login`.
 
 1. 올릴 것을 모두 **커밋**합니다.
-2. **커밋된 것만** 따로 뽑아 거기서 올립니다. 작업 폴더를 그대로 올리면 커밋 안 한 수정까지 올라갑니다.
+2. **`npm run deploy`** — 이것 하나로 끝납니다([scripts/deploy.mjs](scripts/deploy.mjs)).
+   GitHub push → 커밋된 것만 임시 폴더로 뽑기 → 보안 규칙 게시 → App Hosting 배포(5~10분)
+   → Hosting 다시 올려 web.app 캐시 비우기 → 두 주소가 같은 판인지 확인.
+   커밋 안 된 수정이 있으면 시작하지 않고 멈춥니다.
+
+손으로 할 때의 순서도 같습니다(작업 폴더를 그대로 올리면 커밋 안 한 수정까지 올라가니 꼭 뽑아서).
 
 ```bash
 rm -rf ../deploy && mkdir ../deploy && git archive HEAD | tar -x -C ../deploy
 cd ../deploy
+firebase.cmd deploy --only firestore:rules --project aegiaeta10
 firebase.cmd deploy --only apphosting --project aegiaeta10   # 빌드 5~10분
 firebase.cmd deploy --only hosting --project aegiaeta10      # web.app 캐시 비우기(몇 초)
 ```
 
-3. 확인: `curl -sI https://aegiaeta.web.app/login` 의 `Etag`가
-   `https://agikaeta--aegiaeta10.asia-east1.hosted.app/login` 과 같으면 새 화면입니다.
+확인: `curl -sI https://aegiaeta.web.app/login` 의 `Etag`가
+`https://agikaeta--aegiaeta10.asia-east1.hosted.app/login` 과 같으면 새 화면입니다.
+
+> **보안 규칙도 이제 이 순서로 게시됩니다.** 콘솔에 붙여넣지 않아도 됩니다 — 저장소의 `firestore.rules`가 곧 게시본입니다.
 
 아래 Netlify 절차는 옮기기 전 기록으로 남겨 둡니다.
 
