@@ -573,13 +573,11 @@ function MemberRow({
      *   오른쪽 연필 단추의 -mr-2는 그대로라, 박스 안에서 끝 여백 12px 중 8px을 당겨 씁니다.
      */
     /*
-     * 그림자는 --shadow-card가 아니라 --shadow-card-soft입니다
-     * (2026-09-22 사용자 "원우 박스의 글로우 아주아주 조금만 더 약하게").
-     * 헤어라인은 그대로이고 글로우 두 층만 6%→5%, 10%→8%로 낮춥니다.
-     * 한 화면에 줄이 87개까지 서서 같은 그림자가 겹쳐 쌓이기 때문입니다 — 자세한 것은 globals.css.
-     * 다른 화면의 흰 카드는 --shadow-card 그대로이니, 두 값을 헷갈려 바꾸지 마세요.
+     * 그림자는 --shadow-card-flat — 글로우 없이 1px 헤어라인만 (2026-09-23 사용자 "원우 개인별 흰색 박스들의
+     * 글로우 효과도 없애줘"). 홈 카드들과 같은 값입니다.
+     * 지나온 값: --shadow-card → --shadow-card-soft(2026-09-22 "글로우 아주아주 조금만 더 약하게") → 지금.
      */
-    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card-soft)]">
+    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card-flat)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
