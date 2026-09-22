@@ -22,14 +22,14 @@
 1. [Git](https://git-scm.com/)·[Node.js](https://nodejs.org/)(22 이상)·Claude Code를 설치합니다.
 2. 받아 옵니다.
    ```bash
-   git clone https://github.com/yuchancheonn-sketch/netlify-test.git test   # 내 컴퓨터에서는 폴더 이름을 test로
-   cd test
+   git clone https://github.com/yuchancheonn-sketch/netlify-test.git
+   cd netlify-test
    npm install
    npm i -g firebase-tools
    firebase.cmd login          # 브라우저에서 승인 (맥이면 firebase login)
    npm run setup:env           # .env.local을 apphosting.yaml + Secret Manager에서 다시 만듦
    ```
-3. VS Code에서 **`test` 폴더를 열고** Claude Code를 시작합니다(저장소 이름은 netlify-test 그대로, 폴더 이름만 test — 2026-09-22). Claude는 대화 첫머리에
+3. VS Code에서 **`netlify-test` 폴더를 열고** Claude Code를 시작합니다. Claude는 대화 첫머리에
    `npm run sync`로 GitHub과 맞추고, 작업 단위마다 커밋합니다(CLAUDE.md).
 
 ★ **컴퓨터를 옮기기 전에는 꼭 Claude에게 "푸시해줘"** 라고 하세요. push는 말할 때만 하므로,
