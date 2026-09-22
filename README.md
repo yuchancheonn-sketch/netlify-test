@@ -78,6 +78,18 @@ Firebase에는 카카오가 없어서 서버(`/api/auth/kakao`)가 카카오 확
 4. `NEXT_PUBLIC_KAKAO_REST_API_KEY`(와 쓰면 `KAKAO_CLIENT_SECRET`)를 배포 환경변수에 넣고 다시 배포합니다.
    로그인 표에 서명하는 `FIREBASE_SERVICE_ACCOUNT` 도 있어야 합니다.
 
+### 2-3. 카카오톡 채널 챗봇 연결 (2026-09-22)
+
+채널 챗봇이 "일정 · 퀴즈 · 영상 · 앱"에 앱의 정보로 답합니다(`/api/kakao/skill`, 무료 — 원우가 먼저 말을 걸 때만 답함).
+공개 채널이라 **공개해도 되는 것만** 답합니다(일정은 제목·날짜·시간만, 퀴즈는 문제만).
+
+1. [카카오 i 오픈빌더](https://chatbot.kakao.com) → 봇 → **스킬 → 생성**
+   - URL: `https://aegiaeta.web.app/api/kakao/skill`
+   - **헤더** 추가: 키 `x-skill-token`, 값은 Secret Manager의 `KAKAO_SKILL_TOKEN`
+     (`firebase.cmd apphosting:secrets:access KAKAO_SKILL_TOKEN --project aegiaeta10`)
+2. **폴백 블록**(과 원하면 "일정"·"퀴즈" 블록)의 응답을 **스킬 데이터 사용**으로 바꾸고 위 스킬을 고른 뒤 **배포**.
+3. 머리글이 틀리면 401로 답하지 않습니다. 말은 앱이 알아서 가립니다(일정/모임, 퀴즈/문제, 영상/복습, 앱/설치).
+
 ### 3. Firestore 켜기
 
 1. **빌드 → Firestore Database → 데이터베이스 만들기**

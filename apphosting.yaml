@@ -49,3 +49,7 @@ env:
   - variable: KAKAO_CLIENT_SECRET
     secret: KAKAO_CLIENT_SECRET
     availability: [ RUNTIME ]
+  # 카카오 챗봇 스킬(/api/kakao/skill)의 비밀 머리글 값. 오픈빌더 스킬 설정의 헤더 x-skill-token과 같아야 합니다.
+  - variable: KAKAO_SKILL_TOKEN
+    secret: KAKAO_SKILL_TOKEN
+    availability: [ RUNTIME ]
