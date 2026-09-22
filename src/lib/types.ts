@@ -144,6 +144,8 @@ export interface PhotoAlbumDoc {
   /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
   createdBy: string;
+  /** 올린 원우 이름 (2026-09-22부터 적음 — 원우 소식 카드에 보입니다). 그 전 앨범에는 없습니다. */
+  createdByName?: string;
   createdAt: Timestamp | null;
 }
 

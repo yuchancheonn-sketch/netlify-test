@@ -20,8 +20,9 @@ import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { thumbnailUrl } from "@/lib/cloudinary";
 import { dotDate, todayString } from "@/lib/format";
-import { useAlbums } from "@/lib/hooks";
-import type { PhotoAlbumDoc } from "@/lib/types";
+import { useAlbums, useCohortMembers } from "@/lib/hooks";
+import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 /** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
 const ALBUM_BODY_MAX_LENGTH = 1000;
@@ -41,6 +42,12 @@ export default function AlbumList() {
   const { cohort } = useViewCohort();
   const albums = allAlbums.filter((album) => inCohort(album, cohort));
   const [creating, setCreating] = useState(false);
+  /*
+   * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).
+   * 원우수첩과 같은 훅이라 한 번 받아 둔 것을 함께 씁니다. 명단에 없으면(탈퇴 등) 앨범에 적힌 이름을 씁니다.
+   */
+  const members = useCohortMembers(cohort);
+  const authors = new Map(members.data.map((member) => [member.uid, member]));
 
   if (loading) {
     return (
@@ -63,7 +70,7 @@ export default function AlbumList() {
           />
         </div>
       ) : (
-        <AlbumBook albums={albums} />
+        <AlbumBook albums={albums} authors={authors} />
       )}
 
       {/*
@@ -166,7 +173,14 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
  *
  * touch-action: pan-y — 세로 손짓은 브라우저에 맡기고 가로 손짓만 우리가 받습니다.
  */
-function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
+function AlbumBook({
+  albums,
+  authors,
+}: {
+  albums: PhotoAlbumDoc[];
+  /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
+  authors: Map<string, UserDoc>;
+}) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
@@ -291,7 +305,7 @@ function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
       >
         {under ? (
           <div className="absolute inset-0">
-            <AlbumCard album={under} position={albums.indexOf(under) + 1} total={albums.length} />
+            <AlbumCard album={under} author={authors.get(under.createdBy)} position={albums.indexOf(under) + 1} total={albums.length} />
             {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
             {page ? (
               <div
@@ -308,7 +322,7 @@ function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
             className="absolute inset-0 origin-left [backface-visibility:hidden]"
             style={{ transform: `rotateY(${angle}deg)`, transition }}
           >
-            <AlbumCard album={page} position={albums.indexOf(page) + 1} total={albums.length} />
+            <AlbumCard album={page} author={authors.get(page.createdBy)} position={albums.indexOf(page) + 1} total={albums.length} />
             {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
             <div
               aria-hidden="true"
@@ -335,26 +349,46 @@ function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
  */
 function AlbumCard({
   album,
+  author,
   position,
   total,
 }: {
   album: PhotoAlbumDoc;
+  /** 올린 원우(명단에서 찾은 것). 없으면 앨범에 적힌 이름만 씁니다. */
+  author: UserDoc | undefined;
   position: number;
   total: number;
 }) {
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
   const body = album.body?.trim();
+  const authorName = author?.name || album.createdByName || "원우";
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]">
       <div className="shrink-0 px-5 pt-5 pb-4">
-        <h2 className="text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+        {/*
+          올린 원우 — 게시물 머리처럼 사진 + 이름, 그 아래 날짜·사진 수 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
+          이름은 원우수첩의 지금 이름을 먼저 씁니다(이름을 고치면 따라옵니다). 명단에 없으면 올릴 때 적어 둔 이름.
+        */}
+        <div className="flex items-center gap-2.5">
+          <Avatar
+            src={author?.photoURL ?? null}
+            name={authorName}
+            seed={album.createdBy}
+            size={36}
+          />
+          <div className="min-w-0">
+            <p className="truncate text-[14px] font-bold text-ink">{authorName}</p>
+            <p className="text-[12px] text-ink-faint">
+              {date}
+              {date ? " · " : ""}사진 {album.photoCount}장
+            </p>
+          </div>
+        </div>
+
+        <h2 className="mt-3.5 text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
           {album.title}
         </h2>
-        <p className="mt-1 text-[13px] text-ink-faint">
-          {date}
-          {date ? " · " : ""}사진 {album.photoCount}장
-        </p>
         {body ? (
           <p className="mt-3 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
             {body}
@@ -393,7 +427,7 @@ function AlbumCard({
  * (2026-09-22 "소식 올리기"로 이름을 바꾸며 본문 칸을 더하고, "행사 이름/행사 날짜"를 "제목/날짜"로 줄였습니다.)
  */
 function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   /** 새 앨범이 올라갈 기수 — 운영진이 제목 옆에서 고른 기수입니다. */
   const { cohort } = useViewCohort();
@@ -429,6 +463,8 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           photoCount: 0,
           cohort,
           createdBy: user.uid,
+          // 카드에 "누가 올렸는지"를 적으려고 이름도 함께 남깁니다(2026-09-22). 카드는 원우수첩의 지금 이름을 먼저 씁니다.
+          createdByName: profile?.name || "원우",
           createdAt: serverTimestamp(),
         }),
       );
