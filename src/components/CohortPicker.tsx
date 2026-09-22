@@ -156,8 +156,8 @@ export default function CohortPicker({
                 유리판 — 하단 탭바와 같은 재료입니다.
                 · bg-surface/70 + backdrop-blur-2xl + backdrop-saturate-200:
                   뒤 화면이 흐리게, 색은 조금 더 진하게 비칩니다.
-                · 그림자 넷: 바깥 두 겹은 떠 있는 높이, 안쪽 두 겹은 유리
-                  가장자리의 빛(위쪽 1px)과 둘레의 아주 옅은 테두리입니다.
+                · 그림자 대신 회색 1px 테두리만 둡니다 (2026-09-23 사용자 "모든 글로우 없애고 회색 테두리로").
+                  예전엔 바깥 그림자 두 겹 + 유리 가장자리 빛 두 겹이었습니다.
                 · 모서리 20px, 줄의 모서리 14px = 20 - 안쪽 여백 6px.
                   둘을 이렇게 맞춰야 누른 줄의 둥근 칠이 판의 둥근 모서리와
                   나란히 돕니다.
@@ -165,7 +165,7 @@ export default function CohortPicker({
               <ul
                 ref={listRef}
                 aria-label="기수"
-                className="fixed z-50 max-h-[min(62dvh,470px)] origin-top-left overflow-y-auto overscroll-contain rounded-[20px] bg-surface/70 p-1.5 shadow-[0_16px_48px_rgba(17,20,24,0.2),0_2px_8px_rgba(17,20,24,0.08),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_0_0_0.5px_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
+                className="fixed z-50 max-h-[min(62dvh,470px)] origin-top-left overflow-y-auto overscroll-contain rounded-[20px] bg-surface/70 p-1.5 shadow-[var(--shadow-card-flat)] backdrop-blur-2xl backdrop-saturate-200"
                 style={{ top: anchor.top, left: anchor.left, width: LIST_WIDTH }}
               >
                 {options.map((option) => {

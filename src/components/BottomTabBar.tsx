@@ -394,8 +394,9 @@ export default function BottomTabBar() {
           좌우가 더 넓은 것은 알약이 칸보다 3px씩 밖으로 나오기 때문입니다 —
           그만큼 미리 들여두어야 알약이 사방 4px 자리에 멈춥니다.
           두 상수를 고치면 이 값도 같이 고쳐야 합니다.
+          그림자(글로우) 대신 회색 1px 테두리만 둡니다 (2026-09-23 사용자 "모든 글로우 없애고 회색 테두리로").
         */
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[0_2px_8px_rgba(28,25,23,0.06),0_12px_40px_rgba(28,25,23,0.10)] ring-1 ring-black/[0.04]"
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[var(--shadow-card-flat)]"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
