@@ -306,9 +306,25 @@ function AlbumBook({
    * (requestAnimationFrame 두 번 — 첫 번째는 0을 그리게, 두 번째에 1로).
    */
   function turnBy(mode: Turn["mode"]) {
-    if (turn || (mode === "next" ? !hasNext : !hasPrev)) return;
+    if (turn) return;
     setFlippedId(null);
     setTurn({ mode, progress: 0, settling: false });
+
+    /*
+     * ★ 넘길 장이 없는 쪽(첫 장의 ‹, 마지막 장의 ›, 카드가 한 장뿐일 때 둘 다)도 눌립니다 (2026-09-22 사용자 요청
+     *   "화살표를 누르면 카드를 옆으로 넘기는 것과 같은 기능"). 손으로 밀 때처럼 카드가 그쪽으로 살짝 끌려갔다가
+     *   제자리로 돌아와 "더 없음"을 알립니다. 예전엔 그쪽 화살표가 꺼져 있어(disabled) 눌러도 아무 일이 없었고,
+     *   카드가 한 장뿐이던 사용자에게는 화살표가 고장 난 것처럼 보였습니다.
+     */
+    if (mode === "next" ? !hasNext : !hasPrev) {
+      window.requestAnimationFrame(() =>
+        window.requestAnimationFrame(() => setTurn({ mode, progress: 0.06, settling: true })),
+      );
+      window.setTimeout(() => setTurn({ mode, progress: 0, settling: true }), TURN_MS / 2);
+      window.setTimeout(() => setTurn(null), TURN_MS / 2 + TURN_MS);
+      return;
+    }
+
     window.requestAnimationFrame(() =>
       window.requestAnimationFrame(() => setTurn({ mode, progress: 1, settling: true })),
     );
@@ -448,7 +464,8 @@ function AlbumBook({
         {/*
           양옆 화살표 ‹ › — "옆으로 넘기는 카드"라는 표시 겸 누르면 한 장 넘기는 단추.
           2026-09-22 사용자 요청으로 처음 넣었고(24px), 같은 날 "크게"로 36px·선 굵기 2.4·진한 회색으로 키웠습니다.
-          카드 바깥 40px 자리(ARROW_GUTTER)의 세로 가운데. 더 넘길 장이 없는 쪽은 흐리게 두고 눌리지 않습니다.
+          카드 바깥 40px 자리(ARROW_GUTTER)의 세로 가운데. 누르면 손으로 민 것과 똑같이 넘어가고(turnBy),
+          더 넘길 장이 없는 쪽은 흐리게 보이며 누르면 살짝 끌렸다 돌아옵니다 — 밀 때의 고무줄과 같은 뜻.
           onPointerDown을 멈추는 이유는 카드의 ⋯ 단추와 같습니다(틀이 포인터를 붙잡으면 click이 안 일어남).
         */}
         {(["prev", "next"] as const).map((mode) => {
@@ -460,11 +477,11 @@ function AlbumBook({
               type="button"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => turnBy(mode)}
-              disabled={!enabled}
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
-              className={`absolute top-1/2 z-10 flex h-16 w-10 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 disabled:opacity-20 ${
-                mode === "next" ? "-right-1" : "-left-1"
-              }`}
+              // 더 넘길 장이 없는 쪽은 흐리게만 보이고 눌리기는 합니다(누르면 살짝 끌렸다 돌아옴 — turnBy).
+              className={`absolute top-1/2 z-10 flex h-16 w-10 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
+                enabled ? "" : "opacity-30"
+              } ${mode === "next" ? "-right-1" : "-left-1"}`}
             >
               <Icon className="h-9 w-9" strokeWidth={2.4} />
             </button>
