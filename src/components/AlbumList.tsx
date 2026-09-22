@@ -162,27 +162,38 @@ function BookFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** 이만큼(카드 폭의 비율) 넘기거나 빠르게 튕기면 한 장이 넘어갑니다. */
-const TURN_THRESHOLD = 0.28;
+/** 이만큼(카드 폭의 비율) 밀거나 빠르게 튕기면 한 장이 넘어갑니다. */
+const TURN_THRESHOLD = 0.25;
 /** 손을 뗀 뒤 남은 만큼 넘어가거나 되돌아오는 시간(ms) */
-const TURN_MS = 380;
+const TURN_MS = 340;
+/** 넘어갈 때의 속도 곡선 — 처음 빠르고 끝에서 부드럽게 멈춥니다(ease-out 계열). */
+const TURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+/** 양옆 화살표 자리(px) — 카드는 이만큼 양옆을 비우고 섭니다(inset-x-10). */
+const ARROW_GUTTER = 40;
 
 /**
- * 넘기는 중인 책장.
- *   mode "next" — 지금 카드가 왼쪽 등(책등)을 축으로 넘어가며 밑의 다음 카드가 드러납니다(왼쪽으로 밀기).
- *   mode "prev" — 앞서 넘긴 카드가 왼쪽에서 되돌아와 지금 카드를 덮습니다(오른쪽으로 밀기).
+ * 넘기는 중인 상태.
+ *   mode "next" — 왼쪽으로 밀기: 지금 카드가 왼쪽으로 날아가고 뒤에서 다음 카드가 커지며 올라옵니다.
+ *   mode "prev" — 오른쪽으로 밀기: 지금 카드가 오른쪽으로 날아가고 뒤에서 앞 카드가 올라옵니다.
  *   progress 0~1 — 넘어간 정도. settling이면 손을 뗀 뒤 저절로 끝까지 가는 중(transition이 붙음).
  */
 type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
 
 /**
- * 카드를 책처럼 넘겨 보는 자리 (2026-09-22 사용자 요청).
+ * 카드를 옆으로 넘겨 보는 자리 (2026-09-22 사용자 요청).
  *
- * - 한 번에 카드 한 장. 카드는 틀(BookFrame) 위에 붙고, 높이는 사진 비율을 따릅니다(틀보다 길지는 않음, 2026-09-22).
+ * - 한 번에 카드 한 장, 틀(BookFrame)의 세로 가운데. 높이는 사진 비율을 따릅니다(틀보다 길지는 않음).
  * - 왼쪽으로 밀면 다음(더 예전) 카드, 오른쪽으로 밀면 앞 카드. 목록 순서는 useAlbums 그대로(최근 행사가 먼저).
- * - 넘길 때 카드가 왼쪽 끝(책등)을 축으로 3D로 돌아 넘어가고(rotateY 0 → -90°), 넘어가는 장은 점점 어두워지고
- *   밑의 장은 그늘이 걷힙니다. 90°를 넘으면 뒷면이라 안 보입니다(backface-hidden) — 책장이 넘어간 모습입니다.
- * - 뒤에 남은 장이 있으면 오른쪽·아래로 살짝 비켜 선 종이 두 장을 깔아 "쌓인 카드"로 보이게 합니다.
+ *
+ * ★ 넘기는 모습 (2026-09-22 사용자 요청 "자연스럽게 넘어가는 애니메이션"):
+ *   지금 카드는 손가락을 그대로 따라 옆으로 움직이며 아래쪽을 축으로 살짝 기울고(최대 5°),
+ *   그 뒤에서 넘어올 카드가 90% 크기·옅은 모습에서 제 크기로 커지며 올라옵니다.
+ *   손을 떼면 남은 만큼을 ease-out으로 마저 가거나 제자리로 돌아옵니다. 화살표를 눌러도 같은 모습입니다.
+ *   (처음엔 책장처럼 왼쪽 끝을 축으로 3D로 돌려 넘겼는데 — rotateY 0 → -90° — 90°에서 장이 선처럼 서서 사라져
+ *    뚝 끊겨 보였습니다. 그래서 슬라이드로 바꿨습니다.)
+ *   ★ 카드마다 key를 소식 id로 줘서, 뒤에서 올라온 카드가 "지금 카드"가 될 때 같은 요소가 그대로 이어집니다 —
+ *     바뀌는 순간 깜빡이지 않습니다. 그래서 두 자리(지금·뒤) 모두 같은 짜임(뒤집기 칸 + 앞뒤 면)으로 그립니다.
+ * - 멈춰 있을 때 뒤에 남은 장이 있으면 오른쪽·아래로 살짝 비켜 선 종이 두 장을 깔아 "쌓인 카드"로 보입니다.
  * - 처음·마지막 장에서 더 밀면 조금만 따라오다 되돌아옵니다.
  * - 카드를 톡 누르면 제자리에서 뒤집혀 뒷면(세부 설명, AlbumCardBack)이 보이고, 다시 누르면 앞면(2026-09-22 사용자 요청).
  *   넘기기를 시작하거나 화살표를 누르면 앞면으로 돌아옵니다. (예전엔 누르면 앨범 화면 /albums/… 이 열렸습니다.)
@@ -200,10 +211,10 @@ function AlbumBook({
   const { user, isAdmin } = useAuth();
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
-  /** ⋯ 를 눌러 고르기 시트를 연 소식 / 고치기 창을 연 소식 */
+  /** ⋯ 를 눌러 고르기 시트를 연 소식 / 수정 창을 연 소식 */
   const [managing, setManaging] = useState<PhotoAlbumDoc | null>(null);
   const [editing, setEditing] = useState<PhotoAlbumDoc | null>(null);
-  /** 올린 원우와 운영진만 ⋯ (고치기·지우기)가 보입니다. */
+  /** 올린 원우와 운영진만 ⋯ (수정·지우기)가 보입니다. */
   const canManage = (album: PhotoAlbumDoc) => album.createdBy === user?.uid || isAdmin;
   /** 뒤집어 세부 설명을 보고 있는 소식의 id (2026-09-22 사용자 요청 — 카드를 한 번 누르면 뒤집힘) */
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -211,13 +222,14 @@ function AlbumBook({
     x: number;
     y: number;
     time: number;
+    /** 카드 폭(px) — 민 거리를 넘어간 정도(0~1)로 바꾸는 기준 */
     width: number;
     moved: boolean;
     /** 카드 위에서 눌렀는지 — 카드 바깥 빈자리를 눌러서는 뒤집히지 않게. */
     onCard: boolean;
   } | null>(null);
 
-  // 기수를 바꾸거나 앨범이 지워져 목록이 짧아지면 마지막 장에 섭니다.
+  // 기수를 바꾸거나 소식이 지워져 목록이 짧아지면 마지막 장에 섭니다.
   const current = Math.min(index, albums.length - 1);
   const hasPrev = current > 0;
   const hasNext = current < albums.length - 1;
@@ -228,7 +240,7 @@ function AlbumBook({
       x: event.clientX,
       y: event.clientY,
       time: event.timeStamp,
-      width: event.currentTarget.getBoundingClientRect().width,
+      width: Math.max(1, event.currentTarget.getBoundingClientRect().width - ARROW_GUTTER * 2),
       moved: false,
       onCard: event.target instanceof Element && event.target.closest("[data-album-card]") !== null,
     };
@@ -247,7 +259,7 @@ function AlbumBook({
         return;
       }
       start.moved = true;
-      // 넘기기 시작하면 뒤집어 둔 카드는 앞면으로 돌려놓습니다 — 넘어가는 장은 늘 앞면이라.
+      // 넘기기 시작하면 뒤집어 둔 카드는 앞면으로 돌려놓습니다.
       setFlippedId(null);
     }
     const mode = dx < 0 ? "next" : "prev";
@@ -306,38 +318,39 @@ function AlbumBook({
   }
 
   /*
-   * 무엇을 어느 층에 그릴지.
-   *   밑장(under): 넘어가는 장 아래에서 드러나는 카드.
-   *   넘기는 장(page): 돌아가는 카드. 각도 = -90° × 넘어간 정도(next) / -90° × (1 − 넘어간 정도)(prev).
+   * 그릴 카드 — 멈춰 있으면 지금 카드 하나, 넘기는 중이면 뒤에서 올라올 카드(neighbor) + 지금 카드.
+   * 뒤 카드를 먼저 그려 지금 카드 밑에 깔립니다.
    */
-  let under: PhotoAlbumDoc | null = albums[current];
-  let page: PhotoAlbumDoc | null = null;
-  let angle = 0;
-  let turned = 0; // 0이면 덮여 있음, 1이면 다 넘어감 — 그늘 세기에 씁니다.
-  if (turn) {
-    if (turn.mode === "next") {
-      page = albums[current];
-      under = hasNext ? albums[current + 1] : null;
-      turned = turn.progress;
-    } else {
-      page = hasPrev ? albums[current - 1] : albums[current];
-      under = hasPrev ? albums[current] : null;
-      turned = hasPrev ? 1 - turn.progress : turn.progress * -1;
-    }
-    angle = -90 * Math.max(-1, Math.min(1, turned));
-  }
-  const transition = turn?.settling ? `transform ${TURN_MS}ms ease-out, opacity ${TURN_MS}ms ease-out` : "none";
-  /**
-   * 밑장 뒤에 남은 장 수 — 쌓인 종이를 몇 장 깔지(많아도 두 장).
-   * ★ 카드마다 높이가 달라서(사진 비율대로, 2026-09-22) 종이는 틀이 아니라 밑장 카드에 붙여 그 높이를 따릅니다.
-   */
-  const behind = under ? albums.length - 1 - albums.indexOf(under) : 0;
+  const currentAlbum = albums[current];
+  const neighbor = !turn
+    ? null
+    : turn.mode === "next"
+      ? hasNext
+        ? albums[current + 1]
+        : null
+      : hasPrev
+        ? albums[current - 1]
+        : null;
+  const slots = neighbor
+    ? [
+        { album: neighbor, isCurrent: false },
+        { album: currentAlbum, isCurrent: true },
+      ]
+    : [{ album: currentAlbum, isCurrent: true }];
+  /** 지금 카드가 날아가는 쪽 — 다음이면 왼쪽(-1), 앞이면 오른쪽(+1). */
+  const direction = turn?.mode === "next" ? -1 : 1;
+  const progress = turn?.progress ?? 0;
+  const transition = turn?.settling
+    ? `transform ${TURN_MS}ms ${TURN_EASE}, opacity ${TURN_MS}ms ${TURN_EASE}`
+    : "none";
+  /** 지금 카드 뒤에 남은 장 수 — 쌓인 종이를 몇 장 깔지(많아도 두 장). 넘기는 중엔 뒤 카드가 보이니 깔지 않습니다. */
+  const behind = turn ? 0 : albums.length - 1 - current;
 
   return (
     <BookFrame>
       <div
         className="absolute inset-0 select-none"
-        style={{ perspective: "1800px", touchAction: "pan-y" }}
+        style={{ touchAction: "pan-y" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -347,92 +360,88 @@ function AlbumBook({
         }}
         role="group"
         aria-roledescription="넘겨 보는 카드"
-        aria-label={`${current + 1} / ${albums.length} ${albums[current].title}`}
+        aria-label={`${current + 1} / ${albums.length} ${currentAlbum.title}`}
       >
         {/*
           ★ 카드는 틀의 세로 한가운데에 섭니다(2026-09-22 사용자 요청 "화면 한 가운데") — 바깥 칸이 틀을 채우고
-            flex로 가운데를 맞추며, 안쪽 relative 칸이 카드 크기라 종이·그늘이 카드에 딱 맞습니다.
-            좌우는 inset-x-7(28px)만큼 들여 양옆 화살표 자리를 남깁니다.
+            flex로 가운데를 맞추며, 안쪽 relative 칸이 카드 크기라 종이가 카드에 딱 맞습니다.
+            좌우는 inset-x-10(40px)만큼 들여 양옆 큰 화살표 자리를 남깁니다(ARROW_GUTTER).
         */}
-        {under ? (
-          <div className="pointer-events-none absolute inset-x-7 inset-y-0 flex items-center">
-          <div className="pointer-events-auto relative w-full">
-            {/* 쌓인 종이 — 뒤에 남은 장이 있을 때만. 밑장 카드 뒤에서 오른쪽·아래로 4px씩 비켜 섭니다. */}
-            {behind >= 2 ? (
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-              />
-            ) : null}
-            {behind >= 1 ? (
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-              />
-            ) : null}
-            {/*
-              뒤집히는 카드 (2026-09-22 사용자 요청 — 한 번 누르면 뒤집혀 세부 설명).
-              세로 가운데 축으로 180° 돕니다. 앞면·뒷면 모두 backface-hidden이고 뒷면은 미리 180° 돌려 둬서,
-              돌고 나면 뒷면이 바로 읽힙니다. 뒷면은 앞면과 같은 크기(absolute inset-0)라 카드 크기가 안 바뀝니다.
-              perspective는 transform 안에 적습니다 — 부모의 perspective 속성은 바로 아래 자식에게만 걸려서입니다.
-            */}
+        {slots.map(({ album, isCurrent }) => {
+          const flipped = isCurrent && flippedId === album.id;
+          const motion = isCurrent
+            ? {
+                transform: `translateX(${direction * progress * 112}%) rotate(${direction * progress * 5}deg)`,
+                opacity: 1 - progress * 0.25,
+              }
+            : {
+                transform: `translateX(${-direction * (1 - progress) * 6}%) scale(${0.9 + 0.1 * progress})`,
+                opacity: 0.4 + 0.6 * progress,
+              };
+          return (
             <div
-              data-album-card
-              className="relative [transform-style:preserve-3d]"
-              style={{
-                transform: `perspective(1600px) rotateY(${flippedId === under.id ? 180 : 0}deg)`,
-                transition: "transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1)",
-              }}
+              key={album.id}
+              className="pointer-events-none absolute inset-x-10 inset-y-0 flex items-center"
+              style={{ zIndex: isCurrent ? 2 : 1 }}
             >
-              <div className="[backface-visibility:hidden]">
-                <AlbumCard
-                  album={under}
-                  author={authors.get(under.createdBy)}
-                  // 넘기는 중이 아닐 때 보이는 장(= 밑장)에만 ⋯ 를 답니다.
-                  onMore={!page && canManage(under) ? () => setManaging(under) : undefined}
-                />
-              </div>
               <div
-                className="absolute inset-0 [backface-visibility:hidden]"
-                style={{ transform: "rotateY(180deg)" }}
-                aria-hidden={flippedId !== under.id}
+                className="pointer-events-auto relative w-full origin-bottom"
+                style={{ ...motion, transition }}
               >
-                <AlbumCardBack album={under} author={authors.get(under.createdBy)} />
+                {/* 쌓인 종이 — 멈춰 있고 뒤에 남은 장이 있을 때만. 카드 뒤에서 오른쪽·아래로 4px씩 비켜 섭니다. */}
+                {isCurrent && behind >= 2 ? (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+                  />
+                ) : null}
+                {isCurrent && behind >= 1 ? (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+                  />
+                ) : null}
+                {/*
+                  뒤집히는 카드 (2026-09-22 사용자 요청 — 한 번 누르면 뒤집혀 세부 설명).
+                  세로 가운데 축으로 180° 돕니다. 앞면·뒷면 모두 backface-hidden이고 뒷면은 미리 180° 돌려 둬서,
+                  돌고 나면 뒷면이 바로 읽힙니다. 뒷면은 앞면과 같은 크기(absolute inset-0)라 카드 크기가 안 바뀝니다.
+                  perspective는 transform 안에 적습니다 — 부모의 perspective 속성은 바로 아래 자식에게만 걸려서입니다.
+                */}
+                <div
+                  data-album-card
+                  className="relative [transform-style:preserve-3d]"
+                  style={{
+                    transform: `perspective(1600px) rotateY(${flipped ? 180 : 0}deg)`,
+                    transition: "transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1)",
+                  }}
+                >
+                  <div className="[backface-visibility:hidden]">
+                    <AlbumCard
+                      album={album}
+                      author={authors.get(album.createdBy)}
+                      // 멈춰 있을 때 지금 카드에만 ⋯ 를 답니다.
+                      onMore={
+                        isCurrent && !turn && canManage(album) ? () => setManaging(album) : undefined
+                      }
+                    />
+                  </div>
+                  <div
+                    className="absolute inset-0 [backface-visibility:hidden]"
+                    style={{ transform: "rotateY(180deg)" }}
+                    aria-hidden={!flipped}
+                  >
+                    <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
+                  </div>
+                </div>
               </div>
             </div>
-            {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
-            {page ? (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
-                style={{ opacity: 0.25 * (1 - Math.abs(turned)), transition }}
-              />
-            ) : null}
-          </div>
-          </div>
-        ) : null}
-
-        {page ? (
-          <div className="pointer-events-none absolute inset-x-7 inset-y-0 flex items-center">
-            <div
-              className="relative w-full origin-left [backface-visibility:hidden]"
-              // perspective를 transform 안에 — 틀의 perspective 속성은 한 겹 건너라 이 장에 안 걸렸습니다(2026-09-22 고침).
-              style={{ transform: `perspective(1800px) rotateY(${angle}deg)`, transition }}
-            >
-              <AlbumCard album={page} author={authors.get(page.createdBy)} />
-              {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
-                style={{ opacity: 0.35 * Math.abs(turned), transition }}
-              />
-            </div>
-          </div>
-        ) : null}
+          );
+        })}
 
         {/*
-          양옆 화살표 ‹ › — "옆으로 넘기는 카드"라는 표시 겸 누르면 한 장 넘기는 단추 (2026-09-22 사용자 요청 "<> 이런 모양").
-          카드 바깥 28px 자리(inset-x-7)의 세로 가운데. 더 넘길 장이 없는 쪽은 흐리게 두고 눌리지 않습니다.
+          양옆 화살표 ‹ › — "옆으로 넘기는 카드"라는 표시 겸 누르면 한 장 넘기는 단추.
+          2026-09-22 사용자 요청으로 처음 넣었고(24px), 같은 날 "크게"로 36px·선 굵기 2.4·진한 회색으로 키웠습니다.
+          카드 바깥 40px 자리(ARROW_GUTTER)의 세로 가운데. 더 넘길 장이 없는 쪽은 흐리게 두고 눌리지 않습니다.
           onPointerDown을 멈추는 이유는 카드의 ⋯ 단추와 같습니다(틀이 포인터를 붙잡으면 click이 안 일어남).
         */}
         {(["prev", "next"] as const).map((mode) => {
@@ -446,11 +455,11 @@ function AlbumBook({
               onClick={() => turnBy(mode)}
               disabled={!enabled}
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
-              className={`absolute top-1/2 flex h-12 w-7 -translate-y-1/2 items-center justify-center text-ink-muted transition disabled:opacity-25 ${
-                mode === "next" ? "right-0" : "left-0"
+              className={`absolute top-1/2 z-10 flex h-16 w-10 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 disabled:opacity-20 ${
+                mode === "next" ? "-right-1" : "-left-1"
               }`}
             >
-              <Icon className="h-6 w-6" />
+              <Icon className="h-9 w-9" strokeWidth={2.4} />
             </button>
           );
         })}
