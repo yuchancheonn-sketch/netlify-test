@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
@@ -27,6 +28,8 @@ export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
   const { user, profile, isAdmin, logOut } = useAuth();
   const router = useRouter();
+  /** "로그아웃 하시겠어요?" 시트가 떠 있는지 */
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   /*
    * 오른쪽으로 밀어서 앞 화면으로 — 내 프로필 화면과 같은 손짓입니다.
@@ -125,12 +128,10 @@ export default function SettingsPage() {
             </Link>
           ) : null}
 
+          {/* 누르면 바로 나가지 않고 "로그아웃 하시겠어요?" 시트를 띄웁니다(2026-09-22 사용자 요청 — 아래 LogoutSheet). */}
           <button
             type="button"
-            onClick={async () => {
-              await logOut();
-              router.replace("/login");
-            }}
+            onClick={() => setConfirmingLogout(true)}
             className="w-full rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
           >
             {/*
@@ -148,7 +149,82 @@ export default function SettingsPage() {
           </p>
         </section>
       </div>
+
+      {confirmingLogout ? (
+        <LogoutSheet
+          onClose={() => setConfirmingLogout(false)}
+          onConfirm={async () => {
+            await logOut();
+            router.replace("/login");
+          }}
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * 로그아웃 확인 시트 (2026-09-22 사용자 요청 — 사용자가 보낸 캡처처럼).
+ * 화면 아래에서 올라오는 흰 시트: 위 가운데 손잡이 막대 · 큰 제목 "로그아웃 하시겠어요?" ·
+ * 폭 가득 주황 "로그아웃" · 그 아래 글씨만 있는 "취소". 뒤는 어둡게 덮고, 어두운 곳을 눌러도 닫힙니다.
+ * 캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다. 겉모양 짜임은 AccountMergeSheet와 같습니다.
+ */
+function LogoutSheet({
+  onClose,
+  onConfirm,
+}: {
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="로그아웃 확인"
+      onClick={busy ? undefined : onClose}
+      /*
+        포털이어도 React 이벤트는 설정 화면 상자까지 올라가, 시트 위를 옆으로 문지르면 "밀어서 뒤로"가
+        움직입니다. 시트에서 시작한 손짓은 여기서 막습니다.
+      */
+      onTouchStart={(event) => event.stopPropagation()}
+      onTouchMove={(event) => event.stopPropagation()}
+      onTouchEnd={(event) => event.stopPropagation()}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+      >
+        {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+
+        <h2 className="mt-7 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            await onConfirm();
+          }}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
+        >
+          {busy ? <Spinner className="h-5 w-5" /> : null}
+          로그아웃
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onClose}
+          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        >
+          취소
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
