@@ -32,7 +32,8 @@ const ALBUM_BODY_MAX_LENGTH = 1000;
  *
  * ★ 2026-09-22 사용자 요청: 앨범 격자 대신 **게시물 카드 한 장씩**, 카드가 화면을 꽉 채우고,
  *   왼쪽·오른쪽으로 밀어 **책장 넘기듯** 넘겨 봅니다. 아래 AlbumBook.
- *   (앨범 = 게시물 한 개입니다. 데이터는 그대로 photoAlbums — 카드를 누르면 그 앨범 화면에서 사진을 다 보고 올립니다.)
+ *   (앨범 = 게시물 한 개입니다. 데이터는 그대로 photoAlbums. 카드를 눌러 앨범 화면을 여는 길은 같은 날 없앴고,
+ *    앨범 화면은 이제 "소식 올리기" 직후 사진을 붙일 때만 열립니다.)
  *
  * (같은 날 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다. 자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
  */
@@ -172,7 +173,7 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
  *   밑의 장은 그늘이 걷힙니다. 90°를 넘으면 뒷면이라 안 보입니다(backface-hidden) — 책장이 넘어간 모습입니다.
  * - 뒤에 남은 장이 있으면 오른쪽·아래로 살짝 비켜 선 종이 두 장을 깔아 "쌓인 카드"로 보이게 합니다.
  * - 처음·마지막 장에서 더 밀면 조금만 따라오다 되돌아옵니다.
- * - 밀지 않고 톡 누르면 그 앨범 화면(/albums/…)으로 갑니다 — 사진 전부 보기·사진 올리기는 거기서.
+ * - 카드를 톡 눌러도 아무 창도 뜨지 않습니다(2026-09-22 사용자 요청 — 예전엔 앨범 화면 /albums/… 이 열렸습니다).
  *
  * touch-action: pan-y — 세로 손짓은 브라우저에 맡기고 가로 손짓만 우리가 받습니다.
  */
@@ -184,7 +185,6 @@ function AlbumBook({
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
   authors: Map<string, UserDoc>;
 }) {
-  const router = useRouter();
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
   const drag = useRef<{ x: number; y: number; time: number; width: number; moved: boolean } | null>(
@@ -233,10 +233,8 @@ function AlbumBook({
     drag.current = null;
     if (!start) return;
 
-    if (!start.moved) {
-      router.push(`/albums/${albums[current].id}`);
-      return;
-    }
+    // 밀지 않고 톡 누른 것은 아무 일도 없습니다 — 누르면 앨범 화면이 열리던 것을 2026-09-22 사용자 요청으로 없앴습니다.
+    if (!start.moved) return;
     if (!turn) return;
 
     const dx = event.clientX - start.x;
@@ -350,7 +348,7 @@ function AlbumBook({
  *   제목·본문은 처음엔 사진 위였는데 같은 날 사용자 요청으로 사진 아래로 옮겼습니다.
  *   "소식 올리기" 알약이 아래 글을 가리지 않도록 틀(BookFrame)이 알약 위에서 끝납니다.
  * ★ 본문은 넉 줄까지만 보이고 넘치면 "…"(line-clamp-4) — 다 쓰면 사진 자리가 없어집니다.
- *   전문은 카드를 눌러 들어간 앨범 화면에서 봅니다.
+ *   (카드를 눌러 앨범 화면에서 전문을 보던 길은 2026-09-22 사용자 요청으로 없앴습니다.)
  * 사진 위 오른쪽 위 "3 / 10"은 몇 번째 장인지.
  */
 function AlbumCard({
@@ -453,7 +451,7 @@ function AlbumCard({
 
 /**
  * 새 소식(앨범)을 올리는 바텀시트 — 제목·날짜·본문(선택).
- * 사진은 올린 뒤 카드를 눌러 들어간 앨범 화면에서 붙입니다. 첫 사진이 카드의 대표 사진이 됩니다.
+ * 사진은 "올리기"를 누르면 곧바로 열리는 앨범 화면에서 붙입니다. 첫 사진이 카드의 대표 사진이 됩니다.
  * (2026-09-22 "소식 올리기"로 이름을 바꾸며 본문 칸을 더하고, "행사 이름/행사 날짜"를 "제목/날짜"로 줄였습니다.)
  */
 function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
