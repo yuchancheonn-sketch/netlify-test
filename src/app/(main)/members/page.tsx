@@ -213,7 +213,7 @@ export default function MembersPage() {
 
             -mx-4 px-4 — 쓰는 쪽의 좌우 여백 16px을 되밀어 흰 바탕이 화면 끝까지 닿게 하고,
             안쪽에서 같은 값으로 도로 들여 검색칸·고르개는 제자리에 둡니다.
-            pt-[9px] — 제목 줄과 검색칸 사이 (10px → 9.5px → 9px, 2026-09-23 사용자 "0.5px 만큼 줄여줘" 두 번).
+            pt-[8.5px] — 제목 줄과 검색칸 사이 (10px → 9.5px → 9px → 8.5px, 2026-09-23 사용자 "0.5px 만큼 줄여줘" 세 번).
             흰 구역 안에 있어야 합니다. 바깥에 두면
             그만큼이 canvas로 남아 제목 줄과 검색칸 사이에 회색 띠가 그어집니다.
 
@@ -221,7 +221,7 @@ export default function MembersPage() {
             제목 줄은 붙박이라 본문이 그 뒤로 지나가므로, 한쪽만 흰색이면 스크롤할 때
             제목 줄이 다른 색 띠로 떠 보입니다.
         */}
-        <div className="-mx-4 bg-surface px-4 pt-[9px]">
+        <div className="-mx-4 bg-surface px-4 pt-[8.5px]">
           {/* 검색 */}
           <div className="relative">
             {/*
