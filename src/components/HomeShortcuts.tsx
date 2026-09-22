@@ -39,7 +39,7 @@ export default function HomeShortcuts() {
       (2026-09-11에 4px → 6px → 10px로 늘려 왔고, 칸 안 여백을 8px → 4px로 줄이면서 14px로
        옮겨 18px을 지켰습니다. 두 열 사이 간격을 좁혀 보기도 했지만 되돌렸습니다.)
     */
-    <section className="rounded-3xl bg-surface px-2 py-3.5 shadow-[var(--shadow-card)]">
+    <section className="rounded-3xl bg-surface px-2 py-3.5 shadow-[var(--shadow-card-flat)]">
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>

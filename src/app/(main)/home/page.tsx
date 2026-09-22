@@ -97,7 +97,7 @@ export default function HomePage() {
               같은 날 12px(pr-3 + -mr-2) → 44px(pr-9, "왼쪽으로 많이") → 20px → 19px로 맞췄습니다.
               지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
-            <div className="flex items-center gap-3 rounded-3xl bg-surface py-3 pr-[11px] pl-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-3 rounded-3xl bg-surface py-3 pr-[11px] pl-5 shadow-[var(--shadow-card-flat)]">
               {/* 달력 그림은 앱의 기본 주황(brand-500) — 처음엔 옅은 brand-300이라 흐린 주황으로 보인다고 해서 바꿨습니다(2026-09-15). */}
               <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-500" />
               {/*
@@ -169,7 +169,7 @@ export default function HomePage() {
             같은 값으로 맞추면 눈에는 아래가 더 좁아 보입니다.
             ★ 위 여백은 수업 기록 화면(/sessions)의 카드와 같은 값입니다 — 둘이 같은 결로 보이게.
           */}
-          <div className="rounded-3xl bg-surface px-6 pt-5 pb-6 shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl bg-surface px-6 pt-5 pb-6 shadow-[var(--shadow-card-flat)]">
             <h2 className="mb-2 text-[18px] font-bold text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">

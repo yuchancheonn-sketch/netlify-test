@@ -178,8 +178,13 @@ export function EventListItem({
   const box = "rounded-3xl bg-surface p-3.5 shadow-[var(--shadow-card)]";
 
   if (href) {
+    // href를 넘기는 곳은 홈뿐이라, 홈 카드들처럼 글로우 없이 헤어라인만 둡니다 (2026-09-23 사용자 요청).
+    // 모임 화면(href 없음)은 그대로 --shadow-card입니다.
     return (
-      <Link href={href} className={`${box} flex items-center gap-4 transition active:scale-[0.99]`}>
+      <Link
+        href={href}
+        className={`${box.replace("shadow-[var(--shadow-card)]", "shadow-[var(--shadow-card-flat)]")} flex items-center gap-4 transition active:scale-[0.99]`}
+      >
         {row}
         <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
       </Link>
