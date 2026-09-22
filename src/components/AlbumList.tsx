@@ -557,8 +557,11 @@ function AlbumCard({
                 <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
               ) : null}
             </p>
-            {/* 날짜만 — "사진 N장"은 카드에 사진이 한 장뿐이라(2026-09-22) 뺐습니다. */}
-            {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
+            {/*
+              날짜만 — "사진 N장"은 카드에 사진이 한 장뿐이라(2026-09-22) 뺐습니다.
+              14px 먹색 — 2026-09-22 사용자 요청(12px 옅은 회색에서). 뒷면(AlbumCardBack)도 같게 맞춥니다.
+            */}
+            {date ? <p className="text-[14px] text-ink">{date}</p> : null}
           </div>
           {/*
             ⋯ — 고치기·지우기 (2026-09-22 사용자 요청). 올린 원우와 운영진에게만 보입니다.
@@ -645,7 +648,8 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
             <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
           ) : null}
         </p>
-        {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
+        {/* 날짜 14px 먹색 — 앞면과 같게(2026-09-22). */}
+        {date ? <p className="text-[14px] text-ink">{date}</p> : null}
         <h2 className="mt-4 text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
           {album.title}
         </h2>
