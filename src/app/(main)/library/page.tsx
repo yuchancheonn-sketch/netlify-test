@@ -54,7 +54,8 @@ import type { FileDoc } from "@/lib/types";
  */
 const SUBTABS = [
   { value: "videos", label: "복습 영상" },
-  { value: "news", label: "소식" },
+  // 칸 이름 "소식" → "일정" (2026-09-23 사용자 요청). 주소(?tab=news)와 내용(도산아카데미 글 목록)은 그대로입니다.
+  { value: "news", label: "일정" },
   { value: "files", label: "파일" },
 ] as const;
 
