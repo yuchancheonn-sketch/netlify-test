@@ -23,6 +23,7 @@ import {
 } from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
 import type {
+  AcademyEventDoc,
   ChatReadDoc,
   ChatRoomDoc,
   EventDoc,
@@ -238,6 +239,31 @@ export function useEvents(): ListState<EventDoc> {
         setState({ data: events, loading: false, error: null });
       },
       () => setState({ data: [], loading: false, error: "일정을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/**
+ * 도산아카데미 일정 (2026-09-23, 홈 캘린더용). 모든 기수 공통.
+ * 서버가 새 글에서 읽어 적으므로 앱은 읽기만 합니다 — lib/academy-calendar-server.ts.
+ */
+export function useAcademyEvents(): ListState<AcademyEventDoc> {
+  const [state, setState] = useState<ListState<AcademyEventDoc>>(EMPTY);
+
+  useEffect(() => {
+    return onSnapshot(
+      query(collection(db, "academyEvents"), orderBy("date")),
+      (snapshot) =>
+        setState({
+          data: snapshot.docs.map(
+            (document) => ({ id: document.id, ...document.data() }) as AcademyEventDoc,
+          ),
+          loading: false,
+          error: null,
+        }),
+      () => setState({ data: [], loading: false, error: "도산아카데미 일정을 불러오지 못했어요." }),
     );
   }, []);
 

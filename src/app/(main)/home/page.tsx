@@ -10,6 +10,7 @@ import { SectionTitle, Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
 import HomeShortcuts from "@/components/HomeShortcuts";
+import HomeCalendar from "@/components/HomeCalendar";
 import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { useUpcomingEvents } from "@/lib/hooks";
@@ -119,6 +120,12 @@ export default function HomePage() {
             </div>
           )}
         </section>
+
+        {/*
+          한 달 캘린더 — 다가오는 모임 바로 밑 (2026-09-23 사용자 요청).
+          우리 기수 모임 + 도산아카데미 일정(새 글에서 서버가 읽어 넣음), 폰 캘린더 연결까지. components/HomeCalendar.tsx (모임 화면의 MonthCalendar와 따로)
+        */}
+        <HomeCalendar cohort={cohort} />
 
         {/*
           투표·의견 모으기 — 원우 누구나 열 수 있고, 열려 있는 것만 여기 올라옵니다.

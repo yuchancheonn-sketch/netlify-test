@@ -231,6 +231,15 @@ service cloud.firestore {
       // rsvps(참석/불참/미정)는 2026-09-11에 "참석하시나요?"를 없애며 규칙에서도 뺐습니다.
     }
 
+    /*
+     * 도산아카데미 일정 (2026-09-23) — 서버가 dosan21.kr 새 글에서 읽어 적습니다(lib/academy-calendar-server.ts).
+     * 모든 기수가 함께 보는 읽기 전용입니다. 앱에서는 쓰지 못합니다.
+     * (폰 캘린더 구독 열쇠 calendarTokens는 서버만 쓰는 자리라 여기 적지 않습니다 — 앱에서 막힘.)
+     */
+    match /academyEvents/{eventId} {
+      allow read: if isMember();
+    }
+
     match /photoAlbums/{albumId} {
       allow read, write: if isMember();
 

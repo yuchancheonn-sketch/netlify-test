@@ -127,6 +127,24 @@ export interface EventDoc {
   createdAt: Timestamp | null;
 }
 
+/**
+ * academyEvents/{dosan-글idx} — 도산아카데미 일정 (2026-09-23).
+ * 서버가 dosan21.kr 새 글의 "일시·장소"를 읽어 적습니다(lib/academy-calendar-server.ts). 모든 기수 공통, 읽기 전용.
+ */
+export interface AcademyEventDoc {
+  id: string;
+  title: string;
+  /** "YYYY-MM-DD" */
+  date: string;
+  /** "HH:mm", 모르면 "" */
+  startTime: string;
+  /** "HH:mm", 모르면 "" */
+  endTime: string;
+  location: string;
+  /** 원래 글 주소 */
+  link: string;
+}
+
 /** photoAlbums/{albumId} — 행사 단위로 사진을 묶는 앨범 */
 export interface PhotoAlbumDoc {
   id: string;
