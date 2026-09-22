@@ -21,9 +21,19 @@ export function kakaoRedirectUri(): string {
   return `${window.location.origin}/auth/kakao`;
 }
 
+/**
+ * 추측할 수 없는 한 번 쓰는 값.
+ * ★ crypto.randomUUID()는 https·localhost에서만 있어서, 폰 테스트 주소(http://172.30.1.8:3000)에서는
+ *   없다고 터졌습니다(2026-09-23). getRandomValues는 http에서도 있으니 이걸로 만듭니다.
+ */
+function randomState(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 /** 카카오 동의 화면으로 보냅니다. 이 함수를 부르면 화면이 넘어가므로 뒤의 코드는 돌지 않는다고 보세요. */
 export function startKakaoLogin(): void {
-  const state = crypto.randomUUID();
+  const state = randomState();
   try {
     sessionStorage.setItem(STATE_KEY, state);
   } catch {
