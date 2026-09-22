@@ -493,7 +493,8 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
           disabled={busy}
           // 단추를 눌러도 자판이 내려가지 않게 커서를 입력칸에 둡니다.
           onMouseDown={(event) => event.preventDefault()}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
+          // py-[13px] — 약 50px (2026-09-22 사용자 요청 "높이 줄여줘", py-4 16px·약 56px에서 줄임 — 앱의 PrimaryButton field와 같은 높이).
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
         >
           {busy ? <Spinner className="h-5 w-5" /> : null}
           {confirmation ? "확인" : "인증번호 받기"}
