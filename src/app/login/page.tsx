@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConfirmationResult } from "firebase/auth";
 import StageGate from "@/components/StageGate";
-import { GoogleIcon, KakaoIcon, LockIcon, PhoneIcon } from "@/components/icons";
-import { inputClassName, PrimaryButton, Spinner } from "@/components/ui";
+import {
+  ChevronLeftIcon,
+  GoogleIcon,
+  KakaoIcon,
+  LockIcon,
+  PhoneIcon,
+  XMarkIcon,
+} from "@/components/icons";
+import { PrimaryButton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { formatPhoneInput } from "@/lib/format";
 import { isKakaoConfigured, startKakaoLogin } from "@/lib/kakao-login";
@@ -100,6 +107,9 @@ function LoginScreen() {
 
   const verb = purpose === "signup" ? "시작하기" : "로그인";
   const shownError = error ?? authError;
+
+  // 휴대폰 번호 단계는 사진 화면 대신 화면 하나를 통째로 씁니다(2026-09-22 사용자 요청 — 아래 PhoneSignIn).
+  if (step === "phone") return <PhoneSignIn onBack={() => goTo(purpose)} />;
 
   return (
     // 배경 사진을 본문과 같은 폭 안에 가두어, 넓은 화면에서 얼굴만 크게
@@ -201,8 +211,6 @@ function LoginScreen() {
                 회원가입하기
               </button>
             </div>
-          ) : step === "phone" ? (
-            <PhoneSignIn verb={verb} onBack={() => goTo(purpose)} />
           ) : (
             <div className="flex flex-col gap-3">
               {/* 구글 — 흰 단추에 구글 네 색 로고 */}
@@ -270,13 +278,23 @@ function LoginScreen() {
 /**
  * 휴대폰 번호로 시작하기 / 로그인 (2026-09-22).
  * 번호를 넣고 "인증번호 받기" → 문자로 온 6자리를 넣고 "확인". 로그인되면 StageGate가 다음 화면으로 보냅니다.
+ *
+ * ★ 모양 (2026-09-22 사용자 요청 — 사용자가 보낸 캡처처럼):
+ *   왼쪽 위 뒤로(‹) · 큰 제목 "전화번호를 입력해주세요" · 🇰🇷 + 큰 번호 칸(회색 자리글씨 010-0000-0000,
+ *   넣은 번호는 브랜드색) · 오른쪽 끝 지우기(×) · 맨 아래 "인증번호 받기"(번호가 다 차기 전엔 회색, 차면 브랜드색).
+ *   캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다.
+ * ★ 아래 단추가 자판 바로 위에 붙도록 대화방 화면과 같은 짜임입니다 — 화면 높이(h-dvh)의 세로 칸에서 단추를 맨 아래에 두고,
+ *   입력칸에 커서가 있는 동안(=자판이 떠 있는 동안)엔 아래 안전 영역 여백을 걷습니다(이유는 chat/[roomId]/page.tsx 주석).
  */
-function PhoneSignIn({ verb, onBack }: { verb: string; onBack: () => void }) {
+function PhoneSignIn({ onBack }: { onBack: () => void }) {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** 입력칸에 커서가 있는지 — 자판이 떠 있는 동안 아래 여백을 걷는 데 씁니다. */
+  const [typing, setTyping] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 이 화면을 떠나면 로봇 확인을 버립니다(이유는 lib/phone-login.ts의 resetVerifier).
   useEffect(() => () => resetVerifier(), []);
@@ -317,73 +335,136 @@ function PhoneSignIn({ verb, onBack }: { verb: string; onBack: () => void }) {
     }
   }
 
+  /** 인증번호 단계에서 번호 단계로 되돌아갑니다(뒤로 ‹ 와 "번호 다시 넣기"). */
+  function backToPhone() {
+    setConfirmation(null);
+    setCode("");
+    setError(null);
+    resetVerifier();
+  }
+
+  const value = confirmation ? code : phone;
+  // 번호가 다 차야(010으로 시작하는 10~11자리) / 인증번호 6자리가 다 차야 아래 단추가 켜집니다.
+  const ready = confirmation ? /^\d{6}$/.test(code) : toE164Korean(phone) !== null;
+
+  function clearValue() {
+    if (confirmation) setCode("");
+    else setPhone("");
+    setError(null);
+    inputRef.current?.focus();
+  }
+
   return (
-    <div>
-      {confirmation ? (
-        <form onSubmit={handleConfirm} className="flex flex-col gap-3">
-          <p className="text-center text-[14px] font-medium text-ink-soft">
-            {phone}로 보낸 인증번호 6자리를 넣어 주세요.
-          </p>
+    <form
+      onSubmit={confirmation ? handleConfirm : handleSend}
+      onFocus={() => setTyping(true)}
+      onBlur={() => setTyping(false)}
+      className="mx-auto flex h-dvh w-full max-w-[480px] flex-col bg-canvas"
+    >
+      <div
+        className="flex-1 overflow-y-auto px-6"
+        style={{ paddingTop: "calc(12px + env(safe-area-inset-top))" }}
+      >
+        <button
+          type="button"
+          onClick={confirmation ? backToPhone : onBack}
+          aria-label="뒤로"
+          className="-ml-2.5 flex h-11 w-11 items-center justify-center text-ink"
+        >
+          <ChevronLeftIcon className="h-7 w-7" />
+        </button>
+
+        <h1 className="mt-6 text-[26px] font-bold tracking-tight text-ink">
+          {confirmation ? "인증번호를 입력해주세요" : "전화번호를 입력해주세요"}
+        </h1>
+        {confirmation ? (
+          <p className="mt-2 text-[14px] text-ink-muted">{phone}로 보낸 6자리 숫자예요</p>
+        ) : null}
+
+        {/*
+          큰 번호 칸 — 글씨 34px 굵게, 넣은 번호는 브랜드색, 자리글씨는 흐린 회색.
+          번호 단계에만 앞에 🇰🇷 를 붙입니다. 칸이 비어 있지 않으면 오른쪽 끝에 지우기(×)가 뜹니다.
+        */}
+        <div className="mt-6 flex items-center gap-3">
+          {confirmation ? null : (
+            <span aria-hidden="true" className="shrink-0 text-[26px] leading-none">
+              🇰🇷
+            </span>
+          )}
           <input
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            ref={inputRef}
+            key={confirmation ? "code" : "phone"}
+            value={value}
+            onChange={(event) => {
+              setError(null);
+              if (confirmation) setCode(event.target.value.replace(/\D/g, "").slice(0, 6));
+              else setPhone(formatPhoneInput(event.target.value));
+            }}
             inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="인증번호 6자리"
-            aria-label="인증번호"
+            autoComplete={confirmation ? "one-time-code" : "tel"}
+            placeholder={confirmation ? "000000" : "010-0000-0000"}
+            aria-label={confirmation ? "인증번호" : "휴대폰 번호"}
             autoFocus
-            className={`${inputClassName} text-center tracking-[0.3em]`}
+            className={`min-w-0 flex-1 bg-transparent py-1 text-[34px] font-bold text-brand-500 caret-brand-500 outline-none tabular-nums placeholder:text-ink-faint/50 ${
+              confirmation ? "tracking-[0.15em]" : "tracking-tight"
+            }`}
           />
-          <PrimaryButton type="submit" loading={busy}>
-            확인
-          </PrimaryButton>
+          {value ? (
+            <button
+              type="button"
+              // 누르는 순간 입력칸이 커서를 잃으면 자판이 내려갔다 올라옵니다 — 커서를 그대로 둡니다.
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={clearValue}
+              aria-label="지우기"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink-faint/40 text-surface"
+            >
+              <XMarkIcon className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="mt-4 text-[13px] font-medium text-danger">
+            {error}
+          </p>
+        ) : null}
+
+        {confirmation ? (
           <button
             type="button"
-            onClick={() => {
-              setConfirmation(null);
-              setCode("");
-              setError(null);
-              resetVerifier();
-            }}
-            className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
+            onClick={backToPhone}
+            className="mt-5 text-[14px] font-bold text-ink-muted underline underline-offset-4"
           >
             번호 다시 넣기
           </button>
-        </form>
-      ) : (
-        <form onSubmit={handleSend} className="flex flex-col gap-3">
-          <input
-            value={phone}
-            onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="010-1234-5678"
-            aria-label="휴대폰 번호"
-            autoFocus
-            className={`${inputClassName} text-center`}
-          />
-          <PrimaryButton type="submit" loading={busy}>
-            {busy ? null : <PhoneIcon className="h-5 w-5" />}
-            인증번호 받기
-          </PrimaryButton>
-          <button
-            type="button"
-            onClick={onBack}
-            className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
-          >
-            다른 방법으로 {verb}
-          </button>
-        </form>
-      )}
+        ) : null}
 
-      {error ? (
-        <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
-          {error}
-        </p>
-      ) : null}
+        {/* 보이지 않는 로봇 확인(reCAPTCHA)이 붙는 자리. 의심스러울 때만 여기서 창이 뜹니다. */}
+        <div id={PHONE_RECAPTCHA_ID} />
+      </div>
 
-      {/* 보이지 않는 로봇 확인(reCAPTCHA)이 붙는 자리. 의심스러울 때만 여기서 창이 뜹니다. */}
-      <div id={PHONE_RECAPTCHA_ID} />
-    </div>
+      {/*
+        맨 아래 단추 — 자판이 떠 있으면 자판 바로 위(여백 12px), 아니면 홈 바 위로 안전 영역만큼 띄웁니다.
+        번호가 덜 찼으면 회색(bg-fill)으로 꺼 둡니다. PrimaryButton의 꺼짐 색(연한 주황)과 달라 직접 그립니다.
+      */}
+      <div
+        className="px-6 pt-3"
+        style={{ paddingBottom: typing ? "12px" : "calc(16px + env(safe-area-inset-bottom))" }}
+      >
+        <button
+          type="submit"
+          disabled={!ready || busy}
+          // 단추를 눌러도 자판이 내려가지 않게 커서를 입력칸에 둡니다.
+          onMouseDown={(event) => event.preventDefault()}
+          // 보내는 중(busy)에도 눌리지는 않지만 색은 브랜드색 그대로 둡니다 — 회색은 "덜 찼다"는 뜻으로만.
+          className={`flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[16px] font-bold transition active:scale-[0.99] ${
+            ready ? "bg-brand-500 text-white" : "bg-fill text-ink-faint"
+          }`}
+        >
+          {busy ? <Spinner className="h-5 w-5" /> : null}
+          {confirmation ? "확인" : "인증번호 받기"}
+        </button>
+      </div>
+    </form>
   );
 }
