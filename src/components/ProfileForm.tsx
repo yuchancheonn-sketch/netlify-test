@@ -185,13 +185,23 @@ export default function ProfileForm({
     else if (!isKoreanName(form.name)) next.name = "이름은 한글로만 적어 주세요.";
 
     /*
+     * 휴대폰은 꼭 넣어야 합니다(2026-09-22 사용자 요청 — 선택에서 필수로). 전화를 걸 수 있는 번호여야 합니다.
+     * 칸이 이름과 기수 사이에 있어서, 틀린 칸으로 올려 줄 때 순서가 맞도록 여기서 확인합니다.
+     */
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (!form.phone.trim()) next.phone = "휴대폰 번호를 입력해 주세요.";
+    else if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+      next.phone = "휴대폰 번호를 다시 확인해 주세요.";
+    }
+
+    /*
      * 원우수첩이 기수마다 따로라, 기수를 모르면 어느 수첩에 넣을지 정할 수 없습니다.
      * 그래서 이름과 함께 기수만은 꼭 고르게 합니다.
      */
     if (!form.cohort) next.cohort = "기수를 골라 주세요.";
 
     /*
-     * 이름과 기수만 있으면 시작할 수 있습니다.
+     * 이름·휴대폰·기수만 있으면 시작할 수 있습니다(휴대폰은 2026-09-22부터 필수 — 아래에서 확인).
      * 생일·구분·회사 같은 나머지는 나중에 프로필에서 채워도 되고,
      * 원우수첩에서 다른 원우가 대신 채워줄 수도 있습니다.
      * (별칭은 2026-09-15 사용자 요청으로 기능째 없앴습니다 — 앱 어디서나 본명만 씁니다.)
@@ -215,12 +225,6 @@ export default function ProfileForm({
 
     if (form.position.length > POSITION_MAX_LENGTH)
       next.position = `직책은 ${POSITION_MAX_LENGTH}자까지 넣을 수 있어요.`;
-
-    // 비워두는 건 괜찮지만, 넣었다면 전화를 걸 수 있는 번호여야 합니다.
-    const phoneDigits = form.phone.replace(/\D/g, "");
-    if (form.phone.trim() && (phoneDigits.length < 9 || phoneDigits.length > 11)) {
-      next.phone = "휴대폰 번호를 다시 확인해 주세요.";
-    }
 
     if (form.introduction.length > INTRODUCTION_MAX_LENGTH)
       next.introduction = `자기소개는 ${INTRODUCTION_MAX_LENGTH}자까지 쓸 수 있어요.`;
@@ -387,6 +391,30 @@ export default function ProfileForm({
           className={fieldClassName}
         />
         {errors.name ? <FieldError>{errors.name}</FieldError> : null}
+      </div>
+
+      {/*
+        휴대폰 — 원우수첩 상세에서 원우들이 눌러 바로 연락합니다.
+        2026-09-22 사용자 요청으로 선택 → 필수로 바꾸고, 이름과 기수 사이로 옮겼습니다(예전엔 직책 아래).
+      */}
+      <div className="mb-6">
+        <FieldLabel htmlFor="phone">휴대폰</FieldLabel>
+        <input
+          id="phone"
+          value={form.phone}
+          onChange={(event) => update("phone", formatPhoneInput(event.target.value))}
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="010-1234-5678"
+          className={fieldClassName}
+        />
+        {errors.phone ? (
+          <FieldError>{errors.phone}</FieldError>
+        ) : (
+          <p className="mt-2 text-[12px] text-ink-faint">
+            원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
+          </p>
+        )}
       </div>
 
       {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}
@@ -561,29 +589,6 @@ export default function ProfileForm({
           className={fieldClassName}
         />
         {errors.position ? <FieldError>{errors.position}</FieldError> : null}
-      </div>
-
-      {/* 휴대폰 — 원우수첩 상세에서 원우들이 눌러 바로 연락합니다. */}
-      <div className="mb-6">
-        <FieldLabel htmlFor="phone" hint="선택">
-          휴대폰
-        </FieldLabel>
-        <input
-          id="phone"
-          value={form.phone}
-          onChange={(event) => update("phone", formatPhoneInput(event.target.value))}
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="010-1234-5678"
-          className={fieldClassName}
-        />
-        {errors.phone ? (
-          <FieldError>{errors.phone}</FieldError>
-        ) : (
-          <p className="mt-2 text-[12px] text-ink-faint">
-            원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
-          </p>
-        )}
       </div>
 
       {/*
