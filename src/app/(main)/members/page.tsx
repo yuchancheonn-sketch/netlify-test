@@ -350,10 +350,11 @@ export default function MembersPage() {
               공통 부분(칸 순서, 글씨 크기를 span에 거는 규칙 등)은 여전히 세 화면이 같이 따라옵니다.
               (예전에는 화면마다 마크업을 복붙해 둔 탓에 하루 만에 글씨 크기가 갈라졌습니다.)
 
-            mt-[8px] — 위 검색칸과의 간격 (16px → 14px → 11px → 8px, 2026-09-22 사용자 요청 세 번).
+            mt-[9px] — 위 검색칸과의 간격 (16px → 14px → 11px → 8px, 2026-09-22 사용자 요청 세 번;
+            → 9px, 2026-09-23 사용자 "1px 만큼 늘려줘").
             이 화면에만 있는 값이라 여기서 넣습니다. Tailwind 단계 사이 값이라 직접 적습니다.
             ★ 눈에 보이는 흰 여백은 이 값보다 4px 넓습니다 — 고르개 칸이 글씨 위에 pt-1(4px)을
-              두고 있어서입니다(TextTabs "underline"). 지금 8 + 4 = 12px입니다.
+              두고 있어서입니다(TextTabs "underline"). 지금 9 + 4 = 13px입니다.
               여기를 0으로 만들어도 12px 아래로는 안 내려갑니다. 더 줄이려면 그 pt-1을
               건드려야 하는데, 그러면 고른 칸의 주황 바와 글씨 사이(pb-[11px])와의 균형도
               같이 살펴야 합니다 — 위아래가 4px/11px이라 이미 아래쪽이 넉넉한 짜임입니다.
@@ -384,7 +385,7 @@ export default function MembersPage() {
             value={activeFilter}
             onChange={showTypeFilter ? setFilter : () => {}}
             variant="underline"
-            className="mt-[8px]"
+            className="mt-[9px]"
           />
         </div>
 
