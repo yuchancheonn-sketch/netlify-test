@@ -41,9 +41,11 @@ env:
   - variable: FIREBASE_SERVICE_ACCOUNT
     secret: FIREBASE_SERVICE_ACCOUNT
     availability: [RUNTIME]
-  # - variable: NEXT_PUBLIC_KAKAO_REST_API_KEY
-  #   value: ""
-  #   availability: [BUILD, RUNTIME]
+  # 카카오 로그인 (2026-09-22 켬). REST API 키는 동의 화면 주소에 드러나는 공개값입니다.
+  - variable: NEXT_PUBLIC_KAKAO_REST_API_KEY
+    value: "5b6cba6f994d75a6ad43e22c167bfaac"
+    availability: [BUILD, RUNTIME]
+  # Client Secret은 카카오에서 켜지 않았습니다. 켜면 Secret Manager에 넣고 아래 주석을 푸세요.
   # - variable: KAKAO_CLIENT_SECRET
   #   secret: KAKAO_CLIENT_SECRET
   #   availability: [RUNTIME]
