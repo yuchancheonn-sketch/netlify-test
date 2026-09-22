@@ -34,8 +34,8 @@ try {
   if (dirty) {
     notes.push(`커밋 안 된 수정이 있습니다(지난 대화에서 남은 것일 수 있음):\n${dirty}`);
   }
-  // push는 사용자가 "푸시해줘"라고 할 때만 합니다(CLAUDE.md). 여기서는 알리기만.
-  if (ahead > 0) notes.push(`GitHub에 아직 안 올린 커밋이 ${ahead}개 있습니다(사용자가 "푸시해줘" 하면 올림).`);
+  // 고칠 때마다 push하는 것이 규칙이라(CLAUDE.md) 남아 있으면 바로 올리라고 알립니다.
+  if (ahead > 0) notes.push(`GitHub에 아직 안 올린 커밋이 ${ahead}개 있습니다 — git push origin main 하세요.`);
   if (!dirty && behind === 0 && ahead === 0) notes.push("GitHub과 같은 최신 상태입니다.");
 } catch (error) {
   notes.push(`GitHub 확인 실패(인터넷·로그인 확인): ${String(error.message).split("\n")[0]}`);

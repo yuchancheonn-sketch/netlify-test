@@ -33,8 +33,8 @@
 3. VS Code에서 **`netlify-test` 폴더를 열고** Claude Code를 시작합니다. Claude는 대화 첫머리에
    `npm run sync`로 GitHub과 맞추고, 작업 단위마다 커밋합니다(CLAUDE.md).
 
-★ **컴퓨터를 옮기기 전에는 꼭 Claude에게 "푸시해줘"** 라고 하세요. push는 말할 때만 하므로,
-push하지 않은 커밋은 그 컴퓨터에만 있습니다. push해 두면 다른 컴퓨터에서 `npm run sync`(= git pull)만 하면 이어집니다.
+Claude는 고칠 때마다 커밋하고 GitHub에 push까지 합니다(CLAUDE.md, 2026-09-22). 그래서 다른 컴퓨터에서는
+`npm run sync`(= git pull)만 하면 바로 이어집니다.
 **push는 배포가 아닙니다** — 배포는 `npm run deploy`(아래 "배포하기").
 
 ---
