@@ -25,7 +25,8 @@ const SITE_URL = "https://dosan21.kr";
  *   예전엔 "받아오는 것(이 탭) / 원우가 올리는 것(자료 탭)"으로 갈라 두었는데 그 경계는 이제 없습니다.
  */
 const SUBTABS = [
-  { value: "photos", label: "행사 사진" },
+  // 칸 이름 "행사 사진" → "원우 소식" (2026-09-22 사용자 요청). 안의 내용은 그대로 행사 앨범입니다.
+  { value: "photos", label: "원우 소식" },
   { value: "news", label: "소식" },
 ] as const;
 

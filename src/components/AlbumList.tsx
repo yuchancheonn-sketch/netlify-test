@@ -59,7 +59,7 @@ export default function AlbumList() {
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
             title="아직 앨범이 없어요"
-            description="아래 '앨범 만들기'로 첫 행사 앨범을 만들어 보세요."
+            description="아래 '사진 올리기'로 첫 행사 앨범을 만들어 보세요."
           />
         </div>
       ) : (
@@ -135,7 +135,8 @@ export default function AlbumList() {
         className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
       >
         <PlusIcon className="h-5 w-5" />
-        앨범 만들기
+        {/* 단추 글씨 "앨범 만들기" → "사진 올리기" (2026-09-22 사용자 요청). 누르면 여전히 새 앨범 만들기 창이 뜹니다. */}
+        사진 올리기
       </button>
 
       {creating ? <AlbumCreateSheet onClose={() => setCreating(false)} /> : null}
