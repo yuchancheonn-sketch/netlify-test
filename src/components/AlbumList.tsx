@@ -352,8 +352,6 @@ function AlbumBook({
             <AlbumCard
               album={under}
               author={authors.get(under.createdBy)}
-              position={albums.indexOf(under) + 1}
-              total={albums.length}
               // 넘기는 중이 아닐 때 보이는 장(= 밑장)에만 ⋯ 를 답니다.
               onMore={!page && canManage(under) ? () => setManaging(under) : undefined}
             />
@@ -375,7 +373,7 @@ function AlbumBook({
               className="relative w-full origin-left [backface-visibility:hidden]"
               style={{ transform: `rotateY(${angle}deg)`, transition }}
             >
-              <AlbumCard album={page} author={authors.get(page.createdBy)} position={albums.indexOf(page) + 1} total={albums.length} />
+              <AlbumCard album={page} author={authors.get(page.createdBy)} />
               {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
               <div
                 aria-hidden="true"
@@ -437,20 +435,15 @@ function AlbumBook({
  *   "소식 올리기" 알약이 아래 글을 가리지 않도록 틀(BookFrame)이 알약 위에서 끝납니다.
  * ★ 본문은 넉 줄까지만 보이고 넘치면 "…"(line-clamp-4) — 다 쓰면 사진 자리가 없어집니다.
  *   (카드를 눌러 앨범 화면에서 전문을 보던 길은 2026-09-22 사용자 요청으로 없앴습니다.)
- * 사진 위 오른쪽 위 "3 / 10"은 몇 번째 장인지.
  */
 function AlbumCard({
   album,
   author,
-  position,
-  total,
   onMore,
 }: {
   album: PhotoAlbumDoc;
   /** 올린 원우(명단에서 찾은 것). 없으면 앨범에 적힌 이름만 씁니다. */
   author: UserDoc | undefined;
-  position: number;
-  total: number;
   /** ⋯ 를 눌렀을 때. 없으면(고칠 권한이 없거나 넘기는 중인 장) ⋯ 를 그리지 않습니다. */
   onMore?: () => void;
 }) {
@@ -534,9 +527,7 @@ function AlbumCard({
             📷
           </span>
         )}
-        <span className="absolute top-3 right-3 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold text-white tabular-nums">
-          {position} / {total}
-        </span>
+        {/* 사진 오른쪽 위 "3 / 10" 표시는 2026-09-22 사용자 요청으로 없앴습니다. */}
       </div>
 
       {/* 제목·본문 — 사진 아래 (2026-09-22 사용자 요청, 그 전엔 올린 사람 줄 바로 아래·사진 위). */}
