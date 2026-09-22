@@ -140,7 +140,8 @@ function BookFrame({ children }: { children: React.ReactNode }) {
         setTop(Math.round((element.getBoundingClientRect().top + window.scrollY) / zoom));
       }}
       className="relative"
-      style={{ height }}
+      // --frame-h — 카드가 사진 높이를 정할 때 "이보다 길면 안 됨"의 기준으로 씁니다(AlbumCard).
+      style={{ height, "--frame-h": height } as React.CSSProperties}
     >
       {children}
     </div>
@@ -163,7 +164,7 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
 /**
  * 카드를 책처럼 넘겨 보는 자리 (2026-09-22 사용자 요청).
  *
- * - 한 번에 카드 한 장. 카드는 틀(BookFrame)을 꽉 채웁니다.
+ * - 한 번에 카드 한 장. 카드는 틀(BookFrame) 위에 붙고, 높이는 사진 비율을 따릅니다(틀보다 길지는 않음, 2026-09-22).
  * - 왼쪽으로 밀면 다음(더 예전) 카드, 오른쪽으로 밀면 앞 카드. 목록 순서는 useAlbums 그대로(최근 행사가 먼저).
  * - 넘길 때 카드가 왼쪽 끝(책등)을 축으로 3D로 돌아 넘어가고(rotateY 0 → -90°), 넘어가는 장은 점점 어두워지고
  *   밑의 장은 그늘이 걷힙니다. 90°를 넘으면 뒷면이라 안 보입니다(backface-hidden) — 책장이 넘어간 모습입니다.
@@ -270,25 +271,14 @@ function AlbumBook({
     angle = -90 * Math.max(-1, Math.min(1, turned));
   }
   const transition = turn?.settling ? `transform ${TURN_MS}ms ease-out, opacity ${TURN_MS}ms ease-out` : "none";
-  /** 뒤에 남은 장 수(지금 장 뒤) — 쌓인 종이를 몇 장 깔지 */
-  const behind = albums.length - 1 - current;
+  /**
+   * 밑장 뒤에 남은 장 수 — 쌓인 종이를 몇 장 깔지(많아도 두 장).
+   * ★ 카드마다 높이가 달라서(사진 비율대로, 2026-09-22) 종이는 틀이 아니라 밑장 카드에 붙여 그 높이를 따릅니다.
+   */
+  const behind = under ? albums.length - 1 - albums.indexOf(under) : 0;
 
   return (
     <BookFrame>
-      {/* 쌓인 종이 — 뒤에 남은 장이 있을 때만, 많아도 두 장까지. */}
-      {behind >= 2 ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-        />
-      ) : null}
-      {behind >= 1 ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-        />
-      ) : null}
-
       <div
         className="absolute inset-0 select-none"
         style={{ perspective: "1800px", touchAction: "pan-y" }}
@@ -304,7 +294,20 @@ function AlbumBook({
         aria-label={`${current + 1} / ${albums.length} ${albums[current].title}`}
       >
         {under ? (
-          <div className="absolute inset-0">
+          <div className="absolute inset-x-0 top-0">
+            {/* 쌓인 종이 — 뒤에 남은 장이 있을 때만. 밑장 카드 뒤에서 오른쪽·아래로 4px씩 비켜 섭니다. */}
+            {behind >= 2 ? (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+              />
+            ) : null}
+            {behind >= 1 ? (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+              />
+            ) : null}
             <AlbumCard album={under} author={authors.get(under.createdBy)} position={albums.indexOf(under) + 1} total={albums.length} />
             {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
             {page ? (
@@ -319,7 +322,7 @@ function AlbumBook({
 
         {page ? (
           <div
-            className="absolute inset-0 origin-left [backface-visibility:hidden]"
+            className="absolute inset-x-0 top-0 origin-left [backface-visibility:hidden]"
             style={{ transform: `rotateY(${angle}deg)`, transition }}
           >
             <AlbumCard album={page} author={authors.get(page.createdBy)} position={albums.indexOf(page) + 1} total={albums.length} />
@@ -362,9 +365,18 @@ function AlbumCard({
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
   const body = album.body?.trim();
   const authorName = author?.name || album.createdByName || "원우";
+  /*
+   * 사진이 차지해도 되는 최대 높이 = 틀 높이 − 위 글 칸 높이(어림).
+   * 글 칸: 위아래 여백 36 + 올린 사람 줄 36 + 제목 한 줄 약 28 + 사이 14 ≈ 114 → 넉넉히 130,
+   * 긴 제목(두 줄)이면 +28, 본문이 있으면 넉 줄 + 사이 12 ≈ +110. 어림이 모자라도 카드가 틀을 넘지는 않습니다(maxHeight: var(--frame-h) — 넘치는 아래 끝이 잘립니다).
+   */
+  const textReserve = 130 + (album.title.length > 16 ? 28 : 0) + (body ? 110 : 0);
 
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]">
+    <article
+      className="relative flex w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+      style={{ maxHeight: "var(--frame-h)" }}
+    >
       <div className="shrink-0 px-5 pt-5 pb-4">
         {/*
           올린 원우 — 게시물 머리처럼 사진 + 이름, 그 아래 날짜·사진 수 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
@@ -396,35 +408,28 @@ function AlbumCard({
         ) : null}
       </div>
 
-      <div className="relative min-h-0 flex-1 bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)]">
+      <div className="relative">
         {/*
-          ★ 사진은 자르지 않고 원본 비율 그대로 (2026-09-22 사용자 요청).
-            예전엔 thumbnailUrl(c_fill — Cloudinary가 정사각형으로 잘라 줌) + object-cover(칸에 맞춰 또 자름)라
-            사진 가장자리가 잘렸습니다. 이제 viewerUrl(c_limit — 비율 그대로 줄이기만) + object-contain.
-            남는 위아래·양옆은 같은 사진을 흐리게 크게 깔아 채웁니다 — 빈 회색 띠보다 사진과 어울립니다.
-            두 장이 같은 주소라 한 번만 받습니다.
+          ★ 사진은 자르지 않고 원본 비율 그대로, 카드 높이가 사진에 맞춰 줄어듭니다 (2026-09-22 사용자 요청).
+            처음엔 카드가 틀을 꽉 채우고 사진을 잘라(c_fill + object-cover) 넣었고, 다음엔 자르지 않되 남는 자리를
+            같은 사진을 흐리게 깔아 채웠는데 사용자가 "의미없는 여백 넣지 말고 카드 위아래를 줄여줘"라고 했습니다.
+            이제 사진은 폭에 맞추고 높이는 비율대로(h-auto) — 카드는 그만큼만 깁니다. 틀 아래 남는 자리는 그냥 바탕입니다.
+            viewerUrl은 c_limit(비율 그대로 줄이기만)입니다.
+          ★ 세로로 아주 긴 사진만은 카드가 틀(화면)을 넘지 않게 maxHeight로 막습니다. 그때는 사진이 가운데로 줄고
+            양옆이 카드 바탕(흰색)으로 남습니다(object-contain) — 사진을 자르지 않으려면 어쩔 수 없는 자리입니다.
         */}
         {album.coverImageUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={viewerUrl(album.coverImageUrl, 1200)}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={viewerUrl(album.coverImageUrl, 1200)}
-              alt={`${album.title} 대표 사진`}
-              draggable={false}
-              className="absolute inset-0 h-full w-full object-contain"
-            />
-          </>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={viewerUrl(album.coverImageUrl, 1200)}
+            alt={`${album.title} 대표 사진`}
+            draggable={false}
+            className="block h-auto w-full object-contain"
+            style={{ maxHeight: `calc(var(--frame-h) - ${textReserve}px)` }}
+          />
         ) : (
           <span
-            className="absolute inset-0 flex items-center justify-center text-[48px]"
+            className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] text-[48px]"
             aria-hidden="true"
           >
             📷
