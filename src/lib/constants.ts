@@ -160,4 +160,4 @@ export const BRAND_COLOR = "#FD5702"; // 2026-09-22 #FF7210 → #FD5702 (디지�
  * 다르면 홈 화면에서 앱을 열 때 뜨는 첫 화면 색만 튑니다.
  */
 /* globals.css의 --color-canvas와 항상 같은 값. 홈 화면에 추가한 앱이 켜질 때(스플래시)의 바탕색입니다. */
-export const BRAND_BACKGROUND = "#F4F4F3";
+export const BRAND_BACKGROUND = "#F1F1F0";
