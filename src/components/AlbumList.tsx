@@ -33,7 +33,6 @@ import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
-import Avatar from "@/components/Avatar";
 
 /** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
 const ALBUM_BODY_MAX_LENGTH = 1000;
@@ -465,19 +464,14 @@ function AlbumCard({
     >
       <div className="shrink-0 px-5 pt-4 pb-3.5">
         {/*
-          올린 원우 — 게시물 머리처럼 사진 + 이름, 그 아래 날짜·사진 수 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
+          올린 원우 — 이름, 그 아래 날짜 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
           이름은 원우수첩의 지금 이름을 먼저 씁니다(이름을 고치면 따라옵니다). 명단에 없으면 올릴 때 적어 둔 이름.
-          제목·본문은 같은 날 사용자 요청으로 사진 아래로 옮겼습니다(인스타그램 게시물처럼 머리 → 사진 → 글).
+          제목·본문은 같은 날 사용자 요청으로 사진 아래로 옮겼습니다(머리 → 사진 → 글).
+          ★ 이름 왼쪽의 동그란 프로필 사진(36px)은 같은 날 사용자 요청으로 뺐고, 이름을 14 → 17px로 키웠습니다.
         */}
         <div className="flex items-center gap-2.5">
-          <Avatar
-            src={author?.photoURL ?? null}
-            name={authorName}
-            seed={album.createdBy}
-            size={36}
-          />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-bold text-ink">{authorName}</p>
+            <p className="truncate text-[17px] font-bold text-ink">{authorName}</p>
             {/* 날짜만 — "사진 N장"은 카드에 사진이 한 장뿐이라(2026-09-22) 뺐습니다. */}
             {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
           </div>
