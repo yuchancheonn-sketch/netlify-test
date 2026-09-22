@@ -15,7 +15,12 @@ import { db } from "@/lib/firebase";
 import { NOTICE_KEEP_DAYS } from "@/lib/notices";
 import { markChatRead } from "@/lib/chat-read";
 import { ALL_COHORTS, parseSessionDocId, sessionDocId } from "@/lib/cohort";
-import { otherUidOf, toChatRoom } from "@/lib/chat-rooms";
+import {
+  cohortRoomId,
+  emptyCohortRoom,
+  otherUidOf,
+  toChatRoom,
+} from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
 import type {
   ChatReadDoc,
@@ -697,6 +702,46 @@ export function useMyChatRooms(uid?: string): ListState<ChatRoomDoc> {
  * "안 읽음"으로 세면 가입하자마자 배지에 99+가 뜨므로, 기록이 없으면
  * 지금 시각으로 한 번 남겨 그때부터 세기 시작합니다.
  */
+/**
+ * 기수 단체방 하나 (2026-09-22).
+ *
+ * ★ 왜 useMyChatRooms에 섞지 않고 따로 구독하나
+ *   채팅 목록은 `where("memberUids","array-contains", 내 uid)`로 방을 찾는데,
+ *   기수 단체방에는 memberUids가 아예 없습니다(lib/chat-rooms.ts 맨 위 설명).
+ *   명단을 문서에 적지 않는 대신, 이 방만 문서 id로 곧장 구독합니다. 읽기 1건입니다.
+ *
+ * ★ 문서가 없어도 방은 있습니다.
+ *   한 마디도 오가지 않았으면 문서가 없는데, 그때도 목록에 서 있어야 해서
+ *   빈 껍데기(emptyCohortRoom)를 돌려줍니다. 화면은 둘을 구별하지 않습니다.
+ *
+ * ★ 규칙에 막히면(내 기수가 아닌 방) 빈 껍데기로 둡니다.
+ *   운영진이 다른 기수를 골라 보는 경우는 규칙이 통과시키고, 그 밖의 경우는
+ *   애초에 화면이 내 기수만 보여주므로 여기에 걸릴 일이 거의 없습니다.
+ */
+export function useCohortChatRoom(cohort: string | undefined): ChatRoomDoc | null {
+  const roomId = cohort ? cohortRoomId(cohort) : null;
+  const [entry, setEntry] = useState<{ roomId: string; room: ChatRoomDoc } | null>(null);
+
+  useEffect(() => {
+    if (!roomId || !cohort) return;
+    return onSnapshot(
+      doc(db, "chatRooms", roomId),
+      (snapshot) =>
+        setEntry({
+          roomId,
+          room: snapshot.exists()
+            ? toChatRoom(snapshot.id, snapshot.data())
+            : emptyCohortRoom(cohort),
+        }),
+      () => setEntry({ roomId, room: emptyCohortRoom(cohort) }),
+    );
+  }, [roomId, cohort]);
+
+  if (!cohort || !roomId) return null;
+  // 기수를 바꾼 직후에는 옛 기수 방을 보이지 않고 빈 껍데기로 둡니다.
+  return entry?.roomId === roomId ? entry.room : emptyCohortRoom(cohort);
+}
+
 export function useChatReadTimes(uid: string | undefined, roomIds: string[]) {
   const [entry, setEntry] = useState<{ uid: string; doc: ChatReadDoc | null } | null>(null);
   const roomKey = roomIds.join("|");
@@ -826,9 +871,20 @@ export function useUnreadRooms(
 /**
  * 하단 탭에 빨간 점을 띄울지 — 어느 방이든 새 메시지가 있으면 참.
  * 점 하나만 필요한 곳(탭바)에서 씁니다.
+ *
+ * ★ 기수 단체방도 셉니다 (2026-09-22). 그 방은 memberUids가 없어 useMyChatRooms에
+ *   안 걸리므로 따로 받아 붙입니다. cohort를 안 넘기면 1:1 방만 셉니다.
+ *   탭바는 내 기수를 넘깁니다 — 운영진이 다른 기수를 골라 보고 있어도 탭의 점은
+ *   내 기수 방을 기준으로 켜져야 합니다.
  */
-export function useHasUnreadChat(uid?: string): boolean {
-  const { data: rooms } = useMyChatRooms(uid);
+export function useHasUnreadChat(uid?: string, cohort?: string): boolean {
+  const { data: directRooms } = useMyChatRooms(uid);
+  const cohortRoom = useCohortChatRoom(cohort);
+
+  const rooms = useMemo(
+    () => (cohortRoom ? [cohortRoom, ...directRooms] : directRooms),
+    [cohortRoom, directRooms],
+  );
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
   const unread = useUnreadRooms(uid, rooms, readMillis, loaded);

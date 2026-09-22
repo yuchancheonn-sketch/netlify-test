@@ -114,6 +114,13 @@ function NewsTabs() {
 
         ★ 위 NewsFallback의 같은 상자에도 같은 pt-4가 있어야 합니다.
           한쪽만 주면 기다리는 화면과 채워진 화면의 첫 칸 위치가 달라 튀어 보입니다.
+
+        ★ 아래 두 갈래(VideoList·NewsList)의 상자 사이는 모두 14px입니다
+          (20px(gap-5) → 14px, 2026-09-22 사용자 "홈탭이랑 원우탭 목록 간격으로 맞춰줘").
+          홈의 카드 사이·원우수첩 줄 사이와 같은 값이라 탭을 옮겨 다녀도 결이 같습니다.
+          Tailwind 단계(12px·16px) 사이 값이라 gap-[14px]로 직접 적습니다.
+          네 군데(갈래마다 자리 표시 목록 + 진짜 목록)가 모두 같아야 합니다 —
+          한쪽만 고치면 불러오는 동안과 다 불러온 뒤의 줄 자리가 어긋나 한 번 들썩입니다.
       */}
       <div className="px-4 pt-4 pb-8">
         {subtab === "videos" ? <VideoList /> : <NewsList />}
@@ -164,7 +171,7 @@ function VideoList() {
 
   if (loading) {
     return (
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-[14px]">
         {[0, 1, 2].map((key) => (
           <li key={key}>
             <Skeleton className="aspect-video rounded-2xl" />
@@ -206,7 +213,7 @@ function VideoList() {
 
   return (
     <>
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-[14px]">
         {videos.map((video) => (
           <li key={video.id}>
             <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
@@ -325,7 +332,7 @@ function NewsList() {
 
   if (loading) {
     return (
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-[14px]">
         {[0, 1, 2].map((key) => (
           <li key={key}>
             <Skeleton className="aspect-square rounded-2xl" />
@@ -367,7 +374,7 @@ function NewsList() {
 
   return (
     <>
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-[14px]">
         {items.map((item) => (
           <li key={item.id}>
             <a

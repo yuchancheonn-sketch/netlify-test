@@ -11,6 +11,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
+import { cohortOf } from "@/lib/cohort";
 import { useHasUnreadChat } from "@/lib/hooks";
 
 /**
@@ -171,8 +172,12 @@ const SLIDE_TRANSITION = "220ms cubic-bezier(0.22, 1, 0.36, 1)";
 export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
-  const hasUnreadChat = useHasUnreadChat(user?.uid);
+  const { user, profile } = useAuth();
+  /*
+   * 내 기수를 넘깁니다 — 기수 단체방의 새 메시지도 이 점에 들어옵니다 (2026-09-22).
+   * 운영진이 채팅 화면에서 다른 기수를 골라 보고 있어도, 탭의 점은 늘 내 기수 방을 봅니다.
+   */
+  const hasUnreadChat = useHasUnreadChat(user?.uid, cohortOf(profile?.cohort));
 
   const listRef = useRef<HTMLUListElement>(null);
   const [drag, setDrag] = useState<PillDrag | null>(null);
@@ -495,13 +500,20 @@ export default function BottomTabBar() {
               >
                 <span className="relative flex items-center justify-center">
                   {/*
-                    선 굵기는 모든 탭이 2입니다. 그림(당근 하단 바)의 안 고른 아이콘이 가는 선이
-                    아니라 굵은 검은 선이라, 예전 1.7(안 고른 탭)에서 올렸습니다.
+                    선 굵기는 모든 탭이 1.9입니다. 그림(당근 하단 바)의 안 고른 아이콘이 가는 선이
+                    아니라 굵은 검은 선이라 예전 1.7(안 고른 탭)에서 2로 올렸고,
+                    2026-09-22 사용자 "아주아주 조금만 더 얇게"로 1.9가 됐습니다.
                     고른 탭은 굵기가 아니라 속 채움(filled)으로만 달라집니다.
+
+                    ★ 눈에 띄는 것은 안 고른 네 탭입니다 — 고른 탭은 속이 꽉 차 있어
+                      선 굵기가 거의 드러나지 않습니다.
+                    ★ 0.1 단위가 사실상 바닥입니다. 화소 밀도 3배인 폰에서 27px 상자의
+                      0.1은 약 0.34 화소라, 이보다 잘게 내리면 같은 화소에 떨어져
+                      화면에서는 달라지지 않습니다. 더 얇게 가려면 1.8(icons.tsx 기본값)입니다.
                   */}
                   <Icon
                     className="h-[27px] w-[27px]"
-                    strokeWidth={2}
+                    strokeWidth={1.9}
                     filled={covered}
                   />
 

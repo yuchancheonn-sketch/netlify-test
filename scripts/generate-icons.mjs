@@ -289,9 +289,9 @@ function iconSvg(inset, { withWaves, square = false }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FFA353"/>
-      <stop offset="45%" stop-color="#FF7210"/>
-      <stop offset="100%" stop-color="#D95700"/>
+      <stop offset="0%" stop-color="#FF9753"/>
+      <stop offset="45%" stop-color="#FD5702"/>
+      <stop offset="100%" stop-color="#D94700"/>
     </linearGradient>
     <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
@@ -425,7 +425,7 @@ async function main() {
        * 투명한 곳이 조금이라도 남으면 iOS가 그 부분을 검게 칠합니다.
        * 브랜드 주황으로 배경을 깔고 알파 채널을 아예 없애 완전히 불투명하게 만듭니다.
        */
-      pipeline = pipeline.flatten({ background: "#FF7210" }).removeAlpha();
+      pipeline = pipeline.flatten({ background: "#FD5702" }).removeAlpha();
     }
 
     const png = await pipeline.png().toBuffer();

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { thumbnailUrl } from "@/lib/cloudinary";
 
 /** 사진이 없을 때 쓰는 배경색 팔레트. 이름이 같으면 항상 같은 색이 나옵니다. */
 const FALLBACK_COLORS = [
@@ -70,9 +71,16 @@ export default function Avatar({ src, name, size = 40, seed, className = "" }: A
       );
     }
 
+    /*
+     * 직접 올린 사진(Cloudinary)은 원본이 아니라 이 동그라미 크기로 구운 판을 받습니다 (2026-09-22).
+     * unoptimized라 Next.js가 줄여 주지 않으므로, 줄이는 일은 Cloudinary에 맡깁니다.
+     * 화소 밀도가 2~3배인 폰을 생각해 지름의 두 배로 받습니다.
+     * 구글 계정 사진은 Cloudinary 주소가 아니라 그대로 지나갑니다(thumbnailUrl 주석 참고).
+     * next/image는 기본이 lazy라 화면에 들어올 때 받습니다.
+     */
     return (
       <Image
-        src={src}
+        src={thumbnailUrl(src, size * 2)}
         alt={`${name} 프로필 사진`}
         width={size}
         height={size}

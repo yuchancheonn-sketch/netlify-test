@@ -13,7 +13,7 @@
  *   한 그림 안에서 주황의 진하기(ORANGE → PEACH → CREAM)로 앞뒤를 가릅니다.
  */
 
-const ORANGE = "#FF7210";
+const ORANGE = "#FD5702"; // globals.css의 --color-brand-500과 같은 값 (2026-09-22 #FF7210에서 바꿈)
 const ORANGE_DEEP = "#C25100";
 const PEACH = "#FFB066";
 const PEACH_LIGHT = "#FFD9B8";

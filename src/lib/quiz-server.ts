@@ -1,6 +1,6 @@
 import "server-only";
 
-import { FieldValue, type Firestore } from "firebase-admin/firestore";
+import { FieldValue, type DocumentSnapshot, type Firestore } from "firebase-admin/firestore";
 import { cohortOf } from "@/lib/cohort";
 import {
   kstDateString,
@@ -60,29 +60,45 @@ export async function authorizeQuizRequest(request: Request): Promise<Authorized
   }
 }
 
-/** 승인된 원우면 지금 기수("10기" 등), 아니면 null. 차단된 사람은 퀴즈를 풀거나 성적을 볼 수 없습니다. */
-async function memberCohort(db: Firestore, uid: string): Promise<string | null> {
-  const snap = await db.collection("users").doc(uid).get();
+/** users/{uid} 문서에서 지금 기수("10기" 등)를 꺼냅니다. 승인된 원우가 아니면 null. */
+function cohortIn(snap: DocumentSnapshot): string | null {
   if (!snap.exists || snap.get("status") !== "approved") return null;
   return cohortOf(snap.get("cohort") as string | undefined);
 }
 
-/** 내 성적과 기수 안 등수. 한 번도 안 풀었으면 null. */
-async function readStats(db: Firestore, uid: string, cohort: string): Promise<QuizStats | null> {
-  const scoreRef = db.collection(SCORES).doc(uid);
-  const scoreSnap = await scoreRef.get();
-  if (!scoreSnap.exists) return null;
+/** 승인된 원우면 지금 기수, 아니면 null. 차단된 사람은 퀴즈를 풀거나 성적을 볼 수 없습니다. */
+async function memberCohort(db: Firestore, uid: string): Promise<string | null> {
+  return cohortIn(await db.collection("users").doc(uid).get());
+}
 
-  // 프로필에서 기수를 바꾼 원우는 새 기수의 등수에 들어가도록 맞춰 둡니다.
-  if (cohortOf(scoreSnap.get("cohort") as string | undefined) !== cohort) {
-    await scoreRef.update({ cohort });
-  }
+/**
+ * 내 성적과 기수 안 등수. 한 번도 안 풀었으면 null.
+ * quizScores/{uid}는 부르는 쪽에서 다른 조회와 함께 미리 받아 넘깁니다(readQuizStatus 주석 참고).
+ */
+async function readStats(
+  db: Firestore,
+  uid: string,
+  cohort: string,
+  scoreSnap: DocumentSnapshot,
+): Promise<QuizStats | null> {
+  if (!scoreSnap.exists) return null;
 
   const correct = Number(scoreSnap.get("correct") ?? 0);
   const answered = Number(scoreSnap.get("answered") ?? 0);
 
+  // 프로필에서 기수를 바꾼 원우는 새 기수의 등수에 들어가도록 맞춰 둡니다.
+  // 이 쓰기가 끝나기를 기다릴 필요는 없습니다 — 아래 등수 계산은 새 기수로 질의하고,
+  // 질의 결과에 내가 아직 없을 수 있는 것은 includesMe가 보정합니다. 그래서 같이 보냅니다.
+  const syncCohort =
+    cohortOf(scoreSnap.get("cohort") as string | undefined) !== cohort
+      ? scoreSnap.ref.update({ cohort })
+      : null;
+
   // select("correct") — 같은 기수 원우들의 맞힌 수만 받습니다(기수당 수십 건).
-  const peers = await db.collection(SCORES).where("cohort", "==", cohort).select("correct").get();
+  const [peers] = await Promise.all([
+    db.collection(SCORES).where("cohort", "==", cohort).select("correct").get(),
+    syncCohort,
+  ]);
   let higher = 0;
   for (const peer of peers.docs) {
     const peerCorrect = peer.id === uid ? correct : Number(peer.get("correct") ?? 0);
@@ -108,14 +124,24 @@ const RANK_SHOWN_UP_TO = 10;
 
 /** 오늘 문제를 풀었는지(풀었으면 정답·해설까지)와 내 성적. 승인된 원우가 아니면 null. */
 export async function readQuizStatus(db: Firestore, uid: string): Promise<QuizStatus | null> {
-  const cohort = await memberCohort(db, uid);
-  if (!cohort) return null;
-
   const day = kstDayNumber();
   const date = kstDateString(day);
   const quiz = quizForDay(day);
 
-  const answerSnap = await db.collection(ANSWERS).doc(answerDocId(uid, date)).get();
+  /*
+   * 세 문서는 uid와 오늘 날짜만 있으면 되므로 서로를 기다릴 이유가 없습니다.
+   * 예전에는 차례로 await 해서 왕복이 네 번(≈1초)이었는데, 한 번에 보내고 기수가 나와야만
+   * 할 수 있는 등수 질의만 뒤에 두어 두 번(≈0.5초)으로 줄였습니다 (2026-09-22).
+   */
+  const [memberSnap, answerSnap, scoreSnap] = await Promise.all([
+    db.collection("users").doc(uid).get(),
+    db.collection(ANSWERS).doc(answerDocId(uid, date)).get(),
+    db.collection(SCORES).doc(uid).get(),
+  ]);
+
+  const cohort = cohortIn(memberSnap);
+  if (!cohort) return null;
+
   let today: QuizStatus["today"] = null;
   if (answerSnap.exists) {
     const key = answerFor(String(answerSnap.get("quizId") ?? quiz.id));
@@ -130,7 +156,7 @@ export async function readQuizStatus(db: Firestore, uid: string): Promise<QuizSt
     }
   }
 
-  return { quizId: quiz.id, date, today, stats: await readStats(db, uid, cohort) };
+  return { quizId: quiz.id, date, today, stats: await readStats(db, uid, cohort, scoreSnap) };
 }
 
 export type SubmitOutcome =
@@ -202,13 +228,14 @@ export async function readQuizHistory(
   db: Firestore,
   uid: string,
 ): Promise<QuizHistoryItem[] | null> {
-  const cohort = await memberCohort(db, uid);
-  if (!cohort) return null;
-
   const day = kstDayNumber();
-  const answeredToday = (
-    await db.collection(ANSWERS).doc(answerDocId(uid, kstDateString(day))).get()
-  ).exists;
+  // 여기도 두 조회가 서로 기대지 않아 한 번에 보냅니다 (2026-09-22).
+  const [memberSnap, todaySnap] = await Promise.all([
+    db.collection("users").doc(uid).get(),
+    db.collection(ANSWERS).doc(answerDocId(uid, kstDateString(day))).get(),
+  ]);
+  if (!cohortIn(memberSnap)) return null;
+  const answeredToday = todaySnap.exists;
 
   return pastQuizzes(day, answeredToday).flatMap(({ day: quizDay, quiz }) => {
     const key = answerFor(quiz.id);

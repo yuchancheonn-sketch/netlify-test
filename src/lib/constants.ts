@@ -153,7 +153,7 @@ export const COUNCIL_ROLE_MAX_LENGTH = 10;
  * 브랜드 기준색 (PWA theme_color, 주소창 색 등 CSS 밖에서 필요할 때 사용).
  * 앱에서 쓰는 주황은 이 색 하나뿐입니다. 더 진한 주황은 두지 않습니다.
  */
-export const BRAND_COLOR = "#FF7210";
+export const BRAND_COLOR = "#FD5702"; // 2026-09-22 #FF7210 → #FD5702 (디지털온누리 주황). globals.css의 --color-brand-500과 같아야 합니다.
 /**
  * 앱 배경색 (PWA 스플래시·body 배경).
  * globals.css의 --color-canvas와 항상 같은 값을 유지해 주세요.

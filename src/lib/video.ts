@@ -64,12 +64,19 @@ export function parseVideoLink(raw: string): VideoLink | null {
  *   86×62였을 때 위아래로 검은 줄이 보이던 이유입니다.)
  *
  *   16:9로 나오는 mqdefault(320×180)를 쓰면 비율과 무관하게 띠가 없지만,
- *   가로 320px뿐이라 조금만 크게 깔아도 흐릿합니다. 그래서 해상도가 나은
- *   hqdefault를 두고 상자 비율로 푸는 쪽을 택했습니다.
+ *   가로 320px뿐이라 조금만 크게 깔아도 흐릿합니다. 그래서 크게 까는 자리
+ *   (원우 상세 시트의 aspect-video)는 해상도가 나은 hqdefault를 두고
+ *   상자 비율로 푸는 쪽을 택했습니다.
+ *
+ * ★ size "small"은 mqdefault입니다 — **작은 목록 칸에만** 쓰세요 (2026-09-22).
+ *   원우수첩 한 줄의 상자는 112×63(고해상도 폰에서 224×126)이라 320×180이면
+ *   충분히 또렷하고, 한 장이 hqdefault의 절반 무게입니다. 10기 수첩 기준
+ *   26장 합계가 258KB → 166KB로 내려갑니다. 크게 까는 자리에 쓰면 흐려집니다.
  */
-export function videoThumbnail(link: VideoLink): string | null {
+export function videoThumbnail(link: VideoLink, size: "large" | "small" = "large"): string | null {
   if (link.kind === "youtube" && link.id) {
-    return `https://img.youtube.com/vi/${link.id}/hqdefault.jpg`;
+    const name = size === "small" ? "mqdefault" : "hqdefault";
+    return `https://img.youtube.com/vi/${link.id}/${name}.jpg`;
   }
   return null;
 }

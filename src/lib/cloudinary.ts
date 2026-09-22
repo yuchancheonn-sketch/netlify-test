@@ -192,9 +192,16 @@ export function fileThumbnailUrl(url: string, size = 500): string | null {
  *
  * c_fill: 지정한 비율로 꽉 채워 자르기 / g_auto: 중요한 부분을 알아서 남기기
  * q_auto: 화질 자동 / f_auto: 브라우저가 지원하는 최신 포맷으로 자동 변환
+ *
+ * height를 따로 주면 정사각형이 아닌 상자에도 맞춥니다 (원우수첩 한 줄의 112×63 같은).
+ * 안 주면 지금까지처럼 정사각형입니다.
+ *
+ * ★ Cloudinary 주소가 아니면(구글 계정 사진, 옛 data: 주소) 아무것도 바꾸지 않고
+ *   그대로 돌려줍니다 — "/upload/"가 없어서 replace가 걸리지 않습니다. 그래서
+ *   어떤 주소든 안심하고 통과시켜도 됩니다.
  */
-export function thumbnailUrl(url: string, size = 400): string {
-  return url.replace("/upload/", `/upload/c_fill,g_auto,w_${size},h_${size},q_auto,f_auto/`);
+export function thumbnailUrl(url: string, size = 400, height = size): string {
+  return url.replace("/upload/", `/upload/c_fill,g_auto,w_${size},h_${height},q_auto,f_auto/`);
 }
 
 /** 전체화면 뷰어용. 비율은 유지하면서 너무 큰 원본만 줄여서 받습니다. */

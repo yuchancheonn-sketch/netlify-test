@@ -3,8 +3,21 @@
 /**
  * 대화방을 다루는 규칙 모음.
  *
- * 방은 원우 두 명만의 1:1 방(direct) 한 종류입니다.
- * 단체방("main")은 2026-09-10에 없앴습니다 — 카톡 단톡방으로 대신합니다.
+ * 방은 두 종류입니다.
+ *   direct  원우 두 명만의 1:1 방. id는 두 uid를 정렬해 "__"로 이은 것.
+ *   cohort  기수 단체방 (2026-09-22). id는 "cohort-10" 꼴.
+ *
+ * ★ 기수 단체방에는 memberUids가 없습니다 — 일부러입니다.
+ *   "그 기수 원우는 무조건 이 방에 있다"가 요구사항이라, 명단을 문서에 적어 두면
+ *   가입·기수 변경·승인마다 그 배열을 고쳐야 하고 한 번이라도 빠뜨리면 누군가는
+ *   방에서 사라집니다. 대신 **users/{uid}.cohort와 방 id를 견주어** 자격을 봅니다 —
+ *   명단을 어디에도 적지 않으므로 어긋날 수가 없습니다.
+ *   보안 규칙도 같은 방식입니다(firestore.rules의 isCohortRoomMine).
+ *
+ *   대가로 채팅 목록의 `where("memberUids","array-contains",uid)` 질의에는 안 걸립니다.
+ *   그래서 이 방만 문서 id로 따로 구독합니다(hooks.ts의 useCohortChatRoom).
+ *
+ * 예전의 단체방 하나("main")는 2026-09-10에 없앴습니다. 지금 것은 기수별로 나뉜 다른 방입니다.
  */
 
 import {
@@ -18,33 +31,31 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { requestPush } from "@/lib/push";
+import { cohortOf } from "@/lib/cohort";
+import {
+  DIRECT_SEPARATOR,
+  cohortOfRoomId,
+  cohortRoomId,
+  cohortRoomTitle,
+  directRoomId,
+  otherUidOf,
+} from "@/lib/chat-room-id";
 import { CHAT_PREVIEW_MAX_LENGTH } from "@/lib/constants";
 import type { ChatRoomDoc, MessageDoc, UserDoc } from "@/lib/types";
 
-/** 1:1 방 id에서 두 사람의 uid를 잇는 글자. uid에는 쓰이지 않는 모양으로 골랐습니다. */
-const DIRECT_SEPARATOR = "__";
-
-/**
- * 두 원우의 1:1 방 id.
- *
- * 누가 먼저 말을 걸든 같은 id가 나오도록 uid를 정렬해 붙입니다. 그래야
- *  - 방을 찾으려고 따로 조회할 필요가 없고,
- *  - 같은 상대와 방이 두 개 생기는 일이 없습니다.
+/*
+ * 방 id를 읽고 만드는 규칙은 lib/chat-room-id.ts에 있습니다 — 서버 라우트도 같은 규칙을
+ * 써야 하는데 이 파일은 "use client"라 서버에서 못 불러옵니다. 여기서 다시 내보내
+ * 부르는 쪽은 예전처럼 이 파일 하나만 보면 되게 둡니다.
  */
-export function directRoomId(a: string, b: string): string {
-  return [a, b].sort().join(DIRECT_SEPARATOR);
-}
-
-/**
- * 1:1 방에서 나 말고 상대의 uid.
- * 1:1 방 모양이 아니거나(예전 단체방 "main" 등) 내가 낀 방이 아니면 null
- */
-export function otherUidOf(roomId: string, myUid: string): string | null {
-  const uids = roomId.split(DIRECT_SEPARATOR);
-  if (uids.length !== 2 || !uids.includes(myUid)) return null;
-  const other = uids.find((uid) => uid !== myUid);
-  return other ?? null;
-}
+export {
+  cohortOfRoomId,
+  cohortRoomId,
+  cohortRoomTitle,
+  directRoomId,
+  isCohortRoomId,
+  otherUidOf,
+} from "@/lib/chat-room-id";
 
 /**
  * Firestore에서 읽은 방 문서를 화면에서 바로 쓸 수 있는 모양으로 맞춥니다.
@@ -54,10 +65,17 @@ export function otherUidOf(roomId: string, myUid: string): string | null {
  * 읽어 들이는 이 자리에서 빠진 칸을 채웁니다.
  */
 export function toChatRoom(id: string, data: Record<string, unknown>): ChatRoomDoc {
+  /*
+   * kind는 문서에 적힌 값보다 **id를 먼저 믿습니다.**
+   * id는 규칙이 자격을 가리는 기준이기도 해서, 문서 칸이 비어 있거나 옛 값이어도
+   * id만 맞으면 기수 단체방으로 다뤄야 화면과 규칙이 어긋나지 않습니다.
+   */
+  const cohort = cohortOfRoomId(id);
   return {
     id,
-    kind: data.kind === "group" ? "group" : "direct",
+    kind: cohort ? "cohort" : data.kind === "group" ? "group" : "direct",
     title: typeof data.title === "string" ? data.title : "",
+    cohort: cohort ?? "",
     memberUids: Array.isArray(data.memberUids) ? (data.memberUids as string[]) : [],
     lastMessageText:
       typeof data.lastMessageText === "string" ? data.lastMessageText : "",
@@ -67,14 +85,35 @@ export function toChatRoom(id: string, data: Record<string, unknown>): ChatRoomD
   };
 }
 
-/** 채팅 목록에 보여줄 방 이름 — 상대 원우의 이름입니다. */
+/** 채팅 목록에 보여줄 방 이름 — 1:1 방은 상대 원우의 이름, 기수 단체방은 "N기 단체 대화방". */
 export function roomTitle(
   room: ChatRoomDoc,
   myUid: string,
   nameByUid: Map<string, string>,
 ): string {
+  if (room.cohort) return cohortRoomTitle(room.cohort);
   const other = otherUidOf(room.id, myUid);
   return (other && nameByUid.get(other)) || "원우";
+}
+
+/**
+ * 아직 문서가 없는 기수 단체방의 빈 껍데기.
+ *
+ * 기수 단체방은 "그 기수 원우는 무조건 있다"가 요구사항이라, 한 마디도 오가지 않아
+ * 문서가 없을 때도 채팅 목록에 서 있어야 합니다. 1:1 방과 다른 점입니다 —
+ * 1:1 방은 첫 메시지를 보낼 때 생기고, 그 전에는 목록에 없는 편이 맞습니다.
+ */
+export function emptyCohortRoom(cohort: string): ChatRoomDoc {
+  return {
+    id: cohortRoomId(cohort),
+    kind: "cohort",
+    title: cohortRoomTitle(cohort),
+    cohort: cohortOf(cohort),
+    memberUids: [],
+    lastMessageText: "",
+    lastMessageSenderId: "",
+    lastMessageAt: null,
+  };
 }
 
 /** 목록 한 줄에 들어갈 만큼 마지막 메시지를 줄입니다. */
@@ -114,8 +153,13 @@ export async function sendChatMessage({
   sender: { uid: string; profile: UserDoc | null };
   text: string;
 }): Promise<void> {
-  // 1:1 방 모양이 아니면 보내지 않습니다. (보안 규칙도 막습니다)
-  if (!otherUidOf(roomId, sender.uid)) {
+  /*
+   * 아는 방 모양인지 먼저 봅니다 — 1:1 방이거나 기수 단체방이어야 합니다.
+   * (자격 자체는 보안 규칙이 가립니다. 여기서 막는 것은 오타 난 주소로 들어와
+   *  쓸 수 없는 방에 글을 쓰려다 규칙에 거절당하는 일을 미리 거르는 것입니다.)
+   */
+  const roomCohort = cohortOfRoomId(roomId);
+  if (!roomCohort && !otherUidOf(roomId, sender.uid)) {
     throw new Error("대화방을 찾지 못했어요.");
   }
 
@@ -141,14 +185,27 @@ export async function sendChatMessage({
   await setDoc(
     doc(db, "chatRooms", roomId),
     {
-      kind: "direct",
-      title: "",
-      /*
-        1:1 방은 미리 만들어 두지 않으므로, 첫 메시지를 보내는 이 자리에서
-        memberUids를 함께 적어야 상대의 채팅 목록에도 뜹니다. roomId 자체가
-        두 uid를 정렬해 이은 값이라 다시 계산할 필요 없이 그대로 씁니다.
-      */
-      memberUids: roomId.split(DIRECT_SEPARATOR),
+      ...(roomCohort
+        ? {
+            /*
+              기수 단체방 — memberUids를 적지 않습니다.
+              명단은 users/{uid}.cohort가 대신하므로 여기에 또 적으면 두 곳이 어긋납니다
+              (이 파일 맨 위 설명). cohort 칸은 서버가 알림 받을 사람을 찾을 때 씁니다.
+            */
+            kind: "cohort",
+            cohort: roomCohort,
+            title: cohortRoomTitle(roomCohort),
+          }
+        : {
+            kind: "direct",
+            title: "",
+            /*
+              1:1 방은 미리 만들어 두지 않으므로, 첫 메시지를 보내는 이 자리에서
+              memberUids를 함께 적어야 상대의 채팅 목록에도 뜹니다. roomId 자체가
+              두 uid를 정렬해 이은 값이라 다시 계산할 필요 없이 그대로 씁니다.
+            */
+            memberUids: roomId.split(DIRECT_SEPARATOR),
+          }),
       lastMessageText: text,
       lastMessageSenderId: sender.uid,
       lastMessageAt: serverTimestamp(),

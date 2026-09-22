@@ -6,17 +6,32 @@ import { Fragment } from "react";
  * 글자만으로 된 고르개 — 고른 칸은 먹색 글씨, 나머지는 연회색 글씨. 칸 사이에 옅은 세로 줄.
  * 바탕도 테두리도 밑줄 바도 없습니다.
  *
- * 쓰는 곳 (2026-09-15 기준 셋)
- *   - 원우수첩의 구분 고르개   전체 | 일반 원우 | 대학생 원우   ("body")
+ * 쓰는 곳 (2026-09-22 기준 셋)
+ *   - 원우수첩의 구분 고르개   전체 | 일반 원우 | 대학생 원우   ("underline")
  *   - 소식 탭의 서브탭        복습 영상 | 소식                ("header")
  *   - 자료 탭의 서브탭        행사 사진 | 파일                ("header")
+ *
+ * ★ 2026-09-22에 소식·자료도 "underline"으로 옮겼다가 같은 날 되돌렸습니다
+ *   (사용자 "생각보다 별로다"). 그 둘은 서브탭이 제목 자리를 대신하는 짜임이
+ *   더 낫다는 판단입니다 — 다시 옮기자고 제안하지 마세요.
+ *   "body"는 원우수첩이 "underline"으로 가면서 지금 쓰는 곳이 없습니다.
  *
  * ★ 컴포넌트로 뺀 이유
  *   원래는 화면마다 같은 마크업을 복붙해 두었는데, 그날 하루 만에 소식 탭은
  *   20px, 원우수첩은 19px로 갈라졌습니다. 한 군데서만 고쳐도 셋이 같이
  *   움직이도록 여기로 모았습니다. 크기·간격·색을 바꾸려면 이 파일만 고치세요.
  *
- * ★ 두 갈래는 이제 글씨 크기와 들여쓰기만 다릅니다 (2026-09-15).
+ * ★ 세 번째 갈래 "underline" (2026-09-22, 사용자가 보여 준 결제카드 관리 화면 그림을 따름).
+ *   고른 칸은 **주황 굵은 글씨 + 글씨 아래 주황 바**, 나머지는 회색 글씨입니다.
+ *   칸들이 폭을 균등하게 나눠 갖고(flex-1), 줄 전체 아래에 옅은 회색 구분선이 한 줄 깔립니다.
+ *   "body"·"header"에 있는 칸 사이 세로 줄은 없습니다.
+ *   지금 쓰는 곳은 원우수첩 하나뿐이고, 소식·자료 탭 서브탭("header")은 그대로 둡니다
+ *   (그 둘은 제목 자리를 대신하는 22px이라 바를 깔면 제목에 밑줄이 그어진 것처럼 보입니다).
+ *
+ *   ※ 같은 날 잠깐 주황 **테두리 상자**로 만들었다가 되돌렸습니다 — 그림이 잘린 것만 보고
+ *     바를 상자로 잘못 읽었습니다. 상자가 아니라 바입니다.
+ *
+ * ★ 나머지 두 갈래는 글씨 크기와 들여쓰기만 다릅니다 (2026-09-15).
  *   "body"   19px bold, 왼쪽 6px 들임.
  *   "header" 22px bold(제목 자리), 들여쓰기 없음.
  *   칸 순서는 늘 그대로이고, 칸 사이 세로 줄·간격(gap-2)은 두 갈래가 같습니다.
@@ -57,14 +72,29 @@ export default function TextTabs<T extends string>({
    *          PageHeader의 h1이 쓰는 값(text-[22px] tracking-tight)을 그대로 맞췄습니다.
    *          높이는 글줄 하나(27.5px)뿐입니다 — 소식 탭의 기다리는
    *          화면(NewsFallback) 회색 칸이 이 높이에 맞춰져 있습니다.
+   * "underline" 고른 칸 아래에 주황 바를 까는 고르개 (원우수첩). 16px —
+   *          세 칸이 폭을 나눠 가지므로 390px 폰에서 한 칸이 약 117px입니다.
+   *          19px로 두면 "대학생 원우"(다섯 글자 + 띄어쓰기)가 칸을 넘칩니다.
    */
-  variant?: "body" | "header";
+  variant?: "body" | "header" | "underline";
   /** 바깥 여백처럼 화면마다 다른 것만 여기로 받습니다 (예: "mt-4"). */
   className?: string;
 }) {
   const header = variant === "header";
+  const underline = variant === "underline";
   /* 탭과 trailing이 같은 값을 보도록 한 줄에 모아 둡니다. */
-  const textClass = header ? "text-[22px] tracking-tight" : "text-[19px]";
+  const textClass = header
+    ? "text-[22px] tracking-tight"
+    : underline
+      ? "text-[16px]"
+      : "text-[19px]";
+
+  /*
+   * ★ 칸 하나뿐일 때는 늘리지 않습니다 (1·2기 수첩 — 대학생 원우가 없어 "전체 N명" 한 칸만 섭니다).
+   *   flex-1로 두면 주황 바가 화면 폭을 가로질러, 탭이 아니라 밑줄 그은 제목으로 보입니다.
+   *   왼쪽에 제 폭만큼만 서고 바도 글씨 폭만큼만 깔립니다.
+   */
+  const stretch = underline && items.length > 1;
 
   return (
     /*
@@ -89,10 +119,32 @@ export default function TextTabs<T extends string>({
      * shrink-0이 없으면 칸이 쪼그라들어 글자가 두 줄로 접힙니다.
      */
     <span className={`relative flex ${className}`}>
+      {/*
+        "underline" — 칸들이 폭을 나눠 가지므로 가로로 밀 일이 없습니다(overflow-x-auto 불필요).
+        칸 사이 간격도 없습니다: 주황 바가 칸 폭을 꽉 채워야 그림처럼 보이는데,
+        gap을 주면 바 사이가 벌어져 바가 칸보다 짧아 보입니다.
+
+        ★ -mx-4로 좌우 16px을 도로 밀어냅니다.
+          쓰는 쪽(원우수첩)이 px-4 안에 두는데, 그림의 회색 구분선은 화면 끝에서 끝까지
+          이어집니다. 여기서 그만큼 되밀어야 선이 화면을 가로지릅니다.
+          글씨는 칸 가운데에 서므로(justify-center) 되밀어도 제자리를 잃지 않습니다 —
+          세 칸의 가운데가 각각 전체 폭의 1/6·3/6·5/6입니다.
+          쓰는 쪽의 좌우 여백이 px-4가 아니게 되면 이 값도 같이 고쳐야 합니다.
+
+        ★ 회색 구분선은 여기(border-b)에 두고, 주황 바는 칸 안에서 bottom-[-1px]로
+          그 위에 겹쳐 깝니다. 그래야 그림처럼 둘이 같은 높이에 붙어 보입니다.
+
+        ★ 왼쪽 들여쓰기(pl-1.5)는 주지 않습니다 — 첫 칸 글씨가 바로 위 검색 알약의
+          왼쪽 끝과 한 줄로 맞아야 합니다.
+      */}
       <span
-        className={`no-scrollbar relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto ${
-          header ? "" : "pl-1.5"
-        }`}
+        className={
+          underline
+            ? "relative -mx-4 flex min-w-0 flex-1 items-stretch border-b border-line"
+            : `no-scrollbar relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto ${
+                header ? "" : "pl-1.5"
+              }`
+        }
       >
         {items.map((item, index) => {
           const active = item.value === value;
@@ -106,7 +158,8 @@ export default function TextTabs<T extends string>({
                 22px은 "header" 글씨 크기에 맞춘 값인데, "body"(19px)에도 같은 줄을 그대로 씁니다 — 사용자가
                 "똑같이"라고 했습니다. body에서 줄이 글자보다 길어 보이면 이 갈래만 19px로 줄이면 됩니다.
               */}
-              {index > 0 ? (
+              {/* "underline"에는 세로 줄이 없습니다 — 칸을 가르는 것은 주황 바와 색입니다. */}
+              {index > 0 && !underline ? (
                 <span
                   aria-hidden
                   className="relative top-px h-[22px] w-0.5 shrink-0 self-center rounded-full bg-line"
@@ -128,7 +181,33 @@ export default function TextTabs<T extends string>({
                   너무 흐려 못 누르는 칸처럼 보인다는 이야기가 나오면 ink-muted로.
                   전환 없이 바로 바뀝니다.
                 */
-                className={`flex shrink-0 items-center ${active ? "text-ink" : "text-ink-faint"}`}
+                /*
+                  ★ "underline" — 고른 칸은 주황 글씨, 그 아래에 주황 바 (2026-09-22, 그림을 따름).
+                    - 바는 테두리가 아니라 아래 <span>입니다. 테두리로 두면 안 고른 칸에도
+                      같은 굵기의 투명 테두리를 둘러야 높이가 맞는데, 겹쳐 깔 수가 없어
+                      회색 구분선과 주황 바가 위아래로 따로 놉니다.
+                    - 안 고른 칸은 ink-muted입니다 — 다른 두 갈래(ink-faint)보다 한 단 진합니다.
+                      그림의 안 고른 칸이 또렷한 회색이고, 여기서는 고른 칸이 주황 + 바로
+                      확실히 구별되므로 나머지를 굳이 흐리게 둘 까닭이 없습니다.
+                    - pb-[11px] — 글씨와 바 사이. 위쪽(pt-1)보다 넓은 것은 바가 글씨에
+                      바짝 붙으면 밑줄처럼 읽히기 때문입니다.
+                    - flex-1이라 고른 칸에 "42명"이 붙고 떨어져도 칸 폭이 흔들리지 않습니다
+                      (members/page.tsx에 적어 둔 "고를 때 칸 폭이 달라진다"는 흠이 여기서 풀립니다).
+                */
+                className={
+                  underline
+                    ? /*
+                        좌우 여백은 갈래마다 한 번만 적습니다 — px-1과 px-4를 함께 적으면
+                        어느 쪽이 이기는지가 클래스 순서가 아니라 Tailwind가 CSS를 찍어낸
+                        순서로 정해져, 나중에 값을 바꿀 때 조용히 뒤집힐 수 있습니다.
+                        칸이 하나뿐일 때(1·2기)는 -mx-4로 되민 만큼 px-4로 도로 들여
+                        글씨가 검색 알약의 왼쪽 끝에 맞습니다.
+                      */
+                      `relative flex items-center justify-center pt-1 pb-[11px] ${
+                        stretch ? "flex-1 px-1" : "shrink-0 px-4"
+                      } ${active ? "text-brand-500" : "text-ink-muted"}`
+                    : `flex shrink-0 items-center ${active ? "text-ink" : "text-ink-faint"}`
+                }
               >
                 {/*
                   ★ 글씨 크기를 <button>이 아니라 이 <span>에 겁니다. 반드시.
@@ -145,7 +224,44 @@ export default function TextTabs<T extends string>({
                   안 적으면 글꼴 기본값(1.4~1.5배)이 걸려 글자 위아래에 빈 자리가
                   생기고, 글씨가 클수록 그 자리도 같이 커집니다.
                 */}
-                <span className={`leading-tight font-bold ${textClass}`}>{item.label}</span>
+                {/*
+                  "underline"은 whitespace-nowrap을 더합니다. 칸 폭이 정해져 있어(flex-1) 글씨가
+                  두 줄로 접히면 그 칸만 높아지고, 보기 설정 "크게"(zoom 1.15)에서 실제로 접힙니다.
+                  접히는 대신 옆으로 조금 비어져 나가는 편이 줄이 흐트러지지 않습니다.
+
+                  ★ 굵기 — "underline"만 고른 칸이 bold, 나머지가 medium입니다(그림을 따름).
+                    다른 두 갈래는 모든 칸을 bold로 못 박아 두었는데, 그건 굵어진 칸이
+                    옆 칸을 좌우로 밀기 때문이었습니다. 여기서는 칸 폭이 flex-1로 고정이고
+                    글씨가 칸 가운데에 서므로, 굵기가 바뀌어도 옆 칸은 꿈쩍하지 않습니다.
+                */}
+                <span
+                  className={
+                    underline
+                      ? `leading-tight whitespace-nowrap ${textClass} ${
+                          active ? "font-bold" : "font-medium"
+                        }`
+                      : `leading-tight font-bold ${textClass}`
+                  }
+                >
+                  {item.label}
+                </span>
+
+                {/*
+                  주황 바. bottom-[-1px]로 줄 아래 회색 구분선(위 span의 border-b) 위에
+                  겹쳐 깔려, 그림처럼 둘이 한 줄에 붙어 보입니다.
+                  칸 폭을 꽉 채웁니다(inset-x-0) — 글씨 폭에 맞추면 "전체 42명"과
+                  "일반 원우"의 바 길이가 달라져 들쭉날쭉합니다.
+
+                  굵기 2.5px (3px → 2.5px, 2026-09-22 사용자 "조금만 더 얇게").
+                  아래 회색 구분선이 1px이라 2px까지 내리면 둘의 차이가 한 겹밖에 안 나
+                  바가 선의 일부처럼 읽히기 시작합니다. 더 얇게 가려면 그 점을 보세요.
+                */}
+                {underline && active ? (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-[-1px] h-[2.5px] rounded-full bg-brand-500"
+                  />
+                ) : null}
               </button>
             </Fragment>
           );

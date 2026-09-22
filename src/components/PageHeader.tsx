@@ -18,6 +18,7 @@ export default function PageHeader({
   right,
   back,
   backHref,
+  tone = "canvas",
 }: {
   title: ReactNode;
   /** 제목 위에 작게 붙는 문구 */
@@ -32,6 +33,20 @@ export default function PageHeader({
    * 돌아갈 자리는 하나로 정해두고 싶을 때 씁니다. (예: 모임 → 홈)
    */
   backHref?: string;
+  /**
+   * 제목 줄의 바탕 (2026-09-22).
+   *
+   * "canvas"  앱의 보통 바탕(#F6F6F5). 기본값이고, 한 곳만 빼고 모든 화면이 이걸 씁니다.
+   * "surface" 흰색. 원우수첩만 씁니다 — 제목 줄부터 구분 고르개까지 위쪽 한 덩어리가
+   *           흰 바탕이고 그 아래 목록만 보통 바탕입니다(사용자 요청, 그림을 따름).
+   *
+   * ★ 제목 줄은 붙박이(sticky)라 본문이 이 바탕 **뒤로** 지나갑니다. 그래서 쓰는 쪽의
+   *   위쪽 바탕과 여기 값이 어긋나면, 스크롤할 때 제목 줄만 다른 색 띠로 떠 보입니다.
+   *   한쪽을 바꾸면 반드시 다른 쪽도 같이 바꾸세요.
+   * ★ 오른쪽 아이콘(HeaderActions)에도 같은 값을 넘겨야 합니다 — 알림 종의 빨간 점이
+   *   두르는 테가 제목 줄 바탕색이라, 안 넘기면 흰 바탕에 회색 테가 남습니다.
+   */
+  tone?: "canvas" | "surface";
 }) {
   const router = useRouter();
   const showBack = back || !!backHref;
@@ -96,9 +111,9 @@ export default function PageHeader({
      *     나중에 어느 화면이 제 스크롤 상자를 만들면 그 화면만 안 붙습니다.
      */
     <header
-      className={`page-header sticky top-0 z-30 flex gap-3 bg-canvas px-4 pb-1.5 ${
-        eyebrow ? "items-start" : "items-center"
-      }`}
+      className={`page-header sticky top-0 z-30 flex gap-3 px-4 pb-1.5 ${
+        tone === "surface" ? "bg-surface" : "bg-canvas"
+      } ${eyebrow ? "items-start" : "items-center"}`}
     >
       {showBack ? (
         <button
@@ -171,7 +186,7 @@ export default function PageHeader({
  * 아이콘이 서면 둘의 결이 맞지 않습니다.
  * 알림 종은 2026-09-11에 내 프로필 왼쪽에 더했습니다.
  */
-export function HeaderActions() {
+export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface" } = {}) {
   /*
    * -space-x-1.5로 단추끼리 6px 겹칩니다.
    *
@@ -183,7 +198,8 @@ export function HeaderActions() {
    */
   return (
     <div className="flex items-center -space-x-1.5">
-      <HeaderBellLink />
+      {/* tone은 빨간 점이 두르는 테 색에만 쓰입니다 — 제목 줄 바탕과 같아야 합니다(PageHeader의 tone 주석). */}
+      <HeaderBellLink tone={tone} />
       <HeaderIconLink href="/profile" label="내 프로필 열기">
         <PersonIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>
@@ -242,7 +258,7 @@ function HeaderIconLink({
  * 알림함을 한 번도 연 적이 없으면 가입한 시각을 기준으로 삼습니다 — 안 그러면 새로 들어온 원우에게
  * 지난 알림 전부가 "새 알림"으로 켜집니다.
  */
-function HeaderBellLink() {
+function HeaderBellLink({ tone }: { tone: "canvas" | "surface" }) {
   const { user, profile } = useAuth();
   const { data: notices } = useNotices(cohortOf(profile?.cohort));
   const seenAt = useNoticesSeenAt(user?.uid);
@@ -257,7 +273,9 @@ function HeaderBellLink() {
       {hasNew ? (
         <span
           aria-hidden="true"
-          className="absolute top-[7px] right-[8px] h-2 w-2 rounded-full bg-danger ring-2 ring-canvas"
+          className={`absolute top-[7px] right-[8px] h-2 w-2 rounded-full bg-danger ring-2 ${
+            tone === "surface" ? "ring-surface" : "ring-canvas"
+          }`}
         />
       ) : null}
     </HeaderIconLink>

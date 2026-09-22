@@ -411,10 +411,16 @@ export interface PushTokenDoc {
  */
 export interface ChatRoomDoc {
   id: string;
-  kind: "group" | "direct";
+  /**
+   * "direct" 1:1 방. "cohort" 기수 단체방(2026-09-22).
+   * "group"은 2026-09-10에 없앤 옛 단체방("main") 자리입니다 — 남은 문서를 읽을 때만 나옵니다.
+   */
+  kind: "group" | "direct" | "cohort";
   /** 예전 단체방 이름 자리. 1:1 방은 상대 이름을 화면에서 만들어 쓰므로 비어 있습니다. */
   title: string;
-  /** 이 방의 두 사람. 채팅 목록이 이 값으로 내 방을 찾습니다. */
+  /** 기수 단체방일 때 그 기수("10기"). 1:1 방은 빈 글자입니다. */
+  cohort: string;
+  /** 이 방의 두 사람. 채팅 목록이 이 값으로 내 방을 찾습니다. 기수 단체방은 비어 있습니다(아래 설명). */
   memberUids: string[];
   /** 목록에 보여줄 마지막 메시지 미리보기 */
   lastMessageText: string;

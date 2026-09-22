@@ -20,6 +20,7 @@ import {
   shortCouncilRole,
   type DirectoryEntry,
 } from "@/lib/directory";
+import { thumbnailUrl } from "@/lib/cloudinary";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
 import { useCohortMembers, useCohortRoster } from "@/lib/hooks";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
@@ -92,8 +93,14 @@ export default function MembersPage() {
   }, [book]);
 
   /**
-   * 1·2기엔 대학생 원우가 없어 필터 알약을 숨깁니다(lib/cohort.ts). 그 수첩에서는
-   * 다른 기수에서 골라 둔 필터와 상관없이 늘 전체를 보여줍니다.
+   * 구분 고르개(전체·일반·대학생)를 세울지 — **이제 모든 기수에서 셉니다** (2026-09-22).
+   *
+   * 예전에는 1·2기만 숨겼습니다(공식 명단상 대학생 원우가 없는 기수라서). 지금은
+   * 세 칸을 모두 세우고, 아무도 없는 구분을 누르면 빈 화면이 "대학생 원우가 없어요"라고
+   * 알려 줍니다(아래 emptyByTypeOnly). 어느 기수에서나 화면 모양이 같은 편이 낫다는 판단입니다.
+   *
+   * 판단은 lib/cohort.ts의 hasYouthMembers 하나가 합니다 — 되돌리려면 그 함수만 고치면
+   * 이 화면도 예전처럼 한 칸만 세웁니다. 그래서 이 갈래를 지우지 않고 둡니다.
    */
   const showTypeFilter = hasYouthMembers(cohort);
   const activeFilter: Filter = showTypeFilter ? filter : "all";
@@ -118,26 +125,30 @@ export default function MembersPage() {
   );
 
   /**
+   * 검색어는 안 넣었는데 고른 구분에만 아무도 없는 상태인지 (2026-09-22).
+   *
+   * 이때는 빈 화면이 "무엇이 없는지"를 바로 말해 줍니다 — "대학생 원우가 없어요".
+   * searched(검색어까지만 거른 것)가 비어 있지 않은데 visible(구분까지 거른 것)이
+   * 비었다는 것은, 걸러낸 것이 구분 하나뿐이라는 뜻입니다.
+   */
+  const emptyByTypeOnly =
+    activeFilter !== "all" && visible.length === 0 && searched.length > 0;
+
+  /**
    * 고르개 칸 이름표 — **고른 칸에만** 이름 뒤에 인원 수를 답니다 ("전체 50명").
    * 안 고른 칸은 이름만 있습니다 (2026-09-14 사용자 요청).
    *
-   * ★ 숫자가 붙고 떨어지므로 고를 때 칸 폭이 달라집니다.
-   *   고른 칸이 30px쯤 넓어지면서 그 오른쪽 칸들이 밀립니다. 이 화면이 글씨
-   *   굵기까지 고정해 둔 것과는 어긋나지만, 손으로 누른 그 순간에만 일어나는
-   *   일이라 그대로 둡니다. 거슬리면 안 고른 칸에도 숫자 자리를 잡아 두고
-   *   (text-transparent) 보이지만 않게 하면 폭이 못 박힙니다 — 대신 안 고른
-   *   이름 뒤에 빈 자리가 남아 칸 사이가 들쭉날쭉해 보입니다.
+   * ★ 칸 폭이 흔들리던 흠은 2026-09-22에 없어졌습니다.
+   *   숫자가 붙고 떨어지면 고른 칸이 30px쯤 넓어지면서 오른쪽 칸들이 밀렸는데,
+   *   고르개를 "underline" 갈래로 바꾸면서 세 칸이 flex-1로 폭을 균등하게 나눠 갖게 되어
+   *   글자 길이와 무관하게 칸 자리가 고정됐습니다.
+   *   (그 전에 살피던 우회책 — 안 고른 칸에 text-transparent로 숫자 자리 잡아두기,
+   *    min-w-[2ch]로 두 자리 확보하기 — 은 모두 필요 없어졌습니다. min-w-[2ch]는
+   *    한 자리일 때 "대학생 원우␣␣6명"처럼 벌어져 2026-09-14에 걷어낸 것입니다.)
    *
-   * ★ 숫자에는 tabular-nums만 겁니다.
-   *   숫자마다 폭이 같아져, 같은 자릿수 안에서는(50 → 38) 칸이 흔들리지 않습니다.
-   *
-   *   한때 min-w-[2ch]로 숫자 자리를 늘 두 자리만큼 잡아 자릿수가 바뀔 때도
-   *   (50 → 6) 폭이 그대로이게 했는데, **한 자리일 때 숫자 앞에 빈 자리가 남아
-   *   "대학생 원우␣␣6명"처럼 벌어져 보였습니다.** 눈에 보이는 흠이 더 커서
-   *   2026-09-14에 걷어냈습니다. 대신 자릿수가 바뀌는 순간(9 ↔ 10)에는 고른
-   *   칸이 한 글자만큼 넓어졌다 좁아집니다.
-   *   다시 넣고 싶으면 빈 자리가 "명" 쪽이 아니라 이름 쪽으로 가도록
-   *   text-right가 아닌 다른 방법을 찾아야 합니다.
+   * ★ 숫자에는 tabular-nums를 그대로 겁니다.
+   *   칸 폭은 이제 고정이지만, 숫자 폭이 들쭉날쭉하면 칸 **안에서** 글씨가 좌우로
+   *   흔들립니다(가운데 정렬이라 양쪽으로 반씩). 숫자 폭을 맞춰 두면 그것도 없습니다.
    */
   const filterItems = useMemo(
     () =>
@@ -177,124 +188,204 @@ export default function MembersPage() {
             <CohortPicker value={cohort} onChange={setCohort} includeAll />
           </span>
         }
-        right={<HeaderActions />}
+        /*
+          제목 줄도 아래 검색·고르개와 같은 흰 바탕입니다 (2026-09-22 사용자 요청).
+          HeaderActions에도 같은 값을 넘겨야 알림 종의 빨간 점 테가 흰색이 됩니다.
+        */
+        tone="surface"
+        right={<HeaderActions tone="surface" />}
       />
 
       {/*
-        pt-4 — 검색 알약과 제목 줄 사이 16px. 제목 줄의 pb(6px)에 더해 22px입니다.
+        pt-[10px] — 검색박스와 제목 줄 사이 10px (16px → 12px → 10px, 2026-09-22 사용자 요청 두 번).
+        제목 줄의 pb(6px)에 더해 눈에 보이는 간격은 16px입니다(처음 22px).
 
         ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
           제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
           여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
           (홈의 OX 퀴즈 카드 위 여백도 같은 까닭으로 본문 쪽에 있습니다.)
       */}
-      <div className="px-4 pt-4">
-        {/* 검색 */}
-        <div className="relative">
+      <div className="px-4">
+        {/*
+          ★ 위쪽 한 덩어리(제목 줄 · 검색 · 구분 고르개)는 흰 바탕입니다 (2026-09-22 사용자 요청).
+            그 아래 목록만 앱의 보통 바탕(canvas)입니다. 구분 고르개 맨 아래 회색 선이
+            둘의 경계입니다(TextTabs "underline" 갈래가 긋습니다).
+
+            -mx-4 px-4 — 쓰는 쪽의 좌우 여백 16px을 되밀어 흰 바탕이 화면 끝까지 닿게 하고,
+            안쪽에서 같은 값으로 도로 들여 검색칸·고르개는 제자리에 둡니다.
+            pt-[10px] — 제목 줄과 검색칸 사이 10px. 흰 구역 안에 있어야 합니다. 바깥에 두면
+            그만큼이 canvas로 남아 제목 줄과 검색칸 사이에 회색 띠가 그어집니다.
+
+          ★ 제목 줄도 같이 흰색이어야 합니다 — 위 PageHeader에 tone="surface"를 넘겼습니다.
+            제목 줄은 붙박이라 본문이 그 뒤로 지나가므로, 한쪽만 흰색이면 스크롤할 때
+            제목 줄이 다른 색 띠로 떠 보입니다.
+        */}
+        <div className="-mx-4 bg-surface px-4 pt-[10px]">
+          {/* 검색 */}
+          <div className="relative">
+            {/*
+              돋보기 — 오른쪽 끝, 26px (2026-09-14에 자리·크기가 바뀌었습니다).
+              예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
+              있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
+              옮겼습니다.
+              크기 22px (26px → 22px, 2026-09-22 사용자 "돋보기 크기 줄여주고").
+              박스 높이가 그날 44px → 35px로 내려와 26px 돋보기가 칸을 꽉 메웠습니다.
+              22px이면 위아래로 6.5px씩 남아 숨통이 트입니다.
+
+              색은 연회색(ink-faint) — 안내 글씨(ink-muted)보다 한 단 연합니다
+              (2026-09-22 사용자 "조금만 더 연한 회색으로"). 토큰 단계에서 가장 연한 회색이라
+              여기가 끝입니다. 더 연하게 하려면 ink-faint/70 같은 투명도를 써야 합니다.
+              지나온 색: 주황 → ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황(시험, 되돌림) → 먹색 → ink-muted → ink-faint → 주황 → ink-muted → ink-faint.
+              높이는 가운데보다 1px 위(top-[calc(50%-1px)]), 선 두께는 기본 1.9보다 살짝 얇은 1.75 — 둘 다 2026-09-15 사용자 요청.
+              선 두께는 이 화면에서만 넘깁니다(icons.tsx 기본값을 바꾸면 다른 돋보기도 같이 얇아집니다).
+
+              pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
+              누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
+              안 올라옵니다.
+            */}
+            <SearchIcon
+              strokeWidth={1.75}
+              className="pointer-events-none absolute top-[calc(50%-1px)] right-4 h-[22px] w-[22px] -translate-y-1/2 text-ink-faint"
+            />
+            {/*
+              글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
+              16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
+            */}
+            <input
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder="이름·회사·직책으로 찾기"
+              aria-label="원우 검색"
+              /*
+                눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
+                깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
+                있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
+
+                좌우 여백 (2026-09-14에 뒤집혔습니다)
+                  pl-5(20px)  — 왼쪽에 있던 돋보기를 치워서 글씨가 앞으로 왔습니다.
+                  pr-14(56px) — 오른쪽 끝 돋보기(26px, right-4)가 앉을 자리입니다.
+                                16 + 26 = 42px에 글씨와의 숨통 14px을 더한 값이라,
+                                아이콘 크기나 right-4를 고치면 이 값도 같이 고쳐야
+                                긴 검색어가 돋보기 밑으로 파고들지 않습니다.
+                  예전에는 pl-10 / pr-24였습니다(왼쪽 돋보기 + 오른쪽 "원우 N명").
+
+                모서리는 둥근 사각형 14px입니다
+                (알약 → 16px(rounded-2xl) → 14px, 2026-09-22 "아주 조금만 덜 둥글게").
+                Tailwind 단계(12px·16px) 사이 값이라 직접 적습니다.
+                앱의 안쪽 상자들(원우 줄의 사진칸, 퀴즈 카드 속 칸, 상세 시트의 정보 상자)은
+                rounded-2xl(16px)이라 이제 이 칸만 2px 덜 둥급니다. 더 각지게 하려면 12px입니다.
+
+                ★ 알약(rounded-full)이던 때는 둥글기가 22px(높이 44px의 절반)이었는데,
+                  알약은 위아래 가운데가 가장 넓어 글자가 앉는 높이에서는 모서리가
+                  글자를 밀지 않았습니다. 16px로 내리면 모서리가 더 안쪽까지 들어오지만
+                  그래도 글자 줄 높이 바깥이라, 좌우 여백(pl-5·pr-14)은 그대로 둡니다.
+
+                위아래 여백은 위 7px · 아래 9px입니다 (12.5px → 10px → 8px씩 → 지금).
+                박스 높이는 7 + 글줄 19 + 9 ≈ 35px로 그대로이고, 글씨만 1px 위로 올라갑니다
+                (2026-09-22 사용자 "글씨 위치 1px만큼 위로 올려줘").
+
+                ★ 여기만 위아래가 다릅니다. 이 파일의 다른 잔조정은 "늘 위아래 반씩"이 규칙인데,
+                  그 규칙은 글자를 가운데에 두려는 것이고 여기서는 일부러 1px 올린 것입니다.
+                  높이를 바꾸려면 두 값을 같이 움직여 차이(2px)를 지키세요.
+                10px(py-2.5) → 12px(py-3) → 12.5px → 12.25px → 12.5px(2026-09-15 "0.5px 더 늘려줘")
+                → 10px → 8px. 1px·0.5px 같은 잔조정은 늘 위아래로 반씩 나눕니다 —
+                한쪽에만 주면 글자가 가운데에서 벗어납니다.
+
+                ★ 여기가 사실상 바닥입니다. 더 줄이려면 셋 중 하나에 손대야 하는데 다 걸립니다.
+                  - 글씨(16px): 내리면 아이폰에서 입력칸을 누를 때 화면이 확대됩니다(위 주석).
+                  - 위아래 여백: 8px 아래로 가면 손끝이 닿는 자리가 35px을 밑돌기 시작합니다.
+                  - 돋보기(26px): 35px 상자 안에서 위아래 4.5px씩밖에 안 남았습니다.
+                    더 낮추려면 돋보기부터 22px쯤으로 줄여야 상자가 아이콘을 물지 않습니다.
+
+                ★ 0.25px 단위가 사실상 바닥입니다. 화소 밀도가 3배인 폰에서 12.5px은 37.5 화소,
+                  12.25px은 36.75 화소라 반올림하면 한 화소 안팎 차이입니다. 이보다 잘게 나누면
+                  같은 화소에 떨어져 화면에서는 달라지지 않습니다.
+                돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
+                따라옵니다.
+
+                ★ 옅은 회색 알약(bg-fill)입니다 (2026-09-22 사용자 "흰색에서 옅은 회색으로").
+                  지나온 모양: 흰 바탕 + 주황 테두리 + 글로우 → 옅은 회색 바탕(bg-fill)만
+                  → 흰 알약 + 글로우(2026-09-14 쇼핑 앱 검색창 그림) → 지금(다시 옅은 회색).
+
+                  ★ 바꾼 까닭 — 같은 날 이 위쪽 구역 바탕이 흰색이 되면서, 흰 알약이
+                    흰 바탕에 묻혀 글로우로만 겨우 보였습니다. 위쪽 구역을 다시 canvas로
+                    되돌린다면 이 값도 같이 살펴보세요(그때는 흰 알약이 또렷합니다).
+
+                  ★ 어두운 화면에서도 됩니다 — fill(#2A2D31)이 surface(#1D1F22)보다 밝아
+                    어두운 바탕 위에서 알약이 한 단 떠오릅니다. 밝은 화면과 방향이 반대지만
+                    "바탕과 구별된다"는 결과는 같습니다.
+
+                  - 테두리: 없습니다 (2026-09-22 사용자 "검색 알약의 주황색 테두리 없애고").
+                    2026-09-15부터 있던 1.5px 주황 테두리(ring-[1.5px] ring-brand-500)를 걷었습니다.
+                  - 그림자: 없습니다 (2026-09-22 사용자 "글로우 없애주고").
+                    --shadow-card-glow를 걷어 평평한 회색 상자가 됐습니다. 바탕색만으로 구별되므로
+                    떠 있을 까닭이 없습니다. 되살리려면 shadow-[var(--shadow-card-glow)]를 다시 붙이세요.
+                    (지나온 그림자: 그림을 따른 옅은 그림자 0 1px 2px 4% + 0 6px 24px 7% + ring-black/[0.04]
+                     → --shadow-card-glow → 없음.)
+                  - 안내 글씨는 ink-muted(중간 회색) — 그림의 안내 글씨가 연회색이 아니라
+                    또렷한 회색이라 ink-faint에서 한 단 올렸습니다.
+
+                  ★ 안내 글씨 크기는 placeholder에만 겁니다 (placeholder:text-[15px], 2026-09-22
+                    사용자 "글씨 크기 1px만큼 줄여줘"). 입력칸 자체(text-[16px])는 건드리면 안 됩니다 —
+                    16px보다 작으면 아이폰에서 칸을 누를 때 화면이 확대됩니다(위 주석).
+                    placeholder에만 걸면 입력칸의 font-size는 16px로 남아 확대가 일어나지 않고,
+                    안내 글씨만 15px로 그려집니다. 대신 **치는 글씨는 16px 그대로**라 둘이 1px 다릅니다.
+                    (안내 글씨는 칸이 비었을 때만 보이므로 한 화면에 같이 서는 일이 없습니다.)
+              */
+              className="w-full rounded-[14px] bg-fill pt-[7px] pr-14 pb-[9px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
+            />
+          </div>
+
           {/*
-            돋보기 — 오른쪽 끝, 26px (2026-09-14에 자리·크기가 바뀌었습니다).
-            예전에는 왼쪽 끝의 18px이었고 오른쪽에는 "원우 N명"이 앉아
-            있었는데, 그 숫자를 알약 밖으로 꺼내면서 오른쪽이 비어 이리로
-            옮겼습니다.
-            색은 주황(brand-500) — 알약의 주황 테두리(ring-brand-500)와 같은 색입니다
-            (2026-09-15 사용자 요청: 테두리를 주황으로 바꾼 뒤 돋보기도 맞춤). 테두리 색을 바꾸면 이것도 같이 바꿔 주세요.
-            지나온 색: 주황 → ink-faint → 먹색(쇼핑 앱 검색창 그림) → 주황(시험, 되돌림) → 먹색 → ink-muted → ink-faint → 주황.
-            높이는 가운데보다 1px 위(top-[calc(50%-1px)]), 선 두께는 기본 1.9보다 살짝 얇은 1.75 — 둘 다 2026-09-15 사용자 요청.
-            선 두께는 이 화면에서만 넘깁니다(icons.tsx 기본값을 바꾸면 다른 돋보기도 같이 얇아집니다).
+            구분 고르개 — 공용 TextTabs의 "underline" 갈래입니다(components/TextTabs.tsx).
+            고른 칸은 주황 굵은 글씨 + 그 아래 주황 바이고, 세 칸이 폭을 균등하게 나눠 갖습니다.
+            줄 아래에는 화면을 가로지르는 옅은 회색 구분선이 한 줄 깔립니다
+            (2026-09-22 사용자가 보여 준 결제카드 관리 화면 그림을 따름).
+            지나온 모양은 TextTabs 맨 위 주석에 이어 적어 두었습니다.
 
-            pointer-events-none — 아이콘은 그림일 뿐입니다. 이게 없으면 아이콘을
-            누른 손끝이 입력칸에 닿지 않아, 오른쪽 끝을 눌렀을 때 자판이
-            안 올라옵니다.
+            ★ 소식 탭·자료 탭 서브탭과 **같은 컴포넌트**지만 갈래가 다릅니다("header").
+              그 둘은 제목 자리를 대신하는 22px이라 상자를 두르면 제목이 단추처럼 보여
+              2026-09-22에 이 화면만 바꿨습니다. 크기·색을 고칠 때 어느 갈래인지 보세요 —
+              공통 부분(칸 순서, 글씨 크기를 span에 거는 규칙 등)은 여전히 세 화면이 같이 따라옵니다.
+              (예전에는 화면마다 마크업을 복붙해 둔 탓에 하루 만에 글씨 크기가 갈라졌습니다.)
+
+            mt-[8px] — 위 검색칸과의 간격 (16px → 14px → 11px → 8px, 2026-09-22 사용자 요청 세 번).
+            이 화면에만 있는 값이라 여기서 넣습니다. Tailwind 단계 사이 값이라 직접 적습니다.
+            ★ 눈에 보이는 흰 여백은 이 값보다 4px 넓습니다 — 고르개 칸이 글씨 위에 pt-1(4px)을
+              두고 있어서입니다(TextTabs "underline"). 지금 8 + 4 = 12px입니다.
+              여기를 0으로 만들어도 12px 아래로는 안 내려갑니다. 더 줄이려면 그 pt-1을
+              건드려야 하는데, 그러면 고른 칸의 주황 바와 글씨 사이(pb-[11px])와의 균형도
+              같이 살펴야 합니다 — 위아래가 4px/11px이라 이미 아래쪽이 넉넉한 짜임입니다.
+
+            ★ 인원 수는 **고른 칸에만** 이름 뒤에 붙습니다 ("전체 50").
+              2026-09-14에 두 번 옮겼습니다: 오른쪽 끝의 "원우 N명" 한 덩어리
+              → 세 칸 모두에 숫자 → 고른 칸에만 숫자.
+              세 칸 모두에 달았을 때는 20px에서 줄이 약 340px이라 390px 폰에서
+              거의 꽉 찼는데, 한 칸만 달면서 약 300px로 내려와 여유가 생겼습니다.
+              세는 자리는 위 filterItems입니다.
+
+            ★ 이제 모든 기수가 세 칸을 다 세웁니다 (2026-09-22 사용자 "1,2기도 10기처럼").
+              1·2기에는 공식 명단상 대학생 원우가 없지만, 칸을 숨기는 대신 눌렀을 때
+              "대학생 원우가 없어요"라고 알려 주는 쪽으로 바꿨습니다(아래 빈 화면).
+
+              아래 갈래(칸 하나만 세우기)는 그대로 둡니다 — lib/cohort.ts의 hasYouthMembers를
+              되돌리면 이 화면도 예전 모양으로 돌아갑니다. 칸이 하나일 때는 "underline"이
+              폭을 늘리지 않습니다(TextTabs의 stretch) — 늘리면 주황 바가 화면 폭을 가로질러
+              탭이 아니라 밑줄 그은 제목으로 보입니다.
+              예전에는 고르개를 통째로 숨기고 오른쪽 끝에 "원우 N명" 글씨(trailing)를 세웠습니다.
+              onChange를 비워 둔 것은, 이 칸을 눌러도 다른 기수에서 골라 둔 필터
+              (예: 대학생 원우)가 "전체"로 덮이지 않게 하려는 것입니다.
           */}
-          <SearchIcon
-            strokeWidth={1.75}
-            className="pointer-events-none absolute top-[calc(50%-1px)] right-4 h-[26px] w-[26px] -translate-y-1/2 text-brand-500"
-          />
-          {/*
-            글자 크기는 16px 그대로 두고 위아래 여백만 줄였습니다.
-            16px보다 작게 하면 iOS에서 입력칸을 누를 때 화면이 확대됩니다.
-          */}
-          <input
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            placeholder="이름·회사·직책으로 찾기"
-            aria-label="원우 검색"
-            /*
-              눌렀을 때 둘러지던 주황 테두리는 뺐습니다. 글자를 치는 칸이라
-              깜빡이는 커서와 올라온 자판만으로도 어디에 쓰고 있는지 알 수
-              있습니다. (대화방 입력칸도 같은 이유로 뺐습니다.)
-
-              좌우 여백 (2026-09-14에 뒤집혔습니다)
-                pl-5(20px)  — 왼쪽에 있던 돋보기를 치워서 글씨가 앞으로 왔습니다.
-                pr-14(56px) — 오른쪽 끝 돋보기(26px, right-4)가 앉을 자리입니다.
-                              16 + 26 = 42px에 글씨와의 숨통 14px을 더한 값이라,
-                              아이콘 크기나 right-4를 고치면 이 값도 같이 고쳐야
-                              긴 검색어가 돋보기 밑으로 파고들지 않습니다.
-                예전에는 pl-10 / pr-24였습니다(왼쪽 돋보기 + 오른쪽 "원우 N명").
-
-              모서리는 알약(rounded-full)입니다. 알약은 위아래 가운데가 가장
-              넓은 자리라, 돋보기가 앉는 높이에서는 둥글기가 글자를 밀지 않습니다.
-
-              위아래 여백은 12.5px씩입니다. 10px(py-2.5) → 12px(py-3) → 12.5px → 12.25px →
-              다시 12.5px(2026-09-15 사용자 "0.5px 더 늘려줘")로 오갔습니다. 1px·0.5px 같은 잔조정은
-              늘 위아래로 반씩 나눕니다 — 한쪽에만 주면 글자가 가운데에서 벗어납니다.
-
-              ★ 0.25px 단위가 사실상 바닥입니다. 화소 밀도가 3배인 폰에서 12.5px은 37.5 화소,
-                12.25px은 36.75 화소라 반올림하면 한 화소 안팎 차이입니다. 이보다 잘게 나누면
-                같은 화소에 떨어져 화면에서는 달라지지 않습니다.
-              돋보기는 top-1/2로 가운데에 매달려 있어서 높이를 건드려도 저절로
-              따라옵니다.
-
-              ★ 흰 알약이 넓고 옅은 그림자 위에 떠 있는 모양 (2026-09-14, 사용자가 보여 준
-                쇼핑 앱 검색창 그림을 따름). 지나온 모양: 흰 바탕 + 주황 테두리 + 글로우
-                → 옅은 회색 바탕(bg-fill)만 → 지금.
-                - 테두리: 1.5px 주황(ring-[1.5px] ring-brand-500) — 2026-09-15 사용자 요청으로 회색 헤어라인에서 바꿈
-                  (같은 날 1px → 2px → "0.5px 줄여줘"로 1.5px).
-                  글로우는 목록 박스(MemberRow)와 같은 --shadow-card-glow만 따로 씁니다(globals.css 주석의 방식) —
-                  --shadow-card를 그대로 쓰면 회색 헤어라인이 주황 테두리와 겹칩니다.
-                  (그 전에는 목록 박스와 같은 shadow-[var(--shadow-card)] = 회색 1px 헤어라인 + 글로우였습니다.)
-                  (그 전에는 그림을 따른 옅은 그림자 0 1px 2px 4% + 0 6px 24px 7%와 ring-black/[0.04]를 따로 둘렀습니다.)
-                - 안내 글씨는 ink-muted(중간 회색) — 그림의 안내 글씨가 연회색이 아니라
-                  또렷한 회색이라 ink-faint에서 한 단 올렸습니다.
-                어두운 화면에서는 bg-surface가 바탕보다 밝아 알약이 스스로 떠오르고,
-                검은 그림자·선은 거의 안 보이지만 해가 되지 않습니다.
-                높이(py-[12.25px])와 좌우 여백은 그림에 맞춰 바꾸지 않았습니다 — 여러 번 맞춘 값입니다.
-            */
-            className="w-full rounded-full bg-surface py-[12.5px] pr-14 pl-5 text-[16px] text-ink shadow-[var(--shadow-card-glow)] ring-[1.5px] ring-brand-500 outline-none placeholder:text-ink-muted"
+          <TextTabs
+            items={
+              showTypeFilter ? filterItems : filterItems.filter((item) => item.value === "all")
+            }
+            value={activeFilter}
+            onChange={showTypeFilter ? setFilter : () => {}}
+            variant="underline"
+            className="mt-[8px]"
           />
         </div>
-
-        {/*
-          구분 고르개 — 공용 TextTabs입니다(components/TextTabs.tsx).
-          소식 탭·자료 탭의 서브탭과 **같은 컴포넌트**를 씁니다.
-          크기·간격·색·바를 고치려면 그 파일만 고치세요 — 세 화면이 같이 따라옵니다.
-          (예전에는 화면마다 마크업을 복붙해 둔 탓에 하루 만에 글씨 크기가 갈라졌습니다.)
-
-          mt-4 — 위 검색칸과의 간격. 이 화면에만 있는 값이라 여기서 넣습니다.
-
-          ★ 인원 수는 **고른 칸에만** 이름 뒤에 붙습니다 ("전체 50").
-            2026-09-14에 두 번 옮겼습니다: 오른쪽 끝의 "원우 N명" 한 덩어리
-            → 세 칸 모두에 숫자 → 고른 칸에만 숫자.
-            세 칸 모두에 달았을 때는 20px에서 줄이 약 340px이라 390px 폰에서
-            거의 꽉 찼는데, 한 칸만 달면서 약 300px로 내려와 여유가 생겼습니다.
-            세는 자리는 위 filterItems입니다.
-
-          ★ 1·2기 수첩에는 대학생 원우가 없어 "전체 N명" 칸 **하나만** 왼쪽에 세웁니다
-            (2026-09-14 사용자 요청 — 다른 기수와 같은 모양·같은 자리로 인원을 보이게).
-            일반 원우·대학생 원우 칸은 뺍니다. 그 기수에서는 전체 = 일반이고 대학생은
-            늘 0명이라, 눌러도 같은 목록이거나 빈 목록만 나옵니다.
-            예전에는 고르개를 통째로 숨기고 오른쪽 끝에 "원우 N명" 글씨(trailing)를 세웠습니다.
-            onChange를 비워 둔 것은, 이 칸을 눌러도 다른 기수에서 골라 둔 필터
-            (예: 대학생 원우)가 "전체"로 덮이지 않게 하려는 것입니다.
-        */}
-        <TextTabs
-          items={
-            showTypeFilter ? filterItems : filterItems.filter((item) => item.value === "all")
-          }
-          value={activeFilter}
-          onChange={showTypeFilter ? setFilter : () => {}}
-          className="mt-4"
-        />
 
         {/*
           목록.
@@ -303,8 +394,8 @@ export default function MembersPage() {
         */}
         <div className="mt-[18px] pb-6">
           {busy ? (
-            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 12px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
-            <ul className="flex flex-col gap-3">
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 14px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
+            <ul className="flex flex-col gap-[14px]">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key}>
                   <Skeleton className="h-[87px] rounded-3xl" />
@@ -314,26 +405,44 @@ export default function MembersPage() {
           ) : error ? (
             <ErrorState message={error} />
           ) : visible.length === 0 ? (
+            /*
+              빈 화면은 세 갈래입니다 (2026-09-22에 가운데 갈래를 더했습니다).
+                ① 수첩 자체가 비어 있음
+                ② 검색어 없이 구분만 걸었는데 그 구분에 아무도 없음
+                   → "대학생 원우가 없어요"처럼 **무엇이 없는지** 바로 말해 줍니다.
+                     1·2기 수첩에서 "대학생 원우"를 누르면 늘 여기로 옵니다 —
+                     그 두 기수에는 공식 명단상 대학생 원우가 없기 때문입니다.
+                     (예전에는 그 기수에서 고르개를 아예 숨겼는데, 2026-09-22 사용자 요청으로
+                      세 칸을 모두 세우고 대신 이 문구로 알려 주는 쪽으로 바꿨습니다.)
+                ③ 검색어까지 걸린 경우 → 예전처럼 "조건에 맞는 원우가 없어요"
+            */
             <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
               <EmptyState
                 icon={<UsersIcon className="h-10 w-10" />}
                 title={
                   book.length === 0
                     ? "아직 수첩이 비어 있어요"
-                    : "조건에 맞는 원우가 없어요"
+                    : emptyByTypeOnly
+                      ? `${MEMBER_TYPE_LABEL[activeFilter as MemberType]}가 없어요`
+                      : "조건에 맞는 원우가 없어요"
                 }
                 description={
                   book.length === 0
                     ? canAddMembers(cohort)
-                      ? "아래 원우 추가하기로 우리 기수 원우를 한 명씩 채워보세요."
+                      ? "아래 원우 추가하기로 이 기수 원우를 한 명씩 채워보세요."
                       : undefined
-                    : "검색어나 필터를 바꿔보세요."
+                    : emptyByTypeOnly
+                      ? "아래 원우 추가하기로 올리거나, 다른 구분을 눌러보세요."
+                      : "검색어나 필터를 바꿔보세요."
                 }
               />
             </div>
           ) : (
             /*
-              원우마다 흰 박스(MemberRow — rounded-3xl · 그림자)를 세우고 12px씩 띄워 나눕니다.
+              원우마다 흰 박스(MemberRow — rounded-3xl · 그림자)를 세우고 14px씩 띄워 나눕니다.
+              12px → 14px (2026-09-22 사용자 "아주 조금씩 늘려줘"). Tailwind 단계(12px·16px)
+              사이 값이라 직접 적습니다. 위 자리 표시(Skeleton) 목록도 같은 값이어야
+              불러오는 동안과 다 불러온 뒤의 줄 자리가 어긋나지 않습니다.
 
               ★ 박스 → 줄 사이 선 → 다시 박스 (모두 2026-09-14).
                 예전 박스를 줄 사이 선으로 바꿨었습니다(사용자 제안 — 배경이 흰색이던 때 카드마다
@@ -342,7 +451,7 @@ export default function MembersPage() {
                 "예전처럼 박스로 구분 짓도록 해봐"라고 해서 박스로 돌아왔습니다.
                 선으로 되돌리려면 git 기록에서 이 목록의 border-t(ml-0.5)와 MemberRow의 py-3 pl-0.5를 보세요.
             */
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-[14px]">
               {visible.map((entry) => (
                 <li key={entry.key}>
                   <MemberRow
@@ -437,7 +546,12 @@ function MemberRow({
   onEdit: () => void;
 }) {
   const videoLink = parseVideoLink(entry.introVideoUrl);
-  const thumbnail = videoLink ? videoThumbnail(videoLink) : null;
+  /*
+   * 목록 칸(112×63)에는 작은 판을 깝니다 — 상세 시트만 큰 판을 씁니다 (2026-09-22).
+   * 수첩 한 권에 영상 썸네일이 26장, 사진이 42장이라 큰 판으로 깔면 492KB를 한꺼번에
+   * 받습니다. 브라우저는 한 도메인에 6개씩만 열어서 폰에서는 줄줄이 기다립니다.
+   */
+  const thumbnail = videoLink ? videoThumbnail(videoLink, "small") : null;
   const affiliation = affiliationLine(entry);
 
   return (
@@ -453,12 +567,19 @@ function MemberRow({
      *
      * ★ 흰 박스입니다 (2026-09-14 늦게 사용자 "예전처럼 박스로 구분 짓도록 해봐").
      *   rounded-3xl · bg-surface · shadow-[var(--shadow-card)](헤어라인 포함) + 안쪽 여백 p-3(12px) —
-     *   줄 사이 선으로 바꾸기 전(c63fd03 이전) 박스와 같은 값입니다. 목록 쪽이 12px씩 띄웁니다.
+     *   줄 사이 선으로 바꾸기 전(c63fd03 이전) 박스와 같은 값입니다. 목록 쪽이 14px씩 띄웁니다.
      *   같은 날 선으로 지낼 때는 py-3 pl-0.5(왼쪽 2px만 들임)였습니다.
      *
      *   오른쪽 연필 단추의 -mr-2는 그대로라, 박스 안에서 끝 여백 12px 중 8px을 당겨 씁니다.
      */
-    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card)]">
+    /*
+     * 그림자는 --shadow-card가 아니라 --shadow-card-soft입니다
+     * (2026-09-22 사용자 "원우 박스의 글로우 아주아주 조금만 더 약하게").
+     * 헤어라인은 그대로이고 글로우 두 층만 6%→5%, 10%→8%로 낮춥니다.
+     * 한 화면에 줄이 87개까지 서서 같은 그림자가 겹쳐 쌓이기 때문입니다 — 자세한 것은 globals.css.
+     * 다른 화면의 흰 카드는 --shadow-card 그대로이니, 두 값을 헷갈려 바꾸지 마세요.
+     */
+    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card-soft)]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
@@ -484,19 +605,45 @@ function MemberRow({
         */
         className="relative -ml-px h-[63px] w-[112px] shrink-0 overflow-hidden rounded-2xl bg-fill transition active:scale-95"
       >
+        {/*
+          ★ loading="lazy" + 폭·높이 못 박기 (2026-09-22).
+            수첩 한 권이 87줄이라 예전에는 화면 밖 줄의 그림까지 68장을 한꺼번에 받았습니다.
+            lazy를 걸면 처음에는 눈에 보이는 대여섯 줄만 받고 나머지는 굴러 내려갈 때 받습니다.
+            width·height를 함께 적어야 그림이 오기 전에도 줄 높이가 잡혀, 받는 동안
+            목록이 들썩이지 않습니다(상자 크기는 CSS가 정하므로 보이는 크기는 그대로입니다).
+        */}
         {thumbnail ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+            <img
+              src={thumbnail}
+              alt=""
+              width={112}
+              height={63}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
             <span className="absolute right-1.5 bottom-1.5 flex h-5 items-center rounded-md bg-black/65 px-1.5 text-[11px] font-bold text-white">
               ▶ 영상
             </span>
           </>
         ) : entry.photoURL ? (
+          /*
+           * 원본이 아니라 이 칸 크기로 구운 판을 받습니다 (2026-09-22).
+           * 예전에는 올라온 사진을 그대로 받아 112×63 칸에 욱여넣었습니다. 지금 10기는
+           * Cloudinary 사진이 7장뿐이라 차이가 작지만, 폰으로 찍은 사진을 그대로 올리는
+           * 원우가 생기면 한 줄에 수 MB가 실려 옵니다. 지금 막아 둡니다.
+           * (구글 계정 사진은 Cloudinary 주소가 아니라 그대로 지나갑니다 — thumbnailUrl 주석 참고.)
+           */
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={entry.photoURL}
+            src={thumbnailUrl(entry.photoURL, 224, 126)}
             alt={`${entry.name} 프로필 사진`}
+            width={112}
+            height={63}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
@@ -594,18 +741,20 @@ function MemberRow({
         {/*
           회사·직책 줄.
 
-          색은 주황(brand-500)입니다. 2026-09-14에만 주황 → 먹색 → 주황(시험) → 먹색 → 주황으로 오갔고,
-          지금 값은 같은 날 늦게 사용자가 "다시 주황색으로 해봐"라고 한 것입니다(굵기 medium 그대로).
-          ★ 흰 박스 위 #FF7210 13px는 대비가 약해(약 2.6:1) medium 굵기를 지킵니다 — normal로 내리면 흐려집니다.
-          아래는 먹색이던 때의 설명입니다 — 바로 위 이름과 같은 색이 되었지만, 글씨 크기(17px ↔ 13px)와
-          굵기(bold ↔ medium)가 남아 있어 어느 쪽을 먼저 읽을지는 그대로입니다.
+          색은 주황(brand-500)입니다.
+          지나온 색: 주황 → 먹색 → 주황(시험) → 먹색 → 주황(2026-09-14 하루에만 다섯 번)
+          → 회색 → 다시 주황(2026-09-22 사용자가 회색으로 바꿨다가 같은 날 되돌림).
+          ★ 흰 박스 위 #FD5702 13px는 대비가 약해(약 3.2:1 — 옛 #FF7210은 2.6:1) medium 굵기를 지킵니다 — normal로 내리면 흐려집니다.
+          ★ 같은 자리에 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는 강조할 내용이 아니라
+            흐린 회색(ink-muted) 그대로 둡니다. 주황과 회색으로 갈려 한눈에 구별됩니다.
+
           굵기는 medium(500)입니다. 2026-09-14에 사용자가 "아주 조금만 더 얇게"라고 해서
           normal(400)로 내렸다가, 같은 날 늦게 원상복구시켰습니다. 다시 얇게 제안하지 마세요.
           (450 같은 사잇값은 안 됩니다 — layout.tsx가 Noto Sans KR을 400·500·700·900
           네 벌만 받아서, 450을 적어도 브라우저가 500으로 그립니다.)
 
-          같은 자리에 "아직 정보가 입력 안 됐어요"가 대신 들어올 때는 강조할
-          내용이 아니라 흐린 회색(ink-muted) 그대로 둡니다.
+          바로 위 이름과는 글씨 크기(17px ↔ 13px)와 굵기(bold ↔ medium), 색(ink ↔ ink-muted)이
+          달라 어느 쪽을 먼저 읽을지는 그대로입니다.
 
           ★ 이름 옆 원우회 직위 배지(위 councilRole)의 주황은 그대로입니다.
             이 줄과 같이 바꾸지 마세요 — 배지는 연주황 알약 위의 주황 글씨라
@@ -767,7 +916,11 @@ function MemberDetailSheet({
             ) : null}
             <div className="mt-3 flex items-center gap-1.5">
               <Badge tone="neutral">{entry.cohort}</Badge>
-              {/* 1·2기엔 대학생 원우가 없어 구분 배지를 달지 않습니다. */}
+              {/*
+                구분 배지(일반 원우/대학생 원우). 2026-09-22부터 모든 기수에 답니다 —
+                판단은 lib/cohort.ts의 hasYouthMembers가 하고, 지금은 늘 참입니다.
+                예전에는 1·2기에만 달지 않았습니다.
+              */}
               {hasYouthMembers(entry.cohort) ? (
                 <Badge tone={entry.memberType === "youth" ? "brand" : "neutral"}>
                   {MEMBER_TYPE_LABEL[entry.memberType]}

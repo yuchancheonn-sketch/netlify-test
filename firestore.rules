@@ -79,6 +79,43 @@ service cloud.firestore {
     }
 
     /*
+     * ── 기수 단체방 (2026-09-22) ──
+     *
+     * 방 id는 "cohort-10" 꼴이고, 그 기수 원우는 **무조건** 이 방에 듭니다.
+     * 명단(memberUids)을 방 문서에 적지 않습니다 — 적어 두면 가입·승인·기수 변경마다
+     * 배열을 고쳐야 하고 한 번만 빠뜨려도 누군가는 방에서 사라집니다.
+     * 대신 내 users 문서의 cohort와 방 id를 견줍니다. 적어 두는 곳이 없으니 어긋날 수가 없습니다.
+     *
+     * ★ get(myUserPath())는 여기서 공짜입니다.
+     *   isMember()가 같은 요청에서 이미 같은 문서를 읽었고, 한 번의 규칙 판정 안에서
+     *   같은 경로의 get은 캐시되어 읽기가 한 번만 물립니다.
+     *
+     * ★ 기수 칸이 없는 옛 문서는 10기로 봅니다 — lib/cohort.ts의 cohortOf와 같은 규칙입니다.
+     *   앱과 규칙이 다르게 보면 화면에는 보이는데 규칙이 막는 일이 생깁니다.
+     *
+     * ★ 운영진은 다른 기수 방도 봅니다. 홈·자료·수업 화면에서 기수를 바꿔 보는 것과 같은 기준입니다.
+     *
+     * ★ 방 id 모양을 바꾸면 lib/chat-room-id.ts의 COHORT_ROOM_PREFIX도 같이 고쳐야 합니다.
+     */
+    function isCohortRoom(roomId) {
+      return roomId.matches('^cohort-([1-9]|10)$');
+    }
+
+    function myCohort() {
+      return get(myUserPath()).data.get('cohort', '10기');
+    }
+
+    function isCohortRoomMine(roomId) {
+      return isCohortRoom(roomId)
+             && (isAdmin() || myCohort() == roomId.split('-')[1] + '기');
+    }
+
+    /** 이 방을 열고 쓸 수 있는 사람인지 — 1:1 방이거나 내 기수 단체방이거나. */
+    function canUseRoom(roomId) {
+      return isRoomMember(roomId) || isCohortRoomMine(roomId);
+    }
+
+    /*
      * ── 무기명 투표의 표 수 확인 (2026-09-11) ──
      * 고를 것은 2~4개라 반복문 없이 자리마다 적습니다(규칙에는 반복문이 없습니다).
      * 자리가 없는 칸은 앞의 size 조건에서 멈추므로 읽지 않습니다(&&·||는 앞이 정해지면 뒤를 안 봅니다).
@@ -390,13 +427,15 @@ service cloud.firestore {
      */
 
     // ── 채팅 ──
-    // 1:1 방만 있습니다. 그 둘만 들어갑니다.
+    // 방은 두 종류입니다 (2026-09-22).
+    //   1:1 방(uid__uid)       그 두 사람만.
+    //   기수 단체방(cohort-10)  그 기수 원우 전원 + 운영진. 자격은 users의 cohort로 가립니다(canUseRoom).
 
     match /chatRooms/{roomId} {
       /*
        * 방 하나를 직접 열 때(get) — 방 id로 판단합니다.
        */
-      allow get: if isMember() && isRoomMember(roomId);
+      allow get: if isMember() && canUseRoom(roomId);
 
       /*
        * 채팅 목록처럼 여러 방을 한꺼번에 훑을 때(list) — 여기가 까다롭습니다.
@@ -419,14 +458,14 @@ service cloud.firestore {
        * 만들어두는 장난이 가능해집니다. 방 id는 두 사람의 uid로 이미
        * 정해져 있으므로 선점 자체가 불가능합니다.
        */
-      allow write: if isMember() && isRoomMember(roomId);
+      allow write: if isMember() && canUseRoom(roomId);
 
       match /messages/{messageId} {
-        allow read: if isMember() && isRoomMember(roomId);
+        allow read: if isMember() && canUseRoom(roomId);
 
         // 남의 이름으로 보내지 못하도록 보내는 사람이 본인인지 확인합니다.
         allow create: if isMember()
-                      && isRoomMember(roomId)
+                      && canUseRoom(roomId)
                       && request.resource.data.senderId == request.auth.uid;
 
         /*
@@ -437,7 +476,7 @@ service cloud.firestore {
          * 모자랍니다 — 그러면 1:1 상대가 내 말을 지울 수 있습니다.
          */
         allow delete: if isMember()
-                      && isRoomMember(roomId)
+                      && canUseRoom(roomId)
                       && resource.data.senderId == request.auth.uid;
 
         /*
@@ -454,7 +493,7 @@ service cloud.firestore {
          *     지우기는 지우기로 해야 목록 미리보기까지 제대로 정리됩니다.
          */
         allow update: if isMember()
-                      && isRoomMember(roomId)
+                      && canUseRoom(roomId)
                       && resource.data.senderId == request.auth.uid
                       && request.resource.data.diff(resource.data)
                            .affectedKeys().hasOnly(['text', 'editedAt'])

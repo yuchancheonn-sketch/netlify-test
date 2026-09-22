@@ -8,6 +8,8 @@ import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
 import {
+  cohortOfRoomId,
+  cohortRoomTitle,
   deleteChatMessage,
   editChatMessage,
   otherUidOf,
@@ -96,16 +98,21 @@ export default function ChatRoomPage({
   }, [members]);
 
   const otherId = uid ? otherUidOf(roomId, uid) : null;
-  const title = (otherId && nameByUid.get(otherId)) || "원우";
+  /** 기수 단체방이면 그 기수("10기"), 1:1 방이면 null (2026-09-22) */
+  const roomCohort = cohortOfRoomId(roomId);
+  const title = roomCohort
+    ? cohortRoomTitle(roomCohort)
+    : (otherId && nameByUid.get(otherId)) || "원우";
 
   /*
-   * 1:1 방이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
-   * 단체방(/chat/main)을 없앴는데, 예전 알림이나 방문 기록에 그 주소가 남아
+   * 아는 방 모양이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
+   * 아는 모양은 1:1 방(uid__uid)과 기수 단체방(cohort-10) 둘입니다.
+   * 예전 단체방(/chat/main)을 없앴는데 옛 알림이나 방문 기록에 그 주소가 남아
    * 있을 수 있습니다. 보안 규칙도 그 방을 막아서, 두면 빈 화면만 뜹니다.
    */
   useEffect(() => {
-    if (uid && !otherId) router.replace("/chat");
-  }, [uid, otherId, router]);
+    if (uid && !otherId && !roomCohort) router.replace("/chat");
+  }, [uid, otherId, roomCohort, router]);
 
   useEffect(() => {
     if (skipAutoScroll.current) {
@@ -388,7 +395,11 @@ export default function ChatRoomPage({
             <EmptyState
               icon={<ChatIcon className="h-10 w-10" />}
               title="아직 대화가 없어요"
-              description={`${title} 원우에게 첫 메시지를 보내보세요.`}
+              description={
+                roomCohort
+                  ? `${roomCohort} 원우 모두가 보는 방이에요. 첫 메시지를 남겨보세요.`
+                  : `${title} 원우에게 첫 메시지를 보내보세요.`
+              }
             />
           ) : (
             <>

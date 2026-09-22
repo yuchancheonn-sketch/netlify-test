@@ -53,16 +53,22 @@ export default function HomePage() {
       />
 
       {/*
-        칸 사이는 16px (2026-09-11에 20px에서 줄였습니다).
+        칸 사이는 14px (20px → 16px(2026-09-11) → 14px(2026-09-22 사용자 "아주 조금씩 줄여줘")).
+        Tailwind 단계(12px·16px) 사이 값이라 직접 적습니다.
+        ★ 아래 "이후 일정" 안의 두 상자 사이는 12px 그대로입니다 — 한 제목 밑에 묶인
+          한 덩어리라, 덩어리 사이(14px)보다 좁아야 묶여 보입니다.
 
-        pt-4 — 맨 위 OX 퀴즈 카드와 제목 줄 사이 16px (2026-09-14).
-        제목 줄의 pb(6px)에 더해 22px이 됩니다.
+        pt-3 — 맨 위 OX 퀴즈 카드와 제목 줄 사이 12px
+        (16px(2026-09-14) → 12px(2026-09-22 사용자 "박스 위 간격 좀 줄여줘")).
+        제목 줄의 pb(6px)에 더해 18px이 됩니다 (예전 22px).
+        ★ 카드 **안쪽** 위 여백(DosanQuizCard의 pt-[17px])은 그대로입니다 — 그쪽은
+          제목 글씨와 카드 테두리 사이라 여기와 따로 맞춰 둔 값입니다.
 
         ★ 이 여백을 PageHeader의 pb로 주지 않는 이유
           제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
           여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
       */}
-      <div className="flex flex-col gap-4 px-4 pt-4">
+      <div className="flex flex-col gap-[14px] px-4 pt-3">
         {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
         <DosanQuizCard />
 
@@ -82,16 +88,25 @@ export default function HomePage() {
               일정 추가 단추는 최대한 눈에 안 띄게·간소하게").
               왼쪽 달력 그림 · 가운데 "다가오는 모임이 아직 없어요" · 오른쪽 끝에 옅은 회색 "+ 등록" 글자 링크(/events/new).
               단추 모양(주황 알약)을 걷고 글자만 두어 홈에서 눈길을 끌지 않으면서, 필요한 원우는 바로 찾게 했습니다.
-              높이는 위아래 16px + 한 줄 ≈ 56px (예전 가운데 정렬 빈 화면은 약 170px).
+              높이는 위아래 12px + 한 줄 (2026-09-22 사용자 "박스 높이 줄여줘"로 16px에서 4px씩 내렸습니다.
+              2026-09-15에 가운데 정렬 빈 화면 약 170px에서 이 한 줄짜리로 바꾼 뒤 두 번째 감량입니다).
               "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 둡니다.
+              ★ 더 줄이려면 그 py-1.5부터 봐야 합니다 — 상자 높이를 정하는 것은 이제 위아래 여백이
+                아니라 이 링크의 높이입니다. 다만 줄이면 손끝이 닿는 자리도 같이 좁아집니다.
               위치: 상자 오른쪽 여백 pr-[11px] + 단추 안쪽 8px → 글자가 카드 끝에서 19px 안쪽 (2026-09-15 사용자 지정).
               같은 날 12px(pr-3 + -mr-2) → 44px(pr-9, "왼쪽으로 많이") → 20px → 19px로 맞췄습니다.
               지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
             */
-            <div className="flex items-center gap-3 rounded-3xl bg-surface py-4 pr-[11px] pl-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-3 rounded-3xl bg-surface py-3 pr-[11px] pl-5 shadow-[var(--shadow-card)]">
               {/* 달력 그림은 앱의 기본 주황(brand-500) — 처음엔 옅은 brand-300이라 흐린 주황으로 보인다고 해서 바꿨습니다(2026-09-15). */}
               <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-500" />
-              <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-soft">
+              {/*
+                색은 먹색(ink), 굵기는 medium(500) — 둘 다 2026-09-22 사용자 요청
+                ("검은색으로 바꿔주고 글씨 굵기를 좀 줄여줘"). 그 전에는 ink-soft + bold였습니다.
+                ★ 500 아래는 400(normal)뿐입니다. layout.tsx가 Noto Sans KR을 400·500·700·900
+                  네 벌만 받아서, 600을 적어도 브라우저가 700으로 그립니다. 더 얇게 하려면 font-normal.
+              */}
+              <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">
                 다가오는 모임이 아직 없어요
               </p>
               <Link
