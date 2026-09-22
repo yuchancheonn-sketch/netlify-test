@@ -337,7 +337,7 @@ PowerShell에서는 `firebase` 대신 **`firebase.cmd`** 라고 쳐야 합니다
 
 1. 올릴 것을 모두 **커밋**합니다.
 2. **`npm run deploy`** — 이것 하나로 끝납니다([scripts/deploy.mjs](scripts/deploy.mjs)).
-   GitHub push → 커밋된 것만 임시 폴더로 뽑기 → 보안 규칙 게시 → App Hosting 배포(5~10분)
+   GitHub push → 커밋된 것만 임시 폴더로 뽑기 → 보안 규칙 게시 → App Hosting 배포(약 3~4분)
    → Hosting 다시 올려 web.app 캐시 비우기 → 두 주소가 같은 판인지 확인.
    커밋 안 된 수정이 있으면 시작하지 않고 멈춥니다.
 
@@ -347,7 +347,7 @@ PowerShell에서는 `firebase` 대신 **`firebase.cmd`** 라고 쳐야 합니다
 rm -rf ../deploy && mkdir ../deploy && git archive HEAD | tar -x -C ../deploy
 cd ../deploy
 firebase.cmd deploy --only firestore:rules --project aegiaeta10
-firebase.cmd deploy --only apphosting --project aegiaeta10   # 빌드 5~10분
+firebase.cmd deploy --only apphosting --project aegiaeta10   # 빌드 약 3~4분
 firebase.cmd deploy --only hosting --project aegiaeta10      # web.app 캐시 비우기(몇 초)
 ```
 

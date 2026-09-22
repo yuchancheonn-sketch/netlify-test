@@ -5,7 +5,7 @@
  *   1. 커밋 안 된 수정이 있으면 멈춥니다. (배포 전에 먼저 커밋하세요 — 커밋된 것만 올라갑니다.)
  *   2. GitHub에 push (백업. push만으로는 배포되지 않습니다.)
  *   3. 커밋된 것만 임시 폴더로 뽑습니다(git archive). .env.local·작업 중 파일은 섞이지 않습니다.
- *   4. Firestore 보안 규칙 게시 → App Hosting 빌드·배포(5~10분) → Hosting 다시 올려 web.app 캐시 비우기.
+ *   4. Firestore 보안 규칙 게시 → App Hosting 빌드·배포(약 3~4분) → Hosting 다시 올려 web.app 캐시 비우기.
  *   5. web.app과 App Hosting 원래 주소가 같은 판을 주는지 확인.
  *
  * 처음 한 번: `npm i -g firebase-tools` → `firebase.cmd login` (윈도우 PowerShell은 firebase.cmd).
