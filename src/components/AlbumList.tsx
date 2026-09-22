@@ -75,8 +75,8 @@ export default function AlbumList() {
 
       {/*
         사진 올리기 — 자료 탭 "파일 올리기"와 같은 자리·같은 모양의 떠 있는 주황 알약입니다 (2026-09-14).
-        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다. 카드 오른쪽 아래 귀퉁이에 얹히므로
-        카드의 글씨(제목·날짜)는 카드 위쪽에 둡니다.
+        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다. 카드는 이 알약 위에서 끝나서(BookFrame)
+        맨 아래의 제목·본문을 가리지 않습니다.
 
         원우 누구나 봅니다 (2026-09-14, 예전엔 운영진만). 보안 규칙도 원래
         photoAlbums 쓰기를 원우 누구에게나 열어 두었습니다. 새 앨범은 보고 있는
@@ -115,10 +115,12 @@ function heightSnapshot(): number {
 }
 
 /**
- * 카드 한 장이 차지하는 틀 — 제목 줄 아래부터 하단 탭 알약 바로 위까지 꽉 채웁니다.
+ * 카드 한 장이 들어갈 수 있는 틀 — 제목 줄 아래부터 "소식 올리기" 알약 바로 위까지.
  *
- * 높이 = 화면 높이 − 틀의 위 끝 − 90px − 아래 안전 영역.
- *   90px = MainShell이 탭 알약 자리로 비워 둔 78px + 카드와 알약 사이 12px.
+ * 높이 = 화면 높이 − 틀의 위 끝 − 156px − 아래 안전 영역.
+ *   156px = "소식 올리기" 알약 윗변(바닥에서 92 + 높이 52 = 144px) + 사이 12px.
+ *   카드의 제목·본문이 맨 아래라(2026-09-22) 알약이 그 글을 가리지 않게 알약 위에서 끝냅니다.
+ *   (그 전엔 탭 알약 위까지 90px = MainShell이 비워 둔 78px + 12px이었습니다.)
  * 틀의 위 끝(제목 줄 높이 + 본문 pt-4)은 화면마다·폰마다 달라서 그려진 뒤에 한 번 잽니다(ref 콜백).
  * 재기 전 첫 그림에서는 넉넉히 70dvh로 둡니다.
  */
@@ -128,7 +130,7 @@ function BookFrame({ children }: { children: React.ReactNode }) {
 
   const height =
     viewport && top !== null
-      ? `calc(${Math.max(320, viewport - top)}px - 90px - env(safe-area-inset-bottom))`
+      ? `calc(${Math.max(320, viewport - top)}px - 156px - env(safe-area-inset-bottom))`
       : "70dvh";
 
   return (
@@ -344,8 +346,9 @@ function AlbumBook({
  *
  * ★ 글과 사진을 겹치지 않고 위아래로 나눕니다 (2026-09-22 사용자 요청 — "제목이랑 본문이 더 잘 보이게").
  *   처음엔 사진이 카드를 다 덮고 그 위 어두운 막에 흰 글씨를 얹었는데, 사진에 따라 글씨가 묻혔습니다.
- *   이제 위쪽 흰 칸에 제목(20px 굵게)·날짜·사진 수·본문(15px)을 먹색으로 쓰고, 남은 아래를 사진이 채웁니다.
- *   글이 위인 까닭: 오른쪽 아래에 "소식 올리기" 알약이 떠 있어서, 아래에 두면 글을 가립니다.
+ *   이제 흰 칸에 먹색으로 씁니다. 순서는 위에서부터 올린 사람(사진·이름·날짜) → 사진 → 제목(20px 굵게)·본문(15px).
+ *   제목·본문은 처음엔 사진 위였는데 같은 날 사용자 요청으로 사진 아래로 옮겼습니다.
+ *   "소식 올리기" 알약이 아래 글을 가리지 않도록 틀(BookFrame)이 알약 위에서 끝납니다.
  * ★ 본문은 넉 줄까지만 보이고 넘치면 "…"(line-clamp-4) — 다 쓰면 사진 자리가 없어집니다.
  *   전문은 카드를 눌러 들어간 앨범 화면에서 봅니다.
  * 사진 위 오른쪽 위 "3 / 10"은 몇 번째 장인지.
@@ -366,9 +369,10 @@ function AlbumCard({
   const body = album.body?.trim();
   const authorName = author?.name || album.createdByName || "원우";
   /*
-   * 사진이 차지해도 되는 최대 높이 = 틀 높이 − 위 글 칸 높이(어림).
-   * 글 칸: 위아래 여백 36 + 올린 사람 줄 36 + 제목 한 줄 약 28 + 사이 14 ≈ 114 → 넉넉히 130,
-   * 긴 제목(두 줄)이면 +28, 본문이 있으면 넉 줄 + 사이 12 ≈ +110. 어림이 모자라도 카드가 틀을 넘지는 않습니다(maxHeight: var(--frame-h) — 넘치는 아래 끝이 잘립니다).
+   * 사진이 차지해도 되는 최대 높이 = 틀 높이 − 글 칸 높이(어림).
+   * 글 칸: 위 올린 사람 칸(16 + 36 + 14 = 66) + 아래 제목 칸(14 + 제목 한 줄 약 28 + 20 = 62) ≈ 128 → 130,
+   * 긴 제목(두 줄)이면 +28, 본문이 있으면 넉 줄 + 사이 8 ≈ +110.
+   * ★ 제목이 맨 아래라, 어림이 모자라 잘리면 제목이 먼저 잘립니다 — 어림은 넉넉한 쪽으로 두세요. 어림이 모자라도 카드가 틀을 넘지는 않습니다(maxHeight: var(--frame-h) — 넘치는 아래 끝이 잘립니다).
    */
   const textReserve = 130 + (album.title.length > 16 ? 28 : 0) + (body ? 110 : 0);
 
@@ -377,10 +381,11 @@ function AlbumCard({
       className="relative flex w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
       style={{ maxHeight: "var(--frame-h)" }}
     >
-      <div className="shrink-0 px-5 pt-5 pb-4">
+      <div className="shrink-0 px-5 pt-4 pb-3.5">
         {/*
           올린 원우 — 게시물 머리처럼 사진 + 이름, 그 아래 날짜·사진 수 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
           이름은 원우수첩의 지금 이름을 먼저 씁니다(이름을 고치면 따라옵니다). 명단에 없으면 올릴 때 적어 둔 이름.
+          제목·본문은 같은 날 사용자 요청으로 사진 아래로 옮겼습니다(인스타그램 게시물처럼 머리 → 사진 → 글).
         */}
         <div className="flex items-center gap-2.5">
           <Avatar
@@ -397,18 +402,9 @@ function AlbumCard({
             </p>
           </div>
         </div>
-
-        <h2 className="mt-3.5 text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
-          {album.title}
-        </h2>
-        {body ? (
-          <p className="mt-3 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
-            {body}
-          </p>
-        ) : null}
       </div>
 
-      <div className="relative">
+      <div className="relative shrink-0">
         {/*
           ★ 사진은 자르지 않고 원본 비율 그대로, 카드 높이가 사진에 맞춰 줄어듭니다 (2026-09-22 사용자 요청).
             처음엔 카드가 틀을 꽉 채우고 사진을 잘라(c_fill + object-cover) 넣었고, 다음엔 자르지 않되 남는 자리를
@@ -438,6 +434,18 @@ function AlbumCard({
         <span className="absolute top-3 right-3 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold text-white tabular-nums">
           {position} / {total}
         </span>
+      </div>
+
+      {/* 제목·본문 — 사진 아래 (2026-09-22 사용자 요청, 그 전엔 올린 사람 줄 바로 아래·사진 위). */}
+      <div className="shrink-0 px-5 pt-3.5 pb-5">
+        <h2 className="text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+          {album.title}
+        </h2>
+        {body ? (
+          <p className="mt-2 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+            {body}
+          </p>
+        ) : null}
       </div>
     </article>
   );
