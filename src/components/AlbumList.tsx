@@ -169,8 +169,12 @@ const TURN_THRESHOLD = 0.25;
 const TURN_MS = 340;
 /** 넘어갈 때의 속도 곡선 — 처음 빠르고 끝에서 부드럽게 멈춥니다(ease-out 계열). */
 const TURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-/** 양옆 화살표 자리(px) — 카드는 이만큼 양옆을 비우고 섭니다(inset-x-10). */
-const ARROW_GUTTER = 40;
+/**
+ * 양옆 화살표 자리(px) — 카드가 양옆에 따로 비우는 자리.
+ * 0 (2026-09-23 사용자 "게시물 카드 가로 길이를 홈탭 흰색 박스와 똑같게") — 예전엔 40px(inset-x-10).
+ * 이제 카드가 홈 박스처럼 화면 양옆 16px(소식 탭의 px-4)만 남기고, 화살표는 그 16px 안에 작게 섭니다.
+ */
+const ARROW_GUTTER = 0;
 
 /**
  * 넘기는 중인 상태.
@@ -388,7 +392,8 @@ function AlbumBook({
         {/*
           ★ 카드는 틀의 세로 한가운데에 섭니다(2026-09-22 사용자 요청 "화면 한 가운데") — 바깥 칸이 틀을 채우고
             flex로 가운데를 맞추며, 안쪽 relative 칸이 카드 크기라 종이가 카드에 딱 맞습니다.
-            좌우는 inset-x-10(40px)만큼 들여 양옆 큰 화살표 자리를 남깁니다(ARROW_GUTTER).
+            좌우는 들이지 않습니다(inset-x-0) — 카드 폭이 홈 흰 박스와 같습니다(2026-09-23 사용자 요청,
+            예전엔 inset-x-10으로 40px씩 들여 큰 화살표 자리를 남겼습니다). 사진은 폭에 맞춰 비율대로 커집니다.
         */}
         {slots.map(({ album, isCurrent }) => {
           const flipped = isCurrent && flippedId === album.id;
@@ -404,7 +409,7 @@ function AlbumBook({
           return (
             <div
               key={album.id}
-              className="pointer-events-none absolute inset-x-10 inset-y-0 flex items-center"
+              className="pointer-events-none absolute inset-x-0 inset-y-0 flex items-center"
               style={{ zIndex: isCurrent ? 2 : 1 }}
             >
               <div
@@ -467,6 +472,9 @@ function AlbumBook({
           카드 바깥 40px 자리(ARROW_GUTTER)의 세로 가운데. 누르면 손으로 민 것과 똑같이 넘어가고(turnBy),
           더 넘길 장이 없는 쪽은 흐리게 보이며 누르면 살짝 끌렸다 돌아옵니다 — 밀 때의 고무줄과 같은 뜻.
           onPointerDown을 멈추는 이유는 카드의 ⋯ 단추와 같습니다(틀이 포인터를 붙잡으면 click이 안 일어남).
+          ★ 2026-09-23 사용자 요청 "게시물 박스가 차지하고 남은 공간 만큼만의 사이즈로 확 줄여줘":
+            카드가 폭을 다 쓰게 되어, 화살표는 카드 바깥 화면 끝 16px(소식 탭 px-4) 안에 섭니다.
+            단추 폭 16px(w-4, -left-4·-right-4로 그 자리로 내보냄), 아이콘 16px(예전 36px).
         */}
         {(["prev", "next"] as const).map((mode) => {
           const enabled = mode === "next" ? hasNext : hasPrev;
@@ -479,11 +487,11 @@ function AlbumBook({
               onClick={() => turnBy(mode)}
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
               // 더 넘길 장이 없는 쪽은 흐리게만 보이고 눌리기는 합니다(누르면 살짝 끌렸다 돌아옴 — turnBy).
-              className={`absolute top-1/2 z-10 flex h-16 w-10 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
+              className={`absolute top-1/2 z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
                 enabled ? "" : "opacity-30"
-              } ${mode === "next" ? "-right-1" : "-left-1"}`}
+              } ${mode === "next" ? "-right-4" : "-left-4"}`}
             >
-              <Icon className="h-9 w-9" strokeWidth={2.4} />
+              <Icon className="h-4 w-4" strokeWidth={2.4} />
             </button>
           );
         })}
