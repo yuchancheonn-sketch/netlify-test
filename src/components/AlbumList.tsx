@@ -350,8 +350,14 @@ function AlbumBook({
   return (
     <BookFrame>
       <div
-        className="absolute inset-0 select-none"
-        style={{ touchAction: "pan-y" }}
+        /*
+          bottom-8 — 틀 아래 32px는 순번 줄("3 / 10") 자리로 비웁니다(2026-09-22). 카드는 그 위 칸의 가운데에 서고,
+          --card-max(카드 최대 높이)도 그만큼 줄여 카드가 순번을 덮지 않게 합니다.
+        */
+        className="absolute inset-x-0 top-0 bottom-8 select-none"
+        style={
+          { touchAction: "pan-y", "--card-max": "calc(var(--frame-h) - 32px)" } as React.CSSProperties
+        }
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -466,6 +472,18 @@ function AlbumBook({
         })}
       </div>
 
+      {/*
+        순번 "지금 카드 / 전체 카드 수" — 카드 밑, 가운데 (2026-09-22 사용자 요청).
+        카드와 따로 틀 맨 아래 32px 줄에 서서, 카드를 밀어도 따라 움직이지 않습니다. 한 장이 넘어가는 순간 바뀝니다.
+        (같은 날 사진 오른쪽 위에 있던 "1 / 1" 표시는 사용자 요청으로 없앴고, 이것이 그 자리를 대신합니다.)
+      */}
+      <p
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex h-8 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums"
+        aria-live="polite"
+      >
+        {current + 1} / {albums.length}
+      </p>
+
       {managing ? (
         <AlbumManageSheet
           album={managing}
@@ -517,7 +535,7 @@ function AlbumCard({
   return (
     <article
       className="relative flex w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-      style={{ maxHeight: "var(--frame-h)" }}
+      style={{ maxHeight: "var(--card-max, var(--frame-h))" }}
     >
       <div className="shrink-0 px-5 pt-4 pb-3.5">
         {/*
@@ -578,7 +596,7 @@ function AlbumCard({
             alt={`${album.title} 대표 사진`}
             draggable={false}
             className="block h-auto w-full object-contain"
-            style={{ maxHeight: `calc(var(--frame-h) - ${textReserve}px)` }}
+            style={{ maxHeight: `calc(var(--card-max, var(--frame-h)) - ${textReserve}px)` }}
           />
         ) : (
           <span
