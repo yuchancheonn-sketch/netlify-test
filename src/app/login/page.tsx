@@ -7,7 +7,6 @@ import {
   ChevronLeftIcon,
   GoogleIcon,
   KakaoIcon,
-  LockIcon,
   PhoneIcon,
   XMarkIcon,
 } from "@/components/icons";
@@ -25,7 +24,6 @@ import {
 import {
   APP_DEFINITION_BODY,
   APP_NAME,
-  COHORT,
   COURSE_FULL_NAME,
 } from "@/lib/constants";
 
@@ -270,10 +268,7 @@ function LoginScreen() {
             </p>
           ) : null}
 
-          <p className="mt-4 flex items-center justify-center gap-1.5 text-[12px] font-medium text-ink-muted">
-            <LockIcon className="h-4 w-4" />
-            {COHORT} 원우들을 위한 공간이에요
-          </p>
+          {/* 맨 아래 "🔒 10기 원우들을 위한 공간이에요" 줄은 2026-09-22 사용자 요청으로 지웠습니다. */}
         </div>
       </div>
     </div>
