@@ -97,7 +97,8 @@ export default function AlbumList() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+        // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
+        className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
       >
         <PlusIcon className="h-5 w-5" />
         {/* 단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창. */}
@@ -129,8 +130,8 @@ function heightSnapshot(): number {
 /**
  * 카드 한 장이 들어갈 수 있는 틀 — 제목 줄 아래부터 "소식 올리기" 알약 바로 위까지.
  *
- * 높이 = 화면 높이 − 틀의 위 끝 − 156px − 아래 안전 영역.
- *   156px = "소식 올리기" 알약 윗변(바닥에서 92 + 높이 52 = 144px) + 사이 12px.
+ * 높이 = 화면 높이 − 틀의 위 끝 − 157px − 아래 안전 영역.
+ *   157px = "소식 올리기" 알약 윗변(바닥에서 93 + 높이 52 = 145px) + 사이 12px. 알약을 옮기면 이 값도 같이.
  *   카드의 제목·본문이 맨 아래라(2026-09-22) 알약이 그 글을 가리지 않게 알약 위에서 끝냅니다.
  *   (그 전엔 탭 알약 위까지 90px = MainShell이 비워 둔 78px + 12px이었습니다.)
  * 틀의 위 끝(제목 줄 높이 + 본문 pt-4)은 화면마다·폰마다 달라서 그려진 뒤에 한 번 잽니다(ref 콜백).
@@ -142,7 +143,7 @@ function BookFrame({ children }: { children: React.ReactNode }) {
 
   const height =
     viewport && top !== null
-      ? `calc(${Math.max(320, viewport - top)}px - 156px - env(safe-area-inset-bottom))`
+      ? `calc(${Math.max(320, viewport - top)}px - 157px - env(safe-area-inset-bottom))`
       : "70dvh";
 
   return (
