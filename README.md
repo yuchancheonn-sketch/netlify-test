@@ -292,14 +292,39 @@ CPU를 계속 쓰고 있으면 그 상태입니다. 서버 창에
 > **2026-09에 Netlify에서 옮겼습니다** — Netlify 무료 크레딧 한도 때문입니다.
 > 옛 주소 aegiaeta10.netlify.app은 503으로 멈춰 있습니다.
 >
-> ⚠️ **아직 문서로 옮기지 못한 것 (확인 필요)**
-> - App Hosting이 GitHub `main`에 연결돼 **push하면 자동 배포되는지**, 아니면 콘솔에서 직접 올리는지.
->   저장소에는 `apphosting.yaml`이 없습니다.
-> - 환경변수(`NEXT_PUBLIC_…`, `FIREBASE_SERVICE_ACCOUNT`, 카카오 키)를 **어디에 넣었는지**(App Hosting 콘솔 / Secret Manager).
-> - `netlify/functions/feed-push.mts`(매시 새 영상·소식 알림)는 **Netlify 전용 예약 함수라 App Hosting에서는 돌지 않습니다.**
->   따로 옮기지 않았다면 새 영상·소식 알림은 지금 멈춰 있습니다.
->
-> 확인되면 이 칸을 고쳐 주세요. 아래 Netlify 절차는 옮기기 전 기록으로 남겨 둡니다.
+> ⚠️ `netlify/functions/feed-push.mts`(매시 새 영상·소식 알림)는 **Netlify 전용 예약 함수라 App Hosting에서는 돌지 않습니다.**
+> 따로 옮기지 않았다면 새 영상·소식 알림은 지금 멈춰 있습니다.
+
+### 어떻게 짜여 있나 (2026-09-22 확인)
+
+- **App Hosting 백엔드 `agikaeta`** (asia-east1) — Next.js를 빌드해 돌립니다. **GitHub와 연결돼 있지 않습니다.
+  push해도 배포되지 않습니다.** 내 컴퓨터의 폴더를 CLI로 올립니다.
+- **Hosting 사이트 `aegiaeta`** (= aegiaeta.web.app) — 모든 요청을 위 백엔드로 넘기기만 합니다(`firebase.json`의 `hosting`).
+  ★ 이 앞단 CDN이 화면을 **1년** 캐시합니다(`s-maxage=31536000`). 그래서 백엔드만 새로 올리면
+  web.app은 예전 화면을 계속 보여 줍니다. **Hosting도 한 번 다시 올려야 캐시가 비워집니다.**
+- **환경변수는 [apphosting.yaml](apphosting.yaml)** 에 있습니다. 공개값(`NEXT_PUBLIC_…`)은 값 그대로,
+  비밀값은 Secret Manager 이름만(`FIREBASE_SERVICE_ACCOUNT`). 새 비밀값은
+  `firebase.cmd apphosting:secrets:set 이름 --project aegiaeta10` 로 넣습니다.
+
+### 배포 순서
+
+PowerShell에서는 `firebase` 대신 **`firebase.cmd`** 라고 쳐야 합니다(스크립트 실행 정책 때문).
+처음 한 번 `npm i -g firebase-tools` → `firebase.cmd login`.
+
+1. 올릴 것을 모두 **커밋**합니다.
+2. **커밋된 것만** 따로 뽑아 거기서 올립니다. 작업 폴더를 그대로 올리면 커밋 안 한 수정까지 올라갑니다.
+
+```bash
+rm -rf ../deploy && mkdir ../deploy && git archive HEAD | tar -x -C ../deploy
+cd ../deploy
+firebase.cmd deploy --only apphosting --project aegiaeta10   # 빌드 5~10분
+firebase.cmd deploy --only hosting --project aegiaeta10      # web.app 캐시 비우기(몇 초)
+```
+
+3. 확인: `curl -sI https://aegiaeta.web.app/login` 의 `Etag`가
+   `https://agikaeta--aegiaeta10.asia-east1.hosted.app/login` 과 같으면 새 화면입니다.
+
+아래 Netlify 절차는 옮기기 전 기록으로 남겨 둡니다.
 
 ### (옛 기록) Netlify 처음 한 번
 

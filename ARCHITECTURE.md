@@ -9,7 +9,8 @@
 > (옛 주소 aegiaeta10.netlify.app은 503으로 멈춤). 아래 본문에서 "Netlify 서버·Netlify CDN"이라고 적힌 자리는
 > 이제 App Hosting이 맡습니다 — 라우트 핸들러(`/api/*`)는 그대로 돕니다.
 > 예외: `netlify/functions/feed-push.mts`(매시 예약 함수)는 Netlify 전용이라 **App Hosting에서는 돌지 않습니다.**
-> push가 곧 배포인지, 환경변수를 어디에 두는지는 아직 확인되지 않았습니다 — [README 배포하기](README.md#배포하기-firebase-app-hosting) 참고.
+> **push는 배포가 아닙니다** — 백엔드가 GitHub와 연결돼 있지 않아 CLI로 올리고, web.app 앞단 Hosting 캐시(1년)도
+> 다시 올려 비워야 합니다. 환경변수는 apphosting.yaml. 절차는 [README 배포하기](README.md#배포하기-firebase-app-hosting).
 >
 > **로그인 (2026-09-22):** 구글 · 카카오 · 휴대폰 번호. 구글·휴대폰은 Firebase 기본 기능,
 > 카카오는 서버 `/api/auth/kakao`가 카카오 회원번호로 `kakao:<id>` 계정의 로그인 표(custom token)를 만들어 줍니다.
@@ -433,8 +434,8 @@ npm run build        # 타입 검사 + 린트 + 빌드 (배포 전 확인)
 npm run icons        # sharp로 PWA 아이콘 PNG 재생성 (public/icon-*.png)
 ```
 
-**배포: Firebase App Hosting (https://aegiaeta.web.app).** push가 곧 배포인지는 확인 필요(맨 위 안내 참고).
-어느 쪽이든 **push는 사용자가 "배포하자"고 할 때만** 합니다. 커밋은 작업 단위마다 쌓아둡니다.
+**배포: Firebase App Hosting (https://aegiaeta.web.app).** push로는 배포되지 않습니다 — `firebase.cmd deploy --only apphosting`
+뒤에 `--only hosting`(캐시 비우기). 순서는 README 배포하기. **배포·push는 사용자가 "배포하자"고 할 때만** 합니다.
 (옛 기록: Netlify 시절에는 `main`에 push → 자동 빌드였고, `[skip netlify]`로 건너뛸 수 있었습니다.)
 
 **폰에서 안 열릴 때 의심 순서** (`npm run dev:phone`):

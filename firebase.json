@@ -15,8 +15,22 @@
         ".git",
         ".next",
         "firebase-debug.log",
-        "**/.env*"
+        "**/.env*",
+        "hosting-public"
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "site": "aegiaeta",
+    "public": "hosting-public",
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "agikaeta",
+          "region": "asia-east1"
+        }
+      }
+    ]
+  }
 }
