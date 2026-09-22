@@ -124,8 +124,9 @@ function LoginScreen() {
         ★ 2026-09-22 사용자 요청 — 얼굴을 "애기애타" 제목 밑으로 당기고, 제목과 사이는 조금 띄웁니다.
           예전 top-[28%]는 화면 높이에 따라 움직여 제목과의 거리가 폰마다 달랐고, 앱 아이콘을 뺀 뒤로는
           제목 아래가 크게 비었습니다. 제목은 화면 위에서 고정 거리(pt-14 + 두 줄 ≈ 125px)라
-          사진도 고정 거리에서 시작합니다. 110px(사이 57px) → 90px(사이 35px) → 같은 날 "훨씬 위로"에 55px
-          (머리 윗부분이 제목 바로 밑. 40px까지 올리면 머리가 "애기애타" 글자 뒤로 들어가 겹칩니다)
+          사진도 고정 거리에서 시작합니다. 110px(사이 57px) → 90px(사이 35px) → 55px(머리가 제목 바로 밑)
+          → -15px(같은 날 사용자 요청 "70px 위로" — 머리가 "애기애타" 글자 뒤로 올라가 겹칩니다.
+          사진 위끝은 화면 밖으로 15px 나가고, 그 아래 하늘은 마스크로 희미하게 사라집니다)
           (머리는 사진 위끝에서 약 85px 아래 — 2026-09-22 캡처로 잼, 그 위는 아래 마스크로 희미하게 사라지는 하늘).
           높이는 예전과 같은 72%로 둡니다 — bottom-0으로 늘리면 bg-cover가 사진을 키워 얼굴이 커집니다.
           ★ 사진을 위로 올리면 사진 아래 끝이 문구("나를 사랑하고…") 바로 밑, 막이 아직 덜 짙은 곳에 와서
@@ -133,7 +134,7 @@ function LoginScreen() {
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[55px] h-[72%] bg-cover bg-no-repeat"
+        className="pointer-events-none absolute inset-x-0 top-[-15px] h-[72%] bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
