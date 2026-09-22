@@ -13,7 +13,8 @@ import { useAcademyEvents, useEvents } from "@/lib/hooks";
  * 홈의 한 달 캘린더 (2026-09-23 사용자 요청 — "다가오는 모임" 박스 밑).
  *
  * - 한 달 단위로만 봅니다(주·일 보기 없음). ‹ › 로 앞뒤 달을 넘깁니다.
- * - 점 두 가지: 주황 = 우리 기수 모임 일정(events), 회색 = 도산아카데미 일정(academyEvents).
+ * - 일정이 있는 날은 날짜 밑에 주황 점 하나(우리 기수 모임 events · 도산아카데미 academyEvents 모두, 2026-09-23).
+ *   고른 날의 목록에서는 왼쪽 막대 색으로 갈립니다(주황 = 우리 기수, 회색 = 도산아카데미).
  * - 날짜를 누르면 박스 아래쪽에 그날 일정이 섭니다. 처음엔 오늘.
  * - 맨 아래 "내 폰 캘린더에 연결" — 아이폰·구글 캘린더 구독(lib/calendar-feed-server.ts).
  * - 열릴 때 서버에 도산아카데미 새 글 일정을 넣으라고 한 번 알립니다(한 시간에 한 번만 실제로 돎).
@@ -146,8 +147,6 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           const items = byDay.get(key) ?? [];
           const isToday = key === today;
           const isSelected = key === selected;
-          const hasCohort = items.some((item) => item.kind === "cohort");
-          const hasAcademy = items.some((item) => item.kind === "academy");
           return (
             <button
               key={key}
@@ -170,9 +169,12 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               >
                 {day}
               </span>
-              <span className="mt-0.5 flex h-1.5 items-center gap-0.5" aria-hidden="true">
-                {hasCohort ? <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> : null}
-                {hasAcademy ? <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" /> : null}
+              {/*
+                일정이 있는 날은 주황 점 하나 — 우리 기수 모임이든 도산아카데미든 같습니다
+                (2026-09-23 사용자 요청, 예전엔 도산아카데미만 회색 점이었고 둘 다 있으면 점 두 개).
+              */}
+              <span className="mt-0.5 flex h-1.5 items-center" aria-hidden="true">
+                {items.length > 0 ? <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> : null}
               </span>
             </button>
           );
