@@ -371,10 +371,11 @@ function AlbumBook({
     <BookFrame>
       <div
         /*
-          bottom-8 — 틀 아래 32px는 순번 줄("3 / 10") 자리로 비웁니다(2026-09-22). 카드는 그 위 칸의 가운데에 서고,
-          --card-max(카드 최대 높이)도 그만큼 줄여 카드가 순번을 덮지 않게 합니다.
+          틀을 다 씁니다. 순번 줄("3 / 10", 32px)은 카드 바로 밑에 붙어 카드와 한 덩어리로 가운데에 섭니다
+          (2026-09-23 사용자 "1/1은 게시물 카드 바로 밑으로" — 예전엔 틀 맨 아래 bottom-8 자리에 따로).
+          --card-max(카드 최대 높이)는 그 32px을 빼 카드가 순번 줄을 밀어내지 않게 합니다.
         */
-        className="absolute inset-x-0 top-0 bottom-8 select-none"
+        className="absolute inset-0 select-none"
         style={
           { touchAction: "pan-y", "--card-max": "calc(var(--frame-h) - 32px)" } as React.CSSProperties
         }
@@ -409,7 +410,7 @@ function AlbumBook({
           return (
             <div
               key={album.id}
-              className="pointer-events-none absolute inset-x-0 inset-y-0 flex items-center"
+              className="pointer-events-none absolute inset-0 flex flex-col justify-center"
               style={{ zIndex: isCurrent ? 2 : 1 }}
             >
               <div
@@ -462,6 +463,22 @@ function AlbumBook({
                   </div>
                 </div>
               </div>
+
+              {/*
+                순번 "지금 카드 / 전체 카드 수" — 카드 바로 밑, 가운데 (2026-09-23 사용자 요청으로 틀 맨 아래에서 옮김).
+                카드와 달리 넘기는 움직임(transform)을 받지 않아 제자리에 있고, 한 장이 넘어가는 순간 바뀝니다.
+                ★ 뒤에서 올라오는 카드에도 같은 32px 줄을 투명하게(invisible) 둡니다 — 없으면 그 카드가 16px 아래에 섰다가
+                  "지금 카드"가 되는 순간 위로 튑니다.
+              */}
+              <p
+                className={`flex h-8 shrink-0 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums ${
+                  isCurrent ? "" : "invisible"
+                }`}
+                aria-live={isCurrent ? "polite" : undefined}
+                aria-hidden={!isCurrent}
+              >
+                {current + 1} / {albums.length}
+              </p>
             </div>
           );
         })}
@@ -487,7 +504,8 @@ function AlbumBook({
               onClick={() => turnBy(mode)}
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
               // 더 넘길 장이 없는 쪽은 흐리게만 보이고 눌리기는 합니다(누르면 살짝 끌렸다 돌아옴 — turnBy).
-              className={`absolute top-1/2 z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
+              // top-[calc(50%-16px)] — 카드 세로 가운데. 카드가 밑의 순번 줄(32px)과 한 덩어리로 가운데에 서서 16px 위에 있습니다.
+              className={`absolute top-[calc(50%-16px)] z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
                 enabled ? "" : "opacity-30"
               } ${mode === "next" ? "-right-4" : "-left-4"}`}
             >
@@ -497,17 +515,7 @@ function AlbumBook({
         })}
       </div>
 
-      {/*
-        순번 "지금 카드 / 전체 카드 수" — 카드 밑, 가운데 (2026-09-22 사용자 요청).
-        카드와 따로 틀 맨 아래 32px 줄에 서서, 카드를 밀어도 따라 움직이지 않습니다. 한 장이 넘어가는 순간 바뀝니다.
-        (같은 날 사진 오른쪽 위에 있던 "1 / 1" 표시는 사용자 요청으로 없앴고, 이것이 그 자리를 대신합니다.)
-      */}
-      <p
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex h-8 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums"
-        aria-live="polite"
-      >
-        {current + 1} / {albums.length}
-      </p>
+      {/* 순번 "3 / 10"은 카드 바로 밑으로 옮겼습니다(위 카드 칸 안, 2026-09-23). */}
 
       {managing ? (
         <AlbumManageSheet
