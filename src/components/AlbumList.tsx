@@ -11,7 +11,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { PlusIcon, XMarkIcon } from "@/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import {
   EmptyState,
   ErrorState,
@@ -267,6 +267,23 @@ function AlbumBook({
     }, TURN_MS);
   }
 
+  /**
+   * 양옆 화살표(‹ ›)를 눌렀을 때 — 손으로 민 것처럼 한 장 넘깁니다(2026-09-22 사용자 요청).
+   * 넘어간 정도 0에서 한 번 그린 뒤 다음 그림에서 1로 바꿔야 transition이 걸려 넘어가는 모습이 보입니다
+   * (requestAnimationFrame 두 번 — 첫 번째는 0을 그리게, 두 번째에 1로).
+   */
+  function turnBy(mode: Turn["mode"]) {
+    if (turn || (mode === "next" ? !hasNext : !hasPrev)) return;
+    setTurn({ mode, progress: 0, settling: false });
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => setTurn({ mode, progress: 1, settling: true })),
+    );
+    window.setTimeout(() => {
+      setIndex(current + (mode === "next" ? 1 : -1));
+      setTurn(null);
+    }, TURN_MS + 40);
+  }
+
   /*
    * 무엇을 어느 층에 그릴지.
    *   밑장(under): 넘어가는 장 아래에서 드러나는 카드.
@@ -311,8 +328,14 @@ function AlbumBook({
         aria-roledescription="넘겨 보는 카드"
         aria-label={`${current + 1} / ${albums.length} ${albums[current].title}`}
       >
+        {/*
+          ★ 카드는 틀의 세로 한가운데에 섭니다(2026-09-22 사용자 요청 "화면 한 가운데") — 바깥 칸이 틀을 채우고
+            flex로 가운데를 맞추며, 안쪽 relative 칸이 카드 크기라 종이·그늘이 카드에 딱 맞습니다.
+            좌우는 inset-x-7(28px)만큼 들여 양옆 화살표 자리를 남깁니다.
+        */}
         {under ? (
-          <div className="absolute inset-x-0 top-0">
+          <div className="pointer-events-none absolute inset-x-7 inset-y-0 flex items-center">
+          <div className="pointer-events-auto relative w-full">
             {/* 쌓인 종이 — 뒤에 남은 장이 있을 때만. 밑장 카드 뒤에서 오른쪽·아래로 4px씩 비켜 섭니다. */}
             {behind >= 2 ? (
               <div
@@ -343,22 +366,50 @@ function AlbumBook({
               />
             ) : null}
           </div>
+          </div>
         ) : null}
 
         {page ? (
-          <div
-            className="absolute inset-x-0 top-0 origin-left [backface-visibility:hidden]"
-            style={{ transform: `rotateY(${angle}deg)`, transition }}
-          >
-            <AlbumCard album={page} author={authors.get(page.createdBy)} position={albums.indexOf(page) + 1} total={albums.length} />
-            {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
+          <div className="pointer-events-none absolute inset-x-7 inset-y-0 flex items-center">
             <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
-              style={{ opacity: 0.35 * Math.abs(turned), transition }}
-            />
+              className="relative w-full origin-left [backface-visibility:hidden]"
+              style={{ transform: `rotateY(${angle}deg)`, transition }}
+            >
+              <AlbumCard album={page} author={authors.get(page.createdBy)} position={albums.indexOf(page) + 1} total={albums.length} />
+              {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
+                style={{ opacity: 0.35 * Math.abs(turned), transition }}
+              />
+            </div>
           </div>
         ) : null}
+
+        {/*
+          양옆 화살표 ‹ › — "옆으로 넘기는 카드"라는 표시 겸 누르면 한 장 넘기는 단추 (2026-09-22 사용자 요청 "<> 이런 모양").
+          카드 바깥 28px 자리(inset-x-7)의 세로 가운데. 더 넘길 장이 없는 쪽은 흐리게 두고 눌리지 않습니다.
+          onPointerDown을 멈추는 이유는 카드의 ⋯ 단추와 같습니다(틀이 포인터를 붙잡으면 click이 안 일어남).
+        */}
+        {(["prev", "next"] as const).map((mode) => {
+          const enabled = mode === "next" ? hasNext : hasPrev;
+          const Icon = mode === "next" ? ChevronRightIcon : ChevronLeftIcon;
+          return (
+            <button
+              key={mode}
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => turnBy(mode)}
+              disabled={!enabled}
+              aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
+              className={`absolute top-1/2 flex h-12 w-7 -translate-y-1/2 items-center justify-center text-ink-muted transition disabled:opacity-25 ${
+                mode === "next" ? "right-0" : "left-0"
+              }`}
+            >
+              <Icon className="h-6 w-6" />
+            </button>
+          );
+        })}
       </div>
 
       {managing ? (
