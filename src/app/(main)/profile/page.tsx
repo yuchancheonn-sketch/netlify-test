@@ -33,7 +33,12 @@ export default function ProfilePage() {
       대화방처럼 둘로 나눌 필요가 없습니다 — 이 화면에는 떠 있는(fixed) 요소가
       없어서, 통째로 transform을 걸어도 자리가 틀어질 것이 없습니다.
 
-      바탕색은 body와 같은 canvas라, 밀려나 드러나는 자리도 색이 이어집니다.
+      바탕색은 흰색(surface) — 2026-09-23 사용자 요청으로 회색(canvas)에서 바꿨습니다.
+      칸들은 ProfileForm이 mode="edit"일 때 옅은 회색·그림자 없음으로 그립니다.
+      제목 줄도 tone="surface"로 맞춥니다(안 하면 제목 줄만 회색으로 남음).
+      ★ MainShell의 <main>이 탭바 자리로 아래 여백 78px+홈 바를 두는데, 그 여백은 body(회색)라
+        맨 아래까지 내리면 탭바 뒤에 회색 띠가 보입니다. 같은 값을 음수 margin으로 파고들고
+        padding으로 되채워 흰 바탕이 그 자리까지 덮게 합니다. MainShell 값을 바꾸면 같이 바꾸세요.
 
       min-h-full: 내용이 짧을 때도 상자가 화면 아래까지 내려와 있어야 합니다.
       높이를 주지 않으면 상자가 마지막 칸에서 끝나고, 그 아래 빈 자리에서
@@ -45,11 +50,11 @@ export default function ProfilePage() {
       부모의 안쪽 높이에 맞추면 그 여백을 빼고 딱 맞습니다.
     */
     <div
-      className="min-h-full bg-canvas"
+      className="-mb-[calc(78px+env(safe-area-inset-bottom))] min-h-full bg-surface pb-[calc(78px+env(safe-area-inset-bottom))]"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >
-      <PageHeader title="내 프로필" back />
+      <PageHeader title="내 프로필" back tone="surface" />
 
       {saved ? (
         <p

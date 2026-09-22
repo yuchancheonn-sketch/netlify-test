@@ -75,6 +75,15 @@ interface FormState {
  */
 const fieldClassName = inputClassName.replace("py-4", "pt-[11px] pb-[15px]");
 
+/**
+ * 내 프로필 수정 화면(mode="edit")의 칸 모양 (2026-09-23 사용자 요청).
+ * 바탕을 흰색으로 바꾸면서, 흰 칸은 옅은 회색(fill)으로 두고 칸 둘레의 그림자(글로우)를 뺍니다.
+ * 처음 가입(onboarding) 화면은 그대로입니다. 글자 그대로 "bg-fill"·"shadow-none"이 있어야 Tailwind가 CSS를 만듭니다.
+ */
+function flatBox(className: string): string {
+  return className.replace("bg-surface", "bg-fill").replace("shadow-[var(--shadow-card)]", "shadow-none");
+}
+
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -352,6 +361,14 @@ export default function ProfileForm({
   const displayName = form.name.trim() || "나";
   const submitDisabled = mode === "edit" ? !dirty : false;
 
+  // 칸 모양 — 수정 화면만 회색 칸·그림자 없음 (위 flatBox)
+  const flat = mode === "edit";
+  const field = flat ? flatBox(fieldClassName) : fieldClassName;
+  const textareaClassName = flat ? flatBox(inputClassName) : inputClassName;
+  const cardClassName = flat
+    ? flatBox("bg-surface shadow-[var(--shadow-card)]")
+    : "bg-surface shadow-[var(--shadow-card)]";
+
   return (
     <form onSubmit={handleSubmit} className="px-5 pb-10">
       {/* 프로필 사진 */}
@@ -363,7 +380,10 @@ export default function ProfileForm({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             aria-label="프로필 사진 바꾸기"
-            className="absolute -right-1 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] ring-4 ring-canvas transition active:scale-95 disabled:opacity-70"
+            // 수정 화면은 바탕이 흰색(surface)이라 오려내는 테두리도 surface, 그림자는 뺍니다 (2026-09-23 사용자 요청).
+            className={`absolute -right-1 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white ring-4 transition active:scale-95 disabled:opacity-70 ${
+              flat ? "ring-surface" : "shadow-[var(--shadow-float)] ring-canvas"
+            }`}
           >
             {uploading ? <Spinner className="h-5 w-5" /> : <CameraIcon className="h-5 w-5" />}
           </button>
@@ -388,7 +408,7 @@ export default function ProfileForm({
           value={form.name}
           onChange={(event) => update("name", event.target.value)}
           placeholder="예) 홍길동"
-          className={fieldClassName}
+          className={field}
         />
         {errors.name ? <FieldError>{errors.name}</FieldError> : null}
       </div>
@@ -407,7 +427,7 @@ export default function ProfileForm({
           inputMode="tel"
           autoComplete="tel"
           placeholder="010-1234-5678"
-          className={fieldClassName}
+          className={field}
         />
         {errors.phone ? (
           <FieldError>{errors.phone}</FieldError>
@@ -425,7 +445,7 @@ export default function ProfileForm({
           id="cohort"
           value={form.cohort}
           onChange={(event) => update("cohort", event.target.value)}
-          className={`${fieldClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+          className={`${field}appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
           style={SELECT_ARROW_STYLE}
         >
           <option value="" disabled>
@@ -468,7 +488,7 @@ export default function ProfileForm({
             }
             inputMode="numeric"
             placeholder="연도"
-            className={`${fieldClassName} min-w-0 px-4!`}
+            className={`${field}min-w-0 px-4!`}
           />
           <select
             id="month"
@@ -480,7 +500,7 @@ export default function ProfileForm({
               const maxDay = daysInMonth(Number(event.target.value));
               if (Number(form.day) > maxDay) update("day", "");
             }}
-            className={`${fieldClassName} min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4!`}
+            className={`${field}min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4!`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">월</option>
@@ -495,7 +515,7 @@ export default function ProfileForm({
             value={form.day}
             onChange={(event) => update("day", event.target.value)}
             disabled={!form.month}
-            className={`${fieldClassName} min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4! disabled:text-ink-faint`}
+            className={`${field}min-w-0 appearance-none bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-9! pl-4! disabled:text-ink-faint`}
             style={SELECT_ARROW_STYLE}
           >
             <option value="">일</option>
@@ -541,7 +561,7 @@ export default function ProfileForm({
                 className={`flex flex-1 items-center justify-center rounded-2xl border-2 py-[13px] transition ${
                   selected
                     ? "border-brand-500 bg-brand-50"
-                    : "border-transparent bg-surface shadow-[var(--shadow-card)]"
+                    : `border-transparent ${cardClassName}`
                 }`}
               >
                 <span
@@ -571,7 +591,7 @@ export default function ProfileForm({
             update("company", event.target.value.slice(0, COMPANY_MAX_LENGTH))
           }
           placeholder="예) (주)착한부자"
-          className={fieldClassName}
+          className={field}
         />
         {errors.company ? <FieldError>{errors.company}</FieldError> : null}
       </div>
@@ -587,7 +607,7 @@ export default function ProfileForm({
             update("position", event.target.value.slice(0, POSITION_MAX_LENGTH))
           }
           placeholder="예) 대표 / 본부장"
-          className={fieldClassName}
+          className={field}
         />
         {errors.position ? <FieldError>{errors.position}</FieldError> : null}
       </div>
@@ -607,7 +627,7 @@ export default function ProfileForm({
             update("councilRole", event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
           }
           placeholder="예) 회장 / 총무 / 문화위원장"
-          className={fieldClassName}
+          className={field}
         />
       </div>
 
@@ -631,7 +651,7 @@ export default function ProfileForm({
           }
           rows={5}
           placeholder="하는 일, 관심사, 원우들에게 하고 싶은 말을 자유롭게 적어 주세요."
-          className={`${inputClassName} resize-none leading-relaxed`}
+          className={`${textareaClassName} resize-none leading-relaxed`}
         />
         {errors.introduction ? <FieldError>{errors.introduction}</FieldError> : null}
       </div>
@@ -650,12 +670,12 @@ export default function ProfileForm({
           autoCorrect="off"
           spellCheck={false}
           placeholder="https://youtu.be/..."
-          className={fieldClassName}
+          className={field}
         />
         {errors.introVideoUrl ? <FieldError>{errors.introVideoUrl}</FieldError> : null}
 
         {videoPreview ? (
-          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-[var(--shadow-card)]">
+          <div className={`mt-3 flex items-center gap-3 rounded-2xl p-3 ${cardClassName}`}>
             {videoPreview.thumbnail ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
