@@ -2,7 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { PlusIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -22,6 +22,9 @@ import { thumbnailUrl } from "@/lib/cloudinary";
 import { dotDate, todayString } from "@/lib/format";
 import { useAlbums } from "@/lib/hooks";
 import type { PhotoAlbumDoc } from "@/lib/types";
+
+/** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
+const ALBUM_BODY_MAX_LENGTH = 1000;
 
 /**
  * 원우 소식 — 소식 탭의 첫 칸 (예전 이름 "행사 사진").
@@ -56,7 +59,7 @@ export default function AlbumList() {
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
             title="아직 올라온 소식이 없어요"
-            description="아래 '사진 올리기'로 첫 소식을 올려 보세요."
+            description="아래 '소식 올리기'로 첫 소식을 올려 보세요."
           />
         </div>
       ) : (
@@ -78,8 +81,8 @@ export default function AlbumList() {
         className="fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
       >
         <PlusIcon className="h-5 w-5" />
-        {/* 단추 글씨 "앨범 만들기" → "사진 올리기" (2026-09-22 사용자 요청). 누르면 여전히 새 앨범 만들기 창이 뜹니다. */}
-        사진 올리기
+        {/* 단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창. */}
+        소식 올리기
       </button>
 
       {creating ? <AlbumCreateSheet onClose={() => setCreating(false)} /> : null}
@@ -320,9 +323,15 @@ function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
 }
 
 /**
- * 게시물 카드 한 장 — 대표 사진이 카드를 꽉 채우고, 위쪽 어두운 막 위에 제목·날짜·사진 수.
- * 글씨를 위에 두는 건 오른쪽 아래에 "사진 올리기" 알약이 떠 있어서입니다.
- * 오른쪽 위 "3 / 10"은 몇 번째 장인지.
+ * 게시물 카드 한 장.
+ *
+ * ★ 글과 사진을 겹치지 않고 위아래로 나눕니다 (2026-09-22 사용자 요청 — "제목이랑 본문이 더 잘 보이게").
+ *   처음엔 사진이 카드를 다 덮고 그 위 어두운 막에 흰 글씨를 얹었는데, 사진에 따라 글씨가 묻혔습니다.
+ *   이제 위쪽 흰 칸에 제목(20px 굵게)·날짜·사진 수·본문(15px)을 먹색으로 쓰고, 남은 아래를 사진이 채웁니다.
+ *   글이 위인 까닭: 오른쪽 아래에 "소식 올리기" 알약이 떠 있어서, 아래에 두면 글을 가립니다.
+ * ★ 본문은 넉 줄까지만 보이고 넘치면 "…"(line-clamp-4) — 다 쓰면 사진 자리가 없어집니다.
+ *   전문은 카드를 눌러 들어간 앨범 화면에서 봅니다.
+ * 사진 위 오른쪽 위 "3 / 10"은 몇 번째 장인지.
  */
 function AlbumCard({
   album,
@@ -334,43 +343,43 @@ function AlbumCard({
   total: number;
 }) {
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
+  const body = album.body?.trim();
 
   return (
-    <article className="relative h-full w-full overflow-hidden rounded-[24px] bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] shadow-[var(--shadow-card)]">
-      {album.coverImageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={thumbnailUrl(album.coverImageUrl, 1080)}
-          alt={`${album.title} 대표 사진`}
-          draggable={false}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : (
-        <span
-          className="absolute inset-0 flex items-center justify-center text-[48px]"
-          aria-hidden="true"
-        >
-          📷
-        </span>
-      )}
-
-      {/* 위쪽 어두운 막 — 흰 글씨가 어느 사진 위에서도 읽히게. 아래 절반은 사진 그대로. */}
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0)_45%)]"
-      />
-
-      <div className="absolute inset-x-0 top-0 flex items-start gap-3 p-5">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[22px] leading-snug font-bold break-keep text-white [overflow-wrap:anywhere]">
-            {album.title}
-          </h2>
-          <p className="mt-1 text-[13px] font-medium text-white/85">
-            {date}
-            {date ? " · " : ""}사진 {album.photoCount}장
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]">
+      <div className="shrink-0 px-5 pt-5 pb-4">
+        <h2 className="text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+          {album.title}
+        </h2>
+        <p className="mt-1 text-[13px] text-ink-faint">
+          {date}
+          {date ? " · " : ""}사진 {album.photoCount}장
+        </p>
+        {body ? (
+          <p className="mt-3 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+            {body}
           </p>
-        </div>
-        <span className="shrink-0 rounded-full bg-black/35 px-2.5 py-1 text-[12px] font-bold text-white tabular-nums">
+        ) : null}
+      </div>
+
+      <div className="relative min-h-0 flex-1 bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)]">
+        {album.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnailUrl(album.coverImageUrl, 1080)}
+            alt={`${album.title} 대표 사진`}
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <span
+            className="absolute inset-0 flex items-center justify-center text-[48px]"
+            aria-hidden="true"
+          >
+            📷
+          </span>
+        )}
+        <span className="absolute top-3 right-3 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold text-white tabular-nums">
           {position} / {total}
         </span>
       </div>
@@ -378,13 +387,19 @@ function AlbumCard({
   );
 }
 
-/** 새 행사 앨범을 만드는 바텀시트 */
+/**
+ * 새 소식(앨범)을 올리는 바텀시트 — 제목·날짜·본문(선택).
+ * 사진은 올린 뒤 카드를 눌러 들어간 앨범 화면에서 붙입니다. 첫 사진이 카드의 대표 사진이 됩니다.
+ * (2026-09-22 "소식 올리기"로 이름을 바꾸며 본문 칸을 더하고, "행사 이름/행사 날짜"를 "제목/날짜"로 줄였습니다.)
+ */
 function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
+  const router = useRouter();
   /** 새 앨범이 올라갈 기수 — 운영진이 제목 옆에서 고른 기수입니다. */
   const { cohort } = useViewCohort();
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState(todayString());
+  const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -392,7 +407,11 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
     event.preventDefault();
     if (!user || saving) return;
     if (!title.trim()) {
-      setError("행사 이름을 입력해 주세요.");
+      setError("제목을 입력해 주세요.");
+      return;
+    }
+    if (body.length > ALBUM_BODY_MAX_LENGTH) {
+      setError(`본문은 ${ALBUM_BODY_MAX_LENGTH}자까지 쓸 수 있어요.`);
       return;
     }
 
@@ -400,10 +419,12 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
     setError(null);
     // 응답을 잠깐만 기다리고 창을 닫습니다 — 이유는 lib/firestore-commit.ts에.
     try {
+      const created = doc(collection(db, "photoAlbums"));
       await commitWrite(
-        addDoc(collection(db, "photoAlbums"), {
+        setDoc(created, {
           title: title.trim(),
           eventDate,
+          body: body.trim(),
           coverImageUrl: null,
           photoCount: 0,
           cohort,
@@ -412,8 +433,10 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
         }),
       );
       onClose();
+      // 곧바로 그 앨범 화면으로 가서 사진을 붙이게 합니다 — "소식 올리기"를 눌렀는데 사진 없는 카드만 남지 않게.
+      router.push(`/albums/${created.id}`);
     } catch (caught) {
-      setError(saveErrorMessage(caught, "앨범을 만들지 못했어요."));
+      setError(saveErrorMessage(caught, "소식을 올리지 못했어요."));
       setSaving(false);
     }
   }
@@ -423,7 +446,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label="새 앨범 만들기"
+      aria-label="소식 올리기"
       onClick={onClose}
     >
       <form
@@ -431,10 +454,10 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
         onClick={(event) => event.stopPropagation()}
         className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">새 앨범 만들기</h2>
+        <h2 className="mb-6 text-[20px] font-bold text-ink">소식 올리기</h2>
 
         <div className="mb-5">
-          <FieldLabel htmlFor="album-title">행사 이름</FieldLabel>
+          <FieldLabel htmlFor="album-title">제목</FieldLabel>
           <input
             id="album-title"
             value={title}
@@ -447,14 +470,38 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           />
         </div>
 
-        <div className="mb-6">
-          <FieldLabel htmlFor="album-date">행사 날짜</FieldLabel>
+        <div className="mb-5">
+          <FieldLabel htmlFor="album-date">날짜</FieldLabel>
           <input
             id="album-date"
             type="date"
             value={eventDate}
             onChange={(changed) => setEventDate(changed.target.value)}
             className={inputClassName}
+          />
+        </div>
+
+        <div className="mb-6">
+          <FieldLabel
+            htmlFor="album-body"
+            hint={
+              <span className="tabular-nums">
+                선택 · {body.length}/{ALBUM_BODY_MAX_LENGTH}자
+              </span>
+            }
+          >
+            본문
+          </FieldLabel>
+          <textarea
+            id="album-body"
+            value={body}
+            onChange={(changed) => {
+              setBody(changed.target.value.slice(0, ALBUM_BODY_MAX_LENGTH));
+              setError(null);
+            }}
+            rows={4}
+            placeholder="어떤 자리였는지 원우들에게 짧게 들려주세요."
+            className={`${inputClassName} resize-none leading-relaxed`}
           />
         </div>
 
@@ -475,7 +522,7 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           </button>
           {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
           <PrimaryButton type="submit" loading={saving} size="sm">
-            만들기
+            올리기
           </PrimaryButton>
         </div>
       </form>

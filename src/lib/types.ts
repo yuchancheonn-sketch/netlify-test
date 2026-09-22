@@ -136,6 +136,11 @@ export interface PhotoAlbumDoc {
   /** 목록에 보여줄 대표 이미지. 첫 사진이 올라오면 자동으로 채워집니다. */
   coverImageUrl: string | null;
   photoCount: number;
+  /**
+   * 본문 — 원우 소식 카드에 제목 아래로 보이는 글 (2026-09-22 사용자 요청, 선택).
+   * 이 칸이 생기기 전의 앨범에는 없습니다.
+   */
+  body?: string;
   /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
   createdBy: string;

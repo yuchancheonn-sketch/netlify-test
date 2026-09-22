@@ -173,6 +173,16 @@ export default function AlbumPage() {
       />
 
       <div className="px-5 pb-8">
+        {/*
+          본문 전문 — 원우 소식 카드에는 넉 줄까지만 보여서, 여기서 다 보여 줍니다(2026-09-22, 본문 칸이 생기며).
+          본문이 없는 예전 앨범에는 이 칸이 없습니다.
+        */}
+        {album.body?.trim() ? (
+          <p className="mb-5 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+            {album.body.trim()}
+          </p>
+        ) : null}
+
         {/* 원본 그대로 올리기 토글 */}
         <label className="flex items-center justify-between gap-4 py-1">
           <span className="min-w-0">
