@@ -143,7 +143,8 @@ function LoginScreen() {
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[155px] h-[72%] bg-cover bg-no-repeat"
+        // 173px — 제목 글씨를 키우며(2026-09-22) 155px에서 18px 내림. 위 주석의 155px 이야기는 그 전 기록입니다.
+        className="pointer-events-none absolute inset-x-0 top-[173px] h-[72%] bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
@@ -176,9 +177,13 @@ function LoginScreen() {
         {/*
           과정 이름 + 앱 이름. 위에 있던 앱 아이콘(愛己愛他 주황 네모)은 2026-09-22 사용자 요청으로 뺐습니다.
         */}
+        {/*
+          글씨 크기 — 2026-09-22 사용자 요청 "훨씬 키워줘": 과정 이름 13 → 18px, 앱 이름 30 → 44px.
+          제목이 약 18px 길어진 만큼 아래 사진 시작점(top-[155px])도 173px로 함께 내렸습니다 — 제목과 머리 사이 간격을 그대로 두려고.
+        */}
         <div className="flex flex-col items-center text-center">
-          <p className="text-[13px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
-          <h1 className="mt-1 text-[30px] font-bold tracking-tight text-ink">{APP_NAME}</h1>
+          <p className="text-[18px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
+          <h1 className="mt-1 text-[44px] leading-tight font-bold tracking-tight text-ink">{APP_NAME}</h1>
         </div>
 
         {/* 사진이 보이는 여백 */}
