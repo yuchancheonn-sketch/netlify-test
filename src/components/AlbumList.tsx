@@ -467,11 +467,21 @@ function AlbumCard({
           올린 원우 — 이름, 그 아래 날짜 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
           이름은 원우수첩의 지금 이름을 먼저 씁니다(이름을 고치면 따라옵니다). 명단에 없으면 올릴 때 적어 둔 이름.
           제목·본문은 같은 날 사용자 요청으로 사진 아래로 옮겼습니다(머리 → 사진 → 글).
-          ★ 이름 왼쪽의 동그란 프로필 사진(36px)은 같은 날 사용자 요청으로 뺐고, 이름을 14 → 17px로 키웠습니다.
+          ★ 이름 왼쪽의 동그란 프로필 사진(36px)은 같은 날 사용자 요청으로 뺐고, 이름을 14 → 17 → 20px로 키웠습니다.
         */}
         <div className="flex items-center gap-2.5">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[17px] font-bold text-ink">{authorName}</p>
+            {/*
+              이름 20px + 호칭 "원우" (2026-09-22 사용자 요청 — 17px에서 키우고 호칭을 붙임).
+              호칭은 한 단 작고 옅게(17px·보통 굵기·ink-muted) 두어 이름이 먼저 읽힙니다.
+              이름을 모를 때(authorName이 "원우")는 "원우 원우"가 되지 않게 호칭을 붙이지 않습니다.
+            */}
+            <p className="truncate text-[20px] font-bold text-ink">
+              {authorName}
+              {authorName !== "원우" ? (
+                <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
+              ) : null}
+            </p>
             {/* 날짜만 — "사진 N장"은 카드에 사진이 한 장뿐이라(2026-09-22) 뺐습니다. */}
             {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
           </div>
