@@ -434,10 +434,8 @@ function AlbumCard({
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[14px] font-bold text-ink">{authorName}</p>
-            <p className="text-[12px] text-ink-faint">
-              {date}
-              {date ? " · " : ""}사진 {album.photoCount}장
-            </p>
+            {/* 날짜만 — "사진 N장"은 카드에 사진이 한 장뿐이라(2026-09-22) 뺐습니다. */}
+            {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
           </div>
           {/*
             ⋯ — 고치기·지우기 (2026-09-22 사용자 요청). 올린 원우와 운영진에게만 보입니다.
@@ -541,16 +539,15 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
     return () => held.forEach((url) => URL.revokeObjectURL(url));
   }, []);
 
+  /** 사진은 한 장만 — 다시 고르면 바꿔 끼웁니다 (2026-09-22 사용자 요청 "대표사진 한 장만"). */
   function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
+    const file = event.target.files?.[0];
     // 같은 사진을 다시 골라도 change가 일어나게 비웁니다.
     event.target.value = "";
-    const picked = files.map((file) => {
-      const preview = URL.createObjectURL(file);
-      previews.current.push(preview);
-      return { file, preview };
-    });
-    setPhotos((previous) => [...previous, ...picked]);
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    previews.current.push(preview);
+    setPhotos([{ file, preview }]);
     setError(null);
   }
 
@@ -562,7 +559,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
     event.preventDefault();
     if (!user || saving) return;
     if (!editing && photos.length === 0) {
-      setError("사진을 한 장 이상 골라 주세요.");
+      setError("사진을 골라 주세요.");
       return;
     }
     if (!title.trim()) {
@@ -657,14 +654,13 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
         <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
 
         {/*
-          사진 — 새로 올릴 때만. 고른 사진은 가로로 줄지어 미리 보이고, 오른쪽 위 ×로 뺄 수 있습니다.
-          맨 앞 사진이 카드의 대표 사진이 된다고 알려 줍니다. 맨 끝 "+" 칸으로 더 고릅니다.
+          사진 — 새로 올릴 때만, **한 장만** (2026-09-22 사용자 요청 "카드에는 대표사진 한 장만").
+          고른 사진이 미리 보이고, 오른쪽 위 ×로 빼거나 옆 칸으로 다른 사진을 골라 바꿔 끼웁니다.
+          (같은 날 처음엔 여러 장을 고르게 했다가 바꿨습니다.)
         */}
         {editing ? null : (
           <div className="mb-5">
-            <FieldLabel hint={photos.length ? `${photos.length}장 · 첫 사진이 대표` : undefined}>
-              사진
-            </FieldLabel>
+            <FieldLabel>사진</FieldLabel>
             {!isCloudinaryConfigured ? (
               <p className="rounded-2xl bg-brand-50 px-4 py-3 text-[13px] leading-relaxed text-brand-500">
                 사진 보관소(Cloudinary) 설정이 아직 안 되어 있어요. 운영진에게 알려주세요.
@@ -696,11 +692,12 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
                   }`}
                 >
                   <PlusIcon className="h-6 w-6" />
-                  <span className="text-[12px] font-bold">사진 고르기</span>
+                  <span className="text-[12px] font-bold">
+                    {photos.length ? "사진 바꾸기" : "사진 고르기"}
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
-                    multiple
                     disabled={saving}
                     onChange={handlePick}
                     className="hidden"
