@@ -198,12 +198,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                     }`}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-bold text-ink">
-                      {item.kind === "academy" ? (
-                        <span className="mr-1 text-[12px] font-bold text-ink-muted">도산아카데미</span>
-                      ) : null}
-                      {item.title}
-                    </span>
+                    {/* 앞에 붙이던 "도산아카데미" 글자는 뺐습니다(2026-09-23 사용자 요청 — 원우라면 누구나 앎). 왼쪽 회색 막대로 구별됩니다. */}
+                    <span className="block truncate text-[15px] font-bold text-ink">{item.title}</span>
                     <span className="block truncate text-[13px] text-ink-muted">
                       {[item.time, item.location].filter(Boolean).join(" · ") || "시간 미정"}
                     </span>

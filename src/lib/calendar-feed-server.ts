@@ -140,7 +140,8 @@ export async function buildCalendarFeed(db: Firestore, token: string, host: stri
     for (const doc of academyEvents.docs) {
       events.push({
         uid: `academy-${doc.id}@${host}`,
-        title: `[도산아카데미] ${String(doc.get("title") ?? "")}`,
+        // 제목 앞 "[도산아카데미]"는 뺐습니다(2026-09-23 사용자 요청 — 앱 화면과 같게). 캘린더 이름이 "애기애타 ○기"입니다.
+        title: String(doc.get("title") ?? ""),
         date: String(doc.get("date") ?? ""),
         startTime: String(doc.get("startTime") ?? ""),
         endTime: String(doc.get("endTime") ?? ""),
