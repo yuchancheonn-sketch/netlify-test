@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ConfirmationResult } from "firebase/auth";
 import { PrimaryButton, inputClassName } from "@/components/ui";
-import { linkToExistingMember } from "@/lib/account-link";
+import { adoptIntoPhoneAccount, linkToExistingMember } from "@/lib/account-link";
 import { formatPhoneInput } from "@/lib/format";
 import {
   PHONE_RECAPTCHA_ID,
@@ -17,9 +17,11 @@ import {
 /**
  * "이미 가입된 계정이 있어요" 시트 — 계정 합치기의 휴대폰 인증 (2026-09-22).
  *
- * 카카오로 처음 들어온 원우가 첫 프로필에 이름·기수를 넣었는데, 같은 기수·이름의 원우 계정이 이미 있을 때 뜹니다.
- * 휴대폰 번호를 문자로 인증하면(이 카카오 계정에 번호가 이어짐) 서버가 그 번호와 기존 계정의 번호를 견주고,
- * 같으면 기존 계정으로 합칩니다. 왜 문자 인증까지 하는지는 lib/account-link-server.ts 맨 위.
+ * 카카오·구글로 처음 들어온 원우가 첫 프로필에 적은 전화번호로 된 원우 계정이 이미 있을 때 뜹니다
+ * (2026-09-23부터 전화번호 하나로 판단 — 예전엔 같은 기수·이름일 때).
+ * 휴대폰 번호를 문자로 인증하면(이 계정에 번호가 이어짐) 서버가 그 번호로 된 계정을 찾아 합칩니다.
+ * 그 번호가 이미 휴대폰 로그인 계정이면 이어 붙이기가 막히는데, 그때는 그 계정으로 합칩니다(adoptIntoPhoneAccount).
+ * 왜 문자 인증까지 하는지는 lib/account-link-server.ts 맨 위.
  *
  * ★ 폼 안에서 쓰이지만 document.body에 붙입니다(createPortal) — 여기서 Enter를 눌러도
  *   바깥 프로필 폼("시작하기")이 제출되지 않게.
@@ -74,8 +76,19 @@ export default function AccountMergeSheet({
     setBusy(true);
     setError(null);
     try {
-      await confirmation.confirm(code);
-      const match = await linkToExistingMember(name, cohort);
+      try {
+        await confirmation.confirm(code);
+      } catch (caught) {
+        /*
+         * 이 번호가 이미 휴대폰 로그인 계정이면 이어 붙이기가 막힙니다. 문자 확인은 끝났으니
+         * 그 계정으로 합칩니다 (2026-09-23 "전화번호가 같으면 무조건 하나로").
+         */
+        if ((caught as { code?: string })?.code === "auth/credential-already-in-use") {
+          if (await adoptIntoPhoneAccount(caught)) return;
+        }
+        throw caught;
+      }
+      const match = await linkToExistingMember(name, cohort, phone);
       // merged면 이미 기존 계정으로 바꿔 탔습니다 — StageGate가 홈으로 보내니 busy를 풀지 않습니다.
       if (match === "merged") return;
       if (match === "phone-mismatch") setMismatch(true);
@@ -101,11 +114,12 @@ export default function AccountMergeSheet({
         <h2 className="text-[20px] font-bold text-ink">이미 가입된 계정이 있어요</h2>
         {/* 문장마다 줄을 바꿉니다 (2026-09-23 사용자 요청) */}
         <p className="mt-2 text-[14px] leading-relaxed break-keep text-ink-soft">
-          {cohort} <b className="text-ink">{name}</b> 님의 계정이 이미 있어요.
+          {/* 2026-09-23부터 전화번호 하나로 판단해서, 이름·기수 대신 번호를 말합니다. */}
+          이 전화번호로 가입된 계정이 이미 있어요.
           <br />
           본인이 맞으면 휴대폰 번호를 인증해 주세요.
           <br />
-          번호가 같으면 그 계정으로 합쳐지고, 다음부터 카카오로 들어와도 같은 계정을 써요.
+          인증되면 그 계정으로 합쳐지고, 다음부터 어떤 방법으로 들어와도 같은 계정을 써요.
         </p>
 
         {mismatch ? (

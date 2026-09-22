@@ -44,8 +44,8 @@ export default function LoginPage() {
  *
  * ★ 로그인과 가입은 속으로는 같은 일입니다. 어느 쪽으로 들어가든 처음 보는 계정이면 가입(join)으로,
  *   이미 있는 계정이면 홈으로 갑니다(StageGate). 단추 글씨만 다르게 보여 줍니다.
- * ★ 구글·카톡·휴대폰은 처음엔 다른 계정이지만, 카톡·휴대폰으로 처음 온 원우는 첫 프로필에서 같은 기수·이름·
- *   인증된 번호의 기존 계정에 합쳐집니다(2026-09-22 사용자 요청 — lib/account-link-server.ts).
+ * ★ 구글·카톡·휴대폰은 처음엔 다른 계정이지만, 처음 온 원우는 첫 프로필에서 인증된 번호가 같은
+ *   기존 계정에 합쳐집니다(2026-09-22 사용자 요청, 2026-09-23부터 번호 하나로 판단 — lib/account-link-server.ts).
  */
 type Step = "start" | "signup" | "login" | "phone";
 
@@ -264,7 +264,7 @@ function LoginScreen() {
 
           {step === "login" ? (
             <p className="mt-3 text-center text-[12px] text-ink-muted">
-              이미 가입했다면 다른 방법으로 들어와도 이름·휴대폰 번호가 같으면 원래 계정으로 합쳐져요.
+              이미 가입했다면 다른 방법으로 들어와도 휴대폰 번호가 같으면 원래 계정으로 합쳐져요.
             </p>
           ) : null}
 

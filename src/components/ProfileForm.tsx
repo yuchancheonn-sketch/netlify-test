@@ -260,16 +260,16 @@ export default function ProfileForm({
   }
 
   /**
-   * 계정 합치기 확인 (2026-09-22 사용자 요청) — 첫 프로필 설정에서, 구글이 아닌 로그인(카카오·휴대폰)일 때만.
-   * 같은 기수·이름·(인증된) 휴대폰 번호의 원우 계정이 있으면 그 계정으로 바꿔 타고 여기서 멈춥니다.
+   * 계정 합치기 확인 (2026-09-22 사용자 요청) — 첫 프로필 설정에서, 어느 로그인이든.
+   * 2026-09-23부터 전화번호 하나로 판단합니다("등록한 전화번호가 같으면 무조건 같은 계정").
+   * 같은 (인증된) 번호의 원우 계정이 있으면 그 계정으로 바꿔 타고 여기서 멈춥니다.
    * 휴대폰 인증이 필요하면 인증 시트를 띄웁니다. 확인에 실패하면 평소처럼 저장합니다.
    * 규칙은 lib/account-link-server.ts. 돌려주는 값: 저장을 계속해도 되면 true.
    */
   async function checkExistingAccount(name: string): Promise<boolean> {
     if (mode !== "onboarding" || !user) return true;
-    if (user.providerData.some((provider) => provider.providerId === "google.com")) return true;
     try {
-      const match = await linkToExistingMember(name, form.cohort);
+      const match = await linkToExistingMember(name, form.cohort, form.phone);
       if (match === "merged") return false;
       if (match === "needs-phone") {
         setMergePrompt(true);
