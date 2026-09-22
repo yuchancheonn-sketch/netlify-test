@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useRef, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { PlusIcon } from "@/components/icons";
 import {
@@ -19,17 +19,18 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { thumbnailUrl } from "@/lib/cloudinary";
-import { todayString } from "@/lib/format";
+import { dotDate, todayString } from "@/lib/format";
 import { useAlbums } from "@/lib/hooks";
+import type { PhotoAlbumDoc } from "@/lib/types";
 
 /**
- * 행사(앨범) 목록 — 소식 탭의 "행사 사진" 칸.
+ * 원우 소식 — 소식 탭의 첫 칸 (예전 이름 "행사 사진").
  *
- * (2026-09-22 사용자 요청으로 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다.
- *  자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
+ * ★ 2026-09-22 사용자 요청: 앨범 격자 대신 **게시물 카드 한 장씩**, 카드가 화면을 꽉 채우고,
+ *   왼쪽·오른쪽으로 밀어 **책장 넘기듯** 넘겨 봅니다. 아래 AlbumBook.
+ *   (앨범 = 게시물 한 개입니다. 데이터는 그대로 photoAlbums — 카드를 누르면 그 앨범 화면에서 사진을 다 보고 올립니다.)
  *
- * 오른쪽 아래에 떠 있는 "앨범 만들기" 알약이 마지막 줄을 가리지 않도록,
- * 이 목록을 담는 상자는 밑을 pb-24만큼 비워야 합니다(셈법은 news/page.tsx 주석).
+ * (같은 날 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다. 자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
  */
 export default function AlbumList() {
   const { data: allAlbums, loading, error } = useAlbums();
@@ -40,13 +41,9 @@ export default function AlbumList() {
 
   if (loading) {
     return (
-      <ul className="grid grid-cols-2 gap-3">
-        {[0, 1, 2, 3].map((key) => (
-          <li key={key}>
-            <Skeleton className="aspect-square rounded-[20px]" />
-          </li>
-        ))}
-      </ul>
+      <BookFrame>
+        <Skeleton className="h-full w-full rounded-[24px]" />
+      </BookFrame>
     );
   }
 
@@ -58,72 +55,18 @@ export default function AlbumList() {
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
-            title="아직 앨범이 없어요"
-            description="아래 '사진 올리기'로 첫 행사 앨범을 만들어 보세요."
+            title="아직 올라온 소식이 없어요"
+            description="아래 '사진 올리기'로 첫 소식을 올려 보세요."
           />
         </div>
       ) : (
-        /*
-          앨범 칸 — 아이폰 사진 앱 "고정됨" 모음 모양 (2026-09-14, 사용자가 보여 준 화면을 따름).
-          정사각형 칸을 대표 사진이 가득 채우고, 아래쪽만 어둡게 번지는 막 위에
-          흰 굵은 제목을 왼쪽 아래에 얹습니다. 칸 아래에 따로 있던 흰 글씨 상자
-          (제목 + 날짜 · N장)는 걷었습니다 — 그림에 제목 말고는 글이 없어서입니다.
-
-          - aspect-square: 예전 4:3 → 정사각형. 그림의 칸이 정사각형입니다.
-          - rounded-[20px]: 그림의 둥글기. 앱의 다른 카드(12~16px)보다 둥급니다.
-          - shadow-card-glow: 헤어라인 없는 옅은 그림자만. 사진이 칸 끝까지 차므로
-            회색 테두리를 두르면 사진 가장자리에 선이 낍니다.
-          - 제목은 **자르지 않습니다** (2026-09-14 사용자 요청). 처음엔 17px 한 줄 + 말줄임(…)이었는데
-            긴 행사 이름이 잘려서, 15px로 줄이고 필요한 만큼 여러 줄로 접습니다(보통 두 줄 안).
-            break-keep으로 낱말 중간에서 끊지 않고, 낱말 하나가 칸보다 길 때만 글자 사이에서 넘깁니다.
-            줄 수를 묶는 line-clamp는 일부러 안 겁니다 — 걸면 세 줄째부터 다시 잘립니다.
-            제목은 bottom-3에 붙어 있어 줄이 늘면 위로 자랍니다.
-          - 어두운 막: 아래에서 위로 60% 높이까지 검정 60% → 0. 제목이 두세 줄로 위로
-            자라도 흰 글씨 뒤가 어둡도록 처음(45%·55%)보다 넓고 조금 짙게 했습니다.
-            사진 윗부분은 어둡게 하지 않습니다.
-          - 대표 사진이 없는 앨범은 그림의 "최근 삭제된 항목"처럼 위는 옅고 아래로
-            짙어지는 회색 칸에 📷을 가운데 둡니다. 흰 제목이 앉을 아래쪽이 짙어야 해서
-            단색 fill이 아니라 흐름(gradient)입니다.
-        */
-        <ul className="grid grid-cols-2 gap-3">
-          {albums.map((album) => (
-            <li key={album.id}>
-              <Link
-                href={`/albums/${album.id}`}
-                className="relative block aspect-square overflow-hidden rounded-[20px] bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] shadow-[var(--shadow-card-glow)] transition active:scale-[0.98]"
-              >
-                {album.coverImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={thumbnailUrl(album.coverImageUrl, 500)}
-                    alt={`${album.title} 대표 사진`}
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <span
-                    className="absolute inset-0 flex items-center justify-center text-[36px]"
-                    aria-hidden="true"
-                  >
-                    📷
-                  </span>
-                )}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.6),rgba(0,0,0,0)_60%)]"
-                />
-                <p className="absolute right-3 bottom-3 left-3.5 text-[15px] leading-snug font-bold break-keep text-white [overflow-wrap:anywhere]">
-                  {album.title}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <AlbumBook albums={albums} />
       )}
 
       {/*
-        앨범 만들기 — 자료 탭 "파일 올리기"와 같은 자리·같은 모양의 떠 있는 주황 알약입니다 (2026-09-14).
-        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다.
+        사진 올리기 — 자료 탭 "파일 올리기"와 같은 자리·같은 모양의 떠 있는 주황 알약입니다 (2026-09-14).
+        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다. 카드 오른쪽 아래 귀퉁이에 얹히므로
+        카드의 글씨(제목·날짜)는 카드 위쪽에 둡니다.
 
         원우 누구나 봅니다 (2026-09-14, 예전엔 운영진만). 보안 규칙도 원래
         photoAlbums 쓰기를 원우 누구에게나 열어 두었습니다. 새 앨범은 보고 있는
@@ -141,6 +84,297 @@ export default function AlbumList() {
 
       {creating ? <AlbumCreateSheet onClose={() => setCreating(false)} /> : null}
     </>
+  );
+}
+
+/* ───────────────────────── 카드 책 ───────────────────────── */
+
+/** 화면 높이(CSS px)가 바뀌면 알려 줍니다 — 자판·주소창·돌리기. */
+function subscribeHeight(onChange: () => void) {
+  window.addEventListener("resize", onChange);
+  return () => window.removeEventListener("resize", onChange);
+}
+
+/**
+ * 화면 높이를 CSS px로. 보기 설정의 글씨 크기가 html zoom(0.9·1.15)이라 우리가 적는 px도 그만큼 늘거나 줄어,
+ * zoom으로 나눠 맞춥니다. (dvh는 zoom까지 곱해져 "크게"에서 카드가 화면보다 길어집니다 — StageGate 주석.)
+ */
+function heightSnapshot(): number {
+  const zoom = Number(getComputedStyle(document.documentElement).zoom) || 1;
+  return Math.round(window.innerHeight / zoom);
+}
+
+/**
+ * 카드 한 장이 차지하는 틀 — 제목 줄 아래부터 하단 탭 알약 바로 위까지 꽉 채웁니다.
+ *
+ * 높이 = 화면 높이 − 틀의 위 끝 − 90px − 아래 안전 영역.
+ *   90px = MainShell이 탭 알약 자리로 비워 둔 78px + 카드와 알약 사이 12px.
+ * 틀의 위 끝(제목 줄 높이 + 본문 pt-4)은 화면마다·폰마다 달라서 그려진 뒤에 한 번 잽니다(ref 콜백).
+ * 재기 전 첫 그림에서는 넉넉히 70dvh로 둡니다.
+ */
+function BookFrame({ children }: { children: React.ReactNode }) {
+  const viewport = useSyncExternalStore(subscribeHeight, heightSnapshot, () => 0);
+  const [top, setTop] = useState<number | null>(null);
+
+  const height =
+    viewport && top !== null
+      ? `calc(${Math.max(320, viewport - top)}px - 90px - env(safe-area-inset-bottom))`
+      : "70dvh";
+
+  return (
+    <div
+      ref={(element) => {
+        if (!element || top !== null) return;
+        const zoom = Number(getComputedStyle(document.documentElement).zoom) || 1;
+        // 문서 맨 위에서의 거리 — 스크롤한 채로 들어와도 같은 값이 나오게 scrollY를 더합니다.
+        setTop(Math.round((element.getBoundingClientRect().top + window.scrollY) / zoom));
+      }}
+      className="relative"
+      style={{ height }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 이만큼(카드 폭의 비율) 넘기거나 빠르게 튕기면 한 장이 넘어갑니다. */
+const TURN_THRESHOLD = 0.28;
+/** 손을 뗀 뒤 남은 만큼 넘어가거나 되돌아오는 시간(ms) */
+const TURN_MS = 380;
+
+/**
+ * 넘기는 중인 책장.
+ *   mode "next" — 지금 카드가 왼쪽 등(책등)을 축으로 넘어가며 밑의 다음 카드가 드러납니다(왼쪽으로 밀기).
+ *   mode "prev" — 앞서 넘긴 카드가 왼쪽에서 되돌아와 지금 카드를 덮습니다(오른쪽으로 밀기).
+ *   progress 0~1 — 넘어간 정도. settling이면 손을 뗀 뒤 저절로 끝까지 가는 중(transition이 붙음).
+ */
+type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
+
+/**
+ * 카드를 책처럼 넘겨 보는 자리 (2026-09-22 사용자 요청).
+ *
+ * - 한 번에 카드 한 장. 카드는 틀(BookFrame)을 꽉 채웁니다.
+ * - 왼쪽으로 밀면 다음(더 예전) 카드, 오른쪽으로 밀면 앞 카드. 목록 순서는 useAlbums 그대로(최근 행사가 먼저).
+ * - 넘길 때 카드가 왼쪽 끝(책등)을 축으로 3D로 돌아 넘어가고(rotateY 0 → -90°), 넘어가는 장은 점점 어두워지고
+ *   밑의 장은 그늘이 걷힙니다. 90°를 넘으면 뒷면이라 안 보입니다(backface-hidden) — 책장이 넘어간 모습입니다.
+ * - 뒤에 남은 장이 있으면 오른쪽·아래로 살짝 비켜 선 종이 두 장을 깔아 "쌓인 카드"로 보이게 합니다.
+ * - 처음·마지막 장에서 더 밀면 조금만 따라오다 되돌아옵니다.
+ * - 밀지 않고 톡 누르면 그 앨범 화면(/albums/…)으로 갑니다 — 사진 전부 보기·사진 올리기는 거기서.
+ *
+ * touch-action: pan-y — 세로 손짓은 브라우저에 맡기고 가로 손짓만 우리가 받습니다.
+ */
+function AlbumBook({ albums }: { albums: PhotoAlbumDoc[] }) {
+  const router = useRouter();
+  const [index, setIndex] = useState(0);
+  const [turn, setTurn] = useState<Turn | null>(null);
+  const drag = useRef<{ x: number; y: number; time: number; width: number; moved: boolean } | null>(
+    null,
+  );
+
+  // 기수를 바꾸거나 앨범이 지워져 목록이 짧아지면 마지막 장에 섭니다.
+  const current = Math.min(index, albums.length - 1);
+  const hasPrev = current > 0;
+  const hasNext = current < albums.length - 1;
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (turn?.settling) return;
+    drag.current = {
+      x: event.clientX,
+      y: event.clientY,
+      time: event.timeStamp,
+      width: event.currentTarget.getBoundingClientRect().width,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const start = drag.current;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    if (!start.moved) {
+      // 6px 넘게 움직여야 넘기기로 봅니다. 세로로 더 움직였으면 넘기기가 아닙니다.
+      if (Math.abs(dx) < 6) return;
+      if (Math.abs(event.clientY - start.y) > Math.abs(dx)) {
+        drag.current = null;
+        return;
+      }
+      start.moved = true;
+    }
+    const mode = dx < 0 ? "next" : "prev";
+    let progress = Math.min(1, Math.abs(dx) / start.width);
+    // 더 넘길 장이 없으면 고무줄처럼 조금만 따라옵니다.
+    if ((mode === "next" && !hasNext) || (mode === "prev" && !hasPrev)) progress *= 0.15;
+    setTurn({ mode, progress, settling: false });
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    const start = drag.current;
+    drag.current = null;
+    if (!start) return;
+
+    if (!start.moved) {
+      router.push(`/albums/${albums[current].id}`);
+      return;
+    }
+    if (!turn) return;
+
+    const dx = event.clientX - start.x;
+    const fast = Math.abs(dx) / Math.max(1, event.timeStamp - start.time) > 0.5; // 0.5px/ms 넘게 튕기면
+    const possible = turn.mode === "next" ? hasNext : hasPrev;
+    const commit = possible && (turn.progress > TURN_THRESHOLD || fast);
+
+    setTurn({ mode: turn.mode, progress: commit ? 1 : 0, settling: true });
+    window.setTimeout(() => {
+      if (commit) setIndex(current + (turn.mode === "next" ? 1 : -1));
+      setTurn(null);
+    }, TURN_MS);
+  }
+
+  /*
+   * 무엇을 어느 층에 그릴지.
+   *   밑장(under): 넘어가는 장 아래에서 드러나는 카드.
+   *   넘기는 장(page): 돌아가는 카드. 각도 = -90° × 넘어간 정도(next) / -90° × (1 − 넘어간 정도)(prev).
+   */
+  let under: PhotoAlbumDoc | null = albums[current];
+  let page: PhotoAlbumDoc | null = null;
+  let angle = 0;
+  let turned = 0; // 0이면 덮여 있음, 1이면 다 넘어감 — 그늘 세기에 씁니다.
+  if (turn) {
+    if (turn.mode === "next") {
+      page = albums[current];
+      under = hasNext ? albums[current + 1] : null;
+      turned = turn.progress;
+    } else {
+      page = hasPrev ? albums[current - 1] : albums[current];
+      under = hasPrev ? albums[current] : null;
+      turned = hasPrev ? 1 - turn.progress : turn.progress * -1;
+    }
+    angle = -90 * Math.max(-1, Math.min(1, turned));
+  }
+  const transition = turn?.settling ? `transform ${TURN_MS}ms ease-out, opacity ${TURN_MS}ms ease-out` : "none";
+  /** 뒤에 남은 장 수(지금 장 뒤) — 쌓인 종이를 몇 장 깔지 */
+  const behind = albums.length - 1 - current;
+
+  return (
+    <BookFrame>
+      {/* 쌓인 종이 — 뒤에 남은 장이 있을 때만, 많아도 두 장까지. */}
+      {behind >= 2 ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+        />
+      ) : null}
+      {behind >= 1 ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+        />
+      ) : null}
+
+      <div
+        className="absolute inset-0 select-none"
+        style={{ perspective: "1800px", touchAction: "pan-y" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => {
+          drag.current = null;
+          setTurn(null);
+        }}
+        role="group"
+        aria-roledescription="넘겨 보는 카드"
+        aria-label={`${current + 1} / ${albums.length} ${albums[current].title}`}
+      >
+        {under ? (
+          <div className="absolute inset-0">
+            <AlbumCard album={under} position={albums.indexOf(under) + 1} total={albums.length} />
+            {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
+            {page ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
+                style={{ opacity: 0.25 * (1 - Math.abs(turned)), transition }}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
+        {page ? (
+          <div
+            className="absolute inset-0 origin-left [backface-visibility:hidden]"
+            style={{ transform: `rotateY(${angle}deg)`, transition }}
+          >
+            <AlbumCard album={page} position={albums.indexOf(page) + 1} total={albums.length} />
+            {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-[24px] bg-black"
+              style={{ opacity: 0.35 * Math.abs(turned), transition }}
+            />
+          </div>
+        ) : null}
+      </div>
+    </BookFrame>
+  );
+}
+
+/**
+ * 게시물 카드 한 장 — 대표 사진이 카드를 꽉 채우고, 위쪽 어두운 막 위에 제목·날짜·사진 수.
+ * 글씨를 위에 두는 건 오른쪽 아래에 "사진 올리기" 알약이 떠 있어서입니다.
+ * 오른쪽 위 "3 / 10"은 몇 번째 장인지.
+ */
+function AlbumCard({
+  album,
+  position,
+  total,
+}: {
+  album: PhotoAlbumDoc;
+  position: number;
+  total: number;
+}) {
+  const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
+
+  return (
+    <article className="relative h-full w-full overflow-hidden rounded-[24px] bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] shadow-[var(--shadow-card)]">
+      {album.coverImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbnailUrl(album.coverImageUrl, 1080)}
+          alt={`${album.title} 대표 사진`}
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <span
+          className="absolute inset-0 flex items-center justify-center text-[48px]"
+          aria-hidden="true"
+        >
+          📷
+        </span>
+      )}
+
+      {/* 위쪽 어두운 막 — 흰 글씨가 어느 사진 위에서도 읽히게. 아래 절반은 사진 그대로. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0)_45%)]"
+      />
+
+      <div className="absolute inset-x-0 top-0 flex items-start gap-3 p-5">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[22px] leading-snug font-bold break-keep text-white [overflow-wrap:anywhere]">
+            {album.title}
+          </h2>
+          <p className="mt-1 text-[13px] font-medium text-white/85">
+            {date}
+            {date ? " · " : ""}사진 {album.photoCount}장
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full bg-black/35 px-2.5 py-1 text-[12px] font-bold text-white tabular-nums">
+          {position} / {total}
+        </span>
+      </div>
+    </article>
   );
 }
 

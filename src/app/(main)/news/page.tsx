@@ -68,11 +68,10 @@ function NewsFallback() {
       />
       {/*
         pt-4는 아래 NewsTabs의 본문 상자와 같은 값이어야 합니다 — 그쪽 주석 참고.
-        처음 열리는 칸이 행사 사진이라 앨범 칸(2열 정사각형) 자리를 잡아 둡니다.
+        처음 열리는 칸이 원우 소식이라 화면을 채우는 카드 한 장 자리를 잡아 둡니다.
       */}
-      <div className="grid grid-cols-2 gap-3 px-4 pt-4 pb-8">
-        <Skeleton className="aspect-square rounded-[20px]" />
-        <Skeleton className="aspect-square rounded-[20px]" />
+      <div className="px-4 pt-4">
+        <Skeleton className="h-[70dvh] rounded-[24px]" />
       </div>
     </>
   );
@@ -146,12 +145,12 @@ function NewsTabs() {
           자리 표시 목록과 진짜 목록이 같아야 합니다 — 한쪽만 고치면 줄 자리가 한 번 들썩입니다.
           (자료 탭으로 옮긴 복습 영상 목록도 같은 14px입니다.)
 
-        ★ 아래 여백 — 행사 사진 칸은 pb-24, 소식 칸은 pb-8.
-          행사 사진에는 오른쪽 아래에 "앨범 만들기" 주황 알약이 떠 있습니다. 알약은 바닥에서 92px 위에
-          서고 높이가 52px라 바닥 144px까지 가리는데, MainShell이 이미 78px을 비워 두므로 96px(pb-24)을
-          더해 마지막 줄이 가리지 않게 합니다(자료 탭에 있을 때와 같은 셈법).
+        ★ 아래 여백 — 원우 소식 칸은 0, 소식 칸은 pb-8.
+          원우 소식은 카드 한 장이 탭 알약 바로 위까지 화면을 꽉 채우고 스크롤하지 않습니다(2026-09-22 사용자 요청,
+          components/AlbumList.tsx의 BookFrame이 높이를 잽니다). 여기에 여백을 더하면 화면이 괜히 조금 스크롤됩니다.
+          (그 전 격자일 때는 떠 있는 알약에 마지막 줄이 가리지 않게 pb-24였습니다.)
       */}
-      <div className={`px-4 pt-4 ${subtab === "photos" ? "pb-24" : "pb-8"}`}>
+      <div className={`px-4 pt-4 ${subtab === "photos" ? "" : "pb-8"}`}>
         {subtab === "photos" ? <AlbumList /> : <NewsList />}
       </div>
     </>
