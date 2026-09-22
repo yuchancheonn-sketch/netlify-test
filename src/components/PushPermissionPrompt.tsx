@@ -71,7 +71,11 @@ export default function PushPermissionPrompt() {
             type="button"
             onClick={close}
             disabled={working}
-            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted disabled:opacity-50"
+            /*
+              회색 테두리 1px(border-line) — 2026-09-22 사용자 요청. 바탕(bg-fill)이 창 바탕과 거의 같아 단추로 안 보였습니다.
+              테두리만큼 위아래 여백을 10 → 9px로 줄여 옆 "받기"(sm, 위아래 10px)와 높이를 같게 둡니다.
+            */
+            className="shrink-0 rounded-2xl border border-line bg-fill px-5 py-[9px] text-[15px] font-bold whitespace-nowrap text-ink-muted disabled:opacity-50"
           >
             나중에
           </button>
