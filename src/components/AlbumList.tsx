@@ -184,7 +184,8 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
  *   밑의 장은 그늘이 걷힙니다. 90°를 넘으면 뒷면이라 안 보입니다(backface-hidden) — 책장이 넘어간 모습입니다.
  * - 뒤에 남은 장이 있으면 오른쪽·아래로 살짝 비켜 선 종이 두 장을 깔아 "쌓인 카드"로 보이게 합니다.
  * - 처음·마지막 장에서 더 밀면 조금만 따라오다 되돌아옵니다.
- * - 카드를 톡 눌러도 아무 창도 뜨지 않습니다(2026-09-22 사용자 요청 — 예전엔 앨범 화면 /albums/… 이 열렸습니다).
+ * - 카드를 톡 누르면 제자리에서 뒤집혀 뒷면(세부 설명, AlbumCardBack)이 보이고, 다시 누르면 앞면(2026-09-22 사용자 요청).
+ *   넘기기를 시작하거나 화살표를 누르면 앞면으로 돌아옵니다. (예전엔 누르면 앨범 화면 /albums/… 이 열렸습니다.)
  *
  * touch-action: pan-y — 세로 손짓은 브라우저에 맡기고 가로 손짓만 우리가 받습니다.
  */
@@ -204,9 +205,17 @@ function AlbumBook({
   const [editing, setEditing] = useState<PhotoAlbumDoc | null>(null);
   /** 올린 원우와 운영진만 ⋯ (고치기·지우기)가 보입니다. */
   const canManage = (album: PhotoAlbumDoc) => album.createdBy === user?.uid || isAdmin;
-  const drag = useRef<{ x: number; y: number; time: number; width: number; moved: boolean } | null>(
-    null,
-  );
+  /** 뒤집어 세부 설명을 보고 있는 소식의 id (2026-09-22 사용자 요청 — 카드를 한 번 누르면 뒤집힘) */
+  const [flippedId, setFlippedId] = useState<string | null>(null);
+  const drag = useRef<{
+    x: number;
+    y: number;
+    time: number;
+    width: number;
+    moved: boolean;
+    /** 카드 위에서 눌렀는지 — 카드 바깥 빈자리를 눌러서는 뒤집히지 않게. */
+    onCard: boolean;
+  } | null>(null);
 
   // 기수를 바꾸거나 앨범이 지워져 목록이 짧아지면 마지막 장에 섭니다.
   const current = Math.min(index, albums.length - 1);
@@ -221,6 +230,7 @@ function AlbumBook({
       time: event.timeStamp,
       width: event.currentTarget.getBoundingClientRect().width,
       moved: false,
+      onCard: event.target instanceof Element && event.target.closest("[data-album-card]") !== null,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -237,6 +247,8 @@ function AlbumBook({
         return;
       }
       start.moved = true;
+      // 넘기기 시작하면 뒤집어 둔 카드는 앞면으로 돌려놓습니다 — 넘어가는 장은 늘 앞면이라.
+      setFlippedId(null);
     }
     const mode = dx < 0 ? "next" : "prev";
     let progress = Math.min(1, Math.abs(dx) / start.width);
@@ -250,8 +262,17 @@ function AlbumBook({
     drag.current = null;
     if (!start) return;
 
-    // 밀지 않고 톡 누른 것은 아무 일도 없습니다 — 누르면 앨범 화면이 열리던 것을 2026-09-22 사용자 요청으로 없앴습니다.
-    if (!start.moved) return;
+    /*
+     * 밀지 않고 카드를 톡 누르면 뒤집힙니다 — 뒷면에 세부 설명, 다시 누르면 앞면 (2026-09-22 사용자 요청).
+     * (그 전엔 누르면 앨범 화면이 열렸다가, 같은 날 사용자 요청으로 아무 일도 없게 했었습니다.)
+     */
+    if (!start.moved) {
+      if (start.onCard) {
+        const id = albums[current].id;
+        setFlippedId((flipped) => (flipped === id ? null : id));
+      }
+      return;
+    }
     if (!turn) return;
 
     const dx = event.clientX - start.x;
@@ -273,6 +294,7 @@ function AlbumBook({
    */
   function turnBy(mode: Turn["mode"]) {
     if (turn || (mode === "next" ? !hasNext : !hasPrev)) return;
+    setFlippedId(null);
     setTurn({ mode, progress: 0, settling: false });
     window.requestAnimationFrame(() =>
       window.requestAnimationFrame(() => setTurn({ mode, progress: 1, settling: true })),
@@ -348,12 +370,36 @@ function AlbumBook({
                 className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
               />
             ) : null}
-            <AlbumCard
-              album={under}
-              author={authors.get(under.createdBy)}
-              // 넘기는 중이 아닐 때 보이는 장(= 밑장)에만 ⋯ 를 답니다.
-              onMore={!page && canManage(under) ? () => setManaging(under) : undefined}
-            />
+            {/*
+              뒤집히는 카드 (2026-09-22 사용자 요청 — 한 번 누르면 뒤집혀 세부 설명).
+              세로 가운데 축으로 180° 돕니다. 앞면·뒷면 모두 backface-hidden이고 뒷면은 미리 180° 돌려 둬서,
+              돌고 나면 뒷면이 바로 읽힙니다. 뒷면은 앞면과 같은 크기(absolute inset-0)라 카드 크기가 안 바뀝니다.
+              perspective는 transform 안에 적습니다 — 부모의 perspective 속성은 바로 아래 자식에게만 걸려서입니다.
+            */}
+            <div
+              data-album-card
+              className="relative [transform-style:preserve-3d]"
+              style={{
+                transform: `perspective(1600px) rotateY(${flippedId === under.id ? 180 : 0}deg)`,
+                transition: "transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1)",
+              }}
+            >
+              <div className="[backface-visibility:hidden]">
+                <AlbumCard
+                  album={under}
+                  author={authors.get(under.createdBy)}
+                  // 넘기는 중이 아닐 때 보이는 장(= 밑장)에만 ⋯ 를 답니다.
+                  onMore={!page && canManage(under) ? () => setManaging(under) : undefined}
+                />
+              </div>
+              <div
+                className="absolute inset-0 [backface-visibility:hidden]"
+                style={{ transform: "rotateY(180deg)" }}
+                aria-hidden={flippedId !== under.id}
+              >
+                <AlbumCardBack album={under} author={authors.get(under.createdBy)} />
+              </div>
+            </div>
             {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
             {page ? (
               <div
@@ -370,7 +416,8 @@ function AlbumBook({
           <div className="pointer-events-none absolute inset-x-7 inset-y-0 flex items-center">
             <div
               className="relative w-full origin-left [backface-visibility:hidden]"
-              style={{ transform: `rotateY(${angle}deg)`, transition }}
+              // perspective를 transform 안에 — 틀의 perspective 속성은 한 겹 건너라 이 장에 안 걸렸습니다(2026-09-22 고침).
+              style={{ transform: `perspective(1800px) rotateY(${angle}deg)`, transition }}
             >
               <AlbumCard album={page} author={authors.get(page.createdBy)} />
               {/* 넘어가는 장은 돌아갈수록 어두워집니다 — 빛을 등지는 책장처럼. */}
@@ -545,6 +592,50 @@ function AlbumCard({
           </p>
         ) : null}
       </div>
+    </article>
+  );
+}
+
+/**
+ * 카드 뒷면 — 세부 설명 (2026-09-22 사용자 요청 "한 번 클릭하면 카드가 뒤집히면서 세부 설명이").
+ *
+ * 앞면에는 넉 줄까지만 보이는 본문을 여기서 전부 보여 줍니다. 위에 올린 원우·날짜, 그 아래 제목, 본문.
+ * 크기는 앞면과 같아서(사진 비율로 정해진 높이), 본문이 길면 이 안에서 위아래로 굴려 읽습니다.
+ * 맨 아래 작은 안내 "다시 누르면 앞면으로".
+ */
+function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDoc | undefined }) {
+  const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
+  const body = album.body?.trim();
+  const authorName = author?.name || album.createdByName || "원우";
+
+  return (
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]">
+      <div className="shrink-0 px-5 pt-4">
+        <p className="truncate text-[20px] font-bold text-ink">
+          {authorName}
+          {authorName !== "원우" ? (
+            <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
+          ) : null}
+        </p>
+        {date ? <p className="text-[12px] text-ink-faint">{date}</p> : null}
+        <h2 className="mt-4 text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+          {album.title}
+        </h2>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-2">
+        {body ? (
+          <p className="text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+            {body}
+          </p>
+        ) : (
+          <p className="text-[14px] text-ink-faint">적힌 설명이 없어요.</p>
+        )}
+      </div>
+
+      <p className="shrink-0 px-5 pt-2 pb-4 text-center text-[12px] text-ink-faint">
+        다시 누르면 앞면으로
+      </p>
     </article>
   );
 }
