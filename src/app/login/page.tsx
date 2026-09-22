@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ConfirmationResult } from "firebase/auth";
 import StageGate from "@/components/StageGate";
 import {
@@ -275,15 +275,38 @@ function LoginScreen() {
   );
 }
 
+/** 화면에서 지금 보이는 부분(자판을 뺀 곳)이 바뀔 때 알려 줍니다. */
+function subscribeViewport(onChange: () => void) {
+  const viewport = window.visualViewport;
+  viewport?.addEventListener("resize", onChange);
+  viewport?.addEventListener("scroll", onChange);
+  return () => {
+    viewport?.removeEventListener("resize", onChange);
+    viewport?.removeEventListener("scroll", onChange);
+  };
+}
+
+/**
+ * 지금 보이는 부분의 "위 끝:높이" (CSS px). 문자열로 돌려주는 건 useSyncExternalStore가 값이 같으면
+ * 다시 그리지 않게 하려는 것입니다.
+ * 보기 설정의 글씨 크기가 html zoom(0.9·1.15)이라, 우리가 적는 px도 그만큼 늘거나 줄어듭니다 — 그래서 zoom으로 나눕니다.
+ */
+function viewportSnapshot(): string {
+  const viewport = window.visualViewport;
+  if (!viewport) return "";
+  const zoom = Number(getComputedStyle(document.documentElement).zoom) || 1;
+  return `${Math.round(viewport.offsetTop / zoom)}:${Math.round(viewport.height / zoom)}`;
+}
+
 /**
  * 휴대폰 번호로 시작하기 / 로그인 (2026-09-22).
  * 번호를 넣고 "인증번호 받기" → 문자로 온 6자리를 넣고 "확인". 로그인되면 StageGate가 다음 화면으로 보냅니다.
  *
  * ★ 모양 (2026-09-22 사용자 요청 — 사용자가 보낸 캡처처럼):
  *   왼쪽 위 뒤로(‹) · 큰 제목 "전화번호를 입력해주세요" · 🇰🇷 + 큰 번호 칸(회색 자리글씨 010-0000-0000,
- *   넣은 번호는 브랜드색) · 오른쪽 끝 지우기(×) · 맨 아래 "인증번호 받기"(번호가 다 차기 전엔 회색, 차면 브랜드색).
+ *   넣은 번호는 브랜드색) · 오른쪽 끝 지우기(×) · 자판 바로 위 주황 "인증번호 받기" 상자.
  *   캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다.
- * ★ 아래 단추가 자판 바로 위에 붙도록 대화방 화면과 같은 짜임입니다 — 화면 높이(h-dvh)의 세로 칸에서 단추를 맨 아래에 두고,
+ * ★ 아래 단추가 자판 바로 위에 붙도록, 화면을 지금 보이는 부분(visualViewport)에 맞춘 세로 칸으로 그리고 단추를 맨 아래에 둡니다.
  *   입력칸에 커서가 있는 동안(=자판이 떠 있는 동안)엔 아래 안전 영역 여백을 걷습니다(이유는 chat/[roomId]/page.tsx 주석).
  */
 function PhoneSignIn({ onBack }: { onBack: () => void }) {
@@ -344,8 +367,8 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
   }
 
   const value = confirmation ? code : phone;
-  // 번호가 다 차야(010으로 시작하는 10~11자리) / 인증번호 6자리가 다 차야 아래 단추가 켜집니다.
-  const ready = confirmation ? /^\d{6}$/.test(code) : toE164Korean(phone) !== null;
+  const viewport = useSyncExternalStore(subscribeViewport, viewportSnapshot, () => "");
+  const [viewportTop, viewportHeight] = viewport ? viewport.split(":").map(Number) : [0, 0];
 
   function clearValue() {
     if (confirmation) setCode("");
@@ -359,7 +382,15 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
       onSubmit={confirmation ? handleConfirm : handleSend}
       onFocus={() => setTyping(true)}
       onBlur={() => setTyping(false)}
-      className="mx-auto flex h-dvh w-full max-w-[480px] flex-col bg-canvas"
+      /*
+        화면을 "지금 보이는 부분"(자판 위)에 딱 맞춥니다 — 그래야 아래 단추가 자판 바로 위에 섭니다.
+        아이폰 사파리는 자판이 떠도 화면 높이(dvh)를 줄이지 않아, h-dvh만으로는 단추가 자판 뒤에 숨었습니다.
+        보이는 부분의 크기는 아래 viewportSnapshot. 값을 모르는 첫 그림(서버)에서만 h-dvh로 둡니다.
+      */
+      className={`mx-auto flex w-full max-w-[480px] flex-col bg-canvas ${
+        viewport ? "fixed inset-x-0" : "h-dvh"
+      }`}
+      style={viewport ? { top: viewportTop, height: viewportHeight } : undefined}
     >
       <div
         className="flex-1 overflow-y-auto px-6"
@@ -405,7 +436,12 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
             placeholder={confirmation ? "000000" : "010-0000-0000"}
             aria-label={confirmation ? "인증번호" : "휴대폰 번호"}
             autoFocus
-            className={`min-w-0 flex-1 bg-transparent py-1 text-[34px] font-bold text-brand-500 caret-brand-500 outline-none tabular-nums placeholder:text-ink-faint/50 ${
+            /*
+              text-[36px]! — 캡처처럼 크게(2026-09-22 사용자 요청, 34px에서 올림).
+              ! 가 꼭 있어야 합니다: globals.css의 input { font-size: 16px }(iOS 확대 막기)가 Tailwind 크기를 이겨서,
+              ! 없이 적었을 땐 폰에서 16px로 작게 보였습니다.
+            */
+            className={`min-w-0 flex-1 bg-transparent py-1 text-[36px]! font-bold text-brand-500 caret-brand-500 outline-none tabular-nums placeholder:text-ink-faint/50 ${
               confirmation ? "tracking-[0.15em]" : "tracking-tight"
             }`}
           />
@@ -445,7 +481,8 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
 
       {/*
         맨 아래 단추 — 자판이 떠 있으면 자판 바로 위(여백 12px), 아니면 홈 바 위로 안전 영역만큼 띄웁니다.
-        번호가 덜 찼으면 회색(bg-fill)으로 꺼 둡니다. PrimaryButton의 꺼짐 색(연한 주황)과 달라 직접 그립니다.
+        늘 주황 상자입니다(2026-09-22 사용자 요청 "주황색 박스로" — 처음엔 번호가 덜 차면 회색이었음).
+        덜 찬 채로 누르면 handleSend/handleConfirm이 빨간 안내를 띄웁니다.
       */}
       <div
         className="px-6 pt-3"
@@ -453,13 +490,10 @@ function PhoneSignIn({ onBack }: { onBack: () => void }) {
       >
         <button
           type="submit"
-          disabled={!ready || busy}
+          disabled={busy}
           // 단추를 눌러도 자판이 내려가지 않게 커서를 입력칸에 둡니다.
           onMouseDown={(event) => event.preventDefault()}
-          // 보내는 중(busy)에도 눌리지는 않지만 색은 브랜드색 그대로 둡니다 — 회색은 "덜 찼다"는 뜻으로만.
-          className={`flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[16px] font-bold transition active:scale-[0.99] ${
-            ready ? "bg-brand-500 text-white" : "bg-fill text-ink-faint"
-          }`}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
         >
           {busy ? <Spinner className="h-5 w-5" /> : null}
           {confirmation ? "확인" : "인증번호 받기"}
