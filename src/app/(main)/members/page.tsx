@@ -280,9 +280,9 @@ export default function MembersPage() {
                   글자를 밀지 않았습니다. 16px로 내리면 모서리가 더 안쪽까지 들어오지만
                   그래도 글자 줄 높이 바깥이라, 좌우 여백(pl-5·pr-14)은 그대로 둡니다.
 
-                위아래 여백은 위 7px · 아래 9px입니다 (12.5px → 10px → 8px씩 → 지금).
-                박스 높이는 7 + 글줄 19 + 9 ≈ 35px로 그대로이고, 글씨만 1px 위로 올라갑니다
-                (2026-09-22 사용자 "글씨 위치 1px만큼 위로 올려줘").
+                위아래 여백은 위 8px · 아래 10px입니다 (12.5px → 10px → 8px씩 → 7/9px → 지금).
+                박스 높이는 8 + 글줄 19 + 10 ≈ 37px (2026-09-22 사용자 "높이 아주 조금만 더 늘려줘" — 35px에서 위아래 1px씩).
+                위아래 2px 차이는 글씨를 1px 위로 올리려는 것입니다(같은 날 "글씨 위치 1px만큼 위로 올려줘").
 
                 ★ 여기만 위아래가 다릅니다. 이 파일의 다른 잔조정은 "늘 위아래 반씩"이 규칙인데,
                   그 규칙은 글자를 가운데에 두려는 것이고 여기서는 일부러 1px 올린 것입니다.
@@ -332,7 +332,7 @@ export default function MembersPage() {
                     안내 글씨만 15px로 그려집니다. 대신 **치는 글씨는 16px 그대로**라 둘이 1px 다릅니다.
                     (안내 글씨는 칸이 비었을 때만 보이므로 한 화면에 같이 서는 일이 없습니다.)
               */
-              className="w-full rounded-[14px] bg-fill pt-[7px] pr-14 pb-[9px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
+              className="w-full rounded-[14px] bg-fill pt-[8px] pr-14 pb-[10px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
             />
           </div>
 
