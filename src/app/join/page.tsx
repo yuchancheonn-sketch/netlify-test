@@ -7,6 +7,7 @@ import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { fromE164Korean } from "@/lib/phone-login";
+import { switchToLinkedAccount } from "@/lib/account-link";
 
 /**
  * 처음 로그인한 사람의 계정 문서를 만드는 화면.
@@ -41,6 +42,16 @@ function SignUpScreen() {
 
     async function createAccount() {
       if (!user) return;
+      /*
+       * 먼저 이 로그인이 다른 계정에 이어져 있는지 봅니다(2026-09-22 계정 합치기).
+       * 예: 구글 계정에 합쳐 둔 휴대폰 번호로 로그인하면, 새 문서를 만들지 않고 본계정으로 바꿔 탑니다.
+       * 묻는 데 실패해도 가입은 그대로 진행합니다.
+       */
+      try {
+        if (await switchToLinkedAccount()) return;
+      } catch {
+        // 서버가 잠깐 안 되면 평소처럼 새 계정으로.
+      }
       try {
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,

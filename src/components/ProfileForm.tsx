@@ -18,6 +18,8 @@ import { uploadImage } from "@/lib/cloudinary";
 import { cropToSquare } from "@/lib/image";
 import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
+import { linkToExistingMember } from "@/lib/account-link";
+import AccountMergeSheet from "@/components/AccountMergeSheet";
 import {
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLE_MAX_LENGTH,
@@ -124,6 +126,8 @@ export default function ProfileForm({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** 같은 원우 계정이 있어 휴대폰 인증을 묻는 시트(계정 합치기, 2026-09-22) */
+  const [mergePrompt, setMergePrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -242,14 +246,38 @@ export default function ProfileForm({
     return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  /**
+   * 계정 합치기 확인 (2026-09-22 사용자 요청) — 첫 프로필 설정에서, 구글이 아닌 로그인(카카오·휴대폰)일 때만.
+   * 같은 기수·이름·(인증된) 휴대폰 번호의 원우 계정이 있으면 그 계정으로 바꿔 타고 여기서 멈춥니다.
+   * 휴대폰 인증이 필요하면 인증 시트를 띄웁니다. 확인에 실패하면 평소처럼 저장합니다.
+   * 규칙은 lib/account-link-server.ts. 돌려주는 값: 저장을 계속해도 되면 true.
+   */
+  async function checkExistingAccount(name: string): Promise<boolean> {
+    if (mode !== "onboarding" || !user) return true;
+    if (user.providerData.some((provider) => provider.providerId === "google.com")) return true;
+    try {
+      const match = await linkToExistingMember(name, form.cohort);
+      if (match === "merged") return false;
+      if (match === "needs-phone") {
+        setMergePrompt(true);
+        return false;
+      }
+    } catch {
+      // 서버가 잠깐 안 되면 합치지 않고 저장합니다.
+    }
+    return true;
+  }
+
+  async function handleSubmit(event?: React.FormEvent, skipLinkCheck = false) {
+    event?.preventDefault();
     if (!user || saving || uploading) return;
     if (!validate()) return;
 
     setSaving(true);
     setSaveError(null);
     try {
+      if (!skipLinkCheck && !(await checkExistingAccount(form.name.trim()))) return;
+
       const name = form.name.trim();
 
       /*
@@ -670,6 +698,20 @@ export default function ProfileForm({
         <p className="mt-3 text-center text-[12px] text-ink-faint">
           바뀐 내용이 있을 때 저장할 수 있어요
         </p>
+      ) : null}
+
+      {mergePrompt ? (
+        <AccountMergeSheet
+          name={form.name.trim()}
+          cohort={form.cohort}
+          initialPhone={form.phone}
+          onClose={() => setMergePrompt(false)}
+          // 합치지 않고 따로 시작 — 확인을 건너뛰고 평소처럼 저장합니다.
+          onSkip={() => {
+            setMergePrompt(false);
+            void handleSubmit(undefined, true);
+          }}
+        />
       ) : null}
     </form>
   );

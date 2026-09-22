@@ -1,4 +1,5 @@
-import { getAdminAuth } from "@/lib/firebase-admin";
+import { primaryUidOf } from "@/lib/account-link-server";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 /**
  * 카카오 로그인 창구 (2026-09-22).
@@ -10,8 +11,8 @@ import { getAdminAuth } from "@/lib/firebase-admin";
  *   4. 회원번호로 Firebase 계정 id를 정해("kakao:12345") 로그인 표(custom token)를 만들어 돌려줍니다.
  *   5. 브라우저는 signInWithCustomToken으로 로그인합니다. 그다음부터는 구글 로그인과 똑같습니다.
  *
- * ★ 같은 사람이라도 구글로 가입한 계정과는 **다른 계정**입니다(2026-09-22 사용자 결정 — 새로 오는
- *   사람만 카카오로 가입). 계정을 이어 붙이는 기능은 없습니다.
+ * ★ 처음엔 구글 계정과 **다른 계정**으로 시작합니다. 첫 프로필 설정에서 같은 기수·이름·(인증된) 휴대폰 번호의
+ *   원우 계정이 있으면 그 계정에 이어지고, 그 뒤로는 카카오로 들어와도 그 계정으로 들어갑니다(아래 ④, 2026-09-22).
  *
  * 필요한 환경변수
  *   NEXT_PUBLIC_KAKAO_REST_API_KEY  카카오 앱의 REST API 키 (브라우저도 동의 화면 주소를 만들 때 씁니다)
@@ -116,7 +117,16 @@ export async function POST(request: Request) {
     await adminAuth.createUser({ uid, displayName, photoURL });
   }
 
-  // ④ 로그인 표. 브라우저는 이것으로 signInWithCustomToken 합니다.
-  const customToken = await adminAuth.createCustomToken(uid, { provider: "kakao" });
+  /*
+   * ④ 로그인 표. 브라우저는 이것으로 signInWithCustomToken 합니다.
+   *   이 카카오 계정이 예전에 구글 계정에 합쳐졌으면(accountLinks, 2026-09-22) 그 본계정의 표를 줍니다 —
+   *   같은 원우가 카카오로 들어와도 원래 계정 하나로 쓰게. 규칙은 lib/account-link-server.ts.
+   */
+  const db = getAdminDb();
+  const signInUid = db ? await primaryUidOf(db, uid) : uid;
+  const customToken = await adminAuth.createCustomToken(
+    signInUid,
+    signInUid === uid ? { provider: "kakao" } : { provider: "kakao", linkedFrom: uid },
+  );
   return Response.json({ ok: true, token: customToken }, { headers: NO_STORE });
 }

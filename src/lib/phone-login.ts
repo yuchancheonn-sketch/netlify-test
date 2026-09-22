@@ -1,4 +1,5 @@
 import {
+  linkWithPhoneNumber,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
@@ -66,6 +67,21 @@ export async function sendPhoneCode(e164: string): Promise<ConfirmationResult> {
   }
 }
 
+/**
+ * 지금 로그인한 계정(카카오 등)에 휴대폰 번호를 **이어 붙이는** 인증 문자를 보냅니다 (2026-09-22, 계정 합치기용).
+ * 로그인은 그대로이고, confirm(code)이 끝나면 이 계정에 "인증된 번호"가 생깁니다 — lib/account-link-server.ts가 그 번호로 견줍니다.
+ */
+export async function sendLinkPhoneCode(e164: string): Promise<ConfirmationResult> {
+  const user = auth.currentUser;
+  if (!user) throw Object.assign(new Error("not-signed-in"), { code: "auth/no-current-user" });
+  try {
+    return await linkWithPhoneNumber(user, e164, getVerifier());
+  } catch (caught) {
+    resetVerifier();
+    throw caught;
+  }
+}
+
 /** 휴대폰 로그인에서 난 오류를 원우가 읽을 문장으로. */
 export function phoneErrorMessage(caught: unknown): string {
   const code = (caught as { code?: string })?.code ?? "";
@@ -83,6 +99,11 @@ export function phoneErrorMessage(caught: unknown): string {
       return "휴대폰 번호 로그인이 아직 켜져 있지 않아요. 운영진에게 알려주세요.";
     case "auth/network-request-failed":
       return "네트워크 연결을 확인하고 다시 시도해 주세요.";
+    case "auth/credential-already-in-use":
+    case "auth/account-exists-with-different-credential":
+      return "이 번호는 이미 다른 로그인에 쓰이고 있어요. 그 방법(휴대폰 번호)으로 로그인해 주세요.";
+    case "auth/provider-already-linked":
+      return "이 계정에는 이미 휴대폰 번호가 이어져 있어요.";
     default:
       return `인증하지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`;
   }
