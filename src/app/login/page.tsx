@@ -124,19 +124,21 @@ function LoginScreen() {
         ★ 2026-09-22 사용자 요청 — 얼굴을 "애기애타" 제목 밑으로 당기고, 제목과 사이는 조금 띄웁니다.
           예전 top-[28%]는 화면 높이에 따라 움직여 제목과의 거리가 폰마다 달랐고, 앱 아이콘을 뺀 뒤로는
           제목 아래가 크게 비었습니다. 제목은 화면 위에서 고정 거리(pt-14 + 두 줄 ≈ 125px)라
-          사진도 고정 거리(top 90px)에서 시작합니다 → 머리 윗부분이 제목보다 35px쯤 아래에 옵니다(110px은 57px로 너무 멀어 20px 올림)
+          사진도 고정 거리에서 시작합니다. 110px(사이 57px) → 90px(사이 35px) → 같은 날 "훨씬 위로"에 55px
+          (머리 윗부분이 제목 바로 밑. 40px까지 올리면 머리가 "애기애타" 글자 뒤로 들어가 겹칩니다)
           (머리는 사진 위끝에서 약 85px 아래 — 2026-09-22 캡처로 잼, 그 위는 아래 마스크로 희미하게 사라지는 하늘).
           높이는 예전과 같은 72%로 둡니다 — bottom-0으로 늘리면 bg-cover가 사진을 키워 얼굴이 커집니다.
-          사진 아래쪽은 어차피 짙은 막(84%부터 불투명)에 덮입니다.
+          ★ 사진을 위로 올리면 사진 아래 끝이 문구("나를 사랑하고…") 바로 밑, 막이 아직 덜 짙은 곳에 와서
+            가로줄처럼 드러납니다. 그래서 마스크로 아래 끝도 위 끝처럼 서서히 사라지게 합니다(80%→100%).
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[90px] h-[72%] bg-cover bg-no-repeat"
+        className="pointer-events-none absolute inset-x-0 top-[55px] h-[72%] bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 14%)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, #000 14%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 14%, #000 80%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, #000 14%, #000 80%, transparent 100%)",
         }}
       />
       {/* 아래로 갈수록 짙어지는 막 — 얼굴은 드러내고 버튼 쪽은 또렷하게 */}
@@ -182,12 +184,19 @@ function LoginScreen() {
 
         <div className="mt-5">
           {step === "start" ? (
+            /*
+              두 단추 높이 56px → 50px (2026-09-22 사용자 요청 "조금씩 줄여줘").
+              로그인하기는 PrimaryButton field(위아래 13px), 회원가입하기는 테두리 1px + 위아래 12px로 같은 50px.
+              가입 방법 목록(구글·카톡·휴대폰) 단추는 그대로 56px입니다.
+            */
             <div className="flex flex-col gap-3">
-              <PrimaryButton onClick={() => goTo("login")}>로그인하기</PrimaryButton>
+              <PrimaryButton onClick={() => goTo("login")} size="field">
+                로그인하기
+              </PrimaryButton>
               <button
                 type="button"
                 onClick={() => goTo("signup")}
-                className={secondaryButtonClassName}
+                className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 회원가입하기
               </button>
