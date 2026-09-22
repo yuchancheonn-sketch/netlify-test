@@ -377,7 +377,7 @@ function AlbumBook({
         */
         className="absolute inset-0 select-none"
         style={
-          { touchAction: "pan-y", "--card-max": "calc(var(--frame-h) - 32px)" } as React.CSSProperties
+          { touchAction: "pan-y", "--card-max": "calc(var(--frame-h) - 40px)" } as React.CSSProperties
         }
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -469,9 +469,12 @@ function AlbumBook({
                 카드와 달리 넘기는 움직임(transform)을 받지 않아 제자리에 있고, 한 장이 넘어가는 순간 바뀝니다.
                 ★ 뒤에서 올라오는 카드에도 같은 32px 줄을 투명하게(invisible) 둡니다 — 없으면 그 카드가 16px 아래에 섰다가
                   "지금 카드"가 되는 순간 위로 튑니다.
+                ★ mt-2 — 카드와 순번 사이를 8px 더 띄웁니다(2026-09-23 사용자 "카드로부터 더 떨어지도록").
+                  글씨가 32px 줄 가운데라 카드 끝에서 글씨까지 약 8px → 16px. 이 값을 바꾸면 위 --card-max(40px)와
+                  아래 화살표 top(50%-20px)도 같이 맞춥니다.
               */}
               <p
-                className={`flex h-8 shrink-0 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums ${
+                className={`mt-2 flex h-8 shrink-0 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums ${
                   isCurrent ? "" : "invisible"
                 }`}
                 aria-live={isCurrent ? "polite" : undefined}
@@ -504,8 +507,8 @@ function AlbumBook({
               onClick={() => turnBy(mode)}
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
               // 더 넘길 장이 없는 쪽은 흐리게만 보이고 눌리기는 합니다(누르면 살짝 끌렸다 돌아옴 — turnBy).
-              // top-[calc(50%-16px)] — 카드 세로 가운데. 카드가 밑의 순번 줄(32px)과 한 덩어리로 가운데에 서서 16px 위에 있습니다.
-              className={`absolute top-[calc(50%-16px)] z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
+              // top-[calc(50%-20px)] — 카드 세로 가운데. 카드가 밑의 순번 줄(띄움 8px + 32px = 40px)과 한 덩어리로 가운데에 서서 20px 위에 있습니다.
+              className={`absolute top-[calc(50%-20px)] z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
                 enabled ? "" : "opacity-30"
               } ${mode === "next" ? "-right-4" : "-left-4"}`}
             >
