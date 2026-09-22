@@ -276,7 +276,7 @@ function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
   async function open(kind: "webcal" | "google") {
     const next = await load();
     if (!next) return;
-    if (kind === "webcal") window.location.href = next.webcal;
+    if (kind === "webcal") window.location.assign(next.webcal);
     else window.open(next.google, "_blank", "noopener");
   }
 

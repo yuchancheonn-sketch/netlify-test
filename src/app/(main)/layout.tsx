@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import MainShell from "@/components/MainShell";
-import PushPermissionPrompt from "@/components/PushPermissionPrompt";
+import FirstRunSetupPrompt from "@/components/FirstRunSetupPrompt";
 import PushSync from "@/components/PushSync";
 import StageGate from "@/components/StageGate";
 
@@ -17,10 +17,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <StageGate allow={["ready"]}>
       <PushSync />
       {/*
-        가입을 마치고 처음 들어온 기기에 딱 한 번 뜹니다.
+        가입을 마치고 처음 들어온 기기에 딱 한 번 뜹니다 — 알림 받기 + 폰 캘린더 연결(2026-09-23, 예전엔 알림만).
         StageGate 안에 두어, 로그인·가입을 다 마친 뒤에만 물어봅니다.
       */}
-      <PushPermissionPrompt />
+      <FirstRunSetupPrompt />
       <MainShell>{children}</MainShell>
     </StageGate>
   );
