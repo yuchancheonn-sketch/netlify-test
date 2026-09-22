@@ -121,8 +121,7 @@ export default function TextTabs<T extends string>({
     <span className={`relative flex ${className}`}>
       {/*
         "underline" — 칸들이 폭을 나눠 가지므로 가로로 밀 일이 없습니다(overflow-x-auto 불필요).
-        칸 사이 간격도 없습니다: 주황 바가 칸 폭을 꽉 채워야 그림처럼 보이는데,
-        gap을 주면 바 사이가 벌어져 바가 칸보다 짧아 보입니다.
+        칸 사이 간격도 없습니다(주황 바가 칸 폭을 꽉 채우던 때의 짜임 — 2026-09-23부터 바는 글씨 폭).
 
         ★ -mx-4로 좌우 16px을 도로 밀어냅니다.
           쓰는 쪽(원우수첩)이 px-4 안에 두는데, 그림의 회색 구분선은 화면 끝에서 끝까지
@@ -237,31 +236,35 @@ export default function TextTabs<T extends string>({
                 <span
                   className={
                     underline
-                      ? `leading-tight whitespace-nowrap ${textClass} ${
+                      ? `relative leading-tight whitespace-nowrap ${textClass} ${
                           active ? "font-bold" : "font-medium"
                         }`
                       : `leading-tight font-bold ${textClass}`
                   }
                 >
                   {item.label}
+
+                  {/*
+                    주황 바. 줄 아래 회색 구분선(위 span의 border-b) 위에 겹쳐 깔려,
+                    그림처럼 둘이 한 줄에 붙어 보입니다.
+
+                    ★ 길이는 글씨 폭 그대로입니다 (2026-09-23 사용자 요청 — "전체 52명"·"일반 원우"·
+                      "대학생 원우" 글씨 길이에 맞춰). 예전엔 칸 폭을 꽉 채웠습니다.
+                      그래서 바가 <button>이 아니라 이 글씨 <span> 안에 있습니다(inset-x-0이 글씨 폭).
+                    ★ bottom-[-12px] = 버튼 아래 여백 pb-[11px] + 구분선에 겹치는 1px.
+                      pb 값을 바꾸면 이 값도 같이 바꿔야 바가 구분선 위에 그대로 앉습니다.
+
+                    굵기 2.5px (3px → 2.5px, 2026-09-22 사용자 "조금만 더 얇게").
+                    아래 회색 구분선이 1px이라 2px까지 내리면 둘의 차이가 한 겹밖에 안 나
+                    바가 선의 일부처럼 읽히기 시작합니다. 더 얇게 가려면 그 점을 보세요.
+                  */}
+                  {underline && active ? (
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-0 bottom-[-12px] h-[2.5px] rounded-full bg-brand-500"
+                    />
+                  ) : null}
                 </span>
-
-                {/*
-                  주황 바. bottom-[-1px]로 줄 아래 회색 구분선(위 span의 border-b) 위에
-                  겹쳐 깔려, 그림처럼 둘이 한 줄에 붙어 보입니다.
-                  칸 폭을 꽉 채웁니다(inset-x-0) — 글씨 폭에 맞추면 "전체 42명"과
-                  "일반 원우"의 바 길이가 달라져 들쭉날쭉합니다.
-
-                  굵기 2.5px (3px → 2.5px, 2026-09-22 사용자 "조금만 더 얇게").
-                  아래 회색 구분선이 1px이라 2px까지 내리면 둘의 차이가 한 겹밖에 안 나
-                  바가 선의 일부처럼 읽히기 시작합니다. 더 얇게 가려면 그 점을 보세요.
-                */}
-                {underline && active ? (
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 bottom-[-1px] h-[2.5px] rounded-full bg-brand-500"
-                  />
-                ) : null}
               </button>
             </Fragment>
           );
