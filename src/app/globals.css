@@ -487,6 +487,25 @@ button {
   font-size: 16px;
 }
 
+/*
+ * 날짜·시각 칸이 옆으로 삐져나가는 것 막기 (2026-09-23 — 소식 수정 창의 날짜 칸이 화면 밖까지 나갔음).
+ * 아이폰 사파리는 date·time 입력칸에 자기 기본 최소 폭을 줘서 w-full을 무시하고 넘칩니다.
+ * 기본 모양을 걷고(appearance) 최소 폭을 0으로 돌려 칸 폭을 따르게 합니다.
+ * 값을 왼쪽에 붙이고, 비어 있을 때 칸이 납작해지지 않게 글줄 높이를 잡아 둡니다(아이폰은 빈 값이면 높이 0).
+ * 쓰는 곳: 소식 올리기·수정(날짜), 모임 등록·수정(날짜·시작·끝 시각).
+ */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  min-height: 1.5em;
+  text-align: left;
+}
+
 /* 스크롤바는 숨기되 스크롤은 되도록 (가로 서브탭 등에서 사용) */
 @utility no-scrollbar {
   scrollbar-width: none;
