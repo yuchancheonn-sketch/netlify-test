@@ -11,7 +11,9 @@
     "start": "next start",
     "lint": "eslint",
     "icons": "node scripts/generate-icons.mjs",
-    "deploy": "node scripts/deploy.mjs"
+    "deploy": "node scripts/deploy.mjs",
+    "sync": "node scripts/sync.mjs",
+    "setup:env": "node scripts/setup-env.mjs"
   },
   "dependencies": {
     "firebase": "^12.18.0",

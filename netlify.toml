@@ -10,6 +10,10 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  # ★ 2026-09-22: 배포는 Firebase App Hosting으로 옮겼습니다(README "배포하기").
+  #   이제 push는 배포가 아닌 백업이라, Netlify가 아직 저장소에 연결돼 있더라도
+  #   push마다 빌드(크레딧)를 쓰지 않게 모든 빌드를 건너뜁니다. ignore가 0으로 끝나면 Netlify는 빌드를 안 합니다.
+  ignore = "exit 0"
 
 [build.environment]
   # Next.js 16은 Node 20.9 이상이 필요합니다.
