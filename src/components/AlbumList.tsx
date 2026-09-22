@@ -20,7 +20,7 @@ import {
   PrimaryButton,
   Skeleton,
   Spinner,
-  inputClassName,
+  flatInputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { inCohort } from "@/lib/cohort";
@@ -848,10 +848,14 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
       aria-label={heading}
       onClick={saving ? undefined : onClose}
     >
+      {/*
+        흰 바탕(bg-surface) + 옅은 회색 칸(flatInputClassName, 사진 고르기 칸 bg-fill) + "취소"는 흰색에 회색 테두리
+        (2026-09-23 사용자 요청 — 예전엔 회색 바탕에 흰 칸, 취소는 회색 칸).
+      */}
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-surface px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
         <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
 
@@ -889,7 +893,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
                   </div>
                 ))}
                 <label
-                  className={`flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line bg-surface text-ink-muted ${
+                  className={`flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line bg-fill text-ink-muted ${
                     saving ? "opacity-50" : ""
                   }`}
                 >
@@ -920,7 +924,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
               setError(null);
             }}
             placeholder="예) 10기 수료식"
-            className={inputClassName}
+            className={flatInputClassName}
           />
         </div>
 
@@ -931,7 +935,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
             type="date"
             value={eventDate}
             onChange={(changed) => setEventDate(changed.target.value)}
-            className={inputClassName}
+            className={flatInputClassName}
           />
         </div>
 
@@ -955,7 +959,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
             }}
             rows={4}
             placeholder="어떤 자리였는지 원우들에게 짧게 들려주세요."
-            className={`${inputClassName} resize-none leading-relaxed`}
+            className={`${flatInputClassName} resize-none leading-relaxed`}
           />
         </div>
 
@@ -971,7 +975,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
               옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
               0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
             */
-            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted disabled:opacity-50"
+            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)] disabled:opacity-50"
           >
             취소
           </button>

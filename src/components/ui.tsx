@@ -204,6 +204,15 @@ export function FieldLabel({
 export const inputClassName =
   "w-full rounded-2xl border border-transparent bg-surface px-5 py-4 text-[16px] text-ink shadow-[var(--shadow-card)] outline-none transition placeholder:text-ink-faint focus:border-brand-300 focus:ring-4 focus:ring-brand-100";
 
+/**
+ * 흰 바탕 위에 놓는 옅은 회색 입력창 — 위와 같고 바탕만 fill, 테두리(헤어라인) 없음.
+ * 흰 창(소식 올리기·수정 등)에서 씁니다 (2026-09-23 사용자 "흰색 배경에 회색 박스들로").
+ * 내 프로필 수정 화면도 같은 모양입니다(ProfileForm의 flatBox).
+ */
+export const flatInputClassName = inputClassName
+  .replace("bg-surface", "bg-fill")
+  .replace("shadow-[var(--shadow-card)]", "shadow-none");
+
 /** 폼 아래에 뜨는 오류 문구 */
 export function FieldError({ children }: { children: ReactNode }) {
   return (
