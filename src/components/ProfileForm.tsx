@@ -189,9 +189,9 @@ export default function ProfileForm({
      * 칸이 이름과 기수 사이에 있어서, 틀린 칸으로 올려 줄 때 순서가 맞도록 여기서 확인합니다.
      */
     const phoneDigits = form.phone.replace(/\D/g, "");
-    if (!form.phone.trim()) next.phone = "휴대폰 번호를 입력해 주세요.";
+    if (!form.phone.trim()) next.phone = "전화번호를 입력해 주세요.";
     else if (phoneDigits.length < 9 || phoneDigits.length > 11) {
-      next.phone = "휴대폰 번호를 다시 확인해 주세요.";
+      next.phone = "전화번호를 다시 확인해 주세요.";
     }
 
     /*
@@ -398,7 +398,8 @@ export default function ProfileForm({
         2026-09-22 사용자 요청으로 선택 → 필수로 바꾸고, 이름과 기수 사이로 옮겼습니다(예전엔 직책 아래).
       */}
       <div className="mb-6">
-        <FieldLabel htmlFor="phone">휴대폰</FieldLabel>
+        {/* 칸 이름 "휴대폰" → "전화번호" (2026-09-22 사용자 요청). */}
+        <FieldLabel htmlFor="phone">전화번호</FieldLabel>
         <input
           id="phone"
           value={form.phone}
