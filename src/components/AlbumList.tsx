@@ -491,7 +491,7 @@ function AlbumCard({
               type="button"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={onMore}
-              aria-label={`${album.title} 고치기·지우기`}
+              aria-label={`${album.title} 수정·지우기`}
               className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[17px]! leading-none font-bold text-ink-muted transition active:bg-fill"
             >
               ⋯
@@ -671,14 +671,14 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
       onClose();
     } catch (caught) {
       setError(
-        saveErrorMessage(caught, editing ? "소식을 고치지 못했어요." : "소식을 올리지 못했어요."),
+        saveErrorMessage(caught, editing ? "소식을 수정하지 못했어요." : "소식을 올리지 못했어요."),
       );
       setSaving(false);
       setProgress(null);
     }
   }
 
-  const heading = editing ? "소식 고치기" : "소식 올리기";
+  const heading = editing ? "소식 수정" : "소식 올리기";
 
   return (
     <div
@@ -870,7 +870,7 @@ function AlbumManageSheet({
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label="소식 고치기·지우기"
+      aria-label="소식 수정·지우기"
       onClick={deleting ? undefined : onClose}
     >
       <div
@@ -887,7 +887,8 @@ function AlbumManageSheet({
             disabled={deleting}
             className="w-full rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-ink disabled:opacity-50"
           >
-            고치기
+            {/* "고치기" → "수정" (2026-09-22 사용자 요청). 이어 뜨는 창 제목도 "소식 수정"으로 맞췄습니다. */}
+            수정
           </button>
           <button
             type="button"
