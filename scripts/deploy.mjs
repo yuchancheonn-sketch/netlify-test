@@ -36,10 +36,18 @@ run("git push origin main");
 
 const dir = mkdtempSync(path.join(tmpdir(), "aegiaeta-deploy-"));
 try {
-  // 파이프(|) 없이 파일로 떨궜다가 풉니다 — PowerShell·cmd·bash 어디서 돌려도 같게. tar는 윈도우 10에도 기본으로 있습니다.
+  /*
+    파이프(|) 없이 파일로 떨궜다가 풉니다 — PowerShell·cmd·bash 어디서 돌려도 같게.
+    ★ 윈도우에서는 System32의 tar.exe를 콕 집어 부릅니다. Git Bash 안에서 그냥 "tar"를 부르면
+      GNU tar가 잡히는데, 그건 "C:\…"의 "C:"를 원격 컴퓨터 이름으로 알아듣고 실패합니다(2026-09-22 겪음).
+  */
   const tarball = path.join(dir, "source.tar");
+  const tar =
+    process.platform === "win32"
+      ? `"${path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")}"`
+      : "tar";
   run(`git archive --format=tar -o "${tarball}" HEAD`);
-  run(`tar -xf "${tarball}" -C "${dir}"`);
+  run(`${tar} -xf "${tarball}" -C "${dir}"`);
   rmSync(tarball);
   const opts = { cwd: dir };
   run(`${firebase} deploy --only firestore:rules --project ${PROJECT} --non-interactive`, opts);
