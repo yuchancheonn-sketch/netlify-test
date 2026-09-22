@@ -47,10 +47,13 @@ const TABS = [
    * 쓰고 있었고, 자주 여는 행사 사진은 자료 탭 안쪽에 들어 있었습니다.
    * 지금은 받아오는 것(소식·복습 영상)이 가운데, 원우가 직접 올리는 것
    * (행사 사진·파일)이 맨 끝입니다.
+   *
+   * ★ 2026-09-22 사용자 요청으로 소식 탭의 복습 영상과 자료 탭의 행사 사진을 맞바꿨습니다.
+   *   이제 소식 = 행사 사진·소식, 자료 = 복습 영상·파일. 앨범 화면(/albums)은 소식 탭에 딸립니다.
    */
-  { href: "/news", label: "소식", Icon: MegaphoneIcon, owns: [] },
+  { href: "/news", label: "소식", Icon: MegaphoneIcon, owns: ["/albums"] },
   { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
-  { href: "/library", label: "자료", Icon: LibraryIcon, owns: ["/albums"] },
+  { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
 ] as const;
 
 /** 지금 보고 있는 주소가 이 탭에 속하는지. 하위 화면(/events/3 등)까지 포함합니다. */

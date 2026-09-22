@@ -112,7 +112,8 @@ export async function checkFeedsAndNotify({
     {
       key: "videos",
       title: "새 복습 영상",
-      url: "/news",
+      // 복습 영상은 2026-09-22부터 자료 탭(처음 열리는 칸)에 있습니다 — 예전엔 /news.
+      url: "/library",
       load: async () => parseChannelFeed(await fetchText(VIDEO_FEED_URL)),
     },
     {

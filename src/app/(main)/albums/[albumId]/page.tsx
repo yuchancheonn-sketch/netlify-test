@@ -135,7 +135,8 @@ export default function AlbumPage() {
         ),
         deleteDoc(doc(db, "photoAlbums", albumId)),
       ]);
-      router.replace("/library");
+      // 행사 사진은 2026-09-22부터 소식 탭(처음 열리는 칸)에 있습니다 — 예전엔 /library.
+      router.replace("/news");
     } catch {
       setUploadError("앨범을 지우지 못했어요.");
     }

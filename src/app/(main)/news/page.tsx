@@ -2,35 +2,30 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import AlbumList from "@/components/AlbumList";
+import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import TextTabs from "@/components/TextTabs";
 import { MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
-import {
-  embedUrl,
-  videoThumbnailUrl,
-  watchUrl,
-  type VideoItem,
-} from "@/lib/youtube";
+import { useViewCohort } from "@/lib/use-view-cohort";
 import type { NewsItem } from "@/lib/rss";
 
 const SITE_URL = "https://dosan21.kr";
-const CHANNEL_URL = "https://www.youtube.com/@dosanacademy";
 
 /**
- * 소식 탭 — 도산아카데미가 만들어 내려주는 것들을 한자리에 모읍니다.
+ * 소식 탭 — 행사 사진과 도산아카데미 소식.
  *
- * 서브탭 둘 다 **우리가 올리는 것이 아니라 받아오는 것**입니다.
- *  - 복습 영상: 유튜브 채널(@dosanacademy)
- *  - 소식: 홈페이지 RSS(dosan21.kr)
- * 둘 다 우리 앱 서버가 대신 받아 CDN에 캐시해 두고 내려줍니다.
+ *  - 행사 사진: 원우가 올리는 행사별 앨범 (photoAlbums) — components/AlbumList.tsx
+ *  - 소식: 도산아카데미 홈페이지 RSS(dosan21.kr). 우리 앱 서버가 대신 받아 CDN에 캐시해 두고 내려줍니다.
  *
- * 원우가 직접 올리는 사진·파일은 자료 탭(/library)에 있습니다.
- * 받아오는 것과 올리는 것을 탭으로 갈라 둔 것이 이 둘의 경계입니다.
+ * ★ 2026-09-22 사용자 요청으로 이 탭의 "복습 영상"과 자료 탭의 "행사 사진"을 맞바꿨습니다.
+ *   복습 영상은 이제 자료 탭(/library)에 있습니다 — components/VideoList.tsx.
+ *   예전엔 "받아오는 것(이 탭) / 원우가 올리는 것(자료 탭)"으로 갈라 두었는데 그 경계는 이제 없습니다.
  */
 const SUBTABS = [
-  { value: "videos", label: "복습 영상" },
+  { value: "photos", label: "행사 사진" },
   { value: "news", label: "소식" },
 ] as const;
 
@@ -70,23 +65,43 @@ function NewsFallback() {
         title={<Skeleton className="h-[28px] w-[165px] rounded-lg" />}
         right={<HeaderActions />}
       />
-      {/* pt-4는 아래 NewsTabs의 본문 상자와 같은 값이어야 합니다 — 그쪽 주석 참고. */}
-      <div className="px-4 pt-4 pb-8">
-        <Skeleton className="aspect-video rounded-2xl" />
+      {/*
+        pt-4는 아래 NewsTabs의 본문 상자와 같은 값이어야 합니다 — 그쪽 주석 참고.
+        처음 열리는 칸이 행사 사진이라 앨범 칸(2열 정사각형) 자리를 잡아 둡니다.
+      */}
+      <div className="grid grid-cols-2 gap-3 px-4 pt-4 pb-8">
+        <Skeleton className="aspect-square rounded-[20px]" />
+        <Skeleton className="aspect-square rounded-[20px]" />
       </div>
     </>
   );
 }
 
 /**
- * 복습 영상 / 소식 고르개와 그 아래 목록.
- * 주소가 /news?tab=news 면 소식 칸을 먼저 엽니다 — 새 소식 알림(netlify/functions/feed-push.mts)이
- * 이 주소로 엽니다. 새 영상 알림은 그냥 /news(복습 영상 칸)로 엽니다.
+ * 행사 사진 / 소식 고르개와 그 아래 목록.
+ * 주소가 /news?tab=news 면 소식 칸을 먼저 엽니다 — 새 소식 알림(lib/feed-watch.ts)이
+ * 이 주소로 엽니다. 그 밖에는 행사 사진 칸이 먼저 열립니다.
+ * (새 영상 알림은 복습 영상이 옮겨 간 자료 탭 /library로 엽니다.)
  */
 function NewsTabs() {
   const searchParams = useSearchParams();
   const [subtab, setSubtab] = useState<Subtab>(() =>
-    searchParams.get("tab") === "news" ? "news" : "videos",
+    searchParams.get("tab") === "news" ? "news" : "photos",
+  );
+  /*
+   * 행사 사진은 기수마다 따로입니다. 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서
+   * 바꿔 봅니다(자료 탭에 있을 때와 같은 방식). 앨범 목록이 같은 값(useViewCohort)을 읽습니다.
+   * 소식은 모든 기수가 같으므로, 기수 고르개는 행사 사진 칸에서만 답니다.
+   */
+  const { cohort, canSwitch, setCohort } = useViewCohort();
+  const tabs = (
+    <TextTabs
+      variant="header"
+      items={SUBTABS}
+      value={subtab}
+      onChange={setSubtab}
+      className="min-w-0"
+    />
   );
 
   return (
@@ -96,10 +111,18 @@ function NewsTabs() {
         예전에는 제목이 "소식"이고 본문 맨 위에 고르개가 따로 서 있었는데,
         그 고르개에 이미 "소식" 칸이 있어 같은 말이 두 번 보였습니다.
         variant="header"가 글씨를 22px로 키워 다른 화면의 제목과 같게 맞춥니다.
+        min-w-0은 폭이 모자랄 때 탭 쪽이 먼저 줄어들게 하려는 것입니다 — 없으면 기수 고르개가 밀려 잘립니다.
       */}
       <PageHeader
         title={
-          <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
+          canSwitch && subtab === "photos" ? (
+            <span className="flex min-w-0 items-center gap-2">
+              {tabs}
+              <CohortPicker value={cohort} onChange={setCohort} />
+            </span>
+          ) : (
+            tabs
+          )
         }
         right={<HeaderActions />}
       />
@@ -115,171 +138,21 @@ function NewsTabs() {
         ★ 위 NewsFallback의 같은 상자에도 같은 pt-4가 있어야 합니다.
           한쪽만 주면 기다리는 화면과 채워진 화면의 첫 칸 위치가 달라 튀어 보입니다.
 
-        ★ 아래 두 갈래(VideoList·NewsList)의 상자 사이는 모두 14px입니다
+        ★ 소식 목록(NewsList)의 상자 사이는 14px입니다
           (20px(gap-5) → 14px, 2026-09-22 사용자 "홈탭이랑 원우탭 목록 간격으로 맞춰줘").
           홈의 카드 사이·원우수첩 줄 사이와 같은 값이라 탭을 옮겨 다녀도 결이 같습니다.
           Tailwind 단계(12px·16px) 사이 값이라 gap-[14px]로 직접 적습니다.
-          네 군데(갈래마다 자리 표시 목록 + 진짜 목록)가 모두 같아야 합니다 —
-          한쪽만 고치면 불러오는 동안과 다 불러온 뒤의 줄 자리가 어긋나 한 번 들썩입니다.
+          자리 표시 목록과 진짜 목록이 같아야 합니다 — 한쪽만 고치면 줄 자리가 한 번 들썩입니다.
+          (자료 탭으로 옮긴 복습 영상 목록도 같은 14px입니다.)
+
+        ★ 아래 여백 — 행사 사진 칸은 pb-24, 소식 칸은 pb-8.
+          행사 사진에는 오른쪽 아래에 "앨범 만들기" 주황 알약이 떠 있습니다. 알약은 바닥에서 92px 위에
+          서고 높이가 52px라 바닥 144px까지 가리는데, MainShell이 이미 78px을 비워 두므로 96px(pb-24)을
+          더해 마지막 줄이 가리지 않게 합니다(자료 탭에 있을 때와 같은 셈법).
       */}
-      <div className="px-4 pt-4 pb-8">
-        {subtab === "videos" ? <VideoList /> : <NewsList />}
+      <div className={`px-4 pt-4 ${subtab === "photos" ? "pb-24" : "pb-8"}`}>
+        {subtab === "photos" ? <AlbumList /> : <NewsList />}
       </div>
-    </>
-  );
-}
-
-/**
- * 도산아카데미 유튜브 영상 목록.
- *
- * 우리 앱 서버(/api/videos)가 채널에서 받아온 목록을 그대로 큰 그림으로 깝니다.
- * 그림을 누르면 그 자리에서 바로 재생되고, 유튜브에서 퍼가기를 막아둔 영상은
- * 아래 링크로 유튜브에 넘어가 볼 수 있습니다.
- */
-function VideoList() {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  /** 지금 재생 중인 영상 (한 번에 하나만 틉니다) */
-  const [playingId, setPlayingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    async function load() {
-      try {
-        const response = await fetch("/api/videos");
-        const data = (await response.json()) as {
-          items?: VideoItem[];
-          error?: string;
-        };
-        if (!alive) return;
-        if (!response.ok || data.error) setError(data.error ?? "영상을 불러오지 못했어요.");
-        else setVideos(data.items ?? []);
-      } catch {
-        if (alive) setError("영상을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
-
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <ul className="flex flex-col gap-[14px]">
-        {[0, 1, 2].map((key) => (
-          <li key={key}>
-            <Skeleton className="aspect-video rounded-2xl" />
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-        <ErrorState message={error} />
-        <div className="px-6 pb-6 text-center">
-          <a
-            href={CHANNEL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[13px] font-bold text-brand-500"
-          >
-            도산아카데미 유튜브 열기 ↗
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  if (videos.length === 0) {
-    return (
-      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-        <EmptyState
-          icon={<span className="text-[40px]">🎬</span>}
-          title="아직 올라온 영상이 없어요"
-          description="도산아카데미 유튜브에 영상이 올라오면 여기에 바로 보입니다."
-        />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <ul className="flex flex-col gap-[14px]">
-        {videos.map((video) => (
-          <li key={video.id}>
-            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
-              {playingId === video.id ? (
-                <iframe
-                  src={embedUrl(video.id)}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="aspect-video w-full bg-black"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setPlayingId(video.id)}
-                  aria-label={`${video.title} 재생`}
-                  className="relative block aspect-video w-full bg-black transition active:scale-[0.99]"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={videoThumbnailUrl(video.id)}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/55 text-[26px] text-white">
-                      ▶
-                    </span>
-                  </span>
-                </button>
-              )}
-
-              <div className="px-4 py-3.5">
-                <p className="text-[15px] leading-snug font-bold text-ink">{video.title}</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  {video.date ? (
-                    <span className="text-[12px] text-ink-faint">
-                      {formatDotDate(video.date)}
-                    </span>
-                  ) : (
-                    <span />
-                  )}
-                  <a
-                    href={watchUrl(video.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-[12px] font-bold text-brand-500"
-                  >
-                    유튜브에서 보기 ↗
-                  </a>
-                </div>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <a
-        href={CHANNEL_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
-      >
-        도산아카데미 유튜브 채널 열기 ↗
-      </a>
     </>
   );
 }
