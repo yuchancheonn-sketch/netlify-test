@@ -119,7 +119,8 @@ export async function checkFeedsAndNotify({
     {
       key: "news",
       title: "도산아카데미 새 소식",
-      url: "/news?tab=news",
+      // 소식(RSS)은 2026-09-22부터 자료 탭의 "소식" 칸에 있습니다 — 예전엔 /news?tab=news.
+      url: "/library?tab=news",
       load: async () => parseRss(await fetchText(NEWS_FEED_URL, BROWSER_HEADERS)),
     },
   ];

@@ -17,7 +17,7 @@ import { PUSH_BODY_MAX_LENGTH } from "./constants";
 export interface PushPayload {
   title: string;
   body: string;
-  /** 알림을 눌렀을 때 열 앱 안 주소. 예: "/chat/abc__xyz", "/news?tab=news" */
+  /** 알림을 눌렀을 때 열 앱 안 주소. 예: "/chat/abc__xyz", "/library?tab=news" */
   url: string;
   /** 같은 tag의 알림은 겹쳐서 하나로 보입니다. 예: "chat:abc__xyz", "feed:news" */
   tag: string;

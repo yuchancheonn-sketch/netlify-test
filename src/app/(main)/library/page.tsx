@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import NewsList from "@/components/NewsList";
 import {
   addDoc,
   collection,
@@ -35,10 +37,15 @@ import { MAX_UPLOAD_FILE_BYTES } from "@/lib/constants";
 import type { FileDoc } from "@/lib/types";
 
 /**
- * 자료 탭 — 복습 영상과 파일.
+ * 자료 탭 — 복습 영상 · 소식 · 파일.
  *
  *  - 복습 영상: 도산아카데미 유튜브 채널(@dosanacademy) — components/VideoList.tsx
+ *  - 소식: 도산아카데미 사이트(dosan21.kr) RSS와 자동으로 이어진 글 — components/NewsList.tsx
+ *    (2026-09-22 사용자 요청으로 소식 탭에서 옮겨 옴. 도산아카데미가 내려주는 복습 영상 옆에 둡니다.)
  *  - 파일: 원우가 올리는 PDF·한글·엑셀 등을 최근 올린 순으로 (files)
+ *
+ * 주소가 /library?tab=news 면 소식 칸을 먼저 엽니다 — 새 소식 알림(lib/feed-watch.ts)이 이 주소로 엽니다.
+ * 그 밖에는 복습 영상 칸이 먼저 열립니다(새 영상 알림은 그냥 /library).
  *
  * ★ 2026-09-22 사용자 요청으로 소식 탭의 "복습 영상"과 이 탭의 "행사 사진"을 맞바꿨습니다.
  *   행사 사진(앨범)은 이제 소식 탭(/news)에 있습니다 — components/AlbumList.tsx.
@@ -47,13 +54,42 @@ import type { FileDoc } from "@/lib/types";
  */
 const SUBTABS = [
   { value: "videos", label: "복습 영상" },
+  { value: "news", label: "소식" },
   { value: "files", label: "파일" },
 ] as const;
 
 type Subtab = (typeof SUBTABS)[number]["value"];
 
 export default function LibraryPage() {
-  const [subtab, setSubtab] = useState<Subtab>("videos");
+  /*
+    주소의 ?tab을 읽는 useSearchParams는 정적 화면에서 Suspense로 감싸야 빌드가 됩니다(Next 문서).
+    제목 자리의 고르개가 그 값을 쓰므로 제목 줄까지 안에 두고, 기다리는 동안은 같은 모양의 머리를 그립니다
+    (소식 탭에 있을 때 NewsFallback과 같은 방식 — 제목 자리 회색 칸 28px은 TextTabs "header" 글줄 높이).
+  */
+  return (
+    <Suspense
+      fallback={
+        <>
+          <PageHeader
+            title={<Skeleton className="h-[28px] w-[200px] rounded-lg" />}
+            right={<HeaderActions />}
+          />
+          <div className="px-4 pt-4 pb-24">
+            <Skeleton className="aspect-video rounded-2xl" />
+          </div>
+        </>
+      }
+    >
+      <LibraryTabs />
+    </Suspense>
+  );
+}
+
+function LibraryTabs() {
+  const searchParams = useSearchParams();
+  const [subtab, setSubtab] = useState<Subtab>(() =>
+    searchParams.get("tab") === "news" ? "news" : "videos",
+  );
   /*
    * 파일은 기수마다 따로입니다. 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서
    * 바꿔 봅니다(파일 목록이 같은 값 useViewCohort를 읽습니다). 복습 영상은 모든 기수가 같습니다.
@@ -75,7 +111,7 @@ export default function LibraryPage() {
       */}
       <PageHeader
         title={
-          // 복습 영상은 모든 기수가 같아 기수 고르개는 파일 칸에서만 답니다(2026-09-22 맞바꾸며).
+          // 복습 영상·소식은 모든 기수가 같아 기수 고르개는 파일 칸에서만 답니다(2026-09-22).
           canSwitch && subtab === "files" ? (
             <span className="flex min-w-0 items-center gap-2">
               <TextTabs
@@ -110,7 +146,7 @@ export default function LibraryPage() {
          거기도 고칠 일이 생기면 같은 셈법을 쓰면 됩니다.)
       */}
       <div className="px-4 pt-4 pb-24">
-        {subtab === "videos" ? <VideoList /> : <FileList />}
+        {subtab === "videos" ? <VideoList /> : subtab === "news" ? <NewsList /> : <FileList />}
       </div>
     </>
   );
