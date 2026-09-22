@@ -1,9 +1,17 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
-import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { PlusIcon } from "@/components/icons";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { PlusIcon, XMarkIcon } from "@/components/icons";
 import {
   EmptyState,
   ErrorState,
@@ -11,6 +19,7 @@ import {
   FieldLabel,
   PrimaryButton,
   Skeleton,
+  Spinner,
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -18,7 +27,9 @@ import { inCohort } from "@/lib/cohort";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { viewerUrl } from "@/lib/cloudinary";
+import { isCloudinaryConfigured, uploadImage, viewerUrl } from "@/lib/cloudinary";
+import { resizeImage } from "@/lib/image";
+import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
@@ -32,8 +43,9 @@ const ALBUM_BODY_MAX_LENGTH = 1000;
  *
  * ★ 2026-09-22 사용자 요청: 앨범 격자 대신 **게시물 카드 한 장씩**, 카드가 화면을 꽉 채우고,
  *   왼쪽·오른쪽으로 밀어 **책장 넘기듯** 넘겨 봅니다. 아래 AlbumBook.
- *   (앨범 = 게시물 한 개입니다. 데이터는 그대로 photoAlbums. 카드를 눌러 앨범 화면을 여는 길은 같은 날 없앴고,
- *    앨범 화면은 이제 "소식 올리기" 직후 사진을 붙일 때만 열립니다.)
+ *   (앨범 = 게시물 한 개입니다. 데이터는 그대로 photoAlbums. 같은 날 사용자 요청으로 앨범 화면(/albums/…)으로
+ *    가는 길을 모두 없앴습니다 — 사진은 "소식 올리기" 창에서 고르고, 고치기·지우기는 카드의 ⋯ 에서 합니다.
+ *    앨범 화면 파일은 옛 주소로 들어오는 경우를 위해 남아 있습니다.)
  *
  * (같은 날 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다. 자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
  */
@@ -93,7 +105,7 @@ export default function AlbumList() {
         소식 올리기
       </button>
 
-      {creating ? <AlbumCreateSheet onClose={() => setCreating(false)} /> : null}
+      {creating ? <AlbumSheet onClose={() => setCreating(false)} /> : null}
     </>
   );
 }
@@ -185,8 +197,14 @@ function AlbumBook({
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
   authors: Map<string, UserDoc>;
 }) {
+  const { user, isAdmin } = useAuth();
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
+  /** ⋯ 를 눌러 고르기 시트를 연 소식 / 고치기 창을 연 소식 */
+  const [managing, setManaging] = useState<PhotoAlbumDoc | null>(null);
+  const [editing, setEditing] = useState<PhotoAlbumDoc | null>(null);
+  /** 올린 원우와 운영진만 ⋯ (고치기·지우기)가 보입니다. */
+  const canManage = (album: PhotoAlbumDoc) => album.createdBy === user?.uid || isAdmin;
   const drag = useRef<{ x: number; y: number; time: number; width: number; moved: boolean } | null>(
     null,
   );
@@ -308,7 +326,14 @@ function AlbumBook({
                 className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
               />
             ) : null}
-            <AlbumCard album={under} author={authors.get(under.createdBy)} position={albums.indexOf(under) + 1} total={albums.length} />
+            <AlbumCard
+              album={under}
+              author={authors.get(under.createdBy)}
+              position={albums.indexOf(under) + 1}
+              total={albums.length}
+              // 넘기는 중이 아닐 때 보이는 장(= 밑장)에만 ⋯ 를 답니다.
+              onMore={!page && canManage(under) ? () => setManaging(under) : undefined}
+            />
             {/* 밑장의 그늘 — 위 장이 덮고 있을수록 짙고, 넘어갈수록 걷힙니다. */}
             {page ? (
               <div
@@ -335,6 +360,18 @@ function AlbumBook({
           </div>
         ) : null}
       </div>
+
+      {managing ? (
+        <AlbumManageSheet
+          album={managing}
+          onClose={() => setManaging(null)}
+          onEdit={() => {
+            setEditing(managing);
+            setManaging(null);
+          }}
+        />
+      ) : null}
+      {editing ? <AlbumSheet album={editing} onClose={() => setEditing(null)} /> : null}
     </BookFrame>
   );
 }
@@ -356,12 +393,15 @@ function AlbumCard({
   author,
   position,
   total,
+  onMore,
 }: {
   album: PhotoAlbumDoc;
   /** 올린 원우(명단에서 찾은 것). 없으면 앨범에 적힌 이름만 씁니다. */
   author: UserDoc | undefined;
   position: number;
   total: number;
+  /** ⋯ 를 눌렀을 때. 없으면(고칠 권한이 없거나 넘기는 중인 장) ⋯ 를 그리지 않습니다. */
+  onMore?: () => void;
 }) {
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
   const body = album.body?.trim();
@@ -392,13 +432,29 @@ function AlbumCard({
             seed={album.createdBy}
             size={36}
           />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-[14px] font-bold text-ink">{authorName}</p>
             <p className="text-[12px] text-ink-faint">
               {date}
               {date ? " · " : ""}사진 {album.photoCount}장
             </p>
           </div>
+          {/*
+            ⋯ — 고치기·지우기 (2026-09-22 사용자 요청). 올린 원우와 운영진에게만 보입니다.
+            ★ onPointerDown에서 멈추는 이유: 카드 틀이 넘기기 손짓을 받으려고 누르는 순간 포인터를 붙잡습니다
+              (setPointerCapture). 그러면 손을 뗀 곳이 틀로 바뀌어 이 단추의 click이 안 일어납니다.
+          */}
+          {onMore ? (
+            <button
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={onMore}
+              aria-label={`${album.title} 고치기·지우기`}
+              className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[17px]! leading-none font-bold text-ink-muted transition active:bg-fill"
+            >
+              ⋯
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -449,25 +505,66 @@ function AlbumCard({
   );
 }
 
+/** 고른 사진 한 장 — 미리보기 주소는 고를 때 한 번 만들고, 창을 닫을 때 돌려줍니다. */
+type PickedPhoto = { file: File; preview: string };
+
 /**
- * 새 소식(앨범)을 올리는 바텀시트 — 제목·날짜·본문(선택).
- * 사진은 "올리기"를 누르면 곧바로 열리는 앨범 화면에서 붙입니다. 첫 사진이 카드의 대표 사진이 됩니다.
- * (2026-09-22 "소식 올리기"로 이름을 바꾸며 본문 칸을 더하고, "행사 이름/행사 날짜"를 "제목/날짜"로 줄였습니다.)
+ * 소식 올리기 / 고치기 바텀시트 (2026-09-22).
+ *
+ * - 새로 올릴 때(album 없음): 사진 · 제목 · 날짜 · 본문(선택). "올리기"를 누르면 사진을 Cloudinary에 올린 뒤
+ *   소식(photoAlbums 문서)과 사진 목록(photos 하위 문서)을 한 번에 적습니다. 첫 사진이 카드의 대표 사진입니다.
+ * - 고칠 때(album 있음): 제목 · 날짜 · 본문만. 사진은 바꾸지 않습니다.
+ *
+ * ★ 사진 고르기를 이 창으로 옮겼습니다 (2026-09-22 사용자 요청).
+ *   예전엔 올린 뒤 앨범 화면(/albums/…)이 열려 거기서 사진을 붙였는데, 카드를 눌러 여는 앨범 화면을
+ *   사용자 요청으로 없애면서 사진도 여기서 고릅니다. 사진은 긴 변 PHOTO_MAX_DIMENSION으로 줄여 올립니다
+ *   (앨범 화면의 "원본 그대로" 토글은 옮기지 않았습니다).
  */
-function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
+function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => void }) {
   const { user, profile } = useAuth();
-  const router = useRouter();
-  /** 새 앨범이 올라갈 기수 — 운영진이 제목 옆에서 고른 기수입니다. */
+  /** 새 소식이 올라갈 기수 — 운영진이 제목 옆에서 고른 기수입니다. */
   const { cohort } = useViewCohort();
-  const [title, setTitle] = useState("");
-  const [eventDate, setEventDate] = useState(todayString());
-  const [body, setBody] = useState("");
+  const editing = Boolean(album);
+  const [title, setTitle] = useState(album?.title ?? "");
+  const [eventDate, setEventDate] = useState(album?.eventDate || todayString());
+  const [body, setBody] = useState(album?.body ?? "");
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  /** 사진 올리는 중이면 몇 장째인지 */
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+
+  // 창이 닫힐 때 미리보기 주소를 돌려줍니다(브라우저 메모리). 상태는 건드리지 않습니다.
+  const previews = useRef<string[]>([]);
+  useEffect(() => {
+    const held = previews.current;
+    return () => held.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
+
+  function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    // 같은 사진을 다시 골라도 change가 일어나게 비웁니다.
+    event.target.value = "";
+    const picked = files.map((file) => {
+      const preview = URL.createObjectURL(file);
+      previews.current.push(preview);
+      return { file, preview };
+    });
+    setPhotos((previous) => [...previous, ...picked]);
+    setError(null);
+  }
+
+  function removePhoto(preview: string) {
+    setPhotos((previous) => previous.filter((photo) => photo.preview !== preview));
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || saving) return;
+    if (!editing && photos.length === 0) {
+      setError("사진을 한 장 이상 골라 주세요.");
+      return;
+    }
     if (!title.trim()) {
       setError("제목을 입력해 주세요.");
       return;
@@ -479,46 +576,140 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
 
     setSaving(true);
     setError(null);
-    // 응답을 잠깐만 기다리고 창을 닫습니다 — 이유는 lib/firestore-commit.ts에.
     try {
+      if (album) {
+        // 응답을 잠깐만 기다리고 창을 닫습니다 — 이유는 lib/firestore-commit.ts에.
+        await commitWrite(
+          updateDoc(doc(db, "photoAlbums", album.id), {
+            title: title.trim(),
+            eventDate,
+            body: body.trim(),
+          }),
+        );
+        onClose();
+        return;
+      }
+
+      // 1) 사진을 한 장씩 줄여서 Cloudinary에 올립니다. 한 장이라도 실패하면 소식은 적지 않고 멈춥니다.
+      const uploaded = [];
+      for (const [position, photo] of photos.entries()) {
+        setProgress({ done: position, total: photos.length });
+        const payload = await resizeImage(photo.file, PHOTO_MAX_DIMENSION);
+        uploaded.push(await uploadImage(payload, photo.file.name));
+      }
+      setProgress({ done: photos.length, total: photos.length });
+
+      // 2) 소식 문서와 사진 목록을 한 번에 적습니다.
       const created = doc(collection(db, "photoAlbums"));
-      await commitWrite(
+      await commitWrite([
         setDoc(created, {
           title: title.trim(),
           eventDate,
           body: body.trim(),
-          coverImageUrl: null,
-          photoCount: 0,
+          coverImageUrl: uploaded[0].url,
+          photoCount: uploaded.length,
           cohort,
           createdBy: user.uid,
           // 카드에 "누가 올렸는지"를 적으려고 이름도 함께 남깁니다(2026-09-22). 카드는 원우수첩의 지금 이름을 먼저 씁니다.
           createdByName: profile?.name || "원우",
           createdAt: serverTimestamp(),
         }),
-      );
+        ...uploaded.map((image) =>
+          addDoc(collection(db, "photoAlbums", created.id, "photos"), {
+            imageUrl: image.url,
+            publicId: image.publicId,
+            width: image.width,
+            height: image.height,
+            caption: "",
+            uploadedBy: user.uid,
+            // 칸 이름은 옛 그대로 uploadedByNickname이지만 본명을 적습니다(앨범 화면과 같음).
+            uploadedByNickname: profile?.name || "원우",
+            uploadedAt: serverTimestamp(),
+            likes: [],
+          }),
+        ),
+      ]);
       onClose();
-      // 곧바로 그 앨범 화면으로 가서 사진을 붙이게 합니다 — "소식 올리기"를 눌렀는데 사진 없는 카드만 남지 않게.
-      router.push(`/albums/${created.id}`);
     } catch (caught) {
-      setError(saveErrorMessage(caught, "소식을 올리지 못했어요."));
+      setError(
+        saveErrorMessage(caught, editing ? "소식을 고치지 못했어요." : "소식을 올리지 못했어요."),
+      );
       setSaving(false);
+      setProgress(null);
     }
   }
+
+  const heading = editing ? "소식 고치기" : "소식 올리기";
 
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
       aria-modal="true"
-      aria-label="소식 올리기"
-      onClick={onClose}
+      aria-label={heading}
+      onClick={saving ? undefined : onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
         className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
       >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">소식 올리기</h2>
+        <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
+
+        {/*
+          사진 — 새로 올릴 때만. 고른 사진은 가로로 줄지어 미리 보이고, 오른쪽 위 ×로 뺄 수 있습니다.
+          맨 앞 사진이 카드의 대표 사진이 된다고 알려 줍니다. 맨 끝 "+" 칸으로 더 고릅니다.
+        */}
+        {editing ? null : (
+          <div className="mb-5">
+            <FieldLabel hint={photos.length ? `${photos.length}장 · 첫 사진이 대표` : undefined}>
+              사진
+            </FieldLabel>
+            {!isCloudinaryConfigured ? (
+              <p className="rounded-2xl bg-brand-50 px-4 py-3 text-[13px] leading-relaxed text-brand-500">
+                사진 보관소(Cloudinary) 설정이 아직 안 되어 있어요. 운영진에게 알려주세요.
+              </p>
+            ) : (
+              <div className="no-scrollbar -mx-6 flex gap-2 overflow-x-auto px-6">
+                {photos.map((photo, position) => (
+                  <div key={photo.preview} className="relative h-24 w-24 shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.preview}
+                      alt={`고른 사진 ${position + 1}`}
+                      className="h-full w-full rounded-2xl object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(photo.preview)}
+                      disabled={saving}
+                      aria-label={`사진 ${position + 1} 빼기`}
+                      className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                <label
+                  className={`flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line bg-surface text-ink-muted ${
+                    saving ? "opacity-50" : ""
+                  }`}
+                >
+                  <PlusIcon className="h-6 w-6" />
+                  <span className="text-[12px] font-bold">사진 고르기</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={saving}
+                    onChange={handlePick}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-5">
           <FieldLabel htmlFor="album-title">제목</FieldLabel>
@@ -575,21 +766,116 @@ function AlbumCreateSheet({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
+            disabled={saving}
             /*
               shrink-0과 whitespace-nowrap이 꼭 필요합니다.
               옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
               0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
             */
-            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted disabled:opacity-50"
           >
             취소
           </button>
           {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
           <PrimaryButton type="submit" loading={saving} size="sm">
-            올리기
+            {progress && progress.done < progress.total
+              ? `사진 올리는 중 ${progress.done + 1}/${progress.total}`
+              : editing
+                ? "저장"
+                : "올리기"}
           </PrimaryButton>
         </div>
       </form>
+    </div>
+  );
+}
+
+/**
+ * 카드의 ⋯ 를 누르면 뜨는 고르기 시트 — 고치기 / 지우기 / 취소 (2026-09-22 사용자 요청).
+ * 올린 원우와 운영진에게만 ⋯ 가 보입니다(AlbumCard). 모양은 설정의 로그아웃 확인 시트와 같은 결입니다.
+ *
+ * 지우기는 사진 목록(photos 하위 문서)을 먼저 지우고 소식을 지웁니다 — 앨범 화면의 "앨범 지우기"와 같은 순서.
+ * Cloudinary의 사진 실물은 남습니다(서명 없는 업로드라 앱에서 못 지움 — 자료 탭 파일과 같음).
+ */
+function AlbumManageSheet({
+  album,
+  onEdit,
+  onClose,
+}: {
+  album: PhotoAlbumDoc;
+  onEdit: () => void;
+  onClose: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (!window.confirm(`"${album.title}" 소식을 지울까요?\n사진도 함께 사라지고 되돌릴 수 없어요.`)) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const photos = await getDocs(collection(db, "photoAlbums", album.id, "photos"));
+      await commitWrite([
+        ...photos.docs.map((photo) => deleteDoc(photo.ref)),
+        deleteDoc(doc(db, "photoAlbums", album.id)),
+      ]);
+      onClose();
+    } catch (caught) {
+      setError(saveErrorMessage(caught, "소식을 지우지 못했어요."));
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="소식 고치기·지우기"
+      onClick={deleting ? undefined : onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+      >
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+        <p className="mt-5 truncate text-[15px] font-bold text-ink-muted">{album.title}</p>
+
+        <div className="mt-4 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            disabled={deleting}
+            className="w-full rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-ink disabled:opacity-50"
+          >
+            고치기
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-danger disabled:opacity-50"
+          >
+            {deleting ? <Spinner className="h-5 w-5" /> : null}
+            지우기
+          </button>
+        </div>
+
+        {error ? (
+          <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
+            {error}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={deleting}
+          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        >
+          취소
+        </button>
+      </div>
     </div>
   );
 }
