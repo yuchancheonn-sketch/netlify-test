@@ -145,6 +145,19 @@ export interface AcademyEventDoc {
   link: string;
 }
 
+/**
+ * committeeInfo/{위원회 이름} — 위원회 카드 뒷면의 소개 글 (2026-09-23).
+ * 운영진만 고칩니다(firestore.rules). 아직 안 적은 위원회는 문서가 없습니다.
+ */
+export interface CommitteeInfoDoc {
+  id: string;
+  /** 무슨 일을 하는 위원회인지 */
+  about?: string;
+  /** 준비 중인 일·프로젝트 */
+  projects?: string;
+  updatedAt?: Timestamp | null;
+}
+
 /** photoAlbums/{albumId} — 행사 단위로 사진을 묶는 앨범 */
 export interface PhotoAlbumDoc {
   id: string;

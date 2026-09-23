@@ -1,3 +1,14 @@
+"use client";
+
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { FieldError, FieldLabel, PrimaryButton, flatInputClassName } from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
+import { db } from "@/lib/firebase";
+import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
+import { useCommitteeInfo } from "@/lib/hooks";
+
 /**
  * 위원회별 인원 구성 — 소식 탭 "위원회" 칸의 카드들 (2026-09-23 사용자 요청).
  *
@@ -139,13 +150,191 @@ function CommitteeCard({ committee }: { committee: Committee }) {
 }
 
 /**
- * 위원회 7개 카드 — 소식 탭 위원회 칸에서 조직도 카드 뒤로 한 장씩 넘겨 봅니다(2026-09-23 사용자 요청).
- * AlbumList의 넘기는 카드 한 장(Slide) 모양으로 돌려줍니다.
+ * 카드 뒷면 — 이 위원회가 하는 일과 준비 중인 일 (2026-09-23 사용자 요청
+ * "터치하면 뒤집히고, 뒷면에 무슨 일을 하는지·어떤 프로젝트를 준비 중인지 쓰고 수정할 수 있게").
+ *
+ * 글은 Firestore committeeInfo/{위원회 이름}에 있습니다. 원우 누구나 읽고, 고치는 것은 운영진만입니다
+ * (공식 안내라 아무나 바꾸면 안 됩니다 — firestore.rules).
+ * 크기는 앞면과 같고(부모가 absolute inset-0), 글이 길면 이 안에서 위아래로 굴려 읽습니다.
  */
-export function committeeSlides(): { id: string; title: string; node: React.ReactNode }[] {
+function CommitteeCardBack({ committee }: { committee: Committee }) {
+  const { isAdmin } = useAuth();
+  const { data } = useCommitteeInfo();
+  const info = data.get(committee.name);
+  const [editing, setEditing] = useState(false);
+
+  const sections = [
+    { label: "하는 일", value: info?.about?.trim() ?? "" },
+    { label: "준비 중인 일", value: info?.projects?.trim() ?? "" },
+  ];
+
+  return (
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <h3 className="min-w-0 truncate text-[17px] font-bold text-ink">{committee.name}</h3>
+        {/*
+          운영진에게만 "수정". 누르는 순간 카드 틀이 포인터를 붙잡지 않도록 onPointerDown을 멈춥니다
+          (소식 카드의 ⋯ 와 같은 까닭 — AlbumCard 주석 참고).
+        */}
+        {isAdmin ? (
+          <button
+            type="button"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setEditing(true)}
+            className="shrink-0 rounded-full bg-fill px-3 py-1.5 text-[12px]! font-bold text-ink-soft"
+          >
+            수정
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex flex-col gap-3">
+          {sections.map((section) => (
+            <section key={section.label}>
+              <p className="text-[11px] font-bold text-brand-500">{section.label}</p>
+              {section.value ? (
+                <p className="mt-1 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink">
+                  {section.value}
+                </p>
+              ) : (
+                <p className="mt-1 text-[13px] text-ink-faint">
+                  {isAdmin ? "아직 안 적었어요. 위 '수정'에서 적어 주세요." : "아직 안 적었어요."}
+                </p>
+              )}
+            </section>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-2 shrink-0 text-center text-[12px] text-ink-faint">다시 누르면 앞면으로</p>
+
+      {editing ? (
+        <CommitteeEditSheet
+          committee={committee}
+          initial={{ about: info?.about ?? "", projects: info?.projects ?? "" }}
+          onClose={() => setEditing(false)}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+/**
+ * 위원회 소개 글 고치기 창 (운영진만).
+ * ★ document.body에 붙입니다(createPortal) — 카드가 뒤집히려고 3D 변형을 쓰고 있어서,
+ *   그 안에 두면 이 창이 카드와 함께 돌아가고 자리도 카드 기준으로 잡힙니다.
+ */
+function CommitteeEditSheet({
+  committee,
+  initial,
+  onClose,
+}: {
+  committee: Committee;
+  initial: { about: string; projects: string };
+  onClose: () => void;
+}) {
+  const [about, setAbout] = useState(initial.about);
+  const [projects, setProjects] = useState(initial.projects);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      // 응답을 잠깐만 기다리고 닫습니다 — 이유는 lib/firestore-commit.ts에.
+      await commitWrite(
+        setDoc(
+          doc(db, "committeeInfo", committee.name),
+          { about: about.trim(), projects: projects.trim(), updatedAt: serverTimestamp() },
+          { merge: true },
+        ),
+      );
+      onClose();
+    } catch (caught) {
+      setError(saveErrorMessage(caught, "저장하지 못했어요."));
+      setSaving(false);
+    }
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${committee.name} 소개 수정`}
+      onClick={saving ? undefined : onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-surface px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+      >
+        <h2 className="mb-6 text-[20px] font-bold text-ink">{committee.name} 소개</h2>
+
+        <div className="mb-5">
+          <FieldLabel htmlFor="committee-about">하는 일</FieldLabel>
+          <textarea
+            id="committee-about"
+            value={about}
+            onChange={(event) => setAbout(event.target.value.slice(0, INFO_MAX_LENGTH))}
+            rows={4}
+            placeholder="이 위원회가 맡아서 하는 일을 적어 주세요."
+            className={`${flatInputClassName} resize-none leading-relaxed`}
+          />
+        </div>
+
+        <div className="mb-6">
+          <FieldLabel htmlFor="committee-projects">준비 중인 일</FieldLabel>
+          <textarea
+            id="committee-projects"
+            value={projects}
+            onChange={(event) => setProjects(event.target.value.slice(0, INFO_MAX_LENGTH))}
+            rows={4}
+            placeholder="지금 준비하고 있는 행사·프로젝트를 적어 주세요."
+            className={`${flatInputClassName} resize-none leading-relaxed`}
+          />
+        </div>
+
+        {error ? <FieldError>{error}</FieldError> : null}
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)] disabled:opacity-50"
+          >
+            취소
+          </button>
+          <PrimaryButton onClick={save} loading={saving} size="sm">
+            저장
+          </PrimaryButton>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** 소개 글 한 칸의 최대 글자 수 */
+const INFO_MAX_LENGTH = 1000;
+
+/**
+ * 위원회 7개 카드 — 소식 탭 위원회 칸에서 조직도 카드 뒤로 한 장씩 넘겨 봅니다(2026-09-23 사용자 요청).
+ * AlbumList의 넘기는 카드 한 장(Slide) 모양으로 돌려줍니다. back은 눌러서 뒤집었을 때 보이는 면입니다.
+ */
+export function committeeSlides(): {
+  id: string;
+  title: string;
+  node: React.ReactNode;
+  back: React.ReactNode;
+}[] {
   return COMMITTEES.map((committee) => ({
     id: `committee-${committee.name}`,
     title: committee.name,
     node: <CommitteeCard committee={committee} />,
+    back: <CommitteeCardBack committee={committee} />,
   }));
 }

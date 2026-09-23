@@ -25,6 +25,7 @@ import { todayString } from "@/lib/format";
 import type {
   AcademyEventDoc,
   ChatReadDoc,
+  CommitteeInfoDoc,
   ChatRoomDoc,
   EventDoc,
   FileDoc,
@@ -264,6 +265,38 @@ export function useAcademyEvents(): ListState<AcademyEventDoc> {
           error: null,
         }),
       () => setState({ data: [], loading: false, error: "도산아카데미 일정을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
+}
+
+/**
+ * 위원회 소개 글 (2026-09-23) — 소식 탭 위원회 카드의 뒷면.
+ * committeeInfo/{위원회 이름} = { about: 하는 일, projects: 준비 중인 일 }. 운영진만 고칩니다(firestore.rules).
+ * 아직 안 적은 위원회는 문서가 없습니다 — 그때는 빈 값으로 봅니다.
+ */
+export function useCommitteeInfo(): { data: Map<string, CommitteeInfoDoc>; loading: boolean } {
+  const [state, setState] = useState<{ data: Map<string, CommitteeInfoDoc>; loading: boolean }>({
+    data: new Map(),
+    loading: true,
+  });
+
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, "committeeInfo"),
+      (snapshot) =>
+        setState({
+          data: new Map(
+            snapshot.docs.map((document) => [
+              document.id,
+              { id: document.id, ...document.data() } as CommitteeInfoDoc,
+            ]),
+          ),
+          loading: false,
+        }),
+      // 못 읽어도 카드는 그려야 하므로 빈 값으로 둡니다.
+      () => setState({ data: new Map(), loading: false }),
     );
   }, []);
 

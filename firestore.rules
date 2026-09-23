@@ -240,6 +240,15 @@ service cloud.firestore {
       allow read: if isMember();
     }
 
+    /*
+     * 위원회 소개 글 (2026-09-23) — 소식 탭 위원회 카드 뒷면의 "하는 일 · 준비 중인 일".
+     * 원우 누구나 읽고, 고치는 것은 운영진만입니다(공식 안내라 아무나 바꾸면 안 됩니다).
+     */
+    match /committeeInfo/{committeeId} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+
     match /photoAlbums/{albumId} {
       allow read, write: if isMember();
 

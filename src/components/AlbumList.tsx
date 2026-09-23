@@ -241,7 +241,14 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
  * 넘겨 보는 카드 한 장 (2026-09-23) — 소식 카드이거나, 앱에 적어 둔 카드(위원회 조직도·위원회별 인원)입니다.
  * album이 있으면 소식 카드라 눌러서 뒤집고 ⋯로 고칠 수 있고, node면 그 내용만 그립니다.
  */
-type Slide = { id: string; title: string; album?: PhotoAlbumDoc; node?: React.ReactNode };
+type Slide = {
+  id: string;
+  title: string;
+  album?: PhotoAlbumDoc;
+  node?: React.ReactNode;
+  /** 눌러서 뒤집었을 때 보이는 면. 소식 카드는 AlbumCardBack이 대신하고, 위원회 카드는 이것을 씁니다. */
+  back?: React.ReactNode;
+};
 
 function AlbumBook({
   slides,
@@ -322,8 +329,8 @@ function AlbumBook({
      * (그 전엔 누르면 앨범 화면이 열렸다가, 같은 날 사용자 요청으로 아무 일도 없게 했었습니다.)
      */
     if (!start.moved) {
-      // 뒤집히는 것은 소식 카드뿐입니다(위원회 카드는 뒷면이 없습니다).
-      if (start.onCard && slides[current].album) {
+      // 뒷면이 있는 카드만 뒤집힙니다 — 소식 카드(AlbumCardBack)와 위원회 카드(back). 조직도 카드는 뒷면이 없습니다.
+      if (start.onCard && (slides[current].album || slides[current].back)) {
         const id = slides[current].id;
         setFlippedId((flipped) => (flipped === id ? null : id));
       }
@@ -504,13 +511,17 @@ function AlbumBook({
                       </div>
                     )}
                   </div>
-                  {album ? (
+                  {album || slide.back ? (
                     <div
                       className="absolute inset-0 [backface-visibility:hidden]"
                       style={{ transform: "rotateY(180deg)" }}
                       aria-hidden={!flipped}
                     >
-                      <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
+                      {album ? (
+                        <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
+                      ) : (
+                        slide.back
+                      )}
                     </div>
                   ) : null}
                 </div>
