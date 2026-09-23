@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { PrimaryButton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { calendarSubscribeLinks } from "@/lib/calendar-client";
+import { calendarSubscribeLinks, markCalendarLinked } from "@/lib/calendar-client";
 import { enablePush, rememberPushAsked } from "@/lib/push";
 import { refreshPushState, useShouldAskPush } from "@/lib/use-push";
 
@@ -105,6 +105,8 @@ export default function FirstRunSetupPrompt() {
   function openCalendar(kind: "webcal" | "google") {
     if (!links) return;
     setCalendarOpened(true);
+    // 홈 캘린더의 "내 폰 캘린더에 연결" 단추를 감춥니다 — 여기서 이미 연결했으니까요 (2026-09-23).
+    markCalendarLinked();
     if (kind === "webcal") window.location.assign(links.webcal);
     else window.open(links.google, "_blank", "noopener");
   }

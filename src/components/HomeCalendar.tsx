@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { Spinner } from "@/components/ui";
 import { inCohort } from "@/lib/cohort";
-import { calendarSubscribeLinks, requestAcademySync } from "@/lib/calendar-client";
+import {
+  calendarSubscribeLinks,
+  isCalendarLinked,
+  markCalendarLinked,
+  requestAcademySync,
+  subscribeCalendarLinked,
+} from "@/lib/calendar-client";
 import { formatTime, todayString } from "@/lib/format";
 import { useAcademyEvents, useEvents } from "@/lib/hooks";
 
@@ -49,6 +55,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   const [view, setView] = useState({ year: todayYear, month: todayMonth - 1 });
   const [selected, setSelected] = useState(today);
   const [linking, setLinking] = useState(false);
+  /* 이 기기에서 이미 폰 캘린더에 연결했는지. 서버 그림에서는 "연결함"으로 두어 단추가 깜빡이지 않게 합니다. */
+  const linked = useSyncExternalStore(subscribeCalendarLinked, isCalendarLinked, () => true);
 
   const events = useEvents();
   const academy = useAcademyEvents();
@@ -255,14 +263,19 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         )}
       </div>
 
-      {/* 폰 캘린더 연동 */}
-      <button
-        type="button"
-        onClick={() => setLinking(true)}
-        className="mt-2 w-full rounded-2xl py-2.5 text-[14px] font-bold text-brand-500 transition active:bg-fill"
-      >
-        내 폰 캘린더에 연결
-      </button>
+      {/*
+        폰 캘린더 연동 — 이 기기에서 한 번 연결했으면 감춥니다 (2026-09-23 사용자 요청).
+        폰이 실제로 구독을 마쳤는지는 알 수 없어, "연결 단추를 눌러 캘린더 앱으로 넘어갔는지"로 봅니다(lib/calendar-client.ts).
+      */}
+      {linked ? null : (
+        <button
+          type="button"
+          onClick={() => setLinking(true)}
+          className="mt-2 w-full rounded-2xl py-2.5 text-[14px] font-bold text-brand-500 transition active:bg-fill"
+        >
+          내 폰 캘린더에 연결
+        </button>
+      )}
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
     </section>
@@ -274,10 +287,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
  * 한 번 구독하면 앱의 일정이 폰 캘린더에 저절로 들어오고 바뀌면 따라 바뀝니다(폰이 몇 시간마다 다시 읽음).
  */
 function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
-  const [links, setLinks] = useState<{ webcal: string; google: string; https: string } | null>(null);
+  const [links, setLinks] = useState<{ webcal: string; google: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   async function load() {
     if (links || loading) return links;
@@ -298,19 +310,10 @@ function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
   async function open(kind: "webcal" | "google") {
     const next = await load();
     if (!next) return;
+    // 캘린더 앱으로 넘어가면 이 기기는 "연결함"으로 적어 둡니다 — 다음부터 연결 단추를 감춥니다(2026-09-23).
+    markCalendarLinked();
     if (kind === "webcal") window.location.assign(next.webcal);
     else window.open(next.google, "_blank", "noopener");
-  }
-
-  async function copy() {
-    const next = await load();
-    if (!next) return;
-    try {
-      await navigator.clipboard.writeText(next.https);
-      setCopied(true);
-    } catch {
-      setError("복사하지 못했어요.");
-    }
   }
 
   return (
@@ -351,14 +354,7 @@ function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
           >
             구글 캘린더 (안드로이드)
           </button>
-          <button
-            type="button"
-            onClick={() => void copy()}
-            disabled={loading}
-            className="w-full py-2 text-[14px] font-bold text-ink-muted disabled:opacity-50"
-          >
-            {copied ? "주소를 복사했어요" : "구독 주소 복사하기"}
-          </button>
+          {/* "구독 주소 복사하기"는 뺐습니다 (2026-09-23 사용자 요청). */}
         </div>
 
         {error ? (
