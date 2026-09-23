@@ -189,8 +189,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                 오늘을 고른 때(화면을 열면 그렇습니다)는 주황이 이깁니다 — "오늘"이라는 표시가 사라지지 않게.
                 (예전엔 고른 날이 주황 동그라미, 오늘은 동그라미 없이 주황 글씨였습니다.)
               */}
+              {/* 날짜 글씨 15px·medium (2026-09-23 사용자 "숫자 사이즈·굵기 좀만 더 키워줘" — 14px·보통에서). */}
               <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-[14px] tabular-nums ${
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-medium tabular-nums ${
                   isToday
                     ? "bg-brand-500 font-bold text-white"
                     : isSelected
