@@ -169,14 +169,25 @@ function heightSnapshot(): number {
  * 틀의 위 끝(제목 줄 높이 + 본문 pt-4)은 화면마다·폰마다 달라서 그려진 뒤에 한 번 잽니다(ref 콜백).
  * 재기 전 첫 그림에서는 넉넉히 70dvh로 둡니다.
  */
-function BookFrame({ children }: { children: React.ReactNode }) {
+function BookFrame({
+  children,
+  minHeightPx = 0,
+}: {
+  children: React.ReactNode;
+  /**
+   * 이 높이보다는 낮아지지 않습니다 — 위원회 칸에서 카드가 화면보다 길 때 그만큼 늘리는 데 씁니다 (2026-09-23).
+   * 카드가 짧으면 틀은 화면 크기 그대로여서 카드가 화면 한가운데에 섭니다(사용자 "카드가 화면 정가운데에").
+   */
+  minHeightPx?: number;
+}) {
   const viewport = useSyncExternalStore(subscribeHeight, heightSnapshot, () => 0);
   const [top, setTop] = useState<number | null>(null);
 
-  const height =
+  const screenHeight =
     viewport && top !== null
       ? `calc(${Math.max(320, viewport - top)}px - 157px - env(safe-area-inset-bottom))`
       : "70dvh";
+  const height = minHeightPx > 0 ? `max(${screenHeight}, ${minHeightPx}px)` : screenHeight;
 
   return (
     <div
@@ -661,28 +672,12 @@ function AlbumBook({
   );
 
   /*
-   * fit(위원회) — 카드 길이 + 순번 줄 40px만큼만 자리를 차지합니다. 카드가 화면보다 길면 탭을 굴려 읽습니다.
-   *   높이에 transition을 걸어, 길이가 다른 카드로 넘어갈 때 자리도 부드럽게 바뀝니다.
-   *   재기 전(cardHeight 0)에는 높이를 두지 않습니다 — 카드는 절대 자리라 그려지고, 곧 높이가 잡힙니다.
-   * 아니면(원우 소식) 예전처럼 화면에 딱 맞는 틀 안에 섭니다.
+   * 틀 — 기본은 화면에 딱 맞는 크기라 카드가 화면 한가운데에 섭니다(2026-09-23 사용자 "카드가 화면 정가운데에").
+   * fit(위원회)일 때는 카드가 화면보다 길면 그 길이(+순번 줄 40px)만큼 틀이 늘어나, 카드 안이 아니라
+   * 탭 전체를 굴려 읽습니다. 짧은 카드는 화면 크기 그대로라 가운데에 섭니다.
    */
-  if (fit) {
-    return (
-      <div
-        className="relative"
-        style={{
-          height: cardHeight ? cardHeight + 40 : undefined,
-          transition: `height ${TURN_MS}ms ${TURN_EASE}`,
-        }}
-      >
-        {deck}
-        {sheets}
-      </div>
-    );
-  }
-
   return (
-    <BookFrame>
+    <BookFrame minHeightPx={fit && cardHeight ? cardHeight + 40 : 0}>
       {deck}
       {sheets}
     </BookFrame>
