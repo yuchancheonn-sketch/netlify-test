@@ -11,6 +11,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import CommitteeOrgChart from "@/components/CommitteeOrgChart";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -72,6 +73,21 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
   const members = useCohortMembers(cohort);
   const authors = new Map(members.data.map((member) => [member.uid, member]));
 
+  /*
+   * 위원회 칸 (2026-09-23) — 맨 위에 총괄 임원진 조직도 카드가 늘 서고, 그 아래로 올라온 소식 카드가 섭니다.
+   * 조직도는 앱 안에 적어 둔 카드라(components/CommitteeOrgChart.tsx) 불러오기를 기다리지 않습니다.
+   */
+  if (!canAdd) {
+    return (
+      <div className="flex flex-col gap-[14px] pb-6">
+        <CommitteeOrgChart />
+        {!loading && !error && albums.length > 0 ? (
+          <AlbumBook albums={albums} authors={authors} />
+        ) : null}
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <BookFrame>
@@ -88,8 +104,8 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
-            title={canAdd ? "아직 올라온 소식이 없어요" : "아직 올라온 위원회 소식이 없어요"}
-            description={canAdd ? "아래 '소식 올리기'로 첫 소식을 올려 보세요." : undefined}
+            title="아직 올라온 소식이 없어요"
+            description="아래 '소식 올리기'로 첫 소식을 올려 보세요."
           />
         </div>
       ) : (
