@@ -238,16 +238,16 @@ export default function TextTabs<T extends string>({
                     underline
                       ? /*
                           ★ 여러 칸일 때 첫 칸은 오른쪽으로, 끝 칸은 왼쪽으로 3px 당깁니다
-                            (2026-09-23 사용자 "전체는 오른쪽으로 3px, 대학생 원우는 왼쪽으로 3px").
+                            (2026-09-23 "전체는 오른쪽으로 3px, 대학생 원우는 왼쪽으로 3px" → 2026-09-24 "더" 요청으로 6px씩).
                             글씨와 주황 바가 함께 움직이도록 칸이 아니라 이 글씨 span을 옮깁니다.
                         */
                         `relative leading-tight whitespace-nowrap ${textClass} ${
                           active ? "font-bold" : "font-medium"
                         } ${
                           stretch && index === 0
-                            ? "translate-x-[3px]"
+                            ? "translate-x-[6px]"
                             : stretch && index === items.length - 1
-                              ? "-translate-x-[3px]"
+                              ? "-translate-x-[6px]"
                               : ""
                         }`
                       : `leading-tight font-bold ${textClass}`
