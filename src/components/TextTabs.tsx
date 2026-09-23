@@ -259,8 +259,8 @@ export default function TextTabs<T extends string>({
                     주황 바. 줄 아래 회색 구분선(위 span의 border-b) 위에 겹쳐 깔려,
                     그림처럼 둘이 한 줄에 붙어 보입니다.
 
-                    ★ 길이는 글씨 폭 그대로입니다 (2026-09-23 사용자 요청 — "전체 52명"·"일반 원우"·
-                      "대학생 원우" 글씨 길이에 맞춰). 예전엔 칸 폭을 꽉 채웠습니다.
+                    ★ 길이는 글씨 폭 + 양옆 8px씩입니다 (2026-09-23 사용자 요청 두 번 — 먼저 칸 폭에서
+                      글씨 폭으로 줄였고, 그다음 "조금 늘려줘"로 8px씩 넓혔습니다).
                       그래서 바가 <button>이 아니라 이 글씨 <span> 안에 있습니다(inset-x-0이 글씨 폭).
                     ★ bottom-[-12px] = 버튼 아래 여백 pb-[11px] + 구분선에 겹치는 1px.
                       pb 값을 바꾸면 이 값도 같이 바꿔야 바가 구분선 위에 그대로 앉습니다.
@@ -272,7 +272,8 @@ export default function TextTabs<T extends string>({
                   {underline && active ? (
                     <span
                       aria-hidden
-                      className="absolute inset-x-0 bottom-[-12px] h-[2.5px] rounded-full bg-brand-500"
+                      // -inset-x-2 — 글씨보다 양옆 8px씩 더 깁니다 (2026-09-23 사용자 "바 길이 늘려줘"; 예전엔 글씨 폭 그대로).
+                      className="absolute -inset-x-2 bottom-[-12px] h-[2.5px] rounded-full bg-brand-500"
                     />
                   ) : null}
                 </span>
