@@ -35,15 +35,30 @@ import type { EventDoc } from "@/lib/types";
  * ★ 둘째 줄은 시작 시간만 적습니다. "오후 6:30 ~ 오후 10:30"까지 넣으면 D-day와
  *   ">" 사이의 좁은 폭에서 장소가 잘려 나갑니다.
  */
-export function EventDdayCard({ event }: { event: EventDoc }) {
+export function EventDdayCard({
+  event,
+  href = "/events",
+  external = false,
+}: {
+  /** 우리 기수 모임(EventDoc)이거나 도산아카데미 일정 — 카드가 쓰는 칸만 받습니다 (2026-09-23). */
+  event: Pick<EventDoc, "title" | "date" | "startTime" | "location">;
+  /** 눌렀을 때 갈 곳. 기본은 모임 목록, 도산아카데미 일정은 원래 글 주소입니다. */
+  href?: string;
+  /** 앱 밖 주소(도산아카데미 글)면 새 창으로 엽니다. */
+  external?: boolean;
+}) {
   const time = event.startTime ? formatTime(event.startTime) : "";
   const date = parseDateString(event.date);
+  const className =
+    "flex items-center gap-3 rounded-3xl bg-brand-500 py-4 pl-5 text-white shadow-[var(--shadow-float)] transition active:opacity-80";
 
-  return (
-    <Link
-      href="/events"
-      className="flex items-center gap-3 rounded-3xl bg-brand-500 py-4 pl-5 text-white shadow-[var(--shadow-float)] transition active:opacity-80"
-    >
+  /*
+   * 속은 한 벌이고 껍데기만 앱 안 링크(Link)와 바깥 링크(<a>)로 갈립니다.
+   * 껍데기를 함수로 만들어 쓰면 그릴 때마다 새 컴포넌트가 되어 리액트가 속을 버리고 다시 만듭니다
+   * (react-hooks/static-components). 그래서 조각(inside)만 만들어 두고 껍데기는 아래에서 직접 씁니다.
+   */
+  const inside = (
+    <>
       <span className="min-w-0 flex-1">
         {/*
           1행 — 이름표. 홈의 "오늘의 도산" 카드 제목(h2, 18px bold)과 같은 크기·굵기입니다
@@ -105,6 +120,16 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
       <span className="flex shrink-0 items-center pr-4 pl-3 text-white/80">
         <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
+    </>
+  );
+
+  return external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {inside}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {inside}
     </Link>
   );
 }
@@ -120,10 +145,14 @@ export function EventDdayCard({ event }: { event: EventDoc }) {
 export function EventListItem({
   event,
   href,
+  external = false,
   children,
 }: {
-  event: EventDoc;
+  /** 우리 기수 모임이거나 도산아카데미 일정 — 이 카드가 쓰는 칸만 받습니다 (2026-09-23). */
+  event: Pick<EventDoc, "title" | "date" | "startTime" | "endTime" | "location">;
   href?: string;
+  /** 앱 밖 주소(도산아카데미 글)면 새 창으로 엽니다. */
+  external?: boolean;
   children?: ReactNode;
 }) {
   const date = parseDateString(event.date);
@@ -180,13 +209,20 @@ export function EventListItem({
   if (href) {
     // href를 넘기는 곳은 홈뿐이라, 홈 카드들처럼 글로우 없이 헤어라인만 둡니다 (2026-09-23 사용자 요청).
     // 모임 화면(href 없음)은 그대로 --shadow-card입니다.
-    return (
-      <Link
-        href={href}
-        className={`${box.replace("shadow-[var(--shadow-card)]", "shadow-[var(--shadow-card-flat)]")} flex items-center gap-4 transition active:scale-[0.99]`}
-      >
+    const linkClassName = `${box.replace("shadow-[var(--shadow-card)]", "shadow-[var(--shadow-card-flat)]")} flex items-center gap-4 transition active:scale-[0.99]`;
+    const inside = (
+      <>
         {row}
         <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+      </>
+    );
+    return external ? (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
+        {inside}
+      </a>
+    ) : (
+      <Link href={href} className={linkClassName}>
+        {inside}
       </Link>
     );
   }

@@ -13,7 +13,8 @@ import HomeShortcuts from "@/components/HomeShortcuts";
 import HomeCalendar from "@/components/HomeCalendar";
 import { inCohort } from "@/lib/cohort";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
-import { useUpcomingEvents } from "@/lib/hooks";
+import { todayString } from "@/lib/format";
+import { useAcademyEvents, useUpcomingEvents } from "@/lib/hooks";
 import { quoteOfTheDay } from "@/lib/quotes";
 import { useViewCohort } from "@/lib/use-view-cohort";
 
@@ -26,9 +27,26 @@ export default function HomePage() {
    * (오늘의 도산은 모든 기수가 같은 말씀을 봅니다.)
    */
   const { cohort, canSwitch, setCohort } = useViewCohort();
-  const events = upcoming.data.filter((event) => inCohort(event, cohort));
   // 화면을 열 때의 날짜로 정합니다. 날짜가 바뀌면 다음에 열 때 새 말씀이 보입니다.
   const quote = quoteOfTheDay();
+
+  /*
+   * 주요 일정(D-day 카드)과 이후 일정 — 우리 기수 모임과 도산아카데미 일정을 한 줄로 세워
+   * 가장 가까운 것부터 봅니다 (2026-09-23 사용자 요청 "가장 가까운 일정이 자동으로, 하나가 끝나면 그다음").
+   * 오늘 지난 일정은 useUpcomingEvents·아래 today 비교에서 빠지므로, 날이 바뀌면 저절로 다음 일정이 올라옵니다.
+   */
+  const academy = useAcademyEvents();
+  const today = todayString();
+  const events = [
+    ...upcoming.data
+      .filter((event) => inCohort(event, cohort))
+      .map((event) => ({ ...event, key: `e-${event.id}`, href: "/events", external: false })),
+    ...academy.data
+      .filter((event) => event.date >= today)
+      .map((event) => ({ ...event, key: `a-${event.id}`, href: event.link, external: true })),
+  ].sort(
+    (a, b) => a.date.localeCompare(b.date) || (a.startTime || "99:99").localeCompare(b.startTime || "99:99"),
+  );
 
   const [nextEvent, ...laterEvents] = events;
 
@@ -78,11 +96,11 @@ export default function HomePage() {
           (예전의 따로 선 "모임 일정 전체 보기" 상자를 이 카드에 합쳤습니다).
         */}
         <section>
-          {upcoming.loading ? (
+          {upcoming.loading || academy.loading ? (
             /* 세 줄 카드(주요 일정 18px / D-day·날짜·이름 18px / 장소·시간 15px)와 같은 높이 — 위아래 16px + 세 줄 ≈ 109px. */
             <Skeleton className="h-[109px] rounded-3xl" />
           ) : nextEvent ? (
-            <EventDdayCard event={nextEvent} />
+            <EventDdayCard event={nextEvent} href={nextEvent.href} external={nextEvent.external} />
           ) : (
             /*
               모임이 없을 때 — 한 줄짜리 낮은 상자 (2026-09-15 사용자 요청: "박스 높이 훨씬 줄이고,
@@ -155,8 +173,9 @@ export default function HomePage() {
             </SectionTitle>
             <ul className="flex flex-col gap-3">
               {laterEvents.slice(0, 2).map((event) => (
-                <li key={event.id}>
-                  <EventListItem event={event} href="/events" />
+                <li key={event.key}>
+                  {/* 도산아카데미 일정도 함께 섭니다(2026-09-23) — 눌러 가는 곳만 다릅니다. */}
+                  <EventListItem event={event} href={event.href} external={event.external} />
                 </li>
               ))}
             </ul>
