@@ -101,8 +101,22 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   const [, selMonth, selDay] = selected.split("-").map(Number);
   const selWeekday = WEEKDAYS[new Date(`${selected}T00:00:00`).getDay()];
 
+  /*
+   * 캘린더 어디를 눌러도 캘린더가 화면 한가운데로 옵니다 (2026-09-23 사용자 요청).
+   * 날짜를 눌러 아래 일정 줄이 늘어나도 그 줄이 화면 밖에 있지 않게 하려는 것입니다.
+   * 누른 것이 무엇이든(날짜·달 넘기기·일정 줄) 이 칸에서 한 번만 받습니다.
+   * prefers-reduced-motion(움직임 줄이기)을 켠 원우에게는 스르륵 없이 바로 옮깁니다.
+   */
+  function centerSelf(event: React.MouseEvent<HTMLElement>) {
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    event.currentTarget.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+  }
+
   return (
-    <section className="rounded-3xl bg-surface px-4 pt-4 pb-3 shadow-[var(--shadow-card-flat)]">
+    <section
+      onClick={centerSelf}
+      className="rounded-3xl bg-surface px-4 pt-4 pb-3 shadow-[var(--shadow-card-flat)]"
+    >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-[18px] font-bold text-ink tabular-nums">
@@ -199,12 +213,20 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
             {selectedItems.map((item) => {
               const body = (
                 <>
-                  {/* 왼쪽 막대는 둘 다 주황 (2026-09-23 사용자 요청 — 도산아카데미 일정도 같은 색). */}
-                  <span aria-hidden="true" className="mt-1 h-9 w-1 shrink-0 rounded-full bg-brand-500" />
+                  {/*
+                    왼쪽 막대는 둘 다 주황 (2026-09-23 사용자 요청 — 도산아카데미 일정도 같은 색).
+                    self-stretch — 제목이 두세 줄로 늘어나면 막대도 그만큼 길어집니다(예전엔 36px 고정).
+                  */}
+                  <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-brand-500" />
                   <span className="min-w-0 flex-1">
-                    {/* 앞에 붙이던 "도산아카데미" 글자는 뺐습니다(2026-09-23 사용자 요청 — 원우라면 누구나 앎). 왼쪽 회색 막대로 구별됩니다. */}
-                    <span className="block truncate text-[15px] font-bold text-ink">{item.title}</span>
-                    <span className="block truncate text-[13px] text-ink-muted">
+                    {/*
+                      제목은 자르지 않고 줄을 바꿔 끝까지 보여 줍니다 (2026-09-23 사용자 "두 줄이든 세 줄이든 끝까지").
+                      break-keep — 한글은 낱말 단위로 넘깁니다. 긴 영문·주소는 [overflow-wrap:anywhere]로 잘라 넘깁니다.
+                    */}
+                    <span className="block text-[15px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+                      {item.title}
+                    </span>
+                    <span className="mt-0.5 block text-[13px] leading-snug break-keep text-ink-muted">
                       {[item.time, item.location].filter(Boolean).join(" · ") || "시간 미정"}
                     </span>
                   </span>
