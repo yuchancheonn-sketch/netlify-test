@@ -138,13 +138,14 @@ function CommitteeCard({ committee }: { committee: Committee }) {
   );
 }
 
-/** 위원회 7개 카드를 차례로. 소식 탭 위원회 칸에서 조직도 카드 아래에 섭니다. */
-export default function CommitteeRoster() {
-  return (
-    <>
-      {COMMITTEES.map((committee) => (
-        <CommitteeCard key={committee.name} committee={committee} />
-      ))}
-    </>
-  );
+/**
+ * 위원회 7개 카드 — 소식 탭 위원회 칸에서 조직도 카드 뒤로 한 장씩 넘겨 봅니다(2026-09-23 사용자 요청).
+ * AlbumList의 넘기는 카드 한 장(Slide) 모양으로 돌려줍니다.
+ */
+export function committeeSlides(): { id: string; title: string; node: React.ReactNode }[] {
+  return COMMITTEES.map((committee) => ({
+    id: `committee-${committee.name}`,
+    title: committee.name,
+    node: <CommitteeCard committee={committee} />,
+  }));
 }

@@ -12,7 +12,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import CommitteeOrgChart from "@/components/CommitteeOrgChart";
-import CommitteeRoster from "@/components/CommitteeRoster";
+import { committeeSlides } from "@/components/CommitteeRoster";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -78,19 +78,6 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
    * 위원회 칸 (2026-09-23) — 맨 위에 총괄 임원진 조직도 카드가 늘 서고, 그 아래로 올라온 소식 카드가 섭니다.
    * 조직도는 앱 안에 적어 둔 카드라(components/CommitteeOrgChart.tsx) 불러오기를 기다리지 않습니다.
    */
-  if (!canAdd) {
-    return (
-      <div className="flex flex-col gap-[14px] pb-6">
-        <CommitteeOrgChart />
-        {/* 위원회 7개(운영·재정·대외협력·문화홍보·소통화합·봉사·학생) 인원 구성 카드 (2026-09-23) */}
-        <CommitteeRoster />
-        {!loading && !error && albums.length > 0 ? (
-          <AlbumBook albums={albums} authors={authors} />
-        ) : null}
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <BookFrame>
@@ -101,9 +88,22 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
 
   if (error) return <ErrorState message={error} />;
 
+  /*
+   * 위원회 칸 (2026-09-23) — 조직도 → 위원회 7개 → (올라온 소식) 순으로 한 장씩 넘겨 봅니다.
+   * 원우 소식 칸과 넘기는 방식이 똑같습니다(사용자 요청). 앞의 여덟 장은 앱에 적어 둔 카드입니다.
+   */
+  const albumSlides = albums.map((album) => ({ id: album.id, title: album.title, album }));
+  const slides = canAdd
+    ? albumSlides
+    : [
+        { id: "committee-org-chart", title: "총괄 임원진 조직도", node: <CommitteeOrgChart /> },
+        ...committeeSlides(),
+        ...albumSlides,
+      ];
+
   return (
     <>
-      {albums.length === 0 ? (
+      {slides.length === 0 ? (
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
@@ -112,7 +112,7 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
           />
         </div>
       ) : (
-        <AlbumBook albums={albums} authors={authors} />
+        <AlbumBook slides={slides} authors={authors} />
       )}
 
       {/*
@@ -237,11 +237,17 @@ type Turn = { mode: "next" | "prev"; progress: number; settling: boolean };
  *
  * touch-action: pan-y — 세로 손짓은 브라우저에 맡기고 가로 손짓만 우리가 받습니다.
  */
+/**
+ * 넘겨 보는 카드 한 장 (2026-09-23) — 소식 카드이거나, 앱에 적어 둔 카드(위원회 조직도·위원회별 인원)입니다.
+ * album이 있으면 소식 카드라 눌러서 뒤집고 ⋯로 고칠 수 있고, node면 그 내용만 그립니다.
+ */
+type Slide = { id: string; title: string; album?: PhotoAlbumDoc; node?: React.ReactNode };
+
 function AlbumBook({
-  albums,
+  slides,
   authors,
 }: {
-  albums: PhotoAlbumDoc[];
+  slides: Slide[];
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
   authors: Map<string, UserDoc>;
 }) {
@@ -267,9 +273,9 @@ function AlbumBook({
   } | null>(null);
 
   // 기수를 바꾸거나 소식이 지워져 목록이 짧아지면 마지막 장에 섭니다.
-  const current = Math.min(index, albums.length - 1);
+  const current = Math.min(index, slides.length - 1);
   const hasPrev = current > 0;
-  const hasNext = current < albums.length - 1;
+  const hasNext = current < slides.length - 1;
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (turn?.settling) return;
@@ -316,8 +322,9 @@ function AlbumBook({
      * (그 전엔 누르면 앨범 화면이 열렸다가, 같은 날 사용자 요청으로 아무 일도 없게 했었습니다.)
      */
     if (!start.moved) {
-      if (start.onCard) {
-        const id = albums[current].id;
+      // 뒤집히는 것은 소식 카드뿐입니다(위원회 카드는 뒷면이 없습니다).
+      if (start.onCard && slides[current].album) {
+        const id = slides[current].id;
         setFlippedId((flipped) => (flipped === id ? null : id));
       }
       return;
@@ -374,22 +381,22 @@ function AlbumBook({
    * 그릴 카드 — 멈춰 있으면 지금 카드 하나, 넘기는 중이면 뒤에서 올라올 카드(neighbor) + 지금 카드.
    * 뒤 카드를 먼저 그려 지금 카드 밑에 깔립니다.
    */
-  const currentAlbum = albums[current];
+  const currentSlide = slides[current];
   const neighbor = !turn
     ? null
     : turn.mode === "next"
       ? hasNext
-        ? albums[current + 1]
+        ? slides[current + 1]
         : null
       : hasPrev
-        ? albums[current - 1]
+        ? slides[current - 1]
         : null;
   const slots = neighbor
     ? [
-        { album: neighbor, isCurrent: false },
-        { album: currentAlbum, isCurrent: true },
+        { slide: neighbor, isCurrent: false },
+        { slide: currentSlide, isCurrent: true },
       ]
-    : [{ album: currentAlbum, isCurrent: true }];
+    : [{ slide: currentSlide, isCurrent: true }];
   /** 지금 카드가 날아가는 쪽 — 다음이면 왼쪽(-1), 앞이면 오른쪽(+1). */
   const direction = turn?.mode === "next" ? -1 : 1;
   const progress = turn?.progress ?? 0;
@@ -397,7 +404,7 @@ function AlbumBook({
     ? `transform ${TURN_MS}ms ${TURN_EASE}, opacity ${TURN_MS}ms ${TURN_EASE}`
     : "none";
   /** 지금 카드 뒤에 남은 장 수 — 쌓인 종이를 몇 장 깔지(많아도 두 장). 넘기는 중엔 뒤 카드가 보이니 깔지 않습니다. */
-  const behind = turn ? 0 : albums.length - 1 - current;
+  const behind = turn ? 0 : slides.length - 1 - current;
 
   return (
     <BookFrame>
@@ -420,7 +427,7 @@ function AlbumBook({
         }}
         role="group"
         aria-roledescription="넘겨 보는 카드"
-        aria-label={`${current + 1} / ${albums.length} ${currentAlbum.title}`}
+        aria-label={`${current + 1} / ${slides.length} ${currentSlide.title}`}
       >
         {/*
           ★ 카드는 틀의 세로 한가운데에 섭니다(2026-09-22 사용자 요청 "화면 한 가운데") — 바깥 칸이 틀을 채우고
@@ -428,8 +435,9 @@ function AlbumBook({
             좌우는 들이지 않습니다(inset-x-0) — 카드 폭이 홈 흰 박스와 같습니다(2026-09-23 사용자 요청,
             예전엔 inset-x-10으로 40px씩 들여 큰 화살표 자리를 남겼습니다). 사진은 폭에 맞춰 비율대로 커집니다.
         */}
-        {slots.map(({ album, isCurrent }) => {
-          const flipped = isCurrent && flippedId === album.id;
+        {slots.map(({ slide, isCurrent }) => {
+          const album = slide.album;
+          const flipped = isCurrent && flippedId === slide.id;
           const motion = isCurrent
             ? {
                 transform: `translateX(${direction * progress * 112}%) rotate(${direction * progress * 5}deg)`,
@@ -441,7 +449,7 @@ function AlbumBook({
               };
           return (
             <div
-              key={album.id}
+              key={slide.id}
               className="pointer-events-none absolute inset-0 flex flex-col justify-center"
               style={{ zIndex: isCurrent ? 2 : 1 }}
             >
@@ -477,22 +485,39 @@ function AlbumBook({
                   }}
                 >
                   <div className="[backface-visibility:hidden]">
-                    <AlbumCard
-                      album={album}
-                      author={authors.get(album.createdBy)}
-                      // 멈춰 있을 때 지금 카드에만 ⋯ 를 답니다.
-                      onMore={
-                        isCurrent && !turn && canManage(album) ? () => setManaging(album) : undefined
-                      }
-                    />
+                    {album ? (
+                      <AlbumCard
+                        album={album}
+                        author={authors.get(album.createdBy)}
+                        // 멈춰 있을 때 지금 카드에만 ⋯ 를 답니다.
+                        onMore={
+                          isCurrent && !turn && canManage(album)
+                            ? () => setManaging(album)
+                            : undefined
+                        }
+                      />
+                    ) : (
+                      /*
+                        앱에 적어 둔 카드(위원회 조직도·위원회별 인원, 2026-09-23).
+                        틀보다 길면 카드 안에서 위아래로 굴려 읽습니다 — 카드 크기는 소식 카드와 같습니다.
+                      */
+                      <div
+                        className="overflow-y-auto overscroll-contain rounded-[24px]"
+                        style={{ maxHeight: "var(--card-max, var(--frame-h))" }}
+                      >
+                        {slide.node}
+                      </div>
+                    )}
                   </div>
-                  <div
-                    className="absolute inset-0 [backface-visibility:hidden]"
-                    style={{ transform: "rotateY(180deg)" }}
-                    aria-hidden={!flipped}
-                  >
-                    <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
-                  </div>
+                  {album ? (
+                    <div
+                      className="absolute inset-0 [backface-visibility:hidden]"
+                      style={{ transform: "rotateY(180deg)" }}
+                      aria-hidden={!flipped}
+                    >
+                      <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -512,7 +537,7 @@ function AlbumBook({
                 aria-live={isCurrent ? "polite" : undefined}
                 aria-hidden={!isCurrent}
               >
-                {current + 1} / {albums.length}
+                {current + 1} / {slides.length}
               </p>
             </div>
           );
