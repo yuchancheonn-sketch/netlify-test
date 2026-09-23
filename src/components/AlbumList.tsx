@@ -403,8 +403,6 @@ function AlbumBook({
   const transition = turn?.settling
     ? `transform ${TURN_MS}ms ${TURN_EASE}, opacity ${TURN_MS}ms ${TURN_EASE}`
     : "none";
-  /** 지금 카드 뒤에 남은 장 수 — 쌓인 종이를 몇 장 깔지(많아도 두 장). 넘기는 중엔 뒤 카드가 보이니 깔지 않습니다. */
-  const behind = turn ? 0 : slides.length - 1 - current;
 
   return (
     <BookFrame>
@@ -415,8 +413,17 @@ function AlbumBook({
           --card-max(카드 최대 높이)는 그 32px을 빼 카드가 순번 줄을 밀어내지 않게 합니다.
         */
         className="absolute inset-0 select-none"
+        /*
+          touch-action (2026-09-23 사용자 "옆으로 넘길 때 자꾸 아래로 스크롤 되는 경향")
+            - 소식 카드: "none" — 카드 자리에서는 세로 스크롤을 아예 받지 않습니다. 옆으로 밀 때 화면이
+              같이 밀려 내려가던 것이 없어집니다. 이 자리는 화면에 딱 맞아(BookFrame) 굴릴 것도 없습니다.
+            - 위원회 카드: "pan-y" — 카드 안에서 위아래로 굴려 읽어야 해서(긴 조직도) 세로는 열어 둡니다.
+        */
         style={
-          { touchAction: "pan-y", "--card-max": "calc(var(--frame-h) - 40px)" } as React.CSSProperties
+          {
+            touchAction: currentSlide.album ? "none" : "pan-y",
+            "--card-max": "calc(var(--frame-h) - 40px)",
+          } as React.CSSProperties
         }
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -457,19 +464,7 @@ function AlbumBook({
                 className="pointer-events-auto relative w-full origin-bottom"
                 style={{ ...motion, transition }}
               >
-                {/* 쌓인 종이 — 멈춰 있고 뒤에 남은 장이 있을 때만. 카드 뒤에서 오른쪽·아래로 4px씩 비켜 섭니다. */}
-                {isCurrent && behind >= 2 ? (
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 translate-x-[8px] translate-y-[8px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-                  />
-                ) : null}
-                {isCurrent && behind >= 1 ? (
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 translate-x-[4px] translate-y-[4px] rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
-                  />
-                ) : null}
+                {/* 뒤에 종이가 한두 장 더 깔려 있는 것처럼 보이던 그림은 뺐습니다 (2026-09-23 사용자 요청). */}
                 {/*
                   뒤집히는 카드 (2026-09-22 사용자 요청 — 한 번 누르면 뒤집혀 세부 설명).
                   세로 가운데 축으로 180° 돕니다. 앞면·뒷면 모두 backface-hidden이고 뒷면은 미리 180° 돌려 둬서,
@@ -565,7 +560,8 @@ function AlbumBook({
               aria-label={mode === "next" ? "다음 소식" : "앞 소식"}
               // 더 넘길 장이 없는 쪽은 흐리게만 보이고 눌리기는 합니다(누르면 살짝 끌렸다 돌아옴 — turnBy).
               // top-[calc(50%-20px)] — 카드 세로 가운데. 카드가 밑의 순번 줄(띄움 8px + 32px = 40px)과 한 덩어리로 가운데에 서서 20px 위에 있습니다.
-              className={`absolute top-[calc(50%-20px)] z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-soft transition active:scale-90 ${
+              // 색은 ink-faint — 2026-09-23 사용자 "조금만 더 연하게"(ink-soft에서). 토큰 중 가장 연한 회색입니다.
+              className={`absolute top-[calc(50%-20px)] z-10 flex h-16 w-4 -translate-y-1/2 items-center justify-center text-ink-faint transition active:scale-90 ${
                 enabled ? "" : "opacity-30"
               } ${mode === "next" ? "-right-4" : "-left-4"}`}
             >
