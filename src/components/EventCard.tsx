@@ -49,8 +49,12 @@ export function EventDdayCard({
 }) {
   const time = event.startTime ? formatTime(event.startTime) : "";
   const date = parseDateString(event.date);
+  /*
+   * 흰 카드 + 회색 1px 테두리 — 홈의 다른 박스들과 같은 모양 (2026-09-23 사용자 "주요일정 박스의 색을 흰색으로").
+   * 예전에는 주황 바탕에 흰 글씨였습니다. 바탕이 흰색이 되면서 글씨는 먹색, D-day만 주황으로 둡니다.
+   */
   const className =
-    "flex items-center gap-3 rounded-3xl bg-brand-500 py-4 pl-5 text-white shadow-[var(--shadow-float)] transition active:opacity-80";
+    "flex items-center gap-3 rounded-3xl bg-surface py-4 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
 
   /*
    * 속은 한 벌이고 껍데기만 앱 안 링크(Link)와 바깥 링크(<a>)로 갈립니다.
@@ -73,8 +77,8 @@ export function EventDdayCard({
           두 간격의 합(12px)은 그대로라 카드 높이·홈 스켈레톤 높이는 바뀌지 않았습니다.
         */}
         <span className="flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
-          {/* D-day — 날짜 왼쪽, 날짜·이름과 같은 18px bold 흰색 (2026-09-14 사용자 요청으로 3행에서 옮김) */}
-          <span className="shrink-0">{ddayLabel(event.date)}</span>
+          {/* D-day — 날짜 왼쪽. 흰 카드가 된 2026-09-23부터 이것만 주황이고 날짜·이름은 먹색입니다. */}
+          <span className="shrink-0 text-brand-500">{ddayLabel(event.date)}</span>
           {date ? (
             <span className="shrink-0">
               {/* "09.15." — 월·일 모두 두 자리 + 끝에 점 (2026-09-14 사용자 요청, "9월 15일"에서 바꿈) */}
@@ -93,7 +97,7 @@ export function EventDdayCard({
         */}
         {event.location || time ? (
           /* 글씨 15px · 아이콘 18px — 2026-09-15 사용자 요청으로 14px · 15px에서 키웠다가(16px), 같은 날 글씨만 15px로 줄였습니다. */
-          <span className="mt-1 flex min-w-0 items-center gap-3 text-[15px] font-medium text-white">
+          <span className="mt-1 flex min-w-0 items-center gap-3 text-[15px] font-medium text-ink-muted">
             {event.location ? (
               <span className="flex min-w-0 items-center gap-1">
                 <PinIcon className="h-[18px] w-[18px] shrink-0" />
@@ -113,7 +117,7 @@ export function EventDdayCard({
         오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
         맞췄습니다. 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
       */}
-      <span className="flex shrink-0 items-center pr-4 pl-3 text-white/80">
+      <span className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint">
         <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
     </>
