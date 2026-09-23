@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import CohortPicker from "@/components/CohortPicker";
-import { EventDdayCard, EventListItem } from "@/components/EventCard";
+import { EventDdayCard } from "@/components/EventCard";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
-import { CalendarIcon, ChevronRightIcon, PlusIcon } from "@/components/icons";
-import { SectionTitle, Skeleton } from "@/components/ui";
+import { CalendarIcon, PlusIcon } from "@/components/icons";
+import { Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
 import HomeShortcuts from "@/components/HomeShortcuts";
@@ -31,8 +31,8 @@ export default function HomePage() {
   const quote = quoteOfTheDay();
 
   /*
-   * 주요 일정(D-day 카드)과 이후 일정 — 우리 기수 모임과 도산아카데미 일정을 한 줄로 세워
-   * 가장 가까운 것부터 봅니다 (2026-09-23 사용자 요청 "가장 가까운 일정이 자동으로, 하나가 끝나면 그다음").
+   * 주요 일정(D-day 카드) — 우리 기수 모임과 도산아카데미 일정을 한 줄로 세워 가장 가까운 하나를 씁니다
+   * (2026-09-23 사용자 요청 "가장 가까운 일정이 자동으로, 하나가 끝나면 그다음").
    * 오늘 지난 일정은 useUpcomingEvents·아래 today 비교에서 빠지므로, 날이 바뀌면 저절로 다음 일정이 올라옵니다.
    */
   const academy = useAcademyEvents();
@@ -48,7 +48,7 @@ export default function HomePage() {
     (a, b) => a.date.localeCompare(b.date) || (a.startTime || "99:99").localeCompare(b.startTime || "99:99"),
   );
 
-  const [nextEvent, ...laterEvents] = events;
+  const [nextEvent] = events;
 
   return (
     <>
@@ -74,8 +74,7 @@ export default function HomePage() {
       {/*
         칸 사이는 14px (20px → 16px(2026-09-11) → 14px(2026-09-22 사용자 "아주 조금씩 줄여줘")).
         Tailwind 단계(12px·16px) 사이 값이라 직접 적습니다.
-        ★ 아래 "이후 일정" 안의 두 상자 사이는 12px 그대로입니다 — 한 제목 밑에 묶인
-          한 덩어리라, 덩어리 사이(14px)보다 좁아야 묶여 보입니다.
+        ("이후 일정" 칸은 2026-09-23에 없앴습니다 — 그 안의 12px 간격 이야기도 함께 지웠습니다.)
 
         pt-3 — 맨 위 OX 퀴즈 카드와 제목 줄 사이 12px
         (16px(2026-09-14) → 12px(2026-09-22 사용자 "박스 위 간격 좀 줄여줘")).
@@ -156,32 +155,10 @@ export default function HomePage() {
         {/* 바로가기 — 투표 만들기 · 의견 모으기 · 수업 기록 · 역대 투표. 그림 아이콘과 이름을 2열로. */}
         <HomeShortcuts />
 
-        {/* 이후 일정 */}
-        {laterEvents.length > 0 ? (
-          <section>
-            <SectionTitle
-              action={
-                <Link
-                  href="/events"
-                  className="flex items-center gap-0.5 text-[13px] font-bold text-brand-500"
-                >
-                  전체 일정
-                  <ChevronRightIcon className="h-4 w-4" />
-                </Link>
-              }
-            >
-              이후 일정
-            </SectionTitle>
-            <ul className="flex flex-col gap-3">
-              {laterEvents.slice(0, 2).map((event) => (
-                <li key={event.key}>
-                  {/* 도산아카데미 일정도 함께 섭니다(2026-09-23) — 눌러 가는 곳만 다릅니다. */}
-                  <EventListItem event={event} href={event.href} external={event.external} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        {/*
+          "이후 일정" 칸(다음 일정 두 개 + "전체 일정" 링크)은 2026-09-23 사용자 요청으로 없앴습니다.
+          다가오는 일정은 위 주황 카드(가장 가까운 하나)와 캘린더에서 봅니다. 되살리려면 git 기록을 보세요.
+        */}
 
         {/* 오늘의 말씀 — 자정이 지나면 다음 말씀으로 넘어갑니다. */}
         <section>
