@@ -43,6 +43,20 @@ export default function NewsPage() {
   }, [router]);
 
   /*
+   * 원우 소식 칸에서는 화면이 위아래로 굴러가지 않게 잠급니다 (2026-09-23 사용자 요청).
+   * 카드가 화면에 딱 맞게 서는 칸이라 굴릴 것이 없는데, 남아 있던 몇 px의 스크롤이 카드를 옆으로 미는
+   * 손짓을 자꾸 채 갔습니다. 위원회 칸은 카드가 길어질 수 있어 잠그지 않습니다.
+   * 칸을 바꾸거나 다른 탭으로 나가면 정리(cleanup)에서 곧 풀립니다 — 규칙은 globals.css의 data-lock-scroll.
+   */
+  useEffect(() => {
+    if (subtab !== "member") return;
+    document.body.dataset.lockScroll = "yes";
+    return () => {
+      delete document.body.dataset.lockScroll;
+    };
+  }, [subtab]);
+
+  /*
    * 원우 소식은 기수마다 따로입니다. 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서
    * 바꿔 봅니다. 카드 목록이 같은 값(useViewCohort)을 읽습니다.
    */
