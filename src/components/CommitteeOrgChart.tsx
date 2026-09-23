@@ -124,9 +124,14 @@ export default function CommitteeOrgChart() {
         </div>
       </div>
 
-      {/* 부회장 → 정무특보 · 사무처 (왼쪽 줄기에서 내려옵니다) */}
-      <div className="relative h-3" aria-hidden="true">
-        <span className="absolute inset-y-0 left-1/4 w-[1.5px] -translate-x-1/2 bg-ink-faint" />
+      {/*
+        부회장 → 정무특보. 위 칸과 **똑같은 2열 격자**로 그려 선이 어긋나지 않게 합니다
+        (2026-09-23 사용자 "선이 끊겨서 보여" — 위 선은 왼쪽 칸 가운데, 아래 선은 카드 전체의 1/4 자리라
+         칸 사이 간격의 절반만큼 어긋나 있었습니다).
+      */}
+      <div className="grid grid-cols-2 gap-x-2.5" aria-hidden="true">
+        <span className="mx-auto h-3 w-[1.5px] bg-ink-faint" />
+        <span />
       </div>
 
       {/* 정무특보 — 한 줄에 직책·이름·소속 (그림과 같습니다) */}
@@ -139,8 +144,10 @@ export default function CommitteeOrgChart() {
         </span>
       </div>
 
-      <div className="relative h-3" aria-hidden="true">
-        <span className="absolute inset-y-0 left-1/4 w-[1.5px] -translate-x-1/2 bg-ink-faint" />
+      {/* 정무특보 → 사무처. 위와 같은 격자·같은 자리입니다. */}
+      <div className="grid grid-cols-2 gap-x-2.5" aria-hidden="true">
+        <span className="mx-auto h-3 w-[1.5px] bg-ink-faint" />
+        <span />
       </div>
 
       {/* 사무처 — 처장 · 차장 · 회계 세 칸을 한 줄에 */}
