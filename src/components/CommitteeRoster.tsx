@@ -188,17 +188,18 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
         </button>
       </div>
 
-      <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="flex flex-col gap-3">
+      {/* 글씨를 키우고 두 칸 사이를 넓혔습니다 (2026-09-24 사용자 요청 — 이름표 13→15px, 본문 15→17px, 사이 12→24px). */}
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex flex-col gap-6">
           {sections.map((section) => (
             <section key={section.label}>
-              <p className="text-[13px] font-bold text-brand-500">{section.label}</p>
+              <p className="text-[15px] font-bold text-brand-500">{section.label}</p>
               {section.value ? (
-                <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink">
+                <p className="mt-1.5 text-[17px] leading-relaxed whitespace-pre-line break-keep text-ink">
                   {section.value}
                 </p>
               ) : (
-                <p className="mt-1 text-[14px] text-ink-faint">
+                <p className="mt-1.5 text-[16px] text-ink-faint">
                   아직 안 적었어요. 위 &lsquo;수정&rsquo;에서 적어 주세요.
                 </p>
               )}
