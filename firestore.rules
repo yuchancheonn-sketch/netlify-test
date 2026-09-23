@@ -241,12 +241,13 @@ service cloud.firestore {
     }
 
     /*
-     * 위원회 소개 글 (2026-09-23) — 소식 탭 위원회 카드 뒷면의 "하는 일 · 준비 중인 일".
-     * 원우 누구나 읽고, 고치는 것은 운영진만입니다(공식 안내라 아무나 바꾸면 안 됩니다).
+     * 위원회 소개 글 — 소식 탭 위원회 카드 뒷면의 "하는 일 · 준비 중인 일".
+     * 원우 누구나 읽고 **누구나 고칩니다** (2026-09-24 사용자 "위원회 카드들 뒷면 수정할 수 있도록").
+     * 위원회 일은 그 위원회 원우들이 직접 적는 것이 맞다는 판단입니다. 하루 전에는 운영진만 고칠 수 있었습니다.
+     * (총괄 임원진 조직도는 앱 코드에 적혀 있어 아무도 앱에서 고칠 수 없습니다 — components/CommitteeOrgChart.tsx.)
      */
     match /committeeInfo/{committeeId} {
-      allow read: if isMember();
-      allow write: if isAdmin();
+      allow read, write: if isMember();
     }
 
     match /photoAlbums/{albumId} {

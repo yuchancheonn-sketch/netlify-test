@@ -4,7 +4,6 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { FieldError, FieldLabel, PrimaryButton, flatInputClassName } from "@/components/ui";
-import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useCommitteeInfo } from "@/lib/hooks";
@@ -153,12 +152,14 @@ function CommitteeCard({ committee }: { committee: Committee }) {
  * 카드 뒷면 — 이 위원회가 하는 일과 준비 중인 일 (2026-09-23 사용자 요청
  * "터치하면 뒤집히고, 뒷면에 무슨 일을 하는지·어떤 프로젝트를 준비 중인지 쓰고 수정할 수 있게").
  *
- * 글은 Firestore committeeInfo/{위원회 이름}에 있습니다. 원우 누구나 읽고, 고치는 것은 운영진만입니다
- * (공식 안내라 아무나 바꾸면 안 됩니다 — firestore.rules).
+ * 글은 Firestore committeeInfo/{위원회 이름}에 있습니다. **원우 누구나 읽고 고칩니다**
+ * (2026-09-24 사용자 요청 — 하루 전에는 운영진만 고칠 수 있었습니다. 규칙도 함께 바꿨습니다: firestore.rules).
  * 크기는 앞면과 같고(부모가 absolute inset-0), 글이 길면 이 안에서 위아래로 굴려 읽습니다.
+ *
+ * ★ 총괄 임원진 조직도 카드(components/CommitteeOrgChart.tsx)에는 뒷면도 수정도 없습니다 —
+ *   앱 코드에 적혀 있어 앱에서는 아무도 못 고칩니다(2026-09-24 사용자 "계급도 카드는 아무도 수정 못 하게").
  */
 function CommitteeCardBack({ committee }: { committee: Committee }) {
-  const { isAdmin } = useAuth();
   const { data } = useCommitteeInfo();
   const info = data.get(committee.name);
   const [editing, setEditing] = useState(false);
@@ -173,19 +174,18 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{committee.name}</h3>
         {/*
-          운영진에게만 "수정". 누르는 순간 카드 틀이 포인터를 붙잡지 않도록 onPointerDown을 멈춥니다
+          "수정"은 원우 누구나 (2026-09-24 사용자 요청, 예전엔 운영진만).
+          누르는 순간 카드 틀이 포인터를 붙잡지 않도록 onPointerDown을 멈춥니다
           (소식 카드의 ⋯ 와 같은 까닭 — AlbumCard 주석 참고).
         */}
-        {isAdmin ? (
-          <button
-            type="button"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => setEditing(true)}
-            className="shrink-0 rounded-full bg-fill px-3 py-1.5 text-[12px]! font-bold text-ink-soft"
-          >
-            수정
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => setEditing(true)}
+          className="shrink-0 rounded-full bg-fill px-3 py-1.5 text-[12px]! font-bold text-ink-soft"
+        >
+          수정
+        </button>
       </div>
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -199,7 +199,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
                 </p>
               ) : (
                 <p className="mt-1 text-[14px] text-ink-faint">
-                  {isAdmin ? "아직 안 적었어요. 위 '수정'에서 적어 주세요." : "아직 안 적었어요."}
+                  아직 안 적었어요. 위 &lsquo;수정&rsquo;에서 적어 주세요.
                 </p>
               )}
             </section>
