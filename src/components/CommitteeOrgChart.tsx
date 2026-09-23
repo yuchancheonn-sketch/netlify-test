@@ -116,6 +116,11 @@ export default function CommitteeOrgChart() {
           */}
           <span aria-hidden="true" className="mx-auto h-3 w-[1.5px] bg-ink-faint" />
           <Box role="부회장" members={[VICE_CHAIR]} />
+          {/*
+            부회장 아래로 남은 자리를 선으로 채웁니다 (2026-09-23 사용자 "부회장 박스랑 정무특보 박스 제대로 이어줘").
+            오른쪽 칸(고문·감사)이 더 길어서 왼쪽 줄기가 먼저 끝나는데, 그대로 두면 선이 끊겨 보였습니다.
+          */}
+          <span aria-hidden="true" className="mx-auto w-[1.5px] flex-1 bg-ink-faint" />
         </div>
 
         <div className="flex flex-col gap-2.5">
@@ -130,7 +135,8 @@ export default function CommitteeOrgChart() {
       </div>
 
       {/* 정무특보 — 한 줄에 직책·이름·소속 (그림과 같습니다) */}
-      <div className="flex items-baseline gap-2 rounded-xl border border-line bg-fill px-3 py-2">
+      {/* 바탕은 흰색 — 다른 상자들과 같게 (2026-09-23 사용자 요청, 예전엔 옅은 회색 bg-fill). */}
+      <div className="flex items-baseline gap-2 rounded-xl border border-line bg-surface px-3 py-2">
         <span className="shrink-0 text-[10px] font-bold text-ink-muted">정무특보</span>
         <span className="shrink-0 text-[14px] font-bold text-ink">{SPECIAL_ADVISOR.name}</span>
         <span className="min-w-0 text-[10px] leading-snug break-keep text-ink-muted">
