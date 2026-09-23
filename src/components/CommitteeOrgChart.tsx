@@ -76,9 +76,13 @@ function Box({
 }) {
   return (
     <div
-      /* 고문·감사도 다른 상자와 같은 회색 실선입니다 (2026-09-23 사용자 요청, 예전엔 점선). */
+      /*
+        고문·감사도 다른 상자와 같은 회색 실선입니다 (2026-09-23 사용자 요청, 예전엔 점선).
+        테두리 색은 ink-faint — 잇는 선과 같은 진한 회색입니다 (2026-09-24 사용자 "테두리 더 진한 색으로",
+        앱 기본 테두리 색 line(#E4E6E9)에서 올렸습니다).
+      */
       className={`rounded-xl px-2.5 py-2 text-center ${
-        filled ? "bg-brand-500" : "border border-line bg-surface"
+        filled ? "bg-brand-500" : "border border-ink-faint bg-surface"
       }`}
     >
       <p
@@ -136,7 +140,7 @@ export default function CommitteeOrgChart() {
 
       {/* 정무특보 — 한 줄에 직책·이름·소속 (그림과 같습니다) */}
       {/* 바탕은 흰색 — 다른 상자들과 같게 (2026-09-23 사용자 요청, 예전엔 옅은 회색 bg-fill). */}
-      <div className="flex items-baseline gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+      <div className="flex items-baseline gap-2 rounded-xl border border-ink-faint bg-surface px-3 py-2">
         <span className="shrink-0 text-[10px] font-bold text-ink-muted">정무특보</span>
         <span className="shrink-0 text-[14px] font-bold text-ink">{SPECIAL_ADVISOR.name}</span>
         <span className="min-w-0 text-[10px] leading-snug break-keep text-ink-muted">
@@ -151,7 +155,7 @@ export default function CommitteeOrgChart() {
       </div>
 
       {/* 사무처 — 처장 · 차장 · 회계 세 칸을 한 줄에 */}
-      <div className="rounded-xl border border-line bg-surface px-2.5 pt-2 pb-2.5">
+      <div className="rounded-xl border border-ink-faint bg-surface px-2.5 pt-2 pb-2.5">
         <p className="mb-2 text-center text-[11px] font-bold text-ink">사무처</p>
         <div className="grid grid-cols-3 gap-x-2">
           {OFFICE.map((item, index) => (
