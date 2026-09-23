@@ -30,7 +30,8 @@ const SUBTABS = [
 
 export default function NewsPage() {
   const router = useRouter();
-  const [subtab, setSubtab] = useState<AlbumCategory>("member");
+  // 소식 탭을 처음 열면 위원회 칸부터 보입니다 (2026-09-23 사용자 요청).
+  const [subtab, setSubtab] = useState<AlbumCategory>("committee");
   /*
    * 예전 알림(알림 목록에 남은 "도산아카데미 새 소식")은 /news?tab=news를 엽니다. 그 칸이 자료 탭으로 옮겨 갔으니
    * 그리로 넘깁니다. useSearchParams 대신 location을 읽어 Suspense 없이 끝냅니다(상태는 건드리지 않음).
@@ -84,7 +85,12 @@ export default function NewsPage() {
         ★ 아래 여백은 없습니다 — 카드 틀이 "소식 올리기" 알약 위까지 화면을 채우고 스크롤하지 않습니다
           (components/AlbumList.tsx의 BookFrame이 높이를 잽니다). 여기에 여백을 더하면 화면이 괜히 조금 스크롤됩니다.
       */}
-      <div className="px-4 pt-4">
+      {/*
+        위원회 칸은 카드가 화면보다 길 수 있어(조직도) 아래를 넉넉히 비웁니다 —
+        pb-24는 떠 있는 탭 알약에 마지막 줄이 가리지 않을 만큼입니다(자료 탭과 같은 셈법).
+        원우 소식 칸은 카드 틀이 알약 위에서 끝나므로 아래 여백이 없습니다(BookFrame).
+      */}
+      <div className={`px-4 pt-4 ${subtab === "committee" ? "pb-24" : ""}`}>
         <AlbumList category={subtab} />
       </div>
     </>

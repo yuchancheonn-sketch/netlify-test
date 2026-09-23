@@ -112,7 +112,7 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
           />
         </div>
       ) : (
-        <AlbumBook slides={slides} authors={authors} />
+        <AlbumBook slides={slides} authors={authors} fit={!canAdd} />
       )}
 
       {/*
@@ -253,10 +253,17 @@ type Slide = {
 function AlbumBook({
   slides,
   authors,
+  fit = false,
 }: {
   slides: Slide[];
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
   authors: Map<string, UserDoc>;
+  /**
+   * true면 카드 길이만큼 자리가 늘어납니다 — 위원회 칸 (2026-09-23 사용자 "조직도는 카드 길이를 늘려줘.
+   * 지금은 카드 안에서 스크롤해야 더 보여"). 긴 카드는 화면을 넘어가고 탭 전체를 굴려 읽습니다.
+   * false면 예전처럼 화면에 딱 맞는 틀(BookFrame) 안에 카드가 섭니다 — 원우 소식 칸.
+   */
+  fit?: boolean;
 }) {
   const { user, isAdmin } = useAuth();
   const [index, setIndex] = useState(0);
@@ -270,6 +277,26 @@ function AlbumBook({
   const [flippedId, setFlippedId] = useState<string | null>(null);
   /** 카드 자리 — 아래 touchmove 막기를 걸어 두는 곳 */
   const deckRef = useRef<HTMLDivElement | null>(null);
+  /*
+   * 지금 카드의 높이(px) — 두 곳에 씁니다 (2026-09-23).
+   *  1. 순번 줄("3 / 8")을 카드 아래 8px에 두는 자리. 카드마다 길이가 달라도 자리가 뚝 끊기지 않게
+   *     transition을 걸어 부드럽게 옮깁니다(사용자 "n/n이 너무 부자연스럽게 이동해").
+   *  2. fit일 때(위원회 칸) 카드 자리 전체의 높이 — 카드가 길면 그만큼 자리가 늘어납니다.
+   * 카드가 그려진 뒤·크기가 바뀔 때마다 ResizeObserver가 알려 줍니다.
+   */
+  const [cardHeight, setCardHeight] = useState(0);
+  const cardObserver = useRef<ResizeObserver | null>(null);
+  const measureCard = (element: HTMLDivElement | null) => {
+    cardObserver.current?.disconnect();
+    cardObserver.current = null;
+    if (!element) return;
+    setCardHeight(element.getBoundingClientRect().height);
+    const observer = new ResizeObserver(() =>
+      setCardHeight(element.getBoundingClientRect().height),
+    );
+    observer.observe(element);
+    cardObserver.current = observer;
+  };
   const drag = useRef<{
     x: number;
     y: number;
@@ -440,8 +467,8 @@ function AlbumBook({
     ? `transform ${TURN_MS}ms ${TURN_EASE}, opacity ${TURN_MS}ms ${TURN_EASE}`
     : "none";
 
-  return (
-    <BookFrame>
+  /** 카드 + 그 아래 순번 줄(40px)이 들어갈 자리. fit이면 카드 길이를 따라 늘어납니다. */
+  const deck = (
       <div
         ref={deckRef}
         /*
@@ -458,8 +485,9 @@ function AlbumBook({
         */
         style={
           {
-            touchAction: currentSlide.album ? "none" : "pan-y",
-            "--card-max": "calc(var(--frame-h) - 40px)",
+            // fit(위원회)에서는 카드가 잘리지 않고 다 보이므로 세로 손짓을 막지 않습니다 — 탭을 굴려 읽습니다.
+            touchAction: fit ? "pan-y" : "none",
+            "--card-max": fit ? "none" : "calc(var(--frame-h) - 40px)",
           } as React.CSSProperties
         }
         onPointerDown={handlePointerDown}
@@ -494,7 +522,8 @@ function AlbumBook({
           return (
             <div
               key={slide.id}
-              className="pointer-events-none absolute inset-0 flex flex-col justify-center"
+              /* 아래 40px은 순번 줄 자리로 비워 둡니다(순번은 아래에 따로 한 줄만 그립니다). */
+              className="pointer-events-none absolute inset-x-0 top-0 bottom-10 flex items-center"
               style={{ zIndex: isCurrent ? 2 : 1 }}
             >
               <div
@@ -510,6 +539,7 @@ function AlbumBook({
                 */}
                 <div
                   data-album-card
+                  ref={isCurrent ? measureCard : undefined}
                   className="relative [transform-style:preserve-3d]"
                   style={{
                     transform: `perspective(1600px) rotateY(${flipped ? 180 : 0}deg)`,
@@ -531,11 +561,11 @@ function AlbumBook({
                     ) : (
                       /*
                         앱에 적어 둔 카드(위원회 조직도·위원회별 인원, 2026-09-23).
-                        틀보다 길면 카드 안에서 위아래로 굴려 읽습니다 — 카드 크기는 소식 카드와 같습니다.
+                        fit일 때는 길이를 그대로 두어 카드 안에서 굴리지 않아도 다 보입니다(사용자 요청).
                       */
                       <div
-                        className="overflow-y-auto overscroll-contain rounded-[24px]"
-                        style={{ maxHeight: "var(--card-max, var(--frame-h))" }}
+                        className={fit ? "" : "overflow-y-auto overscroll-contain rounded-[24px]"}
+                        style={fit ? undefined : { maxHeight: "var(--card-max, var(--frame-h))" }}
                       >
                         {slide.node}
                       </div>
@@ -557,27 +587,27 @@ function AlbumBook({
                 </div>
               </div>
 
-              {/*
-                순번 "지금 카드 / 전체 카드 수" — 카드 바로 밑, 가운데 (2026-09-23 사용자 요청으로 틀 맨 아래에서 옮김).
-                카드와 달리 넘기는 움직임(transform)을 받지 않아 제자리에 있고, 한 장이 넘어가는 순간 바뀝니다.
-                ★ 뒤에서 올라오는 카드에도 같은 32px 줄을 투명하게(invisible) 둡니다 — 없으면 그 카드가 16px 아래에 섰다가
-                  "지금 카드"가 되는 순간 위로 튑니다.
-                ★ mt-2 — 카드와 순번 사이를 8px 더 띄웁니다(2026-09-23 사용자 "카드로부터 더 떨어지도록").
-                  글씨가 32px 줄 가운데라 카드 끝에서 글씨까지 약 8px → 16px. 이 값을 바꾸면 위 --card-max(40px)와
-                  아래 화살표 top(50%-20px)도 같이 맞춥니다.
-              */}
-              <p
-                className={`mt-2 flex h-8 shrink-0 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums ${
-                  isCurrent ? "" : "invisible"
-                }`}
-                aria-live={isCurrent ? "polite" : undefined}
-                aria-hidden={!isCurrent}
-              >
-                {current + 1} / {slides.length}
-              </p>
             </div>
           );
         })}
+
+        {/*
+          순번 "지금 카드 / 전체 카드 수" — 카드 바로 밑 8px, 가운데 (2026-09-23).
+          ★ 카드마다 한 줄씩 두지 않고 여기 한 줄만 둡니다. 카드 높이(cardHeight)로 자리를 잡고 transition을
+            걸어, 길이가 다른 카드로 넘어가도 뚝 끊기지 않고 부드럽게 따라옵니다
+            (사용자 "n/n이 너무 부자연스럽게 이동해 — 카드 크기에 따라 자연스럽게").
+          자리 셈: 카드 자리(위 40px 뺀 칸)의 한가운데 + 카드 절반 + 8px.
+        */}
+        <p
+          className="pointer-events-none absolute inset-x-0 flex h-8 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums"
+          style={{
+            top: `calc((100% - 40px) / 2 + ${cardHeight / 2 + 8}px)`,
+            transition: `top ${TURN_MS}ms ${TURN_EASE}`,
+          }}
+          aria-live="polite"
+        >
+          {current + 1} / {slides.length}
+        </p>
 
         {/*
           양옆 화살표 ‹ › — "옆으로 넘기는 카드"라는 표시 겸 누르면 한 장 넘기는 단추.
@@ -612,8 +642,10 @@ function AlbumBook({
         })}
       </div>
 
-      {/* 순번 "3 / 10"은 카드 바로 밑으로 옮겼습니다(위 카드 칸 안, 2026-09-23). */}
+  );
 
+  const sheets = (
+    <>
       {managing ? (
         <AlbumManageSheet
           album={managing}
@@ -625,6 +657,34 @@ function AlbumBook({
         />
       ) : null}
       {editing ? <AlbumSheet album={editing} onClose={() => setEditing(null)} /> : null}
+    </>
+  );
+
+  /*
+   * fit(위원회) — 카드 길이 + 순번 줄 40px만큼만 자리를 차지합니다. 카드가 화면보다 길면 탭을 굴려 읽습니다.
+   *   높이에 transition을 걸어, 길이가 다른 카드로 넘어갈 때 자리도 부드럽게 바뀝니다.
+   *   재기 전(cardHeight 0)에는 높이를 두지 않습니다 — 카드는 절대 자리라 그려지고, 곧 높이가 잡힙니다.
+   * 아니면(원우 소식) 예전처럼 화면에 딱 맞는 틀 안에 섭니다.
+   */
+  if (fit) {
+    return (
+      <div
+        className="relative"
+        style={{
+          height: cardHeight ? cardHeight + 40 : undefined,
+          transition: `height ${TURN_MS}ms ${TURN_EASE}`,
+        }}
+      >
+        {deck}
+        {sheets}
+      </div>
+    );
+  }
+
+  return (
+    <BookFrame>
+      {deck}
+      {sheets}
     </BookFrame>
   );
 }

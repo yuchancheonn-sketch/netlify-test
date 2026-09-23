@@ -69,6 +69,18 @@ function PersonLine({ person }: { person: Person }) {
   );
 }
 
+/** 상자와 상자를 잇는 세로선. 자문 자리(고문·감사)는 점선입니다. */
+function Connector({ dashed = false }: { dashed?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`mx-auto block h-4 ${
+        dashed ? "w-0 border-l border-dashed border-line" : "w-px bg-line"
+      }`}
+    />
+  );
+}
+
 /** 계급도의 상자 하나. */
 function ChartBox({
   role,
@@ -104,43 +116,30 @@ export default function CommitteeOrgChart() {
       <h2 className="text-[18px] font-bold text-ink">총괄 임원진 조직도</h2>
 
       {/*
-        위 칸 — 왼쪽은 회장 → 부회장 줄기, 오른쪽은 고문·감사(점선).
-        그림에서도 고문·감사는 줄기 오른쪽에 떨어져 있어, 좁은 화면에서도 같은 자리에 둡니다.
+        한 줄로 가운데 정렬 (2026-09-23 사용자 "2열이 아니라 가운데 정렬로").
+        위에서 아래로 회장 → 부회장 → 고문·감사 → 정무특보 → 사무처. 상자들은 가운데에 서고 세로선이 잇습니다.
+        고문·감사는 지시 계통 밖이라 점선 상자에 회색 점선으로 답니다(그림에서도 따로 떨어져 있었습니다).
       */}
-      <div className="mt-5 grid grid-cols-2 gap-x-3">
-        <div>
-          <ChartBox role="회장" members={[CHAIR]} />
-          {/* 회장 → 부회장 세로선 */}
-          <span aria-hidden="true" className="mx-auto block h-4 w-px bg-line" />
-          <ChartBox role="부회장" members={[VICE_CHAIR]} />
-        </div>
+      <div className="mx-auto mt-5 w-full max-w-[280px]">
+        <ChartBox role="회장" members={[CHAIR]} />
+        <Connector />
+        <ChartBox role="부회장" members={[VICE_CHAIR]} />
 
-        <div className="flex flex-col gap-4">
-          <ChartBox role="고문" members={[ADVISOR]} dashed />
-          <ChartBox role="감사" members={AUDITORS} dashed />
-        </div>
-      </div>
+        <Connector dashed />
+        <ChartBox role="고문" members={[ADVISOR]} dashed />
+        <Connector dashed />
+        <ChartBox role="감사" members={AUDITORS} dashed />
 
-      {/*
-        부회장 아래 갈래 — 왼쪽 칸 가운데(전체 폭의 1/4)에서 내려와 가로로 뻗고,
-        아래 두 칸(정무특보·사무처) 가운데(1/4·3/4)로 다시 내려갑니다. 그림의 ┬ 모양 그대로입니다.
-      */}
-      <div className="relative h-5" aria-hidden="true">
-        <span className="absolute top-0 left-1/4 h-1/2 w-px -translate-x-1/2 bg-line" />
-        <span className="absolute top-1/2 right-1/4 left-1/4 h-px bg-line" />
-        <span className="absolute bottom-0 left-1/4 h-1/2 w-px -translate-x-1/2 bg-line" />
-        <span className="absolute bottom-0 left-3/4 h-1/2 w-px -translate-x-1/2 bg-line" />
-      </div>
-
-      {/* 아래 칸 — 정무특보와 사무처. 사무처 상자 안에 처장·차장·회계가 한 칸씩 들어갑니다. */}
-      <div className="grid grid-cols-2 items-start gap-x-3">
+        <Connector />
         <ChartBox role="정무특보" members={[SPECIAL_ADVISOR]} />
 
-        <div className="relative rounded-xl border border-line bg-surface px-2 pt-4 pb-2.5">
+        <Connector />
+        {/* 사무처 — 상자 안에 처장·차장·회계가 한 칸씩 들어갑니다. */}
+        <div className="relative rounded-xl border border-line bg-surface px-2.5 pt-4 pb-3">
           <RoleChip label="사무처" />
           <div className="flex flex-col gap-1.5">
             {OFFICE.map((item) => (
-              <div key={item.role} className="rounded-lg bg-fill px-2 py-1.5 text-center">
+              <div key={item.role} className="rounded-lg bg-fill px-2 py-2 text-center">
                 <p className="text-[10px] font-bold text-brand-500">{item.role}</p>
                 <div className="mt-1 flex flex-col gap-1">
                   {item.members.map((member) => (
