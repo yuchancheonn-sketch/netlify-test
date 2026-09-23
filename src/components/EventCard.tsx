@@ -13,10 +13,10 @@ import {
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 홈의 다가오는 모임(주요 일정) — 주황 카드에 세 줄, 오른쪽 끝에 ">".
- *   1행  "주요 일정"
- *   2행  D-day + 날짜 + 일정 이름   "D-1  09.15.  아구찜 번개"
- *   3행  장소 + 시간                📍마산아구찜  🕒오후 6:30
+ * 홈의 다가오는 모임(주요 일정) — 주황 카드에 두 줄, 오른쪽 끝에 ">".
+ *   1행  D-day + 날짜 + 일정 이름   "D-1  09.15.  아구찜 번개"
+ *   2행  장소 + 시간                📍마산아구찜  🕒오후 6:30
+ *   (맨 위 "주요 일정" 이름표는 2026-09-23 사용자 요청으로 뺐습니다. 아래 주석의 "2행·3행"은 지금의 1·2행입니다.)
  *
  * ★ 세 줄 짜임 (2026-09-14 사용자 요청). 그 전에는 왼쪽에 둘레가 차오르는 흰 D-day 원
  *   (2026-09-11, 네 시안 가운데 "흰 둘레 원")과 두 줄(이름 / 장소·시간)이었습니다.
@@ -60,11 +60,7 @@ export function EventDdayCard({
   const inside = (
     <>
       <span className="min-w-0 flex-1">
-        {/*
-          1행 — 이름표. 홈의 "오늘의 도산" 카드 제목(h2, 18px bold)과 같은 크기·굵기입니다
-          (2026-09-14 사용자 요청). 두 카드 제목이 같은 급으로 읽히게 — 한쪽을 바꾸면 같이 바꿔 주세요.
-        */}
-        <span className="block text-[18px] leading-tight font-bold">주요 일정</span>
+        {/* 1행 이름표 "주요 일정"은 뺐습니다 (2026-09-23 사용자 요청). 이제 D-day 줄이 카드 맨 위입니다. */}
 
         {/*
           2행 — D-day + 날짜 + 일정 이름. 셋 다 크기·굵기·색이 같습니다(18px bold 흰색,
@@ -76,7 +72,7 @@ export function EventDdayCard({
           한 덩어리로 읽히고 1행 "주요 일정" 이름표와는 떨어져 보이게 (2026-09-15 사용자 요청, 예전엔 4px/8px 반대).
           두 간격의 합(12px)은 그대로라 카드 높이·홈 스켈레톤 높이는 바뀌지 않았습니다.
         */}
-        <span className="mt-2 flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
+        <span className="flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
           {/* D-day — 날짜 왼쪽, 날짜·이름과 같은 18px bold 흰색 (2026-09-14 사용자 요청으로 3행에서 옮김) */}
           <span className="shrink-0">{ddayLabel(event.date)}</span>
           {date ? (

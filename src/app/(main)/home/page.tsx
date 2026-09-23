@@ -97,8 +97,9 @@ export default function HomePage() {
         */}
         <section>
           {upcoming.loading || academy.loading ? (
-            /* 세 줄 카드(주요 일정 18px / D-day·날짜·이름 18px / 장소·시간 15px)와 같은 높이 — 위아래 16px + 세 줄 ≈ 109px. */
-            <Skeleton className="h-[109px] rounded-3xl" />
+            /* 두 줄 카드(D-day·날짜·이름 18px / 장소·시간 15px)와 같은 높이 — 위아래 16px + 두 줄 ≈ 81px.
+               ("주요 일정" 이름표를 뺀 2026-09-23부터. 그전에는 세 줄 109px이었습니다.) */
+            <Skeleton className="h-[81px] rounded-3xl" />
           ) : nextEvent ? (
             <EventDdayCard event={nextEvent} href={nextEvent.href} external={nextEvent.external} />
           ) : (
