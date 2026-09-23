@@ -169,8 +169,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
             주 사이 가로줄 (2026-09-23 사용자 요청) — 칸마다 윗변에 옅은 회색 선 하나.
             첫 줄의 선은 요일 이름과 날짜를 가르는 줄이 됩니다. 빈 칸에도 같은 선을 둬야 줄이 끊기지 않습니다.
           */
-          /* 칸 사이 세로선 — 한 주의 첫 칸(일요일) 왼쪽에는 긋지 않습니다 (2026-09-23 사용자 요청). */
-          const cellLines = `border-t border-line ${index % 7 === 0 ? "" : "border-l"}`;
+          /* 가로줄만 긋습니다 — 칸 사이 세로선은 넣었다가 2026-09-24 사용자 요청으로 도로 뺐습니다. */
+          const cellLines = "border-t border-line";
           if (day === null) return <span key={`blank-${index}`} className={cellLines} aria-hidden="true" />;
           const key = dateKey(view.year, view.month, day);
           const items = byDay.get(key) ?? [];
