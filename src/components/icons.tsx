@@ -162,6 +162,41 @@ export function ReflectionIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+/**
+ * 위원회 탭 — 기둥이 선 건물(의사당 모양). 2026-09-23 사용자 요청으로 확성기(MegaphoneIcon) 자리를 대신합니다.
+ * 다른 탭 아이콘과 같은 결로 그렸습니다 — 24 격자, 선 굵기는 넘겨받은 값, 고른 탭은 채운 모양.
+ */
+export function CommitteeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+        <path d="M12 3.1 21.2 8a.9.9 0 0 1-.4 1.7H3.2A.9.9 0 0 1 2.8 8L12 3.1Z" />
+        <rect x="5.5" y="11.2" width="2.3" height="6" rx="0.7" />
+        <rect x="10.85" y="11.2" width="2.3" height="6" rx="0.7" />
+        <rect x="16.2" y="11.2" width="2.3" height="6" rx="0.7" />
+        <rect x="3.1" y="18.6" width="17.8" height="2.3" rx="1.1" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M12 3.8 20.6 8.5H3.4L12 3.8Z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.6 11.4v5.8M12 11.4v5.8M17.4 11.4v5.8M3.8 20h16.4"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** 도산아카데미 소식 탭 — 안내 방송을 뜻하는 확성기 */
 export function MegaphoneIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   // 손잡이가 열린 곡선이라, 채울 때는 닫힌 모양으로 바꿔 그립니다.

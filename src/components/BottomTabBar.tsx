@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChatIcon,
+  CommitteeIcon,
   HomeIcon,
   LibraryIcon,
-  MegaphoneIcon,
   UsersIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
@@ -51,7 +51,12 @@ const TABS = [
    * ★ 2026-09-22 사용자 요청으로 소식 탭의 복습 영상과 자료 탭의 행사 사진을 맞바꿨습니다.
    *   이제 소식 = 행사 사진·소식, 자료 = 복습 영상·파일. 앨범 화면(/albums)은 소식 탭에 딸립니다.
    */
-  { href: "/news", label: "소식", Icon: MegaphoneIcon, owns: ["/albums"] },
+  /*
+   * 이름 "소식" → "위원회", 아이콘 확성기 → 건물 (2026-09-23 사용자 요청).
+   * 그 탭을 열면 위원회 칸이 먼저 보이고, 옆으로 "원우 소식" 칸이 있습니다(app/(main)/news/page.tsx).
+   * 주소(/news)와 알림이 여는 자리는 그대로입니다.
+   */
+  { href: "/news", label: "위원회", Icon: CommitteeIcon, owns: ["/albums"] },
   { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
   { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
 ] as const;
