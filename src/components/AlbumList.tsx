@@ -12,6 +12,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import CommitteeOrgChart from "@/components/CommitteeOrgChart";
+import CommitteeRoster from "@/components/CommitteeRoster";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import {
   EmptyState,
@@ -81,6 +82,8 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
     return (
       <div className="flex flex-col gap-[14px] pb-6">
         <CommitteeOrgChart />
+        {/* 위원회 7개(운영·재정·대외협력·문화홍보·소통화합·봉사·학생) 인원 구성 카드 (2026-09-23) */}
+        <CommitteeRoster />
         {!loading && !error && albums.length > 0 ? (
           <AlbumBook albums={albums} authors={authors} />
         ) : null}
