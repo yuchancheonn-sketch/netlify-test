@@ -100,11 +100,10 @@ export default function NewsPage() {
           (components/AlbumList.tsx의 BookFrame이 높이를 잽니다). 여기에 여백을 더하면 화면이 괜히 조금 스크롤됩니다.
       */}
       {/*
-        위원회 칸은 카드가 화면보다 길 수 있어(조직도) 아래를 넉넉히 비웁니다 —
-        pb-24는 떠 있는 탭 알약에 마지막 줄이 가리지 않을 만큼입니다(자료 탭과 같은 셈법).
-        원우 소식 칸은 카드 틀이 알약 위에서 끝나므로 아래 여백이 없습니다(BookFrame).
+        아래 여백은 두지 않습니다 — 카드 틀(BookFrame)이 탭 알약 위에서 끝나도록 스스로 높이를 잽니다.
+        (2026-09-23: 위원회 칸에 pb-24를 뒀더니 그만큼 카드 자리가 짧아져 카드가 위로 붙었습니다.)
       */}
-      <div className={`px-4 pt-4 ${subtab === "committee" ? "pb-24" : ""}`}>
+      <div className="px-4 pt-4">
         <AlbumList category={subtab} />
       </div>
     </>

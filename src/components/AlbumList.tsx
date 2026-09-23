@@ -172,8 +172,15 @@ function heightSnapshot(): number {
 function BookFrame({
   children,
   minHeightPx = 0,
+  bottomReservePx = 157,
 }: {
   children: React.ReactNode;
+  /**
+   * 틀 아래로 비워 두는 높이(px).
+   * 157 = "소식 올리기" 알약 윗변(93 + 52) + 사이 12 — 원우 소식 칸.
+   * 위원회 칸에는 그 알약이 없어 90(탭 알약 자리 78 + 12)만 비웁니다 (2026-09-23 사용자 "카드가 화면 한가운데에").
+   */
+  bottomReservePx?: number;
   /**
    * 이 높이보다는 낮아지지 않습니다 — 위원회 칸에서 카드가 화면보다 길 때 그만큼 늘리는 데 씁니다 (2026-09-23).
    * 카드가 짧으면 틀은 화면 크기 그대로여서 카드가 화면 한가운데에 섭니다(사용자 "카드가 화면 정가운데에").
@@ -185,7 +192,7 @@ function BookFrame({
 
   const screenHeight =
     viewport && top !== null
-      ? `calc(${Math.max(320, viewport - top)}px - 157px - env(safe-area-inset-bottom))`
+      ? `calc(${Math.max(320, viewport - top)}px - ${bottomReservePx}px - env(safe-area-inset-bottom))`
       : "70dvh";
   const height = minHeightPx > 0 ? `max(${screenHeight}, ${minHeightPx}px)` : screenHeight;
 
@@ -677,7 +684,11 @@ function AlbumBook({
    * 탭 전체를 굴려 읽습니다. 짧은 카드는 화면 크기 그대로라 가운데에 섭니다.
    */
   return (
-    <BookFrame minHeightPx={fit && cardHeight ? cardHeight + 40 : 0}>
+    <BookFrame
+      minHeightPx={fit && cardHeight ? cardHeight + 40 : 0}
+      // 위원회 칸에는 "소식 올리기" 알약이 없어 그만큼 자리를 더 씁니다 — 카드가 화면 한가운데에 섭니다.
+      bottomReservePx={fit ? 90 : 157}
+    >
       {deck}
       {sheets}
     </BookFrame>
