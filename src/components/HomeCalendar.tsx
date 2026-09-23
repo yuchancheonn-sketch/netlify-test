@@ -157,12 +157,17 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               aria-pressed={isSelected}
               className="flex h-11 flex-col items-center justify-start pt-1"
             >
+              {/*
+                오늘은 주황 동그라미에 흰 숫자, 내가 고른 날은 검은 동그라미에 흰 숫자 (2026-09-23 사용자 요청).
+                오늘을 고른 때(화면을 열면 그렇습니다)는 주황이 이깁니다 — "오늘"이라는 표시가 사라지지 않게.
+                (예전엔 고른 날이 주황 동그라미, 오늘은 동그라미 없이 주황 글씨였습니다.)
+              */}
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[14px] tabular-nums ${
-                  isSelected
+                  isToday
                     ? "bg-brand-500 font-bold text-white"
-                    : isToday
-                      ? "font-bold text-brand-500"
+                    : isSelected
+                      ? "bg-ink font-bold text-white"
                       : index % 7 === 0
                         ? "text-danger"
                         : "text-ink"
