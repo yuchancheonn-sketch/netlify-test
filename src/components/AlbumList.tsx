@@ -268,6 +268,8 @@ function AlbumBook({
   const canManage = (album: PhotoAlbumDoc) => album.createdBy === user?.uid || isAdmin;
   /** 뒤집어 세부 설명을 보고 있는 소식의 id (2026-09-22 사용자 요청 — 카드를 한 번 누르면 뒤집힘) */
   const [flippedId, setFlippedId] = useState<string | null>(null);
+  /** 카드 자리 — 아래 touchmove 막기를 걸어 두는 곳 */
+  const deckRef = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{
     x: number;
     y: number;
@@ -283,6 +285,33 @@ function AlbumBook({
   const current = Math.min(index, slides.length - 1);
   const hasPrev = current > 0;
   const hasNext = current < slides.length - 1;
+
+  /*
+   * 가로로 밀 때 카드 안쪽 세로 굴리기가 끼어들지 않게 막습니다
+   * (2026-09-23 사용자 "위원회 칸에서 카드가 옆으로 잘 안 넘어가").
+   *
+   * 위원회 카드는 길어서 카드 안에서 위아래로 굴려 읽습니다(overflow-y-auto). 그 자리에서 손을 옆으로 밀면
+   * 브라우저가 "세로로 굴리려는 손짓"으로 먼저 채 가고, 그러면 우리 쪽 손짓이 pointercancel로 끊겨
+   * 카드가 제자리로 돌아옵니다. 가로로 6px 넘게(세로보다 많이) 움직인 순간부터 기본 동작을 막아
+   * 그 손짓을 우리가 끝까지 받습니다.
+   *
+   * ★ React의 onTouchMove로는 안 됩니다 — 리액트가 passive로 붙여 preventDefault가 먹지 않습니다.
+   *   그래서 여기서 passive: false로 직접 붙입니다.
+   */
+  useEffect(() => {
+    const deck = deckRef.current;
+    if (!deck) return;
+    function onTouchMove(event: TouchEvent) {
+      const start = drag.current;
+      const touch = event.touches[0];
+      if (!start || !touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (start.moved || (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy))) event.preventDefault();
+    }
+    deck.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => deck.removeEventListener("touchmove", onTouchMove);
+  }, []);
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (turn?.settling) return;
@@ -414,6 +443,7 @@ function AlbumBook({
   return (
     <BookFrame>
       <div
+        ref={deckRef}
         /*
           틀을 다 씁니다. 순번 줄("3 / 10", 32px)은 카드 바로 밑에 붙어 카드와 한 덩어리로 가운데에 섭니다
           (2026-09-23 사용자 "1/1은 게시물 카드 바로 밑으로" — 예전엔 틀 맨 아래 bottom-8 자리에 따로).
