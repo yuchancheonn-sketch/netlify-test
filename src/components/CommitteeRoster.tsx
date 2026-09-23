@@ -109,8 +109,8 @@ const COMMITTEES: Committee[] = [
 function MemberLine({ member }: { member: Member }) {
   return (
     <div className="min-w-0">
-      <p className="text-[15px] leading-tight font-bold text-ink">{member.name}</p>
-      <p className="mt-0.5 text-[12px] leading-relaxed break-keep text-ink-muted">{member.title}</p>
+      <p className="text-[17px] leading-tight font-bold text-ink">{member.name}</p>
+      <p className="mt-1 text-[14px] leading-relaxed break-keep text-ink-muted">{member.title}</p>
     </div>
   );
 }
@@ -121,22 +121,22 @@ function CommitteeCard({ committee }: { committee: Committee }) {
   return (
     <article className="rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="min-w-0 truncate text-[17px] font-bold text-ink">{committee.name}</h3>
+        <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{committee.name}</h3>
         {/* 인원 수 — 그림의 오른쪽 위 알약과 같은 자리 */}
-        <span className="shrink-0 rounded-full bg-fill px-2.5 py-1 text-[12px] font-bold text-ink-muted tabular-nums">
+        <span className="shrink-0 rounded-full bg-fill px-3 py-1 text-[13px] font-bold text-ink-muted tabular-nums">
           {count}명
         </span>
       </div>
 
       {/* 위원장 — 옅은 주황 바탕으로 한 단 올립니다(그림의 노란 칸 자리). */}
       <div className="mt-3 rounded-2xl bg-brand-50 px-3.5 py-3">
-        <p className="mb-1.5 text-[11px] font-bold text-brand-500">위원장</p>
+        <p className="mb-2 text-[13px] font-bold text-brand-500">위원장</p>
         <MemberLine member={committee.chair} />
       </div>
 
       {/* 부위원장 — 옅은 회색 칸 안에서 가로선으로 나눕니다. */}
       <div className="mt-2 rounded-2xl bg-fill px-3.5 py-3">
-        <p className="mb-1.5 text-[11px] font-bold text-ink-soft">부위원장</p>
+        <p className="mb-2 text-[13px] font-bold text-ink-soft">부위원장</p>
         <div className="flex flex-col">
           {committee.viceChairs.map((member) => (
             <div key={member.name} className="border-t border-line py-2 first:border-t-0 first:pt-0 last:pb-0">
@@ -171,7 +171,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <h3 className="min-w-0 truncate text-[17px] font-bold text-ink">{committee.name}</h3>
+        <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{committee.name}</h3>
         {/*
           운영진에게만 "수정". 누르는 순간 카드 틀이 포인터를 붙잡지 않도록 onPointerDown을 멈춥니다
           (소식 카드의 ⋯ 와 같은 까닭 — AlbumCard 주석 참고).
@@ -192,13 +192,13 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
         <div className="flex flex-col gap-3">
           {sections.map((section) => (
             <section key={section.label}>
-              <p className="text-[11px] font-bold text-brand-500">{section.label}</p>
+              <p className="text-[13px] font-bold text-brand-500">{section.label}</p>
               {section.value ? (
-                <p className="mt-1 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink">
+                <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink">
                   {section.value}
                 </p>
               ) : (
-                <p className="mt-1 text-[13px] text-ink-faint">
+                <p className="mt-1 text-[14px] text-ink-faint">
                   {isAdmin ? "아직 안 적었어요. 위 '수정'에서 적어 주세요." : "아직 안 적었어요."}
                 </p>
               )}

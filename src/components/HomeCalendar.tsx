@@ -207,7 +207,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                 일정이 있는 날은 주황 점 하나 — 우리 기수 모임이든 도산아카데미든 같습니다
                 (2026-09-23 사용자 요청, 예전엔 도산아카데미만 회색 점이었고 둘 다 있으면 점 두 개).
               */}
-              <span className="mt-0.5 flex h-1.5 items-center" aria-hidden="true">
+              {/* 점은 날짜 밑 1px에 (2026-09-23 사용자 "1px 위로" — mt-0.5(2px)에서). */}
+              <span className="mt-px flex h-1.5 items-center" aria-hidden="true">
                 {items.length > 0 ? <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> : null}
               </span>
             </button>

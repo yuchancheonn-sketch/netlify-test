@@ -3,14 +3,14 @@
  *
  * 사용자가 보여 준 쪽(dosan-10th 자료집)의 배치를 그대로 옮겼습니다
  * (2026-09-23 "이런 식으로 세로로 길고 카드 안에 딱 들어가는, 굳이 밑으로 스크롤 안 해도 되도록").
- *   ┌ 회장   │ 고문(점선)
- *   └ 부회장 │ 감사(점선)
+ *   ┌ 회장   │ 고문
+ *   └ 부회장 │ 감사
  *     정무특보 (한 줄)
  *     사무처 ─ 처장 · 차장 · 회계 (3열)
  *
  * ★ 한 화면에 들어가게 — 글씨(이름 14px, 소속 10px)와 여백을 촘촘히 잡았습니다. 폰 360px에서 카드 높이 약 520px입니다.
  *   값을 키우면 카드가 화면을 넘어가 탭을 굴려야 하니, 글씨를 키울 때는 같이 살펴보세요.
- * 색은 앱 것만: 회장만 주황 채움, 나머지는 흰 상자 + 회색 1px 테두리, 고문·감사는 점선(지시 계통 밖).
+ * 색은 앱 것만: 회장만 주황 채움, 나머지는 흰 상자 + 회색 1px 테두리.
  * 그림 파일이 아니라 코드라 글씨 크기 설정·어두운 화면을 따라갑니다. 사람이 바뀌면 아래 값만 고치세요.
  */
 
@@ -64,26 +64,21 @@ function PersonBlock({ person, light = false }: { person: Person; light?: boolea
   );
 }
 
-/** 상자 하나 — 위에 직책, 아래 사람들. 점선은 지시 계통 밖(고문·감사), 채움은 회장입니다. */
+/** 상자 하나 — 위에 직책, 아래 사람들. 채움(주황)은 회장뿐이고 나머지는 흰 상자 + 회색 실선입니다. */
 function Box({
   role,
   members,
-  dashed = false,
   filled = false,
 }: {
   role: string;
   members: Person[];
-  dashed?: boolean;
   filled?: boolean;
 }) {
   return (
     <div
+      /* 고문·감사도 다른 상자와 같은 회색 실선입니다 (2026-09-23 사용자 요청, 예전엔 점선). */
       className={`rounded-xl px-2.5 py-2 text-center ${
-        filled
-          ? "bg-brand-500"
-          : dashed
-            ? "border border-dashed border-line bg-surface"
-            : "border border-line bg-surface"
+        filled ? "bg-brand-500" : "border border-line bg-surface"
       }`}
     >
       <p
@@ -106,7 +101,7 @@ export default function CommitteeOrgChart() {
       <h2 className="text-[18px] font-bold text-ink">총괄 임원진 조직도</h2>
       <div aria-hidden="true" className="mt-2 h-[2.5px] w-10 rounded-full bg-brand-500" />
 
-      {/* 위 — 왼쪽 줄기(회장·부회장), 오른쪽 자문(고문·감사, 점선) */}
+      {/* 위 — 왼쪽 줄기(회장·부회장), 오른쪽 자문(고문·감사) */}
       <div className="mt-3 grid grid-cols-2 gap-x-2.5">
         <div className="flex flex-col">
           <Box role="회장" members={[CHAIR]} filled />
@@ -124,8 +119,8 @@ export default function CommitteeOrgChart() {
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <Box role="고문" members={[ADVISOR]} dashed />
-          <Box role="감사" members={AUDITORS} dashed />
+          <Box role="고문" members={[ADVISOR]} />
+          <Box role="감사" members={AUDITORS} />
         </div>
       </div>
 
