@@ -110,8 +110,11 @@ export default function CommitteeOrgChart() {
       <div className="mt-3 grid grid-cols-2 gap-x-2.5">
         <div className="flex flex-col">
           <Box role="회장" members={[CHAIR]} filled />
-          {/* 회장 → 부회장 */}
-          <span aria-hidden="true" className="mx-auto h-3 w-px bg-line" />
+          {/*
+            회장 → 부회장. 잇는 선은 1.5px·진한 회색(ink-faint)입니다
+            (2026-09-23 사용자 "선들이 더 선명하게" — 예전엔 1px·아주 옅은 line 색이라 잘 안 보였습니다).
+          */}
+          <span aria-hidden="true" className="mx-auto h-3 w-[1.5px] bg-ink-faint" />
           <Box role="부회장" members={[VICE_CHAIR]} />
         </div>
 
@@ -123,7 +126,7 @@ export default function CommitteeOrgChart() {
 
       {/* 부회장 → 정무특보 · 사무처 (왼쪽 줄기에서 내려옵니다) */}
       <div className="relative h-3" aria-hidden="true">
-        <span className="absolute inset-y-0 left-1/4 w-px -translate-x-1/2 bg-line" />
+        <span className="absolute inset-y-0 left-1/4 w-[1.5px] -translate-x-1/2 bg-ink-faint" />
       </div>
 
       {/* 정무특보 — 한 줄에 직책·이름·소속 (그림과 같습니다) */}
@@ -136,7 +139,7 @@ export default function CommitteeOrgChart() {
       </div>
 
       <div className="relative h-3" aria-hidden="true">
-        <span className="absolute inset-y-0 left-1/4 w-px -translate-x-1/2 bg-line" />
+        <span className="absolute inset-y-0 left-1/4 w-[1.5px] -translate-x-1/2 bg-ink-faint" />
       </div>
 
       {/* 사무처 — 처장 · 차장 · 회계 세 칸을 한 줄에 */}
@@ -146,8 +149,8 @@ export default function CommitteeOrgChart() {
           {OFFICE.map((item, index) => (
             <div
               key={item.role}
-              /* 칸 사이 옅은 세로줄 — 첫 칸 왼쪽에는 긋지 않습니다(그림과 같음). */
-              className={`min-w-0 px-1 ${index > 0 ? "border-l border-line" : ""}`}
+              /* 칸 사이 세로줄 — 첫 칸 왼쪽에는 긋지 않습니다(그림과 같음). 색은 잇는 선과 같은 ink-faint. */
+              className={`min-w-0 px-1 ${index > 0 ? "border-l border-ink-faint" : ""}`}
             >
               <p className="mb-1 text-[10px] font-bold text-brand-500">{item.role}</p>
               <div className="flex flex-col gap-1.5">
