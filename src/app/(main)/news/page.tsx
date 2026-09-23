@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AlbumList from "@/components/AlbumList";
+import AlbumList, { type AlbumCategory } from "@/components/AlbumList";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
+import TextTabs from "@/components/TextTabs";
 import { useViewCohort } from "@/lib/use-view-cohort";
 
 /**
@@ -17,8 +18,19 @@ import { useViewCohort } from "@/lib/use-view-cohort";
  *   그래서 이제 칸이 하나뿐이라 서브탭 고르개 없이 제목 "원우 소식"만 둡니다.
  *   (예전 주소 /news?tab=news로 들어오면 /library?tab=news로 넘깁니다 — 아래 useEffect. 새 소식 알림은 처음부터 그 주소.)
  */
+/**
+ * 소식 탭의 두 칸 (2026-09-23 사용자 요청 "위원회ㅣ원우소식").
+ * 둘 다 같은 카드 짜임(AlbumList)이고, 위원회 칸에는 "소식 올리기" 단추가 없습니다.
+ * 데이터는 한 곳(photoAlbums)에 있고 category 칸으로 갈립니다 — 칸이 없는 예전 소식은 원우 소식입니다.
+ */
+const SUBTABS = [
+  { value: "committee", label: "위원회" },
+  { value: "member", label: "원우 소식" },
+] as const;
+
 export default function NewsPage() {
   const router = useRouter();
+  const [subtab, setSubtab] = useState<AlbumCategory>("member");
   /*
    * 예전 알림(알림 목록에 남은 "도산아카데미 새 소식")은 /news?tab=news를 엽니다. 그 칸이 자료 탭으로 옮겨 갔으니
    * 그리로 넘깁니다. useSearchParams 대신 location을 읽어 Suspense 없이 끝냅니다(상태는 건드리지 않음).
@@ -37,15 +49,26 @@ export default function NewsPage() {
 
   return (
     <>
+      {/*
+        제목 자리에 칸 고르개 "위원회 | 원우 소식" (2026-09-23 사용자 요청 — 예전엔 제목 "원우 소식" 하나).
+        자료 탭과 같은 공용 TextTabs variant="header"라 글씨가 다른 화면 제목과 같은 크기·자리에 섭니다.
+        기수 고르개(운영진만)는 그대로 옆에 답니다 — min-w-0은 폭이 모자랄 때 고르개가 아니라 탭 쪽이 줄게 합니다.
+      */}
       <PageHeader
         title={
           canSwitch ? (
             <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate">원우 소식</span>
+              <TextTabs
+                variant="header"
+                items={SUBTABS}
+                value={subtab}
+                onChange={setSubtab}
+                className="min-w-0"
+              />
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            "원우 소식"
+            <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
           )
         }
         right={<HeaderActions />}
@@ -62,7 +85,7 @@ export default function NewsPage() {
           (components/AlbumList.tsx의 BookFrame이 높이를 잽니다). 여기에 여백을 더하면 화면이 괜히 조금 스크롤됩니다.
       */}
       <div className="px-4 pt-4">
-        <AlbumList />
+        <AlbumList category={subtab} />
       </div>
     </>
   );

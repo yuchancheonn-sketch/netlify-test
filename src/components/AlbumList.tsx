@@ -37,6 +37,9 @@ import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
 /** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
 const ALBUM_BODY_MAX_LENGTH = 1000;
 
+/** 소식 탭의 칸 (2026-09-23) — 원우 소식 / 위원회 */
+export type AlbumCategory = "member" | "committee";
+
 /**
  * 원우 소식 — 소식 탭의 첫 칸 (예전 이름 "행사 사진").
  *
@@ -48,11 +51,19 @@ const ALBUM_BODY_MAX_LENGTH = 1000;
  *
  * (같은 날 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다. 자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
  */
-export default function AlbumList() {
+export default function AlbumList({ category = "member" }: { category?: AlbumCategory }) {
   const { data: allAlbums, loading, error } = useAlbums();
   /** 보고 있는 기수의 앨범만. 만들 때도 이 기수로 적습니다. */
   const { cohort } = useViewCohort();
-  const albums = allAlbums.filter((album) => inCohort(album, cohort));
+  /*
+   * 소식 탭의 칸 나누기 (2026-09-23 사용자 요청 "위원회ㅣ원우소식").
+   * category 칸이 없는 예전 소식은 모두 원우 소식으로 봅니다.
+   * 위원회 칸에는 "소식 올리기" 단추를 두지 않습니다(사용자 "추가하기 기능은 없어도 돼").
+   */
+  const albums = allAlbums.filter(
+    (album) => inCohort(album, cohort) && (album.category ?? "member") === category,
+  );
+  const canAdd = category === "member";
   const [creating, setCreating] = useState(false);
   /*
    * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).
@@ -77,8 +88,8 @@ export default function AlbumList() {
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
-            title="아직 올라온 소식이 없어요"
-            description="아래 '소식 올리기'로 첫 소식을 올려 보세요."
+            title={canAdd ? "아직 올라온 소식이 없어요" : "아직 올라온 위원회 소식이 없어요"}
+            description={canAdd ? "아래 '소식 올리기'로 첫 소식을 올려 보세요." : undefined}
           />
         </div>
       ) : (
@@ -94,16 +105,18 @@ export default function AlbumList() {
         photoAlbums 쓰기를 원우 누구에게나 열어 두었습니다. 새 앨범은 보고 있는
         기수로 적히고, 원우는 자기 기수로 고정이라 늘 자기 기수에 만들어집니다.
       */}
-      <button
-        type="button"
-        onClick={() => setCreating(true)}
-        // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
-        className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
-      >
-        <PlusIcon className="h-5 w-5" />
-        {/* 단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창. */}
-        소식 올리기
-      </button>
+      {canAdd ? (
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
+          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+        >
+          <PlusIcon className="h-5 w-5" />
+          {/* 단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창. */}
+          소식 올리기
+        </button>
+      ) : null}
 
       {creating ? <AlbumSheet onClose={() => setCreating(false)} /> : null}
     </>
