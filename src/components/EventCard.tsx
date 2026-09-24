@@ -99,12 +99,10 @@ export function EventDdayCard({
 
       <span className="min-w-0 flex-1">
         {/*
-          일정 이름 17px 굵게 — 자르지 않고 줄을 바꿔 끝까지 보여 줍니다(카드가 그만큼 높아짐, 2026-09-25 사용자 요청).
-          break-keep — 한글은 낱말 단위로 넘기고, 띄어쓰기 없는 긴 영문은 [overflow-wrap:anywhere]로 잘라 넘깁니다.
+          일정 이름 17px 굵게 — 한 줄, 길면 "…"로 줄입니다.
+          (2026-09-25에 줄을 바꿔 끝까지 보이게 했다가 같은 날 사용자 "그전이 낫다"로 되돌렸습니다.)
         */}
-        <span className="block text-[17px] leading-snug font-bold break-keep [overflow-wrap:anywhere]">
-          {event.title}
-        </span>
+        <span className="block truncate text-[17px] leading-tight font-bold">{event.title}</span>
         {/* "시간 · 장소" 한 줄 — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 "…". */}
         {time || event.location ? (
           <span className="mt-1 block truncate text-[14px] font-medium text-ink-muted">
