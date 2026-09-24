@@ -6,11 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import SegmentedControl from "@/components/SegmentedControl";
+import ToggleRow from "@/components/ToggleRow";
 import { ChevronRightIcon } from "@/components/icons";
 import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
 import { useDisplaySettings } from "@/lib/use-display-settings";
@@ -67,29 +67,35 @@ export default function SettingsPage() {
       <div className="flex flex-col gap-7 px-4 pb-10">
         {isGuest ? null : <PushSection uid={user?.uid} />}
 
+        {/*
+          글씨 크기·화면은 켜기/끄기 스위치 줄입니다 (2026-09-24 사용자 요청 — 아이폰 "사운드 및 햅틱"처럼).
+          예전엔 작게·중간·크게 / 라이트·다크 고르개였습니다.
+        */}
         <section>
           <SectionTitle>글씨 크기</SectionTitle>
-          {/* 칸마다 그 크기로 글씨를 써서, 고르기 전에도 어떻게 될지 보입니다. */}
-          <SegmentedControl
-            options={TEXT_SCALES}
-            value={textScale}
-            onChange={setTextScale}
+          {/*
+            켜면 크게, 끄면 보통. 스위치는 둘뿐이라 "작게"는 없어졌습니다 —
+            예전에 작게를 고른 원우는 꺼진 채로 보이고, 한 번 켰다 끄면 보통이 됩니다.
+          */}
+          <ToggleRow
+            label="큰 글씨"
+            checked={textScale === "large"}
+            onChange={(on) => setTextScale(on ? "large" : "normal")}
           />
         </section>
 
         <section>
           <SectionTitle>화면</SectionTitle>
           {/*
-            두 칸뿐입니다. "시스템" 칸은 두지 않았습니다 —
-            설명이 필요한 이름인 데다, 아무것도 안 고른 상태가 이미 시스템이라
-            굳이 누를 일이 없습니다.
-
-            그래서 주황 상자가 앉는 기준이 "고른 값"이 아니라 **지금 실제로
-            보이는 밝기(resolved)** 입니다. 아직 아무것도 안 고른 원우에게도
-            둘 중 하나에는 상자가 앉아 있고, 폰에서 다크 모드를 켜면 상자가
-            저절로 옮겨갑니다. 하나를 누르면 그때부터 이 앱만 그 밝기로 굳습니다.
+            켜짐 여부는 "고른 값"이 아니라 **지금 실제로 보이는 밝기(resolved)** 입니다.
+            아무것도 안 고른 원우는 폰을 따르므로, 폰에서 다크 모드를 켜면 스위치도 저절로 켜집니다.
+            누르면 그때부터 이 앱만 그 밝기로 굳습니다(폰 설정이 바뀌면 풀림 — display-settings.ts).
           */}
-          <SegmentedControl options={THEMES} value={resolved} onChange={setTheme} />
+          <ToggleRow
+            label="다크 모드"
+            checked={resolved === "dark"}
+            onChange={(on) => setTheme(on ? "dark" : "light")}
+          />
         </section>
 
         {/*
