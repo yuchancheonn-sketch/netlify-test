@@ -60,7 +60,8 @@ export function LoginRequired({
           onClick={() => goToLogin(returnPath)}
           className="shrink-0 rounded-full bg-brand-500 px-4 py-2 text-[14px]! font-bold text-white transition active:scale-95"
         >
-          로그인
+          {/* 글씨만 1px 위로 (2026-09-25 사용자 요청 — 이 파일의 로그인 단추 셋 모두). 단추가 flex가 아니라 inline-block이 있어야 transform이 먹습니다. */}
+          <span className="inline-block -translate-y-px">로그인</span>
         </button>
       </div>
     );
@@ -73,7 +74,8 @@ export function LoginRequired({
         높이는 field(위아래 13px, 약 50px). 이 상자를 쓰는 채팅·설정·원우수첩 등이 모두 함께 바뀝니다.
       */}
       <PrimaryButton size="field" onClick={() => goToLogin(returnPath)}>
-        로그인
+        {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
+        <span className="-translate-y-px">로그인</span>
       </PrimaryButton>
     </div>
   );
@@ -114,7 +116,8 @@ export function LoginPromptProvider({ children }: { children: ReactNode }) {
                   goToLogin(returnPath);
                 }}
               >
-                로그인
+                {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). */}
+                <span className="-translate-y-px">로그인</span>
               </PrimaryButton>
               <button
                 type="button"
