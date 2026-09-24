@@ -85,8 +85,8 @@ export function EventDdayCard({
         {/* 굵기 700(font-bold) — 2026-09-25 사용자 "아주 조금만 더 얇게", 800(font-extrabold)에서 한 단계. */}
         <span
           className={`font-bold tracking-tight whitespace-nowrap text-brand-500 ${
-            // 26px — 2026-09-25 사용자 "아주 조금만 더 작게", 28px에서.
-            dday.length >= 5 ? "text-[22px]" : "text-[26px]"
+            // 24px — 2026-09-25 사용자 요청(28px → 26px → 24px).
+            dday.length >= 5 ? "text-[22px]" : "text-[24px]"
           }`}
         >
           {dday}
