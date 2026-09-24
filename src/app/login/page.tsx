@@ -159,9 +159,13 @@ function LoginScreen() {
           /*
             막의 바탕색은 globals.css의 --scrim 입니다. 값을 박아두면 어두운
             화면에서 크림색 막 위에 흰 글씨가 올라가 아무것도 안 보입니다.
+
+            ★ 얼굴 자리(화면 약 30~60%)는 막을 옅게 (2026-09-25 사용자 "얼굴이 조금 더 선명하게").
+              예전 값: 0.5 0% · 0.28 38% · 0.68 60% · 0.95 74% · 1 84% — 38%→60% 사이에서 막이 짙어져 턱·입이 뿌옇게 덮였습니다.
+              이제 30%~54%를 0.12로 두고, 문구("나를 사랑하고…", 약 70%) 앞에서 빠르게 짙어집니다. 74% 뒤(문구·단추)는 그대로입니다.
           */
           background:
-            "linear-gradient(to bottom, rgb(var(--scrim) / 0.5) 0%, rgb(var(--scrim) / 0.28) 38%, rgb(var(--scrim) / 0.68) 60%, rgb(var(--scrim) / 0.95) 74%, rgb(var(--scrim)) 84%)",
+            "linear-gradient(to bottom, rgb(var(--scrim) / 0.5) 0%, rgb(var(--scrim) / 0.12) 30%, rgb(var(--scrim) / 0.12) 54%, rgb(var(--scrim) / 0.7) 66%, rgb(var(--scrim) / 0.95) 74%, rgb(var(--scrim)) 84%)",
         }}
       />
 
