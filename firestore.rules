@@ -401,7 +401,8 @@ service cloud.firestore {
      * 사라지므로, 목록에서 없어지면 아무도 다시 찾지 못합니다).
      */
     match /files/{fileId} {
-      allow read: if true;
+      // 보는 것도 원우만 (2026-09-25 사용자 "파일창도 로그인해야만") — 2026-09-24 둘러보기 때 true로 열었던 것을 되돌림.
+      allow read: if isMember();
       allow create: if isMember()
                     && request.resource.data.uploadedBy == request.auth.uid;
       allow delete: if isMember()

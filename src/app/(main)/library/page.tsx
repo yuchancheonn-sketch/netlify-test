@@ -1,6 +1,6 @@
 "use client";
 
-import { useRequireLogin } from "@/components/LoginRequired";
+import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import NewsList from "@/components/NewsList";
@@ -89,9 +89,12 @@ export default function LibraryPage() {
 
 function LibraryTabs() {
   const searchParams = useSearchParams();
-  const [subtab, setSubtab] = useState<Subtab>(() =>
-    searchParams.get("tab") === "news" ? "news" : "videos",
-  );
+  // ?tab=files는 파일 칸의 로그인 안내에서 로그인한 뒤 돌아올 때 씁니다 (2026-09-25).
+  const [subtab, setSubtab] = useState<Subtab>(() => {
+    const tab = searchParams.get("tab");
+    return tab === "news" || tab === "files" ? tab : "videos";
+  });
+  const isGuest = useIsGuest();
   /*
    * 파일은 기수마다 따로입니다. 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서
    * 바꿔 봅니다(파일 목록이 같은 값 useViewCohort를 읽습니다). 복습 영상은 모든 기수가 같습니다.
@@ -148,7 +151,19 @@ function LibraryTabs() {
          거기도 고칠 일이 생기면 같은 셈법을 쓰면 됩니다.)
       */}
       <div className="px-4 pt-4 pb-24">
-        {subtab === "videos" ? <VideoList /> : subtab === "news" ? <NewsList /> : <FileList />}
+        {subtab === "videos" ? (
+          <VideoList />
+        ) : subtab === "news" ? (
+          <NewsList />
+        ) : isGuest ? (
+          /*
+            파일 칸은 로그인해야 봅니다 (2026-09-25 사용자 요청). 원우들이 올린 자료라 목록도 원우에게만 —
+            firestore.rules의 files 읽기도 원우만입니다. 로그인하면 이 파일 칸으로 돌아옵니다.
+          */
+          <LoginRequired returnPath="/library?tab=files" />
+        ) : (
+          <FileList />
+        )}
       </div>
     </>
   );
