@@ -121,11 +121,13 @@ export default function DosanQuizCard() {
   /*
    * 버튼 색 — 푸는 동안만 씁니다(푼 뒤에는 카드가 성적으로 바뀝니다).
    * 고른 칸은 주황 테두리 + 연한 주황 바탕(brand-50) + 주황 글씨(2026-09-15 사용자 요청), 나머지는 흰 칸.
+   * 안 고른 칸의 테두리는 선 색(line)에 먹색(ink)을 8% 섞은 것 — 2026-09-25 사용자 "아주 조금만 더 진한 회색으로"
+   * (밝은 화면 약 #D4D6D8, 예전 line #E4E6E9). 먹색을 섞으니 어두운 화면에서는 한 단 밝아져 역시 또렷해집니다.
    */
   function choiceClassName(value: OxAnswer): string {
     return picked === value
       ? "border-brand-500 bg-brand-50 text-brand-500"
-      : "border-line bg-surface text-ink";
+      : "border-[color-mix(in_srgb,var(--color-line)_92%,var(--color-ink))] bg-surface text-ink";
   }
 
   return (
