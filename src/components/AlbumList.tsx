@@ -558,10 +558,16 @@ function AlbumBook({
      * (그 전엔 누르면 앨범 화면이 열렸다가, 같은 날 사용자 요청으로 아무 일도 없게 했었습니다.)
      */
     if (!start.moved) {
-      // 뒷면이 있는 카드만 뒤집힙니다 — 소식 카드(AlbumCardBack)와 위원회 카드(back). 조직도 카드는 뒷면이 없습니다.
+      // 뒷면이 있는 카드만 뒤집힙니다 — 소식 카드(AlbumCardBack)와 위원회 카드(back). 조직도 카드는 뒷면이 없어 넘어갑니다.
       if (start.onCard && (slides[current].album || slides[current].back)) {
         const id = slides[current].id;
         setFlippedId((flipped) => (flipped === id ? null : id));
+      } else if (start.onCard) {
+        /*
+         * 뒷면 없는 카드(조직도)는 누르면 다음 카드로 넘어갑니다 — › 화살표를 누른 것과 같습니다
+         * (2026-09-24 사용자 요청 "조직도 카드는 그 다음 카드로 넘어가도록").
+         */
+        turnBy("next");
       }
       return;
     }
