@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import SegmentedControl from "@/components/SegmentedControl";
 import ToggleRow from "@/components/ToggleRow";
 import { ChevronRightIcon } from "@/components/icons";
 import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
@@ -260,7 +259,7 @@ function permissionProblem(permission: PushPermission): string {
 }
 
 /**
- * 알림 켜기/끄기 — 글씨 크기·화면과 같은 모양의 고르개입니다.
+ * 알림 켜기/끄기 — 글씨 크기·화면과 같은 모양의 스위치 줄입니다.
  *
  * 이 설정은 **기기마다 따로**입니다. 폰에서 켜도 태블릿에서는 따로 켜야 합니다.
  * 브라우저 권한이 기기 단위로 주어지기 때문입니다.
@@ -298,19 +297,17 @@ function PushSection({ uid }: { uid: string | undefined }) {
   }
 
   const message = blocked ?? problem;
-  const spinner = <Spinner className="h-[18px] w-[18px]" />;
 
   return (
     <section>
       <SectionTitle>알림</SectionTitle>
-      <SegmentedControl
-        value={on ? "on" : "off"}
-        onChange={choose}
+      {/* 끄기·켜기 고르개였던 것을 스위치 줄로 (2026-09-24 사용자 요청). 켜고 끄는 동안 스위치 옆에 스피너가 돕니다. */}
+      <ToggleRow
+        label="알림 받기"
+        checked={on}
+        onChange={(next) => choose(next ? "on" : "off")}
         disabled={pending !== null || blocked !== null}
-        options={[
-          { value: "off", label: "끄기", icon: pending === "off" ? spinner : null },
-          { value: "on", label: "켜기", icon: pending === "on" ? spinner : null },
-        ]}
+        icon={pending !== null ? <Spinner className="h-[18px] w-[18px]" /> : null}
       />
       {message ? (
         <p role="alert" className="mt-2.5 text-[13px] leading-relaxed text-danger">
