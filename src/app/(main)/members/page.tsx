@@ -406,8 +406,8 @@ export default function MembersPage() {
         */}
         <div className="mt-[18px] pb-6">
           {busy ? (
-            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.75px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
-            <ul className="flex flex-col gap-[13.75px]">
+            /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.5px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
+            <ul className="flex flex-col gap-[13.5px]">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key}>
                   <Skeleton className="h-[87px] rounded-3xl" />
@@ -451,8 +451,8 @@ export default function MembersPage() {
             </div>
           ) : (
             /*
-              원우마다 흰 박스(MemberRow — rounded-3xl · 헤어라인)를 세우고 13.75px씩 띄워 나눕니다.
-              12px → 14px (2026-09-22 사용자 "아주 조금씩 늘려줘") → 13.75px (2026-09-23 사용자 "0.25px씩 줄여줘").
+              원우마다 흰 박스(MemberRow — rounded-3xl · 헤어라인)를 세우고 13.5px씩 띄워 나눕니다.
+              12px → 14px (2026-09-22 사용자 "아주 조금씩 늘려줘") → 13.75px (2026-09-23 사용자 "0.25px씩 줄여줘") → 13.5px (2026-09-25 사용자 "0.25px 만큼 줄여줘").
               Tailwind 단계(12px·16px)
               사이 값이라 직접 적습니다. 위 자리 표시(Skeleton) 목록도 같은 값이어야
               불러오는 동안과 다 불러온 뒤의 줄 자리가 어긋나지 않습니다.
@@ -464,7 +464,7 @@ export default function MembersPage() {
                 "예전처럼 박스로 구분 짓도록 해봐"라고 해서 박스로 돌아왔습니다.
                 선으로 되돌리려면 git 기록에서 이 목록의 border-t(ml-0.5)와 MemberRow의 py-3 pl-0.5를 보세요.
             */
-            <ul className="flex flex-col gap-[13.75px]">
+            <ul className="flex flex-col gap-[13.5px]">
               {visible.map((entry) => (
                 <li key={entry.key}>
                   <MemberRow
