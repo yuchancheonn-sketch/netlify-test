@@ -663,10 +663,7 @@ function AlbumBook({
           (2026-09-23 사용자 "1/1은 게시물 카드 바로 밑으로" — 예전엔 틀 맨 아래 bottom-8 자리에 따로).
           --card-max(카드 최대 높이)는 그 32px을 빼 카드가 순번 줄을 밀어내지 않게 합니다.
         */
-        className="absolute inset-0 select-none"
-        // 카드를 옆으로 넘기는 자리라, 화면을 밀어 탭을 옮기는 손짓(lib/use-tab-swipe.ts)은 여기서 받지 않습니다 (2026-09-25).
-        data-no-tab-swipe
-        /*
+        className="absolute inset-0 select-none"        /*
           touch-action (2026-09-23 사용자 "옆으로 넘길 때 자꾸 아래로 스크롤 되는 경향")
             - 소식 카드: "none" — 카드 자리에서는 세로 스크롤을 아예 받지 않습니다. 옆으로 밀 때 화면이
               같이 밀려 내려가던 것이 없어집니다. 이 자리는 화면에 딱 맞아(BookFrame) 굴릴 것도 없습니다.

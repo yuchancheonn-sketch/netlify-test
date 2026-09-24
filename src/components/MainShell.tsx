@@ -2,8 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import BottomTabBar, { TAB_ROOTS } from "@/components/BottomTabBar";
-import { useTabSwipe } from "@/lib/use-tab-swipe";
+import BottomTabBar from "@/components/BottomTabBar";
 
 /**
  * 대화방 안에서는 하단 탭바를 감춥니다.
@@ -18,8 +17,6 @@ function isInsideChatRoom(pathname: string): boolean {
 
 export default function MainShell({ children }: { children: ReactNode }) {
   const fullScreen = isInsideChatRoom(usePathname());
-  // 탭 첫 화면을 옆으로 밀면 옆 탭으로 (2026-09-25 사용자 요청 — 인스타처럼). lib/use-tab-swipe.ts
-  const swipeRef = useTabSwipe(TAB_ROOTS);
 
   return (
     <>
@@ -30,7 +27,6 @@ export default function MainShell({ children }: { children: ReactNode }) {
           잡았습니다. 탭바를 감추는 대화방에서는 없앱니다.
         */}
         <main
-          ref={swipeRef}
           className={
             fullScreen
               ? "flex flex-1 flex-col"
