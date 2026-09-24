@@ -810,7 +810,7 @@ function AlbumBook({
  *
  * ★ 글과 사진을 겹치지 않고 위아래로 나눕니다 (2026-09-22 사용자 요청 — "제목이랑 본문이 더 잘 보이게").
  *   처음엔 사진이 카드를 다 덮고 그 위 어두운 막에 흰 글씨를 얹었는데, 사진에 따라 글씨가 묻혔습니다.
- *   이제 흰 칸에 먹색으로 씁니다. 순서는 위에서부터 올린 사람(사진·이름·날짜) → 사진 → 제목(20px 굵게)·본문(15px).
+ *   이제 흰 칸에 먹색으로 씁니다. 순서는 위에서부터 올린 사람(사진·이름·날짜) → 사진 → 제목(18px 굵게, 2026-09-24 20px에서)·본문(15px).
  *   제목·본문은 처음엔 사진 위였는데 같은 날 사용자 요청으로 사진 아래로 옮겼습니다.
  *   "소식 올리기" 알약이 아래 글을 가리지 않도록 틀(BookFrame)이 알약 위에서 끝납니다.
  * ★ 본문은 넉 줄까지만 보이고 넘치면 "…"(line-clamp-4) — 다 쓰면 사진 자리가 없어집니다.
@@ -920,7 +920,8 @@ function AlbumCard({
 
       {/* 제목·본문 — 사진 아래 (2026-09-22 사용자 요청, 그 전엔 올린 사람 줄 바로 아래·사진 위). */}
       <div className="shrink-0 px-5 pt-3.5 pb-5">
-        <h2 className="text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+        {/* 제목 18px — 2026-09-24 사용자 요청 "제목 글씨 사이즈 좀 줄여줘"(20px에서). 뒷면(AlbumCardBack)도 같게 맞춥니다. */}
+        <h2 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
           {album.title}
         </h2>
         {body ? (
@@ -956,7 +957,8 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
         </p>
         {/* 날짜 14px 먹색 — 앞면과 같게(2026-09-22). */}
         {date ? <p className="text-[14px] text-ink">{date}</p> : null}
-        <h2 className="mt-4 text-[20px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+        {/* 18px — 앞면 제목과 같게(2026-09-24, 20px에서). */}
+        <h2 className="mt-4 text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
           {album.title}
         </h2>
       </div>
