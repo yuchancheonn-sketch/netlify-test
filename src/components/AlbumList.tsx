@@ -32,6 +32,7 @@ import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { isCloudinaryConfigured, uploadImage, viewerUrl } from "@/lib/cloudinary";
 import { resizeImage } from "@/lib/image";
+import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, parseDateString, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
@@ -1044,6 +1045,10 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
   const [saving, setSaving] = useState(false);
   /** 사진 올리는 중이면 몇 장째인지 */
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // 위쪽 회색 손잡이를 끌어내려 닫기 (2026-09-24 사용자 요청) — 다른 시트(SessionEditSheet 등)와 같은 손짓. 올리는 중엔 안 닫힘.
+  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(() => {
+    if (!saving) onClose();
+  });
 
   // 창이 닫힐 때 미리보기 주소를 돌려줍니다(브라우저 메모리). 상태는 건드리지 않습니다.
   const previews = useRef<string[]>([]);
@@ -1165,11 +1170,28 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
         흰 바탕(bg-surface) + 옅은 회색 칸(flatInputClassName, 사진 고르기 칸 bg-fill) + "취소"는 흰색에 회색 테두리
         (2026-09-23 사용자 요청 — 예전엔 회색 바탕에 흰 칸, 취소는 회색 칸).
       */}
-      <form
-        onSubmit={handleSubmit}
+      {/*
+        회색 손잡이 (2026-09-24 사용자 요청 "이 창 상단에도 회색 조절 바"). 끌어내리면 닫힙니다.
+        손잡이는 굴러가는 칸 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명. 그래서 바깥 상자가
+        시트 모양을 맡고 form이 안에서 굴러갑니다. form의 pt-7(28px)은 손잡이 칸(12 + 6 + 8 = 26px)이 생겨
+        pt-1로 줄였습니다 — 제목까지의 거리는 거의 같습니다.
+      */}
+      <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-surface px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        style={sheetStyle}
       >
+        <div
+          {...handleTouchHandlers}
+          aria-hidden="true"
+          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
+        >
+          <div className="h-1.5 w-10 rounded-full bg-line" />
+        </div>
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+        >
         <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
 
         {/*
@@ -1301,7 +1323,8 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
                 : "올리기"}
           </PrimaryButton>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

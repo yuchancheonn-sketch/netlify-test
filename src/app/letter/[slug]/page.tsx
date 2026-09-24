@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LetterBook } from "@/components/AlbumList";
 import { PlusIcon } from "@/components/icons";
+import PageHeader from "@/components/PageHeader";
 import { thumbnailUrl } from "@/lib/cloudinary";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { fetchWeekPosts, weekIdFromLetterSlug } from "@/lib/week-letter-server";
@@ -63,16 +64,19 @@ export default async function WeekLetterPage({ params }: Props) {
   }));
 
   return (
-    <main className="mx-auto max-w-[560px] px-4 pt-[calc(20px+env(safe-area-inset-top))]">
-      <header className="px-1">
-        <p className="text-[14px] font-bold text-brand-500">애기애타 10기</p>
-        <h1 className="mt-1 text-[24px] font-bold text-ink">이번주 원우 소식</h1>
-        <p className="mt-1 text-[15px] text-ink-muted">
-          {weekRangeLabel(weekId)} · 소식 {posts.length}개
-        </p>
-      </header>
+    <main className="mx-auto max-w-[560px]">
+      {/*
+        머리글은 앱과 같은 한 줄 제목(PageHeader) — 2026-09-24 사용자 "앱의 원우소식 카드랑 디자인이 다르잖아".
+        처음엔 세 줄(애기애타 10기 / 이번주 원우 소식 / 날짜)이었는데, 카카오톡 브라우저의 위아래 막대까지 겹쳐
+        카드 자리가 모자라 사진이 줄고 양옆이 비었습니다. 한 줄로 줄여 앱과 같은 크기로 섭니다.
+      */}
+      <PageHeader
+        title="이번주 원우 소식"
+        right={<span className="text-[14px] font-medium text-ink-muted">{weekRangeLabel(weekId)}</span>}
+      />
 
-      <div className="mt-5">
+      {/* px-4 pt-4 — 앱 소식 탭(news/page.tsx)과 같은 여백. */}
+      <div className="px-4 pt-4">
         {posts.length === 0 ? (
           <p className="rounded-3xl bg-surface px-6 py-10 text-center text-[15px] text-ink-muted shadow-[var(--shadow-card)]">
             이 주에는 올라온 소식이 없어요.
