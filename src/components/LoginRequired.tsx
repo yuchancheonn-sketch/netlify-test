@@ -45,10 +45,13 @@ export function LoginRequired({
   message = LOGIN_REQUIRED_TEXT,
   returnPath,
   compact = false,
+  onBack,
 }: {
   message?: string;
   returnPath?: string;
   compact?: boolean;
+  /** 주면 로그인 단추 아래에 "되돌아가기"를 답니다 — 알림·내 프로필처럼 제목 줄 아이콘으로 들어온 화면(2026-09-25). */
+  onBack?: () => void;
 }) {
   const goToLogin = useGoToLogin();
   if (compact) {
@@ -77,6 +80,19 @@ export function LoginRequired({
         {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
         <span className="-translate-y-px">로그인</span>
       </PrimaryButton>
+      {/*
+        되돌아가기 (2026-09-25 사용자 요청) — 로그인하지 않고 원래 보던 탭으로. 로그아웃 시트의 "취소"와 같은 글자 단추.
+        -mt-2 — 위 gap-4(16px)에서 8px 당겨 로그인 단추에 붙여 둡니다.
+      */}
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="-mt-2 w-full py-2 text-[15px]! font-bold text-ink-soft"
+        >
+          되돌아가기
+        </button>
+      ) : null}
     </div>
   );
 }

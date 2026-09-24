@@ -164,7 +164,7 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
 /** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
 export default function NotificationsPage() {
   return (
-    <GuestGate title="알림">
+    <GuestGate title="알림" back>
       <NotificationsPageContent />
     </GuestGate>
   );
