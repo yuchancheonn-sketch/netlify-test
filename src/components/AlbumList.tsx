@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import {
   addDoc,
   collection,
@@ -43,6 +44,58 @@ const ALBUM_BODY_MAX_LENGTH = 1000;
 /** 소식 탭의 칸 (2026-09-23) — 원우 소식 / 위원회 */
 export type AlbumCategory = "member" | "committee";
 
+/** 소식이 속한 주(화~월). weekId가 없는 옛 소식은 올린 시각(createdAt)으로 다시 계산합니다 (2026-09-24). */
+function weekOfAlbum(album: PhotoAlbumDoc): string {
+  return (
+    album.weekId ??
+    weekIdForMillis(album.createdAt?.toMillis() ?? parseDateString(album.eventDate)?.getTime() ?? Date.now())
+  );
+}
+
+/**
+ * 한 주(화~월)의 원우 소식만 넘겨 보는 자리 — /news/week/[weekId] 화면 (2026-09-24 사용자 요청).
+ * 매주 월요일 저녁 카카오톡 채널로 나가는 "이번주 원우 소식" 링크가 이 화면을 엽니다.
+ * 원우 소식 칸과 같은 카드 책(AlbumBook)이고, 아래에는 탭바만 있어 90px(위원회 칸과 같음)만 비웁니다.
+ */
+export function WeekAlbumBook({ weekId }: { weekId: string }) {
+  const { data: allAlbums, loading, error } = useAlbums();
+  const { cohort } = useViewCohort();
+  const members = useCohortMembers(cohort);
+  const authors = new Map(members.data.map((member) => [member.uid, member]));
+
+  if (loading) {
+    return (
+      <BookFrame bottomReservePx={90}>
+        <Skeleton className="h-full w-full rounded-[24px]" />
+      </BookFrame>
+    );
+  }
+  if (error) return <ErrorState message={error} />;
+
+  const slides = allAlbums
+    .filter(
+      (album) =>
+        inCohort(album, cohort) &&
+        (album.category ?? "member") === "member" &&
+        weekOfAlbum(album) === weekId,
+    )
+    .map((album) => ({ id: album.id, title: album.title, album }));
+
+  if (slides.length === 0) {
+    return (
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+        <EmptyState
+          icon={<span className="text-[40px]">📸</span>}
+          title="이 주에는 올라온 소식이 없어요"
+          description="소식 탭에서 이번 주 소식과 지난 소식을 볼 수 있어요."
+        />
+      </div>
+    );
+  }
+
+  return <AlbumBook slides={slides} authors={authors} bottomReservePx={90} />;
+}
+
 /**
  * 원우 소식 — 소식 탭의 첫 칸 (예전 이름 "행사 사진").
  *
@@ -83,9 +136,7 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
    * 위원회 칸에는 적용하지 않습니다 — 주간 개념이 없는 고정 소개 글이라 canAdd일 때만 거릅니다.
    * weekId가 없는 옛 소식(이 기능 이전에 올라온 소식)은 올린 시각(createdAt)으로 주를 다시 계산합니다.
    */
-  const weekOf = (album: PhotoAlbumDoc) =>
-    album.weekId ??
-    weekIdForMillis(album.createdAt?.toMillis() ?? parseDateString(album.eventDate)?.getTime() ?? Date.now());
+  const weekOf = weekOfAlbum;
   const thisWeek = currentWeekId();
   const currentAlbums = canAdd ? albums.filter((album) => weekOf(album) === thisWeek) : albums;
   /** 지난 주 → 그 주 소식 목록(최근 순은 useAlbums 정렬을 그대로 물려받습니다). */
@@ -188,7 +239,6 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
         <PastWeeksSheet
           weekIds={pastWeekIds}
           albumsByWeek={pastWeeks}
-          authors={authors}
           onClose={() => setViewingPast(false)}
         />
       ) : null}
@@ -1310,65 +1360,22 @@ function AlbumManageSheet({
 }
 
 /**
- * 지난 소식 — 이번 주 뒤로 접힌 지난 주들을 주차별로 훑어보는 자리 (2026-09-24 사용자 요청).
+ * 지난 소식 — 이번 주 뒤로 접힌 지난 주들의 목록 (2026-09-24 사용자 요청).
  *
- * 처음엔 주 목록(그 주의 날짜 범위 · 게시물 수)이 최근 순으로 서고, 한 주를 고르면 그 주의 소식이
- * 원우 소식 칸과 똑같이 책장 넘기듯 보입니다 — AlbumBook을 그대로 다시 씁니다.
+ * 주 목록(그 주의 날짜 범위 · 게시물 수)이 최근 순으로 서고, 한 주를 누르면 그 주 화면(/news/week/…)으로 갑니다.
+ * 카카오톡 채널로 나가는 링크와 같은 화면이라, 주소를 복사해 나눌 수도 있습니다.
+ * (같은 날 처음엔 이 창 안에서 카드를 넘겨 보게 했다가, 링크로 보낼 주소가 필요해 화면으로 옮겼습니다.)
  */
 function PastWeeksSheet({
   weekIds,
   albumsByWeek,
-  authors,
   onClose,
 }: {
   /** 최근 주가 먼저 */
   weekIds: string[];
   albumsByWeek: Map<string, PhotoAlbumDoc[]>;
-  authors: Map<string, UserDoc>;
   onClose: () => void;
 }) {
-  const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
-
-  if (selectedWeek) {
-    const slides = (albumsByWeek.get(selectedWeek) ?? []).map((album) => ({
-      id: album.id,
-      title: album.title,
-      album,
-    }));
-    return (
-      <div
-        className="fixed inset-0 z-40 flex flex-col bg-canvas"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${weekRangeLabel(selectedWeek)} 원우 소식`}
-      >
-        <div className="flex shrink-0 items-center gap-1 px-3 pt-[calc(10px+env(safe-area-inset-top))] pb-3">
-          <button
-            type="button"
-            onClick={() => setSelectedWeek(null)}
-            aria-label="주 목록으로"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
-          >
-            <ChevronLeftIcon className="h-5 w-5" strokeWidth={2.4} />
-          </button>
-          <h2 className="text-[17px] font-bold text-ink">{weekRangeLabel(selectedWeek)} 원우 소식</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
-        {/* bottomReservePx 16 — 이 화면엔 "소식 올리기" 알약이 없어 아래에 안전영역만큼만 비워 둡니다. */}
-        <div className="min-h-0 flex-1 px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
-          <AlbumBook slides={slides} authors={authors} bottomReservePx={16} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
@@ -1388,15 +1395,14 @@ function PastWeeksSheet({
           {weekIds.map((weekId) => {
             const count = albumsByWeek.get(weekId)?.length ?? 0;
             return (
-              <button
+              <Link
                 key={weekId}
-                type="button"
-                onClick={() => setSelectedWeek(weekId)}
+                href={`/news/week/${weekId}`}
                 className="flex w-full items-center justify-between rounded-2xl bg-fill px-5 py-4 text-left transition active:opacity-70"
               >
                 <span className="text-[16px] font-bold text-ink">{weekRangeLabel(weekId)}</span>
                 <span className="text-[14px] text-ink-muted">게시물 {count}개</span>
-              </button>
+              </Link>
             );
           })}
         </div>

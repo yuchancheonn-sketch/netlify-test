@@ -41,7 +41,7 @@ export default function AdminPage() {
       : []),
     { value: "roster", label: "원우 명단" },
     { value: "members", label: "권한 관리" },
-    // 매주 화요일 서버가 지난주 원우 소식을 모아 적는 카톡 채널 발송 초안 (2026-09-24).
+    // 매주 월요일 저녁 서버가 이번주 원우 소식 링크로 적는 카톡 채널 발송 초안 (2026-09-24).
     { value: "newsDraft", label: "카톡 초안" },
   ];
 
@@ -510,7 +510,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
 /* ------------------------------------------------------------------ */
 
 /**
- * 매주 화요일 서버(/api/news/weekly-close)가 지난주 원우 소식을 모아 적어 둔 초안.
+ * 매주 월요일 18시 서버(/api/news/weekly-close)가 이번주 원우 소식 화면 링크로 적어 둔 초안.
  * 운영진이 "복사하기"로 문구를 복사해 카카오톡 채널 관리자센터 → 소식 글쓰기에 붙여넣습니다.
  * (카카오 비즈니스 메시지로 자동 발송하는 길은 건당 비용이 들어 쓰지 않습니다 — 2026-09-24 사용자 선택.)
  */
@@ -525,7 +525,7 @@ function NewsDraftSection() {
         <EmptyState
           icon={<span className="text-[40px]">💬</span>}
           title="아직 초안이 없어요"
-          description="매주 화요일 새벽, 지난주(화~월) 원우 소식을 모아 여기에 초안을 만들어 둡니다."
+          description="매주 월요일 저녁 6시, 이번 주(화~월) 원우 소식 링크로 여기에 초안을 만들어 둡니다."
         />
       </div>
     );

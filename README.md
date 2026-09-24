@@ -102,8 +102,8 @@ Firebase에는 카카오가 없어서 서버(`/api/auth/kakao`)가 카카오 확
 원우 소식은 **화요일 ~ 다음주 월요일** 단위입니다. 소식 탭에는 이번 주 소식만 보이고, 지난 주들은 "지난 소식" 단추 뒤에
 주차별로 모입니다(앱이 날짜로 스스로 가름 — 아래 예약 실행과 상관없음).
 
-매주 **화요일 00:10(한국 시간)** GitHub Actions([.github/workflows/weekly-news.yml](.github/workflows/weekly-news.yml))가
-`/api/news/weekly-close`를 불러 지난주 소식으로 "이번주 원우 소식이에요" 문구를 만들어 `weeklyDrafts`에 적고 운영진에게 푸시를 보냅니다.
+매주 **월요일 18:00(한국 시간)** GitHub Actions([.github/workflows/weekly-news.yml](.github/workflows/weekly-news.yml))가
+`/api/news/weekly-close`를 불러 이번 주 소식 화면 주소(`/news/week/그 주 화요일`)로 "이번주 원우 소식이에요" 문구를 만들어 `weeklyDrafts`에 적고 운영진에게 푸시를 보냅니다.
 운영진은 **운영진 화면 → 카톡 초안 → 복사하기** 후 카카오톡 채널 관리자센터에서 소식 글로 올립니다.
 (채널 구독자에게 자동으로 톡을 보내는 비즈니스 메시지는 건당 비용이 들어 쓰지 않습니다.)
 
