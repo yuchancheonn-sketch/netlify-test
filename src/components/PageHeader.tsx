@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { BellIcon, ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
-import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
+import { useIsGuest } from "@/components/LoginRequired";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
 import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
@@ -188,29 +188,12 @@ export default function PageHeader({
  * 알림 종은 2026-09-11에 내 프로필 왼쪽에 더했습니다.
  */
 export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface" } = {}) {
-  const isGuest = useIsGuest();
-  const goToLogin = useGoToLogin();
   /*
-   * 로그인 안 하고 둘러보는 사람 (2026-09-24) — 종(알림)·프로필은 원우마다 다른 것이라 빼고, 그 자리에 "로그인" 단추.
-   * 설정(글씨 크기·화면 밝기)은 기기에 적는 것이라 그대로 둡니다. 누르면 지금 화면을 기억하고 로그인으로 갑니다.
+   * 로그인 안 하고 둘러보는 사람에게도 아이콘 세 개를 그대로 둡니다 (2026-09-25 사용자 요청 — 전날 넣은
+   * "로그인" 단추를 빼고 되돌림). 알림함·내 프로필 화면에 들어가면 그 화면이 로그인 안내 상자를 보여 줍니다.
+   * 다만 종의 빨간 점은 원우의 알림 기록을 읽어야 해서, 둘러보는 사람에게는 점 없는 종만 둡니다.
    */
-  if (isGuest) {
-    return (
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => goToLogin()}
-          className="rounded-full bg-brand-500 px-4 py-1.5 text-[14px] font-bold text-white transition active:scale-95"
-        >
-          {/* 글씨만 1px 위로 — 2026-09-24 사용자 요청. 단추가 flex가 아니라 span에 inline-block이 있어야 transform이 먹습니다. */}
-          <span className="inline-block -translate-y-px">로그인</span>
-        </button>
-        <HeaderIconLink href="/settings" label="설정 열기">
-          <SettingsIcon className={HEADER_ICON_SIZE} />
-        </HeaderIconLink>
-      </div>
-    );
-  }
+  const isGuest = useIsGuest();
 
   /*
    * -space-x-1.5로 단추끼리 6px 겹칩니다.
@@ -224,7 +207,13 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
   return (
     <div className="flex items-center -space-x-1.5">
       {/* tone은 빨간 점이 두르는 테 색에만 쓰입니다 — 제목 줄 바탕과 같아야 합니다(PageHeader의 tone 주석). */}
-      <HeaderBellLink tone={tone} />
+      {isGuest ? (
+        <HeaderIconLink href="/notifications" label="알림 열기">
+          <BellIcon className={HEADER_ICON_SIZE} />
+        </HeaderIconLink>
+      ) : (
+        <HeaderBellLink tone={tone} />
+      )}
       <HeaderIconLink href="/profile" label="내 프로필 열기">
         <PersonIcon className={HEADER_ICON_SIZE} />
       </HeaderIconLink>

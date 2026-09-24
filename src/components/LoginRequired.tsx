@@ -68,7 +68,11 @@ export function LoginRequired({
   return (
     <div className="flex flex-col items-center gap-4 rounded-3xl bg-surface px-6 py-10 text-center shadow-[var(--shadow-card)]">
       <p className="text-[15px] leading-relaxed font-bold break-keep text-ink-soft">{message}</p>
-      <PrimaryButton size="sm" className="w-auto! px-8" onClick={() => goToLogin(returnPath)}>
+      {/*
+        폭 가득 긴 단추 (2026-09-25 사용자 요청 "가로로 긴 로그인 버튼으로" — 예전엔 글씨만큼 짧은 단추).
+        높이는 field(위아래 13px, 약 50px). 이 상자를 쓰는 채팅·설정·원우수첩 등이 모두 함께 바뀝니다.
+      */}
+      <PrimaryButton size="field" onClick={() => goToLogin(returnPath)}>
         로그인
       </PrimaryButton>
     </div>
