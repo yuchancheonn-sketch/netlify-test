@@ -384,17 +384,25 @@ html[data-theme="dark"] {
 }
 
 /*
- * ★ 크게 — zoom이 아니라 **글씨만 1.5배** (2026-09-25 사용자 요청: 온누리상품권 앱의 큰글씨처럼
+ * ★ 크게 — 폰에서는 zoom이 아니라 **글씨만 1.5배** (2026-09-25 사용자 요청: 온누리상품권 앱의 큰글씨처럼
  *   "기준 글씨와 이 정도 차이" — 캡처를 재 보니 글씨만 1.5배, 아이콘·박스·여백은 그대로였습니다).
  *
- *   --text-scale은 postcss-text-scale.cjs가 모든 font-size에 곱해 둔 배율입니다(평소엔 없음 = 1).
+ *   -webkit-text-size-adjust(퍼센트)는 폰 브라우저(아이폰 사파리·안드로이드 크롬)가 글씨만 키우는 설정입니다.
  *   px로 못 박은 text-[15px]도 함께 커지고, 칸·아이콘·여백은 그대로라 글이 길면 줄이 바뀌거나 "…"로 줄어듭니다.
- *   예전(2026-09-24까지)에는 zoom 1.15 — 화면 전체를 1.15배로 벌린 것이었습니다.
- *   같은 날 -webkit-text-size-adjust: 150%로 먼저 해 봤는데 아이폰이 무시해서 이 방식으로 바꿨습니다.
- *   (zoom이 걸리지 않으므로 앱 곳곳의 "zoom으로 나누기"는 1로 나눠 그대로 맞습니다.)
+ *   예전(2026-09-24까지)에는 폰에서도 zoom 1.15 — 화면 전체를 1.15배로 벌린 것이었습니다.
+ *
+ *   컴퓨터 브라우저는 이 설정을 무시해서, 마우스로 쓰는 화면(hover·fine pointer)에서만 예전 zoom 1.15를 남깁니다.
+ *   (폰에는 zoom이 걸리지 않으므로 앱 곳곳의 "zoom으로 나누기"는 1로 나눠 그대로 맞습니다.)
  */
 :root[data-text-scale="large"] {
-  --text-scale: 1.5;
+  -webkit-text-size-adjust: 150%;
+  text-size-adjust: 150%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-text-scale="large"] {
+    zoom: 1.15;
+  }
 }
 
 body {
