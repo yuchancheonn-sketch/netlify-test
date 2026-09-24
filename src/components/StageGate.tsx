@@ -59,7 +59,7 @@ export default function StageGate({
  * 앱 바탕(bg-canvas) 한가운데에 도산아카데미 로고만 둡니다.
  * 도는 동그라미도, 점도, 글씨도 없습니다 — 잠깐 스쳐 가는 화면이라 조용할수록 좋습니다.
  *
- * ★ 바탕은 bg-canvas입니다. 지금 canvas는 모든 탭이 같은 옅은 회색(#F1F1F0, 2026-09-23)이라
+ * ★ 바탕은 bg-canvas입니다. 지금 canvas는 모든 탭이 같은 옅은 회색(#EEEEED, 2026-09-23)이라
  *   로딩이 끝나 탭이 나타날 때 바탕색이 바뀌지 않습니다.
  *   홈 화면에 추가한 앱의 스플래시(manifest의 BRAND_BACKGROUND)도 같은 값입니다.
  *
