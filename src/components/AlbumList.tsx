@@ -466,10 +466,15 @@ function AlbumBook({
     cardObserver.current?.disconnect();
     cardObserver.current = null;
     if (!element) return;
-    setCardHeight(element.getBoundingClientRect().height);
-    const observer = new ResizeObserver(() =>
-      setCardHeight(element.getBoundingClientRect().height),
-    );
+    /*
+     * ★ offsetHeight로 잽니다 — getBoundingClientRect()는 안 됩니다 (2026-09-25 사용자 "이 카드만 회전할 때 내려갔다가 올라가").
+     *   카드는 뒤집힐 때 perspective 3D로 돌아서, 도는 동안 화면에 보이는 크기(getBoundingClientRect)가 커졌다 작아집니다.
+     *   그 값으로 재면 높이가 흔들리고, 화면보다 긴 카드(fit — 대외협력위원회처럼 인원 많은 카드)는 그 높이로 자리를 잡아서
+     *   카드가 아래로 내려갔다 올라왔습니다. offsetHeight는 변형(transform)을 무시한 원래 높이라 도는 동안에도 그대로입니다.
+     *   (measureCard는 그릴 때마다 새 함수라 리액트가 그릴 때마다 다시 부릅니다 — 회전 중에도 계속 재는 까닭.)
+     */
+    setCardHeight(element.offsetHeight);
+    const observer = new ResizeObserver(() => setCardHeight(element.offsetHeight));
     observer.observe(element);
     cardObserver.current = observer;
   };
