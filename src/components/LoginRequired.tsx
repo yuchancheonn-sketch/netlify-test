@@ -91,7 +91,8 @@ export function LoginRequired({
       <button
         type="button"
         onClick={onBack}
-        className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        // 아주 얇은 회색 밑줄 1px (2026-09-25 사용자 요청) — 글씨보다 옅은 ink-faint, 글씨에서 4px 아래.
+        className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-1 underline-offset-4"
       >
         되돌아가기
       </button>
