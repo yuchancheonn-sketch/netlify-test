@@ -82,8 +82,9 @@ export function EventDdayCard({
       */}
       <span className="flex shrink-0 flex-col items-center leading-none">
         {/* "D-DAY"·"D-100"처럼 다섯 글자 이상이면 22px — 28px면 칸이 넓어져 제목 자리를 많이 뺏습니다. */}
+        {/* 굵기 700(font-bold) — 2026-09-25 사용자 "아주 조금만 더 얇게", 800(font-extrabold)에서 한 단계. */}
         <span
-          className={`font-extrabold tracking-tight whitespace-nowrap text-brand-500 ${
+          className={`font-bold tracking-tight whitespace-nowrap text-brand-500 ${
             dday.length >= 5 ? "text-[22px]" : "text-[28px]"
           }`}
         >
