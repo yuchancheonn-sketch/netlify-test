@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
-import BottomTabBar from "@/components/BottomTabBar";
+import { useEffect, type ReactNode } from "react";
+import BottomTabBar, { TAB_ROOTS } from "@/components/BottomTabBar";
 
 /**
  * 대화방 안에서는 하단 탭바를 감춥니다.
@@ -15,8 +15,41 @@ function isInsideChatRoom(pathname: string): boolean {
   return /^\/chat\/[^/]+$/.test(pathname);
 }
 
+/** 화면 좌우 끝에서 이 폭 안쪽으로 시작한 손짓을 막습니다(아이폰 사파리의 뒤로·앞으로 밀기 자리). */
+const EDGE_PX = 20;
+
+/**
+ * 탭 첫 화면에서는 아이폰의 "화면 끝을 밀어 뒤로 가기"를 막습니다 (2026-09-25 사용자 요청 "모든 탭화면들이 다 이렇게 밀리잖아").
+ *
+ * 탭은 앱의 맨 바깥이라 뒤로 갈 곳이 없어야 하는데, 브라우저 기록에는 앞서 본 탭·화면이 남아 있어
+ * 왼쪽 끝을 밀면 그 화면이 옆에서 끌려 나왔습니다. 탭 이동을 기록에 안 쌓게(BottomTabBar의 replace) 해도
+ * 이미 쌓인 기록이나 하위 화면에서 돌아올 때 쌓인 기록은 남습니다. 그래서 손짓 자체를 막습니다.
+ *
+ * 방법: 화면 좌우 끝 20px에서 시작한 터치의 touchstart에 preventDefault — 사파리가 그 손짓을
+ * 뒤로·앞으로 가기로 쓰지 못합니다. passive: false여야 먹습니다.
+ * 대가로 그 20px 띠 안을 톡 누르는 것도 눌리지 않습니다. 탭 첫 화면의 카드·단추는 끝에서 16px 들어와
+ * 시작해 걸치는 것이 거의 없고, 뒤로(‹) 단추가 있는 하위 화면(설정·알림·모임 등)에서는 막지 않습니다 —
+ * 거기서는 밀어서 뒤로 가는 것이 맞는 동작입니다.
+ */
+function useBlockEdgeSwipe(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    function onTouchStart(event: TouchEvent) {
+      const touch = event.touches[0];
+      if (!touch) return;
+      if (touch.clientX < EDGE_PX || touch.clientX > window.innerWidth - EDGE_PX) {
+        event.preventDefault();
+      }
+    }
+    document.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => document.removeEventListener("touchstart", onTouchStart);
+  }, [active]);
+}
+
 export default function MainShell({ children }: { children: ReactNode }) {
-  const fullScreen = isInsideChatRoom(usePathname());
+  const pathname = usePathname();
+  const fullScreen = isInsideChatRoom(pathname);
+  useBlockEdgeSwipe(TAB_ROOTS.includes(pathname));
 
   return (
     <>

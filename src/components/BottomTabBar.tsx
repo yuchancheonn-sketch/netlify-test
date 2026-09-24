@@ -61,6 +61,9 @@ const TABS = [
   { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
 ] as const;
 
+/** 다섯 탭의 첫 화면 주소. 그 화면에서 아이폰 끝 밀기(뒤로 가기)를 막는 MainShell이 씁니다. */
+export const TAB_ROOTS: readonly string[] = TABS.map(({ href }) => href);
+
 /** 지금 보고 있는 주소가 이 탭에 속하는지. 하위 화면(/events/3 등)까지 포함합니다. */
 function tabHolds(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
