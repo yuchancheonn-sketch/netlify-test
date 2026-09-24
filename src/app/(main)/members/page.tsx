@@ -342,8 +342,12 @@ export default function MembersPage() {
                     placeholder에만 걸면 입력칸의 font-size는 16px로 남아 확대가 일어나지 않고,
                     안내 글씨만 15px로 그려집니다. 대신 **치는 글씨는 16px 그대로**라 둘이 1px 다릅니다.
                     (안내 글씨는 칸이 비었을 때만 보이므로 한 화면에 같이 서는 일이 없습니다.)
+
+                  ★ 2026-09-25부터 바탕은 bg-fill이 아니라 **bg-canvas** — 앱 기본 바탕 회색(#EEEEED)과 같은 색입니다
+                    (사용자 "검색 박스랑 기본 배경의 회색이랑 같은 색이 되도록"). 흰 구역 위라 또렷이 보입니다.
+                    어두운 화면에서는 canvas(#121315)가 surface보다 어두워 칸이 한 단 들어가 보입니다.
               */
-              className="w-full rounded-[14px] bg-fill pt-[8px] pr-14 pb-[10px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
+              className="w-full rounded-[14px] bg-canvas pt-[8px] pr-14 pb-[10px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
             />
           </div>
 
