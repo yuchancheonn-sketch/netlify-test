@@ -70,6 +70,7 @@ export function LoginRequired({
     );
   }
   return (
+    <>
     <div className="flex flex-col items-center gap-4 rounded-3xl bg-surface px-6 py-10 text-center shadow-[var(--shadow-card)]">
       <p className="text-[15px] leading-relaxed font-bold break-keep text-ink-soft">{message}</p>
       {/*
@@ -80,20 +81,22 @@ export function LoginRequired({
         {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
         <span className="-translate-y-px">로그인</span>
       </PrimaryButton>
-      {/*
-        되돌아가기 (2026-09-25 사용자 요청) — 로그인하지 않고 원래 보던 탭으로. 로그아웃 시트의 "취소"와 같은 글자 단추.
-        -mt-2 — 위 gap-4(16px)에서 8px 당겨 로그인 단추에 붙여 둡니다.
-      */}
-      {onBack ? (
-        <button
-          type="button"
-          onClick={onBack}
-          className="-mt-2 w-full py-2 text-[15px]! font-bold text-ink-soft"
-        >
-          되돌아가기
-        </button>
-      ) : null}
     </div>
+    {/*
+      되돌아가기 (2026-09-25 사용자 요청) — 로그인하지 않고 원래 보던 탭으로. 글자만 있는 단추.
+      흰 상자 밖 아래, 회색 바탕 위에 둡니다(같은 날 사용자 "흰색 박스 아래에 그냥 회색 배경 위에" — 처음엔 상자 안 로그인 단추 밑).
+      상자와 사이 8px(mt-2) + 단추 위아래 12px(py-3) — 손끝 닿는 자리를 넉넉히.
+    */}
+    {onBack ? (
+      <button
+        type="button"
+        onClick={onBack}
+        className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
+      >
+        되돌아가기
+      </button>
+    ) : null}
+    </>
   );
 }
 
