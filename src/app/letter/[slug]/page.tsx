@@ -89,7 +89,6 @@ export default async function WeekLetterPage({ params }: Props) {
         ★ Link가 아니라 a입니다 — 앱 안 이동이면 소식 탭이 처음 그려질 때 주소가 아직 바뀌기 전이라
           ?compose=1을 못 읽을 수 있어서, 페이지를 새로 엽니다(소식지는 앱과 따로 떨어진 쪽이라 새로 열어도 됩니다).
       */}
-      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a
         href="/news?compose=1"
         className="fixed right-5 bottom-[calc(20px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
