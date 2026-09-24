@@ -9,9 +9,8 @@ import { weekRangeLabel } from "@/lib/week";
 /**
  * 한 주(화~월)의 원우 소식 — /news/week/2026-09-22 (그 주 화요일) (2026-09-24 사용자 요청).
  *
- * 소식 탭 "지난 소식"에서 주를 누르면 오고, 매주 월요일 저녁 6시 원우 단톡방에 올라가는
- * "이번주 원우 소식이에요" 링크도 이 화면을 엽니다(/api/news/weekly-close).
- * 로그인 안 된 채 링크로 들어오면 로그인 뒤 이 화면으로 돌아옵니다(StageGate).
+ * 소식 탭 "지난 소식"에서 주를 누르면 옵니다. 로그인한 원우용 화면입니다.
+ * (단톡방에 올라가는 "이번주 원우 소식" 링크는 로그인 없이 보는 소식지 app/letter/[slug]입니다 — 2026-09-24.)
  * 뒤로(‹)는 소식 탭으로 갑니다 — 카톡에서 바로 연 경우 돌아갈 앞 화면이 없어서입니다.
  */
 export default function WeekNewsPage({ params }: { params: Promise<{ weekId: string }> }) {

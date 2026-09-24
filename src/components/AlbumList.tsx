@@ -54,7 +54,6 @@ function weekOfAlbum(album: PhotoAlbumDoc): string {
 
 /**
  * 한 주(화~월)의 원우 소식만 넘겨 보는 자리 — /news/week/[weekId] 화면 (2026-09-24 사용자 요청).
- * 매주 월요일 저녁 원우 단톡방에 올라가는 "이번주 원우 소식" 링크가 이 화면을 엽니다.
  * 원우 소식 칸과 같은 카드 책(AlbumBook)이고, 아래에는 탭바만 있어 90px(위원회 칸과 같음)만 비웁니다.
  */
 export function WeekAlbumBook({ weekId }: { weekId: string }) {
@@ -1365,7 +1364,6 @@ function AlbumManageSheet({
  * 지난 소식 — 이번 주 뒤로 접힌 지난 주들의 목록 (2026-09-24 사용자 요청).
  *
  * 주 목록(그 주의 날짜 범위 · 게시물 수)이 최근 순으로 서고, 한 주를 누르면 그 주 화면(/news/week/…)으로 갑니다.
- * 단톡방에 올라가는 링크와 같은 화면이라, 주소를 복사해 나눌 수도 있습니다.
  * (같은 날 처음엔 이 창 안에서 카드를 넘겨 보게 했다가, 링크로 보낼 주소가 필요해 화면으로 옮겼습니다.)
  */
 function PastWeeksSheet({

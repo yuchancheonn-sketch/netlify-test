@@ -168,6 +168,7 @@
 | `/chat` | 1:1 채팅 목록 (탭 이름은 "채팅") | 1:1 대화 최근순, 안 읽은 점. 단체방은 2026-09-10에 없앰(카톡 단톡방으로 대체) | `chatRooms` |
 | `/chat/[roomId]` | 대화방 | 탭바 감춤, 밀어서 뒤로가기 | `chatRooms/{id}/messages` |
 | `/news` | 원우 소식 | 원우가 올리는 게시물 카드(사진 한 장·제목·본문), 좌우로 넘기고 누르면 뒤집혀 본문. **이번 주(화~월) 소식만** 보이고 지난 주는 "지난 소식"에 주차별로(2026-09-24, `lib/week.ts`). 옛 `?tab=news`는 `/library?tab=news`로 넘김 | `photoAlbums` |
+| `/letter/[주-열쇠]` | 주간 소식지 (공개) | **로그인 없이** 그 주 원우 소식 카드만 위아래로(수정·탭 없음). 서버가 Admin SDK로 읽어 그림. 주소 끝 열쇠(NEWS_CRON_TOKEN 서명)가 맞아야 열림 — 날짜만 바꿔 다른 주를 못 보게 (2026-09-24, `lib/week-letter-server.ts`) | `photoAlbums` (서버) |
 | `/profile` | 내 프로필 | 프로필 편집 + 로그아웃 + 운영진 화면 입구 | `users/{uid}` |
 | `/settings` | 설정 | 알림 · 글씨 크기 · 화면 밝기 (**기기마다 따로**) | localStorage |
 | `/admin` | 운영진 화면 | 가입 승인 · 명단 관리 · 권한 부여 | `users`, `roster` |
