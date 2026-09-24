@@ -61,7 +61,8 @@ export function EventDdayCard({
    *   그 전(2026-09-23~25)에는 한 줄에 "D-7 10.02. 제목", 아래 장소·시간 두 줄 짜임이었습니다.
    */
   const className =
-    "flex items-center gap-4 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    // gap-3 — 세로 선 양옆 12px (2026-09-25 사용자 "디데이랑 제목이 너무 멀어, 가깝게" — 16px에서).
+    "flex items-center gap-3 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
   /** D-day 아래 작은 날짜 — "10.02 금" */
   const dateText = date
@@ -75,9 +76,12 @@ export function EventDdayCard({
    */
   const inside = (
     <>
-      {/* 왼쪽 칸 — 큰 D-day(28px 가장 굵게, 주황)와 그 아래 작은 날짜(12px 굵게, 회색). 폭 62px 고정, 가운데 맞춤. */}
-      <span className="flex w-[62px] shrink-0 flex-col items-center leading-none">
-        {/* "D-DAY"·"D-100"처럼 다섯 글자 이상이면 22px — 28px로는 62px 칸을 넘칩니다. */}
+      {/*
+        왼쪽 칸 — 큰 D-day(28px 가장 굵게, 주황)와 그 아래 작은 날짜(12px 굵게, 회색), 가운데 맞춤.
+        폭은 글자만큼만 (2026-09-25 사용자 "디데이랑 제목 더 가깝게" — 처음엔 62px 고정이라 "D-7" 양옆이 비어 제목이 멀어 보였습니다).
+      */}
+      <span className="flex shrink-0 flex-col items-center leading-none">
+        {/* "D-DAY"·"D-100"처럼 다섯 글자 이상이면 22px — 28px면 칸이 넓어져 제목 자리를 많이 뺏습니다. */}
         <span
           className={`font-extrabold tracking-tight whitespace-nowrap text-brand-500 ${
             dday.length >= 5 ? "text-[22px]" : "text-[28px]"
@@ -94,8 +98,13 @@ export function EventDdayCard({
       <span aria-hidden="true" className="w-px shrink-0 self-stretch bg-line" />
 
       <span className="min-w-0 flex-1">
-        {/* 일정 이름 17px 굵게 — 길면 "…"로 줄입니다. */}
-        <span className="block truncate text-[17px] leading-tight font-bold">{event.title}</span>
+        {/*
+          일정 이름 17px 굵게 — 자르지 않고 줄을 바꿔 끝까지 보여 줍니다(카드가 그만큼 높아짐, 2026-09-25 사용자 요청).
+          break-keep — 한글은 낱말 단위로 넘기고, 띄어쓰기 없는 긴 영문은 [overflow-wrap:anywhere]로 잘라 넘깁니다.
+        */}
+        <span className="block text-[17px] leading-snug font-bold break-keep [overflow-wrap:anywhere]">
+          {event.title}
+        </span>
         {/* "시간 · 장소" 한 줄 — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 "…". */}
         {time || event.location ? (
           <span className="mt-1 block truncate text-[14px] font-medium text-ink-muted">
