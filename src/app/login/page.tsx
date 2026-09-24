@@ -205,7 +205,7 @@ function LoginScreen() {
             /*
               두 단추 높이 56px → 50px (2026-09-22 사용자 요청 "조금씩 줄여줘").
               로그인하기는 PrimaryButton field(위아래 13px), 회원가입하기는 테두리 1px + 위아래 12px로 같은 50px.
-              가입 방법 목록(구글·카톡·휴대폰) 단추는 그대로 56px입니다.
+              가입 방법 목록(구글·카톡·휴대폰) 단추도 2026-09-25부터 같은 50px입니다(아래 주석).
             */
             <div className="flex flex-col gap-3">
               <PrimaryButton onClick={() => goTo("login")} size="field">
@@ -220,13 +220,18 @@ function LoginScreen() {
               </button>
             </div>
           ) : (
+            /*
+              ★ 세 단추 56px → 50px (2026-09-25 사용자 "박스들 위치 확 내려서 도산 선생 얼굴 안 가리도록").
+                위 "로그인하기/회원가입하기"와 같은 높이(흰 단추 테두리 1px + 위아래 12px, 카톡 위아래 13px).
+                아래 "이미 가입했다면…" 안내 두 줄을 뺀 것과 합쳐 목록 전체가 약 66px 내려갑니다(목록은 화면 아래에 붙어 섭니다).
+            */
             <div className="flex flex-col gap-3">
               {/* 구글 — 흰 단추에 구글 네 색 로고 */}
               <button
                 type="button"
                 onClick={handleGoogle}
                 disabled={submitting}
-                className={secondaryButtonClassName}
+                className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 {submitting ? <Spinner className="h-5 w-5" /> : <GoogleIcon className="h-5 w-5" />}
                 구글 계정으로 {verb}
@@ -236,7 +241,7 @@ function LoginScreen() {
                 type="button"
                 onClick={handleKakao}
                 disabled={submitting}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-5 py-4 text-[16px] font-bold text-black/85 transition active:scale-[0.99] disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-5 py-[13px] text-[16px] font-bold text-black/85 transition active:scale-[0.99] disabled:opacity-60"
               >
                 <KakaoIcon className="h-5 w-5" />
                 카톡으로 {verb}
@@ -245,18 +250,22 @@ function LoginScreen() {
                 type="button"
                 onClick={() => goTo("phone")}
                 disabled={submitting}
-                className={secondaryButtonClassName}
+                className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 <PhoneIcon className="h-5 w-5" />
                 휴대폰 번호로 {verb}
               </button>
 
+              {/*
+                "처음으로" → 로그인 목록에서는 "회원가입" (2026-09-25 사용자 요청) — 누르면 가입 방법 목록("…으로 시작하기")으로 바뀝니다.
+                가입 목록에서는 거꾸로 "로그인"을 두어 서로 오갑니다. 처음 화면으로 가는 길은 없어졌습니다.
+              */}
               <button
                 type="button"
-                onClick={() => goTo("start")}
+                onClick={() => goTo(step === "login" ? "signup" : "login")}
                 className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
               >
-                처음으로
+                {step === "login" ? "회원가입" : "로그인"}
               </button>
             </div>
           )}
@@ -267,11 +276,7 @@ function LoginScreen() {
             </p>
           ) : null}
 
-          {step === "login" ? (
-            <p className="mt-3 text-center text-[12px] text-ink-muted">
-              이미 가입했다면 다른 방법으로 들어와도 휴대폰 번호가 같으면 원래 계정으로 합쳐져요.
-            </p>
-          ) : null}
+          {/* "이미 가입했다면 다른 방법으로 들어와도…합쳐져요" 안내는 2026-09-25 사용자 요청으로 뺐습니다(합치기 자체는 그대로). */}
 
           {/*
             로그인 없이 둘러보기 (2026-09-24 사용자 요청 "보는 것만큼 로그인 없이") — 홈으로. 올리기·수정할 때 다시 로그인을 안내합니다.
