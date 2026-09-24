@@ -104,8 +104,8 @@ Firebase에는 카카오가 없어서 서버(`/api/auth/kakao`)가 카카오 확
 
 매주 **월요일 18:00(한국 시간)** GitHub Actions([.github/workflows/weekly-news.yml](.github/workflows/weekly-news.yml))가
 `/api/news/weekly-close`를 불러 이번 주 소식 화면 주소(`/news/week/그 주 화요일`)로 "이번주 원우 소식이에요" 문구를 만들어 `weeklyDrafts`에 적고 운영진에게 푸시를 보냅니다.
-운영진은 **운영진 화면 → 카톡 초안 → 복사하기** 후 카카오톡 채널 관리자센터에서 소식 글로 올립니다.
-(채널 구독자에게 자동으로 톡을 보내는 비즈니스 메시지는 건당 비용이 들어 쓰지 않습니다.)
+운영진은 푸시를 눌러 **카톡 초안 → 카톡으로 보내기**(폰 공유 창) → 카카오톡 → 원우 단톡방을 고릅니다.
+(카카오톡 채널 가입자에게 자동으로 보내는 길은 유료 비즈니스 메시지뿐이라 쓰지 않고 단톡방에 올리기로 했습니다.)
 
 - 비밀값 `NEWS_CRON_TOKEN`이 **두 곳에 같은 값**으로 있어야 합니다 — Secret Manager(`apphosting.yaml`이 가리킴)와
   GitHub 저장소 Settings → Secrets and variables → Actions. 2026-09-24에 둘 다 넣었습니다. 값을 바꾸면 두 곳 모두 바꿉니다.

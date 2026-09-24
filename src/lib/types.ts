@@ -513,10 +513,10 @@ export interface NoticeDoc {
 }
 
 /**
- * weeklyDrafts/{weekId} — 이번주 원우 소식 카카오톡 채널 발송 초안(그 주 화면 링크) (2026-09-24).
+ * weeklyDrafts/{weekId} — 이번주 원우 소식 단톡방용 카톡 초안(그 주 화면 링크) (2026-09-24).
  *
  * 매주 월요일 18:00 GitHub Actions가 /api/news/weekly-close를 불러 서버(Admin SDK)만 적습니다.
- * 앱은 /admin 화면에서 읽기만 하고, 운영진이 draftText를 복사해 카카오톡 채널 관리자센터에 직접 올립니다
+ * 앱은 /admin 화면에서 읽기만 하고, 운영진이 draftText를 원우 단톡방에 직접 올립니다
  * (카카오 비즈니스 메시지는 건당 비용이 들어 쓰지 않기로 했습니다 — 2026-09-24 사용자 선택).
  */
 export interface WeeklyDraftDoc {
@@ -525,7 +525,7 @@ export interface WeeklyDraftDoc {
   /** "9월 22일~28일" */
   weekLabel: string;
   postCount: number;
-  /** 채널에 그대로 붙여넣을 문구 */
+  /** 단톡방에 그대로 보낼 문구 */
   draftText: string;
   createdAt: Timestamp | null;
 }

@@ -194,7 +194,7 @@
 | `chatReads/{uid}` | 본인 uid | 방별 마지막으로 본 시각 | **본인만** |
 | `pushTokens/{FCM토큰}` | FCM 토큰 | 그 기기 주인 uid·userAgent | 본인 것 하나만. **list는 아무에게도 안 엶** |
 | `pushLog/{event:id}` | `event:{eventId}` | 일정 알림 중복 방지 표시 | **규칙에 없음 = 클라이언트 전면 차단** (서버 전용) |
-| `weeklyDrafts/{weekId}` | 그 주 화요일 `YYYY-MM-DD` | 이번주 원우 소식 카톡 채널 초안(문구·게시물 수·그 주 화면 링크). 매주 월요일 18시 GitHub Actions → `/api/news/weekly-close`가 적음 (2026-09-24) | **운영진만 읽기**, 쓰기는 서버만 |
+| `weeklyDrafts/{weekId}` | 그 주 화요일 `YYYY-MM-DD` | 이번주 원우 소식 단톡방용 카톡 초안(문구·게시물 수·그 주 화면 링크). 매주 월요일 18시 GitHub Actions → `/api/news/weekly-close`가 적음 (2026-09-24) | **운영진만 읽기**, 쓰기는 서버만 |
 
 ### 눈여겨볼 설계
 

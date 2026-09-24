@@ -15,9 +15,9 @@ import { weekIdForDay, weekRangeLabel } from "@/lib/week";
  *   1. 이번 주(지난 화요일~오늘 월요일)에 올라온 원우 소식 수를 세고
  *   2. "이번주 원우 소식이에요" + 그 주 화면 주소(/news/week/{그 주 화요일})를 weeklyDrafts/{그 주}에 적고
  *   3. 운영진에게 "초안이 준비됐어요" 푸시를 보냅니다.
- * 채널 발송은 운영진이 /admin "카톡 초안"에서 복사해 손으로 합니다(비즈니스 메시지는 건당 비용이라 쓰지 않음).
- * ★ 채널은 공개라 원우가 아닌 구독자도 받습니다. 그래서 문구에 원우 이름·소식 제목은 넣지 않고 수와 링크만 둡니다
- *   (링크 화면은 로그인한 원우만 열림).
+ * 보내기는 운영진이 /admin "카톡 초안"의 "카톡으로 보내기"(폰 공유 창)나 복사로 원우 단톡방에 올립니다
+ * (같은 날 사용자 선택 — 카카오톡 채널 가입자에게 자동으로 보내는 길은 유료 비즈니스 메시지뿐이라 쓰지 않음).
+ * 문구에는 소식 수와 링크만 둡니다. 링크 화면은 로그인한 원우만 열립니다.
  *
  * 화면의 "이번 주만 보이기"는 이 주소와 상관없이 앱이 날짜로 스스로 합니다 — 이 호출이 한 번 빠져도
  * 카드는 제때 접히고, 초안만 그 주 것이 안 생깁니다. 같은 주를 여러 번 불러도 같은 문서를 덮어씁니다.
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
   const push = await sendPushToUsers({
     recipientUids: admins.docs.map((document) => document.id),
     title: "이번주 원우 소식 카톡 초안이 준비됐어요",
-    body: `${weekLabel} · 게시물 ${posts.length}개 — 운영진 화면에서 복사해 채널에 올려 주세요.`,
-    url: "/admin",
+    body: `${weekLabel} · 게시물 ${posts.length}개 — 눌러서 단톡방에 보내 주세요.`,
+    url: "/admin?tab=newsDraft",
     tag: `weekly-draft:${weekId}`,
   });
 

@@ -22,8 +22,16 @@ type Tab = "pending" | "roster" | "members" | "newsDraft";
 
 export default function AdminPage() {
   const { isAdmin } = useAuth();
-  // 고르기 전에는 null. 막아둔 사람이 있으면 그 탭에서 시작합니다.
-  const [tab, setTab] = useState<Tab | null>(null);
+  /*
+   * 고르기 전에는 null. 막아둔 사람이 있으면 그 탭에서 시작합니다.
+   * 월요일 저녁 "카톡 초안" 푸시는 /admin?tab=newsDraft를 열어 그 탭에서 바로 시작합니다 (2026-09-24).
+   * (이 화면은 로그인 확인이 끝난 뒤 브라우저에서만 그려져서, 여기서 주소를 읽어도 화면이 어긋나지 않습니다.)
+   */
+  const [tab, setTab] = useState<Tab | null>(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "newsDraft"
+      ? "newsDraft"
+      : null,
+  );
   const users = useAllUsers();
   const roster = useRoster();
 
@@ -41,7 +49,7 @@ export default function AdminPage() {
       : []),
     { value: "roster", label: "원우 명단" },
     { value: "members", label: "권한 관리" },
-    // 매주 월요일 저녁 서버가 이번주 원우 소식 링크로 적는 카톡 채널 발송 초안 (2026-09-24).
+    // 매주 월요일 저녁 서버가 이번주 원우 소식 링크로 적는 단톡방용 카톡 초안 (2026-09-24).
     { value: "newsDraft", label: "카톡 초안" },
   ];
 
@@ -511,7 +519,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
 
 /**
  * 매주 월요일 18시 서버(/api/news/weekly-close)가 이번주 원우 소식 화면 링크로 적어 둔 초안.
- * 운영진이 "복사하기"로 문구를 복사해 카카오톡 채널 관리자센터 → 소식 글쓰기에 붙여넣습니다.
+ * 운영진이 "카톡으로 보내기"(폰 공유 창)나 "복사하기"로 원우 단톡방에 올립니다.
  * (카카오 비즈니스 메시지로 자동 발송하는 길은 건당 비용이 들어 쓰지 않습니다 — 2026-09-24 사용자 선택.)
  */
 function NewsDraftSection() {
@@ -542,6 +550,19 @@ function NewsDraftSection() {
 
 function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
   const [copied, setCopied] = useState(false);
+  /*
+   * 폰의 공유 창 — 카카오톡 → 원우 단톡방을 고르면 문구가 그대로 갑니다 (2026-09-24 사용자 "단톡방에 올리기").
+   * 공유 창이 없는 브라우저(대개 컴퓨터)에서는 단추를 감추고 복사만 둡니다.
+   */
+  const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  async function share() {
+    try {
+      await navigator.share({ text: draft.draftText });
+    } catch {
+      // 공유 창을 닫은 것도 여기로 옵니다 — 알릴 것 없음.
+    }
+  }
 
   async function copy() {
     try {
@@ -560,13 +581,26 @@ function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
           <p className="text-[16px] font-bold text-ink">{draft.weekLabel}</p>
           <p className="text-[13px] text-ink-muted">게시물 {draft.postCount}개</p>
         </div>
-        <button
-          type="button"
-          onClick={copy}
-          className="shrink-0 rounded-full bg-brand-500 px-4 py-2 text-[13px] font-bold text-white transition active:scale-95"
-        >
-          {copied ? "복사했어요" : "복사하기"}
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={copy}
+            className={`rounded-full px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
+              canShare ? "bg-fill text-ink-muted" : "bg-brand-500 text-white"
+            }`}
+          >
+            {copied ? "복사했어요" : "복사하기"}
+          </button>
+          {canShare ? (
+            <button
+              type="button"
+              onClick={share}
+              className="rounded-full bg-brand-500 px-4 py-2 text-[13px] font-bold text-white transition active:scale-95"
+            >
+              카톡으로 보내기
+            </button>
+          ) : null}
+        </div>
       </div>
       <p className="mt-3 rounded-2xl bg-fill px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
         {draft.draftText}

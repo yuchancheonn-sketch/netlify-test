@@ -538,7 +538,7 @@ service cloud.firestore {
     }
 
     /*
-     * 이번주 원우 소식 카톡 채널 초안 (2026-09-24) — 운영진 화면 "카톡 초안" 탭.
+     * 이번주 원우 소식 단톡방용 카톡 초안 (2026-09-24) — 운영진 화면 "카톡 초안" 탭.
      * 서버(/api/news/weekly-close, 매주 월요일 18시 GitHub Actions가 부름)만 적고, 운영진만 읽습니다.
      */
     match /weeklyDrafts/{weekId} {
