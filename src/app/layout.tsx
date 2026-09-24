@@ -79,7 +79,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         예전에는 여기에 인라인 style로 밝은 회색을 박아두었는데, 인라인은
         CSS를 이기기 때문에 어두운 화면에서도 배경만 밝은 채로 남았습니다.
       */}
-      <body className="min-h-full font-sans">
+      {/*
+        suppressHydrationWarning (2026-09-24): 카카오톡 안 브라우저(아이폰)가 리액트보다 먼저 <body>에
+        style="-webkit-text-size-adjust:100%"를 붙여서, 카톡에서 링크를 열면 개발 서버에 하이드레이션 경고가 떴습니다.
+        우리 코드가 아니라 카톡이 붙인 것이라 이 태그의 속성 차이만 눈감습니다(안쪽 내용은 그대로 검사됩니다).
+      */}
+      <body className="min-h-full font-sans" suppressHydrationWarning>
         {/*
           보기 설정(글씨 크기·화면 밝기)을 화면이 그려지기 전에 적용합니다.
           리액트가 켜진 뒤에 적용하면 보통 크기로 한 번 그려졌다가 바뀌면서
