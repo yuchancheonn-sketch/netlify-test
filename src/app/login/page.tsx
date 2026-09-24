@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ConfirmationResult } from "firebase/auth";
 import StageGate from "@/components/StageGate";
@@ -267,6 +268,16 @@ function LoginScreen() {
               이미 가입했다면 다른 방법으로 들어와도 휴대폰 번호가 같으면 원래 계정으로 합쳐져요.
             </p>
           ) : null}
+
+          {/*
+            로그인 없이 둘러보기 (2026-09-24 사용자 요청 "보는 것만큼 로그인 없이") — 홈으로. 올리기·수정할 때 다시 로그인을 안내합니다.
+          */}
+          <Link
+            href="/home"
+            className="mt-5 block text-center text-[14px] font-bold text-ink-muted underline underline-offset-4"
+          >
+            로그인 없이 둘러보기
+          </Link>
 
           {/* 맨 아래 "🔒 10기 원우들을 위한 공간이에요" 줄은 2026-09-22 사용자 요청으로 지웠습니다. */}
         </div>

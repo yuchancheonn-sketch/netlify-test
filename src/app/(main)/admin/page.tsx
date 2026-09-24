@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useMemo, useState } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
@@ -20,7 +21,7 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
 
 type Tab = "pending" | "roster" | "members" | "newsDraft";
 
-export default function AdminPage() {
+function AdminPageContent() {
   const { isAdmin } = useAuth();
   /*
    * 고르기 전에는 null. 막아둔 사람이 있으면 그 탭에서 시작합니다.
@@ -613,5 +614,14 @@ function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
         ) : null}
       </div>
     </li>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function AdminPage() {
+  return (
+    <GuestGate title="운영진">
+      <AdminPageContent />
+    </GuestGate>
   );
 }

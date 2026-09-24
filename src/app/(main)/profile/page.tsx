@@ -1,12 +1,13 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
 
@@ -75,5 +76,14 @@ export default function ProfilePage() {
       */}
       <div className="pb-10" />
     </div>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function ProfilePage() {
+  return (
+    <GuestGate title="내 프로필">
+      <ProfilePageContent />
+    </GuestGate>
   );
 }

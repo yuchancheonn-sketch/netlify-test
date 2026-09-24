@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, OMarkIcon, QMarkIcon, XMarkIcon } from "@/components/icons";
+import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 import { PrimaryButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { kstDateString, quizForDay, type OxAnswer } from "@/lib/dosan-quiz";
@@ -47,7 +48,18 @@ export default function DosanQuizCard() {
   const quizStatus = useQuizStatus(user?.uid, day);
   // 자정 경계에서 서버가 본 오늘 문제와 화면의 문제가 다르면, 서버 값을 아직 쓰지 않습니다.
   const status = quizStatus.status?.quizId === quiz.id ? quizStatus.status : null;
-  const today = status?.today ?? null;
+  /*
+   * 로그인 안 하고 둘러보는 사람 (2026-09-24 사용자 요청) — 풀 수는 있지만 기록은 안 남습니다(/api/quiz/check).
+   * 결과는 이 화면에만 들고 있고, 성적 칸 대신 "나의 등수 보러가기"(로그인)를 보여 줍니다.
+   */
+  const isGuest = useIsGuest();
+  const goToLogin = useGoToLogin();
+  const [guestResult, setGuestResult] = useState<{ key: string; result: QuizTodayResult } | null>(null);
+  const today = isGuest
+    ? guestResult?.key === quizKey
+      ? guestResult.result
+      : null
+    : (status?.today ?? null);
 
   /**
    * 제출 전에 눌러 둔 답. 어느 문제에 고른 것인지(key)와 함께 둡니다 —
@@ -75,8 +87,21 @@ export default function DosanQuizCard() {
     setScreen("grading");
     const startedAt = Date.now();
     try {
-      const next = await sendQuizAnswer(quiz.id, picked);
-      quizStatus.setStatus(next);
+      if (isGuest) {
+        const response = await fetch("/api/quiz/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quizId: quiz.id, answer: picked }),
+        });
+        if (!response.ok) {
+          const reason = ((await response.json().catch(() => null)) as { reason?: string } | null)?.reason;
+          throw new QuizRequestError(reason ?? "failed");
+        }
+        setGuestResult({ key: quizKey, result: (await response.json()) as QuizTodayResult });
+      } else {
+        const next = await sendQuizAnswer(quiz.id, picked);
+        quizStatus.setStatus(next);
+      }
       // 서버가 빨리 답해도 "채점 중이에요"를 잠깐은 보여줍니다 — 번쩍하고 지나가지 않게.
       const wait = Math.max(0, GRADING_MS - (Date.now() - startedAt));
       gradingTimer.current = window.setTimeout(() => setScreen("explanation"), wait);
@@ -158,6 +183,19 @@ export default function DosanQuizCard() {
             <Skeleton className="h-[52px] rounded-2xl" />
             <Skeleton className="mt-4 h-10 rounded-2xl" />
           </div>
+        ) : today && isGuest ? (
+          <>
+            <QuizResultView today={today} stats={null} />
+            {/* 로그인 안 하고 푼 답은 맞힌 수·등수에 안 들어갑니다 — 로그인하면 이 화면으로 돌아와 다시 풉니다. */}
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-faint">
+              로그인하지 않고 푼 답은 등수에 들어가지 않아요.
+            </p>
+            <div className="mt-3">
+              <PrimaryButton onClick={() => goToLogin()} size="compact">
+                나의 등수 보러가기
+              </PrimaryButton>
+            </div>
+          </>
         ) : today ? (
           <QuizResultView today={today} stats={status?.stats ?? null} />
         ) : quizStatus.error && !status ? (

@@ -33,6 +33,7 @@ import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { isCloudinaryConfigured, uploadImage, viewerUrl } from "@/lib/cloudinary";
 import { resizeImage } from "@/lib/image";
 import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
+import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, parseDateString, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
@@ -153,7 +154,10 @@ export default function AlbumList({
     (album) => inCohort(album, cohort) && (album.category ?? "member") === category,
   );
   const canAdd = category === "member";
-  const [creating, setCreating] = useState(startComposing && category === "member");
+  const isGuest = useIsGuest();
+  const requireLogin = useRequireLogin();
+  // 둘러보는 사람은 창을 연 채로 시작하지 않습니다 — news/page.tsx가 로그인으로 보내고, 로그인 뒤 이 주소로 돌아옵니다.
+  const [creating, setCreating] = useState(startComposing && category === "member" && !isGuest);
   const [viewingPast, setViewingPast] = useState(false);
   /*
    * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).
@@ -257,7 +261,11 @@ export default function AlbumList({
       {canAdd ? (
         <button
           type="button"
-          onClick={() => setCreating(true)}
+          onClick={() => {
+            // 소식 올리기는 로그인해야 — 둘러보는 사람에게는 안내 창, 로그인 뒤 소식 올리기 창으로 (2026-09-24).
+            if (requireLogin({ returnPath: "/news?compose=1" })) return;
+            setCreating(true);
+          }}
           // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
           className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
         >

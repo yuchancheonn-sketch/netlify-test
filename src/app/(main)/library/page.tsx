@@ -1,5 +1,6 @@
 "use client";
 
+import { useRequireLogin } from "@/components/LoginRequired";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import NewsList from "@/components/NewsList";
@@ -180,6 +181,7 @@ function FileList() {
   /** 0~1. 여러 개를 올릴 때는 지금 올리는 한 개의 진행률입니다. */
   const [progress, setProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const requireLogin = useRequireLogin();
 
   async function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(event.target.files ?? []);
@@ -296,6 +298,10 @@ function FileList() {
       */}
       {isCloudinaryConfigured ? (
         <label
+          // 둘러보는 사람이 누르면 파일 고르기 창 대신 로그인 안내 (2026-09-24).
+          onClick={(event) => {
+            if (requireLogin()) event.preventDefault();
+          }}
           className={`fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95 ${uploading ? "opacity-60" : ""}`}
         >
           {uploading ? (

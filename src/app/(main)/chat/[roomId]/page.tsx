@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
@@ -27,7 +28,7 @@ import type { MessageDoc } from "@/lib/types";
  * 위에 얇은 제목 줄(뒤로가기 + 상대 이름), 가운데 대화, 아래 입력창.
  * 하단 탭바는 MainShell이 이 주소에서 감춥니다.
  */
-export default function ChatRoomPage({
+function ChatRoomPageContent({
   params,
 }: {
   params: Promise<{ roomId: string }>;
@@ -818,5 +819,14 @@ function MessageRow({
         ) : null}
       </div>
     </li>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function ChatRoomPage(props: { params: Promise<{ roomId: string }> }) {
+  return (
+    <GuestGate title="채팅">
+      <ChatRoomPageContent {...props} />
+    </GuestGate>
   );
 }

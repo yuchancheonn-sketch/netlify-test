@@ -11,6 +11,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { NOTICE_KEEP_DAYS } from "@/lib/notices";
 import { markChatRead } from "@/lib/chat-read";
@@ -52,6 +53,24 @@ export interface ListState<T> {
 const EMPTY: ListState<never> = { data: [], loading: true, error: null };
 
 /**
+ * 누가 보고 있나 (2026-09-24) — 로그인 확인 중 / 로그인 안 하고 둘러보는 중 / 원우.
+ * 원우 명단(users·roster)은 보안 규칙상 원우만 읽어서, 둘러보는 사람에게는 서버가 번호·이메일을 뺀 명단을 줍니다.
+ */
+function useViewer(): "loading" | "guest" | "member" {
+  const { stage } = useAuth();
+  return stage === "loading" ? "loading" : stage === "signedOut" ? "guest" : "member";
+}
+
+/** 둘러보는 사람용 원우 명단 — 번호·이메일 뺀 것(app/api/public/directory). */
+async function fetchPublicDirectory(cohort: string): Promise<{ members: UserDoc[]; roster: RosterDoc[] }> {
+  const response = await fetch(`/api/public/directory?cohort=${encodeURIComponent(cohort)}`);
+  if (!response.ok) throw new Error(String(response.status));
+  return response.json();
+}
+
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, "ko");
+
+/**
  * 승인된 원우 목록.
  * 원우수첩처럼 이름 가나다순으로 정렬합니다.
  * 정렬은 Firestore 색인을 따로 만들지 않아도 되도록 앱에서 처리합니다.
@@ -59,8 +78,19 @@ const EMPTY: ListState<never> = { data: [], loading: true, error: null };
  */
 export function useApprovedMembers(): ListState<UserDoc> {
   const [state, setState] = useState<ListState<UserDoc>>(EMPTY);
+  const viewer = useViewer();
 
   useEffect(() => {
+    if (viewer === "loading") return;
+    if (viewer === "guest") {
+      let alive = true;
+      fetchPublicDirectory(ALL_COHORTS)
+        .then(({ members }) => alive && setState({ data: members.sort(byName), loading: false, error: null }))
+        .catch(() => alive && setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }));
+      return () => {
+        alive = false;
+      };
+    }
     const membersQuery = query(collection(db, "users"), where("status", "==", "approved"));
     return onSnapshot(
       membersQuery,
@@ -74,7 +104,7 @@ export function useApprovedMembers(): ListState<UserDoc> {
       },
       () => setState({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." }),
     );
-  }, []);
+  }, [viewer]);
 
   return state;
 }
@@ -116,8 +146,25 @@ export function useAllUsers(): ListState<UserDoc> {
  */
 export function useCohortMembers(cohort: string): ListState<UserDoc> {
   const [entry, setEntry] = useState<{ cohort: string; state: ListState<UserDoc> } | null>(null);
+  const viewer = useViewer();
 
   useEffect(() => {
+    if (viewer === "loading") return;
+    if (viewer === "guest") {
+      let alive = true;
+      fetchPublicDirectory(cohort)
+        .then(({ members }) =>
+          alive && setEntry({ cohort, state: { data: members.sort(byName), loading: false, error: null } }),
+        )
+        .catch(
+          () =>
+            alive &&
+            setEntry({ cohort, state: { data: [], loading: false, error: "원우 목록을 불러오지 못했어요." } }),
+        );
+      return () => {
+        alive = false;
+      };
+    }
     /*
      * "전체"(ALL_COHORTS)는 일부러 고를 때만 모든 기수를 받습니다 — 기본은 내 기수라,
      * 원우수첩을 여는 것만으로는 모든 기수를 읽지 않습니다(2026-09-11).
@@ -146,7 +193,7 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
           state: { data: [], loading: false, error: "원우 목록을 불러오지 못했어요." },
         }),
     );
-  }, [cohort]);
+  }, [cohort, viewer]);
 
   // 기수를 바꾼 직후에는 옛 기수 목록을 보이지 않고 불러오는 중으로 둡니다.
   return entry?.cohort === cohort ? entry.state : EMPTY;
@@ -160,8 +207,21 @@ export function useCohortRoster(cohort: string): ListState<RosterDoc> {
   const [entry, setEntry] = useState<{ cohort: string; state: ListState<RosterDoc> } | null>(
     null,
   );
+  const viewer = useViewer();
 
   useEffect(() => {
+    if (viewer === "loading") return;
+    if (viewer === "guest") {
+      let alive = true;
+      fetchPublicDirectory(cohort)
+        .then(({ roster }) => alive && setEntry({ cohort, state: { data: roster, loading: false, error: null } }))
+        .catch(
+          () => alive && setEntry({ cohort, state: { data: [], loading: false, error: "명단을 불러오지 못했어요." } }),
+        );
+      return () => {
+        alive = false;
+      };
+    }
     return onSnapshot(
       cohort === ALL_COHORTS
         ? collection(db, "roster")
@@ -178,7 +238,7 @@ export function useCohortRoster(cohort: string): ListState<RosterDoc> {
           state: { data: [], loading: false, error: "명단을 불러오지 못했어요." },
         }),
     );
-  }, [cohort]);
+  }, [cohort, viewer]);
 
   return entry?.cohort === cohort ? entry.state : EMPTY;
 }

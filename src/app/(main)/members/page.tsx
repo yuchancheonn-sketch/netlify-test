@@ -1,5 +1,6 @@
 "use client";
 
+import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -64,7 +65,16 @@ export default function MembersPage() {
   const [enlarged, setEnlarged] = useState<DirectoryEntry | null>(null);
   /** 시트를 열자마자 영상을 재생할지 (영상 썸네일을 눌러 들어온 경우) */
   const [autoPlay, setAutoPlay] = useState(false);
-  const [editing, setEditing] = useState<Editing>(null);
+  const [editing, setEditingState] = useState<Editing>(null);
+  /*
+   * 원우수첩은 누구나 보고(번호는 빼고 — /api/public/directory), 칸 고치기·원우 추가는 로그인해야 (2026-09-24).
+   * 여는 쪽은 모두 이 함수를 거칩니다 — 둘러보는 사람이면 안내 창만 뜹니다.
+   */
+  const requireLogin = useRequireLogin();
+  function setEditing(next: Editing) {
+    if (next && requireLogin()) return;
+    setEditingState(next);
+  }
 
   /** 가입한 원우 + 아직 가입 전인 이름을 한 권으로 (이름 가나다순) */
   const entries = useMemo(
@@ -502,6 +512,7 @@ export default function MembersPage() {
           isMe={!!selected.member && selected.member.uid === profile?.uid}
           onEnlargePhoto={() => setEnlarged(selected)}
           onEdit={() => {
+            if (requireLogin()) return;
             setEditing({ entry: selected });
             setSelected(null);
           }}
@@ -822,8 +833,10 @@ function MemberRow({
 function StartChatButton({ otherUid, name }: { otherUid: string; name: string }) {
   const router = useRouter();
   const { user } = useAuth();
+  const requireLogin = useRequireLogin();
 
   function handleClick() {
+    if (requireLogin()) return;
     if (!user) return;
     router.push(`/chat/${ensureDirectRoom(user.uid, otherUid)}`);
   }
@@ -865,6 +878,8 @@ function MemberDetailSheet({
   const member = entry.member;
 
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
+  // 둘러보는 사람에게는 번호가 내려오지 않습니다 — 전화·문자 자리에 로그인 안내 (2026-09-24 사용자 "번호만 로그인 뒤에").
+  const isGuest = useIsGuest();
 
   return (
     <div
@@ -935,6 +950,12 @@ function MemberDetailSheet({
             계정이 있는 원우에게만, 그리고 나 자신에게는 보이지 않습니다.
           */}
           {member && !isMe ? <StartChatButton otherUid={member.uid} name={entry.name} /> : null}
+
+          {isGuest ? (
+            <div className="mt-3">
+              <LoginRequired compact message="로그인하면 연락처를 볼 수 있어요" />
+            </div>
+          ) : null}
 
           {/* 휴대폰 — 눌러서 바로 전화·문자 */}
           {entry.phone ? (

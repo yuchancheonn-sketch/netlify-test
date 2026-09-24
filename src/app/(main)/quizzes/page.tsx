@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
@@ -21,7 +22,7 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  *  - 정답·해설은 서버에서 받습니다(/api/quiz/history, 2026-09-15부터 정답이 앱 코드에 없음).
  * 해설은 줄마다 접혀 있고 "해설 보기"로 폅니다. 돌아갈 자리는 홈이라 <와 오른쪽 밀기 모두 홈으로 갑니다.
  */
-export default function QuizzesPage() {
+function QuizzesPageContent() {
   const router = useRouter();
   const swipe = useSwipeBack({ onCommit: () => router.push("/home") });
   const day = useKstDay();
@@ -139,5 +140,14 @@ function PastQuizCard({
         </div>
       ) : null}
     </article>
+  );
+}
+
+/** 역대 퀴즈는 내가 푼 답과 함께 보여서 로그인해야 봅니다 (2026-09-24, components/GuestGate.tsx). */
+export default function QuizzesPage() {
+  return (
+    <GuestGate title="역대 퀴즈">
+      <QuizzesPageContent />
+    </GuestGate>
   );
 }

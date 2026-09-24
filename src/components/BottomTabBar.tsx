@@ -185,7 +185,8 @@ export default function BottomTabBar() {
    * 내 기수를 넘깁니다 — 기수 단체방의 새 메시지도 이 점에 들어옵니다 (2026-09-22).
    * 운영진이 채팅 화면에서 다른 기수를 골라 보고 있어도, 탭의 점은 늘 내 기수 방을 봅니다.
    */
-  const hasUnreadChat = useHasUnreadChat(user?.uid, cohortOf(profile?.cohort));
+  // 로그인 안 하고 둘러보는 사람은 대화방이 없어 기수 단체방도 구독하지 않습니다(2026-09-24).
+  const hasUnreadChat = useHasUnreadChat(user?.uid, user ? cohortOf(profile?.cohort) : undefined);
 
   const listRef = useRef<HTMLUListElement>(null);
   const [drag, setDrag] = useState<PillDrag | null>(null);

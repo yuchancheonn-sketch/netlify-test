@@ -200,6 +200,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    /*
+     * ★ 로그인 없이 읽기 (2026-09-24 사용자 요청 "보는 것만큼 로그인 없이, 수정이나 올리기는 그때서야 로그인").
+     *   아래 "allow read: if true" 자리들은 로그인 안 한 사람도 읽습니다 — 앱 주소를 아는 누구나입니다(검색엔진은 막음).
+     *   쓰기는 모두 예전처럼 원우만. 원우 명단(users·roster — 연락처)·채팅·알림·기기 토큰은 열지 않았고,
+     *   로그인 안 한 사람의 원우수첩은 서버가 번호·이메일을 뺀 명단을 내려줍니다(/api/public/directory).
+     */
     // ── 원우끼리 함께 쓰는 것들 ──
     // 서로 수첩을 채워주고 명단을 정리하는 앱이라 이 안에서는 권한을 나누지 않았습니다.
 
@@ -218,7 +224,7 @@ service cloud.firestore {
      * 사라지면 원우들이 헷갈립니다. createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
      */
     match /events/{eventId} {
-      allow read: if isMember();
+      allow read: if true;
       allow create: if isMember()
                     && request.resource.data.createdBy == request.auth.uid;
       allow update: if isMember()
@@ -237,7 +243,7 @@ service cloud.firestore {
      * (폰 캘린더 구독 열쇠 calendarTokens는 서버만 쓰는 자리라 여기 적지 않습니다 — 앱에서 막힘.)
      */
     match /academyEvents/{eventId} {
-      allow read: if isMember();
+      allow read: if true;
     }
 
     /*
@@ -247,14 +253,17 @@ service cloud.firestore {
      * (총괄 임원진 조직도는 앱 코드에 적혀 있어 아무도 앱에서 고칠 수 없습니다 — components/CommitteeOrgChart.tsx.)
      */
     match /committeeInfo/{committeeId} {
-      allow read, write: if isMember();
+      allow read: if true;
+      allow write: if isMember();
     }
 
     match /photoAlbums/{albumId} {
-      allow read, write: if isMember();
+      allow read: if true;
+      allow write: if isMember();
 
       match /photos/{photoId} {
-        allow read, write: if isMember();
+        allow read: if true;
+        allow write: if isMember();
       }
     }
 
@@ -269,7 +278,7 @@ service cloud.firestore {
      * 결과가 뒤집히기 때문입니다.
      */
     match /polls/{pollId} {
-      allow read: if isMember();
+      allow read: if true;
       allow create: if isMember()
                     && request.resource.data.createdBy == request.auth.uid;
       allow delete: if isMember()
@@ -317,7 +326,7 @@ service cloud.firestore {
        *   원래 맞는 방식입니다.
        */
       match /tally/{docId} {
-        allow read: if isMember();
+        allow read: if true;
         // 투표를 여는 그 쓰기(묶음)에서, 연 사람이 고를 것 수만큼의 0으로 만듭니다.
         allow create: if isMember()
                       && docId == 'counts'
@@ -369,7 +378,7 @@ service cloud.firestore {
        * 없습니다 — 누가 썼는지 아무 데도 안 적혀 있기 때문입니다.
        */
       match /opinions/{opinionId} {
-        allow read: if isMember();
+        allow read: if true;
         allow create: if isMember()
                       && request.resource.data.keys().hasOnly(['text', 'createdAt'])
                       && request.resource.data.text is string
@@ -392,7 +401,7 @@ service cloud.firestore {
      * 사라지므로, 목록에서 없어지면 아무도 다시 찾지 못합니다).
      */
     match /files/{fileId} {
-      allow read: if isMember();
+      allow read: if true;
       allow create: if isMember()
                     && request.resource.data.uploadedBy == request.auth.uid;
       allow delete: if isMember()
@@ -421,7 +430,8 @@ service cloud.firestore {
 
     // 주차별 수업의 주제·강사·영상. 원우수첩처럼 누구나 채웁니다.
     match /sessions/{week} {
-      allow read, write: if isMember();
+      allow read: if true;
+      allow write: if isMember();
 
       /*
        * 그 주 수업에 남기는 느낀점 댓글. 모든 원우가 서로 읽습니다.
@@ -431,7 +441,7 @@ service cloud.firestore {
        * 오간 이야기가 나중에 조용히 바뀌면 대화가 남지 않습니다.
        */
       match /comments/{commentId} {
-        allow read: if isMember();
+        allow read: if true;
         allow create: if isMember()
                       && request.resource.data.authorId == request.auth.uid;
         allow delete: if isMember() && resource.data.authorId == request.auth.uid;

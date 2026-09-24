@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { useRequireLogin } from "@/components/LoginRequired";
 import { Spinner } from "@/components/ui";
 import { inCohort } from "@/lib/cohort";
 import {
@@ -55,6 +56,11 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   const [view, setView] = useState({ year: todayYear, month: todayMonth - 1 });
   const [selected, setSelected] = useState(today);
   const [linking, setLinking] = useState(false);
+  /*
+   * 달력은 로그인 없이도 보입니다(2026-09-24 사용자 "캘린더는 로그인 안 해도 보이도록"). "내 폰 캘린더에 연결"만
+   * 원우마다 따로 구독 주소를 만드는 일이라 로그인해야 합니다.
+   */
+  const requireLogin = useRequireLogin();
   /* 이 기기에서 이미 폰 캘린더에 연결했는지. 서버 그림에서는 "연결함"으로 두어 단추가 깜빡이지 않게 합니다. */
   const linked = useSyncExternalStore(subscribeCalendarLinked, isCalendarLinked, () => true);
 
@@ -279,7 +285,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
       {linked ? null : (
         <button
           type="button"
-          onClick={() => setLinking(true)}
+          onClick={() => {
+            if (requireLogin()) return;
+            setLinking(true);
+          }}
           className="mt-2 w-full rounded-2xl py-2.5 text-[14px] font-bold text-brand-500 transition active:bg-fill"
         >
           내 폰 캘린더에 연결

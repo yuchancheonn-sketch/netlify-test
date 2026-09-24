@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,7 @@ import type { NoticeDoc } from "@/lib/types";
  * 화면을 여는 순간 "다 봤다"고 적어 종의 빨간 점을 끕니다. 다만 이번에 새로 온 줄은
  * 열기 직전의 기준 시각으로 옅은 주황 바탕을 남겨, 무엇이 새로 왔는지 보이게 합니다.
  */
-export default function NotificationsPage() {
+function NotificationsPageContent() {
   const { user, profile } = useAuth();
   const router = useRouter();
   /*
@@ -157,5 +158,14 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
         <ChevronRightIcon className="h-4 w-4 text-ink-faint" />
       </span>
     </Link>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function NotificationsPage() {
+  return (
+    <GuestGate title="알림">
+      <NotificationsPageContent />
+    </GuestGate>
   );
 }

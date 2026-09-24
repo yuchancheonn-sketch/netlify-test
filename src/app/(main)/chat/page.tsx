@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
@@ -36,7 +37,7 @@ import type { ChatRoomDoc, UserDoc } from "@/lib/types";
  *   원우는 늘 자기 기수 방만 봅니다. 홈·자료·일정·수업 화면과 같은 규칙이고,
  *   고른 값도 그 화면들과 함께 따라다닙니다.
  */
-export default function ChatListPage() {
+function ChatListPageContent() {
   const { user } = useAuth();
   const uid = user?.uid;
   const { cohort, canSwitch, setCohort } = useViewCohort();
@@ -268,5 +269,14 @@ function ChatRoomRow({
         ) : null}
       </div>
     </Link>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function ChatListPage() {
+  return (
+    <GuestGate title="채팅">
+      <ChatListPageContent />
+    </GuestGate>
   );
 }

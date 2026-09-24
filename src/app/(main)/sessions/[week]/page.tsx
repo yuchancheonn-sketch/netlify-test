@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import SegmentedControl from "@/components/SegmentedControl";
 import SessionComments from "@/components/SessionComments";
 import SessionEditSheet from "@/components/SessionEditSheet";
+import { useRequireLogin } from "@/components/LoginRequired";
 import { EmptyState, Skeleton } from "@/components/ui";
 import { LibraryIcon } from "@/components/icons";
 import { useSession } from "@/lib/hooks";
@@ -39,6 +40,8 @@ export default function SessionPage({
   const { cohort } = useViewCohort();
   const { data: session, loading } = useSession(cohort, week);
   const [editing, setEditing] = useState(false);
+  // 수업 정보는 누구나 보고, 고치기는 로그인해야 (2026-09-24).
+  const requireLogin = useRequireLogin();
   /*
    * 지금 보고 있는 교시. 영상도 느낀점도 이 값 하나를 따라 함께 바뀝니다.
    *
@@ -101,7 +104,10 @@ export default function SessionPage({
           */
           <button
             type="button"
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              if (requireLogin()) return;
+              setEditing(true);
+            }}
             aria-label="수업 정보 수정"
             className="shrink-0 rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-bold text-ink-muted transition active:scale-95"
           >

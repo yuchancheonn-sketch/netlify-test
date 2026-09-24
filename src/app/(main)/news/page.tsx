@@ -7,6 +7,7 @@ import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import TextTabs from "@/components/TextTabs";
 import { useViewCohort } from "@/lib/use-view-cohort";
+import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 
 /**
  * 소식 탭 — 원우 소식 (원우가 올리는 게시물 카드, components/AlbumList.tsx).
@@ -30,6 +31,8 @@ const SUBTABS = [
 
 export default function NewsPage() {
   const router = useRouter();
+  const isGuest = useIsGuest();
+  const goToLogin = useGoToLogin();
   /*
    * 소식 탭을 처음 열면 위원회 칸부터 보입니다 (2026-09-23 사용자 요청).
    * 단, 소식지(app/letter)의 "소식 올리러 가기"로 오면(/news?compose=1) 원우 소식 칸에서 소식 올리기 창을 연 채로
@@ -48,10 +51,15 @@ export default function NewsPage() {
     if (search.get("tab") === "news") {
       router.replace("/library?tab=news");
     } else if (search.get("compose") === "1") {
+      if (isGuest) {
+        // 로그인 안 한 채 "소식 올리러 가기"로 왔으면 로그인부터 — 마치면 이 주소로 돌아와 창이 열립니다 (2026-09-24).
+        goToLogin("/news?compose=1");
+        return;
+      }
       // 창은 이미 열렸으니 주소에서 떼어 둡니다 — 새로고침할 때마다 창이 다시 뜨지 않게.
       router.replace("/news");
     }
-  }, [router]);
+  }, [router, isGuest, goToLogin]);
 
   /*
    * 원우 소식 칸에서는 화면이 위아래로 굴러가지 않게 잠급니다 (2026-09-23 사용자 요청).

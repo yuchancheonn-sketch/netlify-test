@@ -6,37 +6,20 @@ import { useRouter } from "next/navigation";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { APP_NAME } from "@/lib/constants";
+import { rememberReturnPath, takeReturnPath } from "@/lib/login-return";
 
-/** 각 단계에서 사용자가 있어야 할 화면 */
+/**
+ * 각 단계에서 사용자가 있어야 할 화면.
+ * signedOut은 홈 — 로그인 없이도 둘러볼 수 있습니다(2026-09-24 사용자 요청 "보는 것만큼 로그인 없이").
+ * 로그인은 올리기·수정처럼 로그인이 필요한 일을 할 때 LoginRequired가 안내합니다.
+ */
 const STAGE_PATH: Record<Exclude<AuthStage, "loading">, string> = {
-  signedOut: "/login",
+  signedOut: "/home",
   needsSignUp: "/join",
   pending: "/pending",
   needsOnboarding: "/onboarding",
   ready: "/home",
 };
-
-const RETURN_KEY = "agikaeta:return";
-/** 돌아올 곳으로 기억하지 않는 주소 — 로그인·가입 단계 화면들. */
-const GATE_PATHS = ["/login", "/join", "/pending", "/onboarding", "/auth"];
-
-function rememberReturnPath() {
-  const { pathname, search } = window.location;
-  if (pathname === "/" || GATE_PATHS.some((path) => pathname.startsWith(path))) return;
-  try {
-    sessionStorage.setItem(RETURN_KEY, pathname + search);
-  } catch {}
-}
-
-function takeReturnPath(): string | null {
-  try {
-    const path = sessionStorage.getItem(RETURN_KEY);
-    sessionStorage.removeItem(RETURN_KEY);
-    return path && path.startsWith("/") && !path.startsWith("//") ? path : null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * 로그인·가입 단계에 맞지 않는 화면에 들어오면 알맞은 화면으로 돌려보냅니다.
@@ -58,9 +41,8 @@ export default function StageGate({
   useEffect(() => {
     if (stage === "loading" || allowed) return;
     /*
-     * 로그인 안 된 채 앱 안 주소로 들어오면(원우가 보내 준 앱 링크, 옛 알림 등) 그 주소를 기억했다가,
-     * 로그인을 마치면 홈 대신 그리로 보냅니다 (2026-09-24). 카카오톡 안에서 링크를 열면 따로 된 브라우저라
-     * 대개 로그아웃 상태여서, 이게 없으면 로그인 뒤 홈에 떨어져 링크가 헛걸음이 됩니다.
+     * 로그인을 마치면 기억해 둔 주소(lib/login-return.ts)로 보냅니다 (2026-09-24). 로그인하러 가기 전의 화면이나
+     * 로그인 없이 못 여는 주소로 들어왔던 곳 — 카카오톡 안에서 링크를 열면 대개 로그아웃 상태라서입니다.
      */
     if (stage === "signedOut") rememberReturnPath();
     router.replace(stage === "ready" ? (takeReturnPath() ?? STAGE_PATH.ready) : STAGE_PATH[stage]);

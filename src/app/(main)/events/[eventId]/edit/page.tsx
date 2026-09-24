@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useParams } from "next/navigation";
 import EventForm from "@/components/EventForm";
 import PageHeader from "@/components/PageHeader";
@@ -12,7 +13,7 @@ import { useEvent } from "@/lib/hooks";
  * 누가 올렸는지(createdBy)는 일정을 불러와야 알 수 있어서, 권한은 불러온 뒤에 가립니다.
  * (최종 확인은 firestore.rules가 합니다.)
  */
-export default function EditEventPage() {
+function EditEventPageContent() {
   const params = useParams<{ eventId: string }>();
   const { user, isAdmin } = useAuth();
   const { event, loading, notFound } = useEvent(params.eventId);
@@ -34,5 +35,14 @@ export default function EditEventPage() {
         <EventForm event={event} />
       )}
     </>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function EditEventPage() {
+  return (
+    <GuestGate title="일정 수정">
+      <EditEventPageContent />
+    </GuestGate>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRequireLogin } from "@/components/LoginRequired";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -163,6 +164,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
   const { data } = useCommitteeInfo();
   const info = data.get(committee.name);
   const [editing, setEditing] = useState(false);
+  const requireLogin = useRequireLogin();
 
   const sections = [
     { label: "하는 일", value: info?.about?.trim() ?? "" },
@@ -181,7 +183,11 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
         <button
           type="button"
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            // 둘러보는 사람에게는 로그인 안내 (2026-09-24).
+            if (requireLogin()) return;
+            setEditing(true);
+          }}
           className="shrink-0 rounded-full bg-fill px-3 py-1.5 text-[12px]! font-bold text-ink-soft"
         >
           수정

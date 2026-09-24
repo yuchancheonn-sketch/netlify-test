@@ -5,6 +5,7 @@ import Avatar from "@/components/Avatar";
 import { ArrowUpIcon, ChatIcon } from "@/components/icons";
 import { EmptyState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { formatChatListTime } from "@/lib/format";
 import { useApprovedMembers, useSessionComments } from "@/lib/hooks";
 import {
@@ -49,6 +50,8 @@ export default function SessionComments({
 
   /** 답글을 달고 있는 원 댓글. null이면 새 댓글을 쓰는 중입니다. */
   const [replyTo, setReplyTo] = useState<SessionCommentDoc | null>(null);
+  // 느낀점은 누구나 읽고, 쓰기·답글은 로그인해야 (2026-09-24).
+  const requireLogin = useRequireLogin();
 
   /*
    * 쓴 사람의 지금 이름과 사진을 uid로 찾아 붙입니다.
@@ -117,7 +120,7 @@ export default function SessionComments({
                 week={week}
                 myUid={uid}
                 member={memberByUid.get(root.authorId)}
-                onReply={() => setReplyTo(root)}
+                onReply={() => !requireLogin() && setReplyTo(root)}
               />
 
               {replies.length > 0 ? (
@@ -134,7 +137,7 @@ export default function SessionComments({
                         week={week}
                         myUid={uid}
                         member={memberByUid.get(reply.authorId)}
-                        onReply={() => setReplyTo(root)}
+                        onReply={() => !requireLogin() && setReplyTo(root)}
                         compact
                       />
                     </li>
@@ -274,6 +277,7 @@ function CommentComposer({
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const { cohort } = useViewCohort();
+  const isGuest = useIsGuest();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -302,6 +306,15 @@ function CommentComposer({
     } finally {
       setSending(false);
     }
+  }
+
+  // 둘러보는 사람에게는 입력줄 대신 한 줄짜리 로그인 안내 (2026-09-24).
+  if (isGuest) {
+    return (
+      <div className="sticky bottom-0 -mx-4 mt-4 bg-canvas/95 px-4 pt-3 pb-2 backdrop-blur">
+        <LoginRequired compact message="로그인하면 느낀점을 남길 수 있어요" />
+      </div>
+    );
   }
 
   return (

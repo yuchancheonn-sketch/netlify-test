@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { BellIcon, ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
+import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
 import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
@@ -187,6 +188,29 @@ export default function PageHeader({
  * 알림 종은 2026-09-11에 내 프로필 왼쪽에 더했습니다.
  */
 export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface" } = {}) {
+  const isGuest = useIsGuest();
+  const goToLogin = useGoToLogin();
+  /*
+   * 로그인 안 하고 둘러보는 사람 (2026-09-24) — 종(알림)·프로필은 원우마다 다른 것이라 빼고, 그 자리에 "로그인" 단추.
+   * 설정(글씨 크기·화면 밝기)은 기기에 적는 것이라 그대로 둡니다. 누르면 지금 화면을 기억하고 로그인으로 갑니다.
+   */
+  if (isGuest) {
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => goToLogin()}
+          className="rounded-full bg-brand-500 px-4 py-1.5 text-[14px] font-bold text-white transition active:scale-95"
+        >
+          로그인
+        </button>
+        <HeaderIconLink href="/settings" label="설정 열기">
+          <SettingsIcon className={HEADER_ICON_SIZE} />
+        </HeaderIconLink>
+      </div>
+    );
+  }
+
   /*
    * -space-x-1.5로 단추끼리 6px 겹칩니다.
    *

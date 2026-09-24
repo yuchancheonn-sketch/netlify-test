@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import SegmentedControl from "@/components/SegmentedControl";
 import { ChevronRightIcon } from "@/components/icons";
+import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
 import { SectionTitle, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { TEXT_SCALES, THEMES } from "@/lib/display-settings";
@@ -28,6 +29,11 @@ export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
   const { user, profile, isAdmin, logOut } = useAuth();
   const router = useRouter();
+  /*
+   * 로그인 안 하고 둘러보는 사람 (2026-09-24) — 글씨 크기·화면 밝기는 기기에 적는 것이라 그대로 쓰고,
+   * 알림·계정 칸 자리에는 로그인 안내 상자를 둡니다.
+   */
+  const isGuest = useIsGuest();
   /** "로그아웃 하시겠어요?" 시트가 떠 있는지 */
   const [confirmingLogout, setConfirmingLogout] = useState(false);
 
@@ -59,7 +65,7 @@ export default function SettingsPage() {
       <PageHeader title="설정" back />
 
       <div className="flex flex-col gap-7 px-4 pb-10">
-        <PushSection uid={user?.uid} />
+        {isGuest ? null : <PushSection uid={user?.uid} />}
 
         <section>
           <SectionTitle>글씨 크기</SectionTitle>
@@ -94,6 +100,12 @@ export default function SettingsPage() {
           나간 뒤 기록에 설정 화면이 남지 않도록 push가 아니라 replace로 로그인 화면에 갑니다.
           (가입 대기 화면 /pending에는 따로 로그아웃이 있습니다 — 그 화면엔 설정으로 가는 길이 없어서입니다.)
         */}
+        {isGuest ? (
+          <section>
+            <SectionTitle>계정</SectionTitle>
+            <LoginRequired />
+          </section>
+        ) : (
         <section>
           <SectionTitle>계정</SectionTitle>
           {/*
@@ -148,6 +160,7 @@ export default function SettingsPage() {
             작성한 글과 사진을 함께 정리해 드릴게요.
           </p>
         </section>
+        )}
       </div>
 
       {confirmingLogout ? (

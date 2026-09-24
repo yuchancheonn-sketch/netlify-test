@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRequireLogin } from "@/components/LoginRequired";
 import { Badge, FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
 import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
@@ -112,6 +113,8 @@ export function PollBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
  */
 function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const { isAdmin } = useAuth();
+  // 로그인 안 하고 둘러보는 사람은 고르기까지는 되고, 넣으려 하면 로그인 안내 (2026-09-24).
+  const requireLogin = useRequireLogin();
   const counts = usePollTally(poll.id, poll.options.length);
   /** 이미 넣었는지 — 아직 모르면 null */
   const hasVoted = useHasVoted(poll.id, myUid);
@@ -129,6 +132,7 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const selected = picked;
 
   async function handleSubmit() {
+    if (requireLogin()) return;
     if (selected === null || !myUid || saving || hasVoted !== false) return;
     if (
       !window.confirm(
@@ -325,6 +329,7 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
  */
 function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const { isAdmin } = useAuth();
+  const requireLogin = useRequireLogin();
   const { data: opinions } = usePollOpinions(poll.id);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -334,6 +339,8 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    // 익명 의견도 원우만 남깁니다 — 로그인 안 했으면 안내 (2026-09-24).
+    if (requireLogin()) return;
     const text = draft.trim();
     if (!text || saving) return;
 

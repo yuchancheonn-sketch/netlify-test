@@ -9,6 +9,7 @@ import {
   PollHistoryIllustration,
 } from "@/components/illustrations";
 import { PollCreateSheet } from "@/components/PollCard";
+import { useRequireLogin } from "@/components/LoginRequired";
 
 /**
  * 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다.
@@ -31,7 +32,14 @@ const ITEM_CLASS_NAME =
  *  - 수업 기록: /sessions 화면으로 갑니다. 예전엔 홈 아래쪽에 주차별 목록이 통째로 있었습니다.
  */
 export default function HomeShortcuts() {
-  const [creating, setCreating] = useState<"vote" | "opinion" | null>(null);
+  const [creatingKind, setCreating] = useState<"vote" | "opinion" | null>(null);
+  // 투표 만들기·의견 모으기는 로그인해야 — 둘러보는 사람에게는 안내 창 (2026-09-24).
+  const requireLogin = useRequireLogin();
+  const creating = creatingKind;
+  function startCreating(kind: "vote" | "opinion") {
+    if (requireLogin()) return;
+    setCreating(kind);
+  }
 
   return (
     /*
@@ -42,12 +50,12 @@ export default function HomeShortcuts() {
     <section className="rounded-3xl bg-surface px-2 py-3.5 shadow-[var(--shadow-card-flat)]">
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
-        <button type="button" onClick={() => setCreating("vote")} className={ITEM_CLASS_NAME}>
+        <button type="button" onClick={() => startCreating("vote")} className={ITEM_CLASS_NAME}>
           <BallotBoxIllustration className="h-7 w-7 shrink-0" />
           <span className="text-[15px]! font-medium text-ink">투표 만들기</span>
         </button>
 
-        <button type="button" onClick={() => setCreating("opinion")} className={ITEM_CLASS_NAME}>
+        <button type="button" onClick={() => startCreating("opinion")} className={ITEM_CLASS_NAME}>
           <OpinionIllustration className="h-7 w-7 shrink-0" />
           <span className="text-[15px]! font-medium text-ink">의견 모으기</span>
         </button>

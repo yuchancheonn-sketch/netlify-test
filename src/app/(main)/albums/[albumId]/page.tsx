@@ -1,5 +1,6 @@
 "use client";
 
+import GuestGate from "@/components/GuestGate";
 import { useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -23,7 +24,7 @@ import { formatDotDate } from "@/lib/format";
 import { useAlbum, useAlbumPhotos } from "@/lib/hooks";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 
-export default function AlbumPage() {
+function AlbumPageContent() {
   const params = useParams<{ albumId: string }>();
   const albumId = params.albumId;
   const router = useRouter();
@@ -337,5 +338,14 @@ function PhotoPlusIcon() {
       />
       <path d="M18 16v5M15.5 18.5h5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
+  );
+}
+
+/** 로그인 안 하고 둘러보는 사람에게는 로그인 안내 상자만 (2026-09-24, components/GuestGate.tsx). */
+export default function AlbumPage() {
+  return (
+    <GuestGate title="앨범">
+      <AlbumPageContent />
+    </GuestGate>
   );
 }
