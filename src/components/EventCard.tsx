@@ -52,10 +52,9 @@ export function EventDdayCard({
   /*
    * 흰 카드 + 회색 1px 테두리 — 홈의 다른 박스들과 같은 모양 (2026-09-23 사용자 "주요일정 박스의 색을 흰색으로").
    * 예전에는 주황 바탕에 흰 글씨였습니다. 바탕이 흰색이 되면서 글씨는 먹색, D-day만 주황으로 둡니다.
-   * 테두리는 1px 주황입니다 (2026-09-25 사용자 "주요일정 박스 테두리 색 주황색으로" — 전에는 다른 박스와 같은 회색 --shadow-card-flat).
    */
   const className =
-    "flex items-center gap-3 rounded-3xl bg-surface py-4 pl-5 text-ink shadow-[0_0_0_1px_var(--color-brand-500)] transition active:opacity-80";
+    "flex items-center gap-3 rounded-3xl bg-surface py-4 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
 
   /*
    * 속은 한 벌이고 껍데기만 앱 안 링크(Link)와 바깥 링크(<a>)로 갈립니다.
