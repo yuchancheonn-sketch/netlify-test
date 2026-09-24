@@ -145,6 +145,9 @@ function CommitteeCard({ committee }: { committee: Committee }) {
           ))}
         </div>
       </div>
+
+      {/* 뒷면의 "다시 누르면 앞면으로"와 같은 모양·자리 (2026-09-25 사용자 요청 — 앞면에도 뒤집을 수 있다는 표시). */}
+      <p className="mt-2 text-center text-[12px] text-ink-faint">눌러서 뒷면 보기</p>
     </article>
   );
 }
