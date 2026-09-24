@@ -30,15 +30,26 @@ const SUBTABS = [
 
 export default function NewsPage() {
   const router = useRouter();
-  // 소식 탭을 처음 열면 위원회 칸부터 보입니다 (2026-09-23 사용자 요청).
-  const [subtab, setSubtab] = useState<AlbumCategory>("committee");
+  /*
+   * 소식 탭을 처음 열면 위원회 칸부터 보입니다 (2026-09-23 사용자 요청).
+   * 단, 소식지(app/letter)의 "소식 올리러 가기"로 오면(/news?compose=1) 원우 소식 칸에서 소식 올리기 창을 연 채로
+   * 시작합니다 (2026-09-24). 이 화면은 로그인 확인이 끝난 뒤 브라우저에서만 그려져서 여기서 주소를 읽어도 어긋나지 않습니다.
+   */
+  const [composing] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("compose") === "1",
+  );
+  const [subtab, setSubtab] = useState<AlbumCategory>(composing ? "member" : "committee");
   /*
    * 예전 알림(알림 목록에 남은 "도산아카데미 새 소식")은 /news?tab=news를 엽니다. 그 칸이 자료 탭으로 옮겨 갔으니
    * 그리로 넘깁니다. useSearchParams 대신 location을 읽어 Suspense 없이 끝냅니다(상태는 건드리지 않음).
    */
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("tab") === "news") {
+    const search = new URLSearchParams(window.location.search);
+    if (search.get("tab") === "news") {
       router.replace("/library?tab=news");
+    } else if (search.get("compose") === "1") {
+      // 창은 이미 열렸으니 주소에서 떼어 둡니다 — 새로고침할 때마다 창이 다시 뜨지 않게.
+      router.replace("/news");
     }
   }, [router]);
 
@@ -104,7 +115,7 @@ export default function NewsPage() {
         (2026-09-23: 위원회 칸에 pb-24를 뒀더니 그만큼 카드 자리가 짧아져 카드가 위로 붙었습니다.)
       */}
       <div className="px-4 pt-4">
-        <AlbumList category={subtab} />
+        <AlbumList category={subtab} startComposing={composing} />
       </div>
     </>
   );

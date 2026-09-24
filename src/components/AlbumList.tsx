@@ -114,8 +114,11 @@ export function LetterBook({ albums }: { albums: PhotoAlbumDoc[] }) {
   }, []);
 
   const slides = albums.map((album) => ({ id: album.id, title: album.title, album }));
-  // 아래에 탭바도 "소식 올리기" 알약도 없어 24px만 비웁니다(안전 영역은 BookFrame이 따로 뺌).
-  return <AlbumBook slides={slides} authors={NO_AUTHORS} bottomReservePx={24} readOnly />;
+  /*
+   * 84 = "소식 올리러 가기" 알약 윗변(바닥에서 20 + 높이 52 = 72) + 사이 12 — 앱의 157과 같은 셈(탭바 자리만 없음).
+   * 알약을 옮기면 이 값도 같이. (안전 영역은 BookFrame이 따로 뺍니다.)
+   */
+  return <AlbumBook slides={slides} authors={NO_AUTHORS} bottomReservePx={84} readOnly />;
 }
 
 /**
@@ -129,7 +132,14 @@ export function LetterBook({ albums }: { albums: PhotoAlbumDoc[] }) {
  *
  * (같은 날 자료 탭에서 소식 탭으로 옮기며 이 파일로 떼어 냈습니다. 자리를 맞바꾼 복습 영상은 components/VideoList.tsx.)
  */
-export default function AlbumList({ category = "member" }: { category?: AlbumCategory }) {
+export default function AlbumList({
+  category = "member",
+  startComposing = false,
+}: {
+  category?: AlbumCategory;
+  /** 처음부터 소식 올리기 창을 연 채로 — 소식지의 "소식 올리러 가기"(/news?compose=1)로 들어왔을 때 (2026-09-24). */
+  startComposing?: boolean;
+}) {
   const { data: allAlbums, loading, error } = useAlbums();
   /** 보고 있는 기수의 앨범만. 만들 때도 이 기수로 적습니다. */
   const { cohort } = useViewCohort();
@@ -142,7 +152,7 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
     (album) => inCohort(album, cohort) && (album.category ?? "member") === category,
   );
   const canAdd = category === "member";
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(startComposing && category === "member");
   const [viewingPast, setViewingPast] = useState(false);
   /*
    * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LetterBook } from "@/components/AlbumList";
+import { PlusIcon } from "@/components/icons";
 import { thumbnailUrl } from "@/lib/cloudinary";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { fetchWeekPosts, weekIdFromLetterSlug } from "@/lib/week-letter-server";
@@ -80,6 +81,22 @@ export default async function WeekLetterPage({ params }: Props) {
           <LetterBook albums={albums} />
         )}
       </div>
+
+      {/*
+        소식 올리러 가기 — 앱 원우 소식 칸의 "소식 올리기" 알약과 같은 모양·같은 오른쪽 자리 (2026-09-24 사용자 요청).
+        누르면 앱의 원우 소식 칸이 소식 올리기 창을 연 채로 열립니다(/news?compose=1). 로그인이 안 돼 있으면
+        로그인 뒤 그 창으로 이어집니다(StageGate가 주소를 기억). 탭바가 없어서 바닥에서 20px에 섭니다.
+        ★ Link가 아니라 a입니다 — 앱 안 이동이면 소식 탭이 처음 그려질 때 주소가 아직 바뀌기 전이라
+          ?compose=1을 못 읽을 수 있어서, 페이지를 새로 엽니다(소식지는 앱과 따로 떨어진 쪽이라 새로 열어도 됩니다).
+      */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <a
+        href="/news?compose=1"
+        className="fixed right-5 bottom-[calc(20px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+      >
+        <PlusIcon className="h-5 w-5" />
+        소식 올리러 가기
+      </a>
     </main>
   );
 }
