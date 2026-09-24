@@ -193,7 +193,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               className={`flex h-11 flex-col items-center justify-start pt-[3px] ${cellLines}`}
             >
               {/*
-                오늘은 주황 동그라미에 흰 숫자, 내가 고른 날은 검은 동그라미에 흰 숫자 (2026-09-23 사용자 요청).
+                오늘은 주황 동그라미에 흰 숫자, 내가 고른 날은 주황 테두리(1.5px)에 가운데가 빈 동그라미 (2026-09-25 사용자 요청 —
+                2026-09-23부터는 검은 동그라미에 흰 숫자였습니다). 숫자 색은 고르지 않았을 때와 같고(일요일 빨강) 굵게만 합니다.
                 오늘을 고른 때(화면을 열면 그렇습니다)는 주황이 이깁니다 — "오늘"이라는 표시가 사라지지 않게.
                 (예전엔 고른 날이 주황 동그라미, 오늘은 동그라미 없이 주황 글씨였습니다.)
               */}
@@ -202,11 +203,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-medium tabular-nums ${
                   isToday
                     ? "bg-brand-500 font-bold text-white"
-                    : isSelected
-                      ? "bg-ink font-bold text-white"
-                      : index % 7 === 0
-                        ? "text-danger"
-                        : "text-ink"
+                    : `${isSelected ? "border-[1.5px] border-brand-500 font-bold" : ""} ${
+                        index % 7 === 0 ? "text-danger" : "text-ink"
+                      }`
                 }`}
               >
                 {day}
