@@ -237,10 +237,16 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               const body = (
                 <>
                   {/*
-                    왼쪽 막대는 둘 다 주황 (2026-09-23 사용자 요청 — 도산아카데미 일정도 같은 색).
+                    왼쪽 막대 — 도산아카데미 사이트에서 이어진 공식 일정은 주황, 원우가 올린 우리 기수 모임(번개 등)은 먹색
+                    (2026-09-25 사용자 요청. 2026-09-23부터 이날까지는 둘 다 주황이었습니다).
                     self-stretch — 제목이 두세 줄로 늘어나면 막대도 그만큼 길어집니다(예전엔 36px 고정).
                   */}
-                  <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-brand-500" />
+                  <span
+                    aria-hidden="true"
+                    className={`w-1 shrink-0 self-stretch rounded-full ${
+                      item.kind === "academy" ? "bg-brand-500" : "bg-ink"
+                    }`}
+                  />
                   <span className="min-w-0 flex-1">
                     {/*
                       제목은 자르지 않고 줄을 바꿔 끝까지 보여 줍니다 (2026-09-23 사용자 "두 줄이든 세 줄이든 끝까지").
