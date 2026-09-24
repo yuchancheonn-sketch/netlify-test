@@ -133,7 +133,11 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-[18px] font-bold text-ink tabular-nums">
+        {/*
+          "오늘의 도산"·"오늘의 OX 퀴즈" 제목과 같은 18px 굵게 먹색 (2026-09-25 사용자 "글씨 크기 똑같게").
+          크기는 원래 같았는데 여기만 tabular-nums(숫자 폭 고르게)가 붙어 숫자가 넓게 그려져 달라 보였습니다 — 그래서 뺐습니다.
+        */}
+        <h2 className="text-[18px] font-bold text-ink">
           {view.year}년 {view.month + 1}월
         </h2>
         <div className="-mr-2 flex items-center">
