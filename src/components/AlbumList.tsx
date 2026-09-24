@@ -270,8 +270,11 @@ export default function AlbumList({
           className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
         >
           <PlusIcon className="h-5 w-5" />
-          {/* 단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창. */}
-          소식 올리기
+          {/*
+            단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창.
+            글씨만 1px 위로, "+"는 제자리 (2026-09-25 사용자 요청). 단추가 flex라 span에 transform이 먹습니다.
+          */}
+          <span className="-translate-y-px">소식 올리기</span>
         </button>
       ) : null}
 
