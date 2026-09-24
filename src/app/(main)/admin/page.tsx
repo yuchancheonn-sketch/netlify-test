@@ -10,15 +10,15 @@ import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
-import { useAllUsers, useRoster } from "@/lib/hooks";
-import type { MemberType, RosterDoc, UserDoc } from "@/lib/types";
+import { useAllUsers, useRoster, useWeeklyDrafts } from "@/lib/hooks";
+import type { MemberType, RosterDoc, UserDoc, WeeklyDraftDoc } from "@/lib/types";
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   general: "일반 원우",
   youth: "대학생 원우",
 };
 
-type Tab = "pending" | "roster" | "members";
+type Tab = "pending" | "roster" | "members" | "newsDraft";
 
 export default function AdminPage() {
   const { isAdmin } = useAuth();
@@ -41,6 +41,8 @@ export default function AdminPage() {
       : []),
     { value: "roster", label: "원우 명단" },
     { value: "members", label: "권한 관리" },
+    // 매주 화요일 서버가 지난주 원우 소식을 모아 적는 카톡 채널 발송 초안 (2026-09-24).
+    { value: "newsDraft", label: "카톡 초안" },
   ];
 
   if (!isAdmin) {
@@ -80,7 +82,9 @@ export default function AdminPage() {
         </div>
 
         <div className="mt-5">
-          {users.error ? (
+          {activeTab === "newsDraft" ? (
+            <NewsDraftSection />
+          ) : users.error ? (
             <ErrorState message={users.error} />
           ) : users.loading ? (
             <div className="flex flex-col gap-3">
@@ -498,5 +502,75 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
         })}
       </ul>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 카톡 초안 (2026-09-24)                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 매주 화요일 서버(/api/news/weekly-close)가 지난주 원우 소식을 모아 적어 둔 초안.
+ * 운영진이 "복사하기"로 문구를 복사해 카카오톡 채널 관리자센터 → 소식 글쓰기에 붙여넣습니다.
+ * (카카오 비즈니스 메시지로 자동 발송하는 길은 건당 비용이 들어 쓰지 않습니다 — 2026-09-24 사용자 선택.)
+ */
+function NewsDraftSection() {
+  const drafts = useWeeklyDrafts();
+
+  if (drafts.error) return <ErrorState message={drafts.error} />;
+  if (drafts.loading) return <Skeleton className="h-40 rounded-3xl" />;
+  if (drafts.data.length === 0) {
+    return (
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+        <EmptyState
+          icon={<span className="text-[40px]">💬</span>}
+          title="아직 초안이 없어요"
+          description="매주 화요일 새벽, 지난주(화~월) 원우 소식을 모아 여기에 초안을 만들어 둡니다."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-3">
+      {drafts.data.map((draft) => (
+        <NewsDraftCard key={draft.id} draft={draft} />
+      ))}
+    </ul>
+  );
+}
+
+function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(draft.draftText);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("아래 문구를 길게 눌러 복사해 주세요.", draft.draftText);
+    }
+  }
+
+  return (
+    <li className="rounded-3xl bg-surface p-5 shadow-[var(--shadow-card)]">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[16px] font-bold text-ink">{draft.weekLabel}</p>
+          <p className="text-[13px] text-ink-muted">게시물 {draft.postCount}개</p>
+        </div>
+        <button
+          type="button"
+          onClick={copy}
+          className="shrink-0 rounded-full bg-brand-500 px-4 py-2 text-[13px] font-bold text-white transition active:scale-95"
+        >
+          {copied ? "복사했어요" : "복사하기"}
+        </button>
+      </div>
+      <p className="mt-3 rounded-2xl bg-fill px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+        {draft.draftText}
+      </p>
+    </li>
   );
 }

@@ -1,0 +1,96 @@
+import { timingSafeEqual } from "node:crypto";
+import { FieldValue, type Timestamp } from "firebase-admin/firestore";
+import { kstDayNumber } from "@/lib/dosan-quiz";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { sendPushToUsers } from "@/lib/push-server";
+import { weekIdForDay, weekRangeLabel } from "@/lib/week";
+
+/**
+ * 원우 소식 주간 마감 (2026-09-24 사용자 요청).
+ *
+ * 매주 화요일 00:10(한국 시간) GitHub Actions(.github/workflows/weekly-news.yml)가 이 주소를 부릅니다.
+ * App Hosting에는 예약 실행이 없고 Cloud Functions는 결제수단이 필요해서 GitHub의 무료 예약 실행을 씁니다.
+ *
+ *   1. 막 끝난 지난주(화~월)에 올라온 원우 소식을 모아
+ *   2. 카카오톡 채널에 올릴 "이번주 원우 소식이에요" 문구를 weeklyDrafts/{그 주}에 적고
+ *   3. 운영진에게 "초안이 준비됐어요" 푸시를 보냅니다.
+ * 채널 발송은 운영진이 /admin "카톡 초안"에서 복사해 손으로 합니다(비즈니스 메시지는 건당 비용이라 쓰지 않음).
+ *
+ * 화면의 "이번 주만 보이기"는 이 주소와 상관없이 앱이 날짜로 스스로 합니다 — 이 호출이 한 번 빠져도
+ * 카드는 제때 접히고, 초안만 그 주 것이 안 생깁니다. 같은 주를 여러 번 불러도 같은 문서를 덮어씁니다.
+ *
+ * ★ 누구나 두드릴 수 있는 주소라 머리글 x-cron-token이 NEWS_CRON_TOKEN(Secret Manager)과 같아야 합니다.
+ *   GitHub 저장소 Secrets의 NEWS_CRON_TOKEN에 같은 값을 넣어 둡니다.
+ */
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const APP_URL = "https://aegiaeta.web.app";
+
+function authorized(request: Request): boolean {
+  const expected = process.env.NEWS_CRON_TOKEN ?? "";
+  const given = request.headers.get("x-cron-token") ?? "";
+  if (!expected || given.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+}
+
+type AlbumData = {
+  title?: string;
+  createdByName?: string;
+  category?: string;
+  createdAt?: Timestamp | null;
+};
+
+export async function POST(request: Request) {
+  if (!authorized(request)) {
+    return Response.json({ ok: false, reason: "unauthorized" }, { status: 401 });
+  }
+
+  const db = getAdminDb();
+  if (!db) return Response.json({ ok: false, reason: "no-service-account" }, { status: 500 });
+
+  // 화요일에 불리므로 오늘은 이미 새 주입니다. 7일 전이 막 끝난 주의 화요일입니다.
+  // ?week=YYYY-MM-DD로 주를 정해 다시 만들 수도 있습니다(빠진 주를 손으로 채울 때).
+  const requested = new URL(request.url).searchParams.get("week");
+  const weekId =
+    requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : weekIdForDay(kstDayNumber() - 7);
+  const weekLabel = weekRangeLabel(weekId);
+
+  // 색인을 새로 만들지 않으려고 같음 조건 하나로만 받고, 정렬·거르기는 여기서 합니다.
+  const snapshot = await db.collection("photoAlbums").where("weekId", "==", weekId).get();
+  const posts = snapshot.docs
+    .map((document) => document.data() as AlbumData)
+    .filter((album) => album.title && (album.category ?? "member") === "member")
+    .sort((a, b) => (a.createdAt?.toMillis() ?? 0) - (b.createdAt?.toMillis() ?? 0));
+
+  if (posts.length === 0) {
+    return Response.json({ ok: true, weekId, postCount: 0, skipped: true });
+  }
+
+  const lines = posts.map(
+    (album) => `• ${album.title}${album.createdByName ? ` — ${album.createdByName} 원우` : ""}`,
+  );
+  const draftText =
+    `이번주 원우 소식이에요 📮\n(${weekLabel})\n\n` +
+    `${lines.join("\n")}\n\n` +
+    `사진과 이야기는 앱에서 볼 수 있어요.\n${APP_URL}/news`;
+
+  await db.collection("weeklyDrafts").doc(weekId).set({
+    weekId,
+    weekLabel,
+    postCount: posts.length,
+    draftText,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  const admins = await db.collection("users").where("role", "==", "admin").select().get();
+  const push = await sendPushToUsers({
+    recipientUids: admins.docs.map((document) => document.id),
+    title: "이번주 원우 소식 카톡 초안이 준비됐어요",
+    body: `${weekLabel} · 게시물 ${posts.length}개 — 운영진 화면에서 복사해 채널에 올려 주세요.`,
+    url: "/admin",
+    tag: `weekly-draft:${weekId}`,
+  });
+
+  return Response.json({ ok: true, weekId, postCount: posts.length, push });
+}

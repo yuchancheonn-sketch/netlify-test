@@ -538,6 +538,15 @@ service cloud.firestore {
     }
 
     /*
+     * 지난주 원우 소식 카톡 채널 초안 (2026-09-24) — 운영진 화면 "카톡 초안" 탭.
+     * 서버(/api/news/weekly-close, 매주 화요일 GitHub Actions가 부름)만 적고, 운영진만 읽습니다.
+     */
+    match /weeklyDrafts/{weekId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    /*
      * 웹 푸시 알림을 받을 기기 목록. 문서 id가 곧 FCM 등록 토큰입니다.
      *
      * 여기는 **원우끼리 열어두면 안 되는 자리**입니다. 목록을 훑을 수 있으면

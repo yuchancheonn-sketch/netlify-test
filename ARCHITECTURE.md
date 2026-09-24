@@ -167,7 +167,7 @@
 | `/sessions/[week]` | 주차별 수업 | 1·2교시 영상 + 느낀점 댓글(1단 답글). <·밀기는 수업 기록 목록(`/sessions`)으로 | `sessions/{week}` |
 | `/chat` | 1:1 채팅 목록 (탭 이름은 "채팅") | 1:1 대화 최근순, 안 읽은 점. 단체방은 2026-09-10에 없앰(카톡 단톡방으로 대체) | `chatRooms` |
 | `/chat/[roomId]` | 대화방 | 탭바 감춤, 밀어서 뒤로가기 | `chatRooms/{id}/messages` |
-| `/news` | 원우 소식 | 원우가 올리는 게시물 카드(사진 한 장·제목·본문), 좌우로 넘기고 누르면 뒤집혀 본문. 옛 `?tab=news`는 `/library?tab=news`로 넘김 | `photoAlbums` |
+| `/news` | 원우 소식 | 원우가 올리는 게시물 카드(사진 한 장·제목·본문), 좌우로 넘기고 누르면 뒤집혀 본문. **이번 주(화~월) 소식만** 보이고 지난 주는 "지난 소식"에 주차별로(2026-09-24, `lib/week.ts`). 옛 `?tab=news`는 `/library?tab=news`로 넘김 | `photoAlbums` |
 | `/profile` | 내 프로필 | 프로필 편집 + 로그아웃 + 운영진 화면 입구 | `users/{uid}` |
 | `/settings` | 설정 | 알림 · 글씨 크기 · 화면 밝기 (**기기마다 따로**) | localStorage |
 | `/admin` | 운영진 화면 | 가입 승인 · 명단 관리 · 권한 부여 | `users`, `roster` |
@@ -194,6 +194,7 @@
 | `chatReads/{uid}` | 본인 uid | 방별 마지막으로 본 시각 | **본인만** |
 | `pushTokens/{FCM토큰}` | FCM 토큰 | 그 기기 주인 uid·userAgent | 본인 것 하나만. **list는 아무에게도 안 엶** |
 | `pushLog/{event:id}` | `event:{eventId}` | 일정 알림 중복 방지 표시 | **규칙에 없음 = 클라이언트 전면 차단** (서버 전용) |
+| `weeklyDrafts/{weekId}` | 그 주 화요일 `YYYY-MM-DD` | 지난주 원우 소식 카톡 채널 초안(문구·게시물 수). 매주 화요일 GitHub Actions → `/api/news/weekly-close`가 적음 (2026-09-24) | **운영진만 읽기**, 쓰기는 서버만 |
 
 ### 눈여겨볼 설계
 

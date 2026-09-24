@@ -179,6 +179,12 @@ export interface PhotoAlbumDoc {
   category?: "member" | "committee";
   /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
+  /**
+   * 화~월 주 단위 이름표 — 그 주가 시작하는 화요일의 "YYYY-MM-DD" (2026-09-24, lib/week.ts).
+   * 원우 소식(member) 칸에서 화면에 이번 주 것만 보이게 거르는 데 씁니다. 위원회(committee) 소식과
+   * 이 칸이 생기기 전의 옛 소식에는 없어서, 그럴 땐 createdAt으로 주를 다시 계산합니다.
+   */
+  weekId?: string;
   createdBy: string;
   /** 올린 원우 이름 (2026-09-22부터 적음 — 원우 소식 카드에 보입니다). 그 전 앨범에는 없습니다. */
   createdByName?: string;
@@ -503,5 +509,23 @@ export interface NoticeDoc {
   url: string;
   /** "10기"처럼 한 기수, 또는 모든 기수 "all" */
   cohort: string;
+  createdAt: Timestamp | null;
+}
+
+/**
+ * weeklyDrafts/{weekId} — 지난주 원우 소식을 모은 카카오톡 채널 발송 초안 (2026-09-24).
+ *
+ * 매주 화요일 이른 아침 GitHub Actions가 /api/news/weekly-close를 불러 서버(Admin SDK)만 적습니다.
+ * 앱은 /admin 화면에서 읽기만 하고, 운영진이 draftText를 복사해 카카오톡 채널 관리자센터에 직접 올립니다
+ * (카카오 비즈니스 메시지는 건당 비용이 들어 쓰지 않기로 했습니다 — 2026-09-24 사용자 선택).
+ */
+export interface WeeklyDraftDoc {
+  id: string;
+  weekId: string;
+  /** "9월 22일~28일" */
+  weekLabel: string;
+  postCount: number;
+  /** 채널에 그대로 붙여넣을 문구 */
+  draftText: string;
   createdAt: Timestamp | null;
 }

@@ -53,3 +53,8 @@ env:
   - variable: KAKAO_SKILL_TOKEN
     secret: KAKAO_SKILL_TOKEN
     availability: [ RUNTIME ]
+  # 원우 소식 주간 마감(/api/news/weekly-close)의 비밀 머리글 값 (2026-09-24).
+  # GitHub 저장소 Secrets의 NEWS_CRON_TOKEN과 같아야 합니다(.github/workflows/weekly-news.yml).
+  - variable: NEWS_CRON_TOKEN
+    secret: NEWS_CRON_TOKEN
+    availability: [ RUNTIME ]

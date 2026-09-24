@@ -32,8 +32,9 @@ import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { isCloudinaryConfigured, uploadImage, viewerUrl } from "@/lib/cloudinary";
 import { resizeImage } from "@/lib/image";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
-import { dotDate, todayString } from "@/lib/format";
+import { dotDate, parseDateString, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
+import { currentWeekId, weekIdForMillis, weekRangeLabel } from "@/lib/week";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
 
 /** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
@@ -67,12 +68,39 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
   );
   const canAdd = category === "member";
   const [creating, setCreating] = useState(false);
+  const [viewingPast, setViewingPast] = useState(false);
   /*
    * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).
    * 원우수첩과 같은 훅이라 한 번 받아 둔 것을 함께 씁니다. 명단에 없으면(탈퇴 등) 앨범에 적힌 이름을 씁니다.
    */
   const members = useCohortMembers(cohort);
   const authors = new Map(members.data.map((member) => [member.uid, member]));
+
+  /*
+   * 원우 소식은 화~월 주 단위로 묶입니다 (2026-09-24 사용자 요청). 화면 첫 자리엔 이번 주에 올라온
+   * 소식만 보이고, 지난 주들은 "지난 소식" 단추 뒤로 접혀 들어갑니다 — 주가 바뀌면 아무도 아직 아무것도
+   * 올리지 않은 빈 화면에서 다시 시작합니다(사용자 "새로 추가하기 전에는 쌓인 카드가 없는거지").
+   * 위원회 칸에는 적용하지 않습니다 — 주간 개념이 없는 고정 소개 글이라 canAdd일 때만 거릅니다.
+   * weekId가 없는 옛 소식(이 기능 이전에 올라온 소식)은 올린 시각(createdAt)으로 주를 다시 계산합니다.
+   */
+  const weekOf = (album: PhotoAlbumDoc) =>
+    album.weekId ??
+    weekIdForMillis(album.createdAt?.toMillis() ?? parseDateString(album.eventDate)?.getTime() ?? Date.now());
+  const thisWeek = currentWeekId();
+  const currentAlbums = canAdd ? albums.filter((album) => weekOf(album) === thisWeek) : albums;
+  /** 지난 주 → 그 주 소식 목록(최근 순은 useAlbums 정렬을 그대로 물려받습니다). */
+  const pastWeeks = new Map<string, PhotoAlbumDoc[]>();
+  if (canAdd) {
+    for (const album of albums) {
+      const week = weekOf(album);
+      if (week === thisWeek) continue;
+      const list = pastWeeks.get(week) ?? [];
+      list.push(album);
+      pastWeeks.set(week, list);
+    }
+  }
+  // 최근 주가 먼저 — weekId는 "YYYY-MM-DD"라 문자열 비교로 그대로 최신순이 됩니다.
+  const pastWeekIds = [...pastWeeks.keys()].sort((a, b) => (a < b ? 1 : -1));
 
   /*
    * 위원회 칸 (2026-09-23) — 맨 위에 총괄 임원진 조직도 카드가 늘 서고, 그 아래로 올라온 소식 카드가 섭니다.
@@ -92,7 +120,7 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
    * 위원회 칸 (2026-09-23) — 조직도 → 위원회 7개 → (올라온 소식) 순으로 한 장씩 넘겨 봅니다.
    * 원우 소식 칸과 넘기는 방식이 똑같습니다(사용자 요청). 앞의 여덟 장은 앱에 적어 둔 카드입니다.
    */
-  const albumSlides = albums.map((album) => ({ id: album.id, title: album.title, album }));
+  const albumSlides = currentAlbums.map((album) => ({ id: album.id, title: album.title, album }));
   const slides = canAdd
     ? albumSlides
     : [
@@ -107,13 +135,31 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
-            title="아직 올라온 소식이 없어요"
-            description="아래 '소식 올리기'로 첫 소식을 올려 보세요."
+            title={canAdd ? "아직 이번 주 소식이 없어요" : "아직 올라온 소식이 없어요"}
+            description={
+              canAdd
+                ? "아래 '소식 올리기'로 이번 주 첫 소식을 올려 보세요."
+                : "아래 '소식 올리기'로 첫 소식을 올려 보세요."
+            }
           />
         </div>
       ) : (
         <AlbumBook slides={slides} authors={authors} fit={!canAdd} />
       )}
+
+      {/*
+        지난 소식 — 이번 주 뒤로 접힌 지난 주들을 주차별로 훑어보는 자리 (2026-09-24 사용자 요청).
+        지난 주가 하나도 없으면 단추 자체를 안 둡니다. "소식 올리기"와 같은 줄, 반대쪽(왼쪽)에 옅은 색으로.
+      */}
+      {canAdd && pastWeekIds.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setViewingPast(true)}
+          className="fixed bottom-[calc(93px+env(safe-area-inset-bottom))] left-5 z-20 flex items-center gap-1.5 rounded-full bg-surface px-5 py-4 text-[15px] font-bold text-ink-muted shadow-[var(--shadow-card-flat)] transition active:scale-95"
+        >
+          지난 소식
+        </button>
+      ) : null}
 
       {/*
         사진 올리기 — 자료 탭 "파일 올리기"와 같은 자리·같은 모양의 떠 있는 주황 알약입니다 (2026-09-14).
@@ -138,6 +184,14 @@ export default function AlbumList({ category = "member" }: { category?: AlbumCat
       ) : null}
 
       {creating ? <AlbumSheet onClose={() => setCreating(false)} /> : null}
+      {viewingPast ? (
+        <PastWeeksSheet
+          weekIds={pastWeekIds}
+          albumsByWeek={pastWeeks}
+          authors={authors}
+          onClose={() => setViewingPast(false)}
+        />
+      ) : null}
     </>
   );
 }
@@ -272,6 +326,7 @@ function AlbumBook({
   slides,
   authors,
   fit = false,
+  bottomReservePx,
 }: {
   slides: Slide[];
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
@@ -282,6 +337,11 @@ function AlbumBook({
    * false면 예전처럼 화면에 딱 맞는 틀(BookFrame) 안에 카드가 섭니다 — 원우 소식 칸.
    */
   fit?: boolean;
+  /**
+   * 틀 아래로 비워 두는 높이(px)를 밖에서 정합니다 (2026-09-24, "지난 소식" 보기용).
+   * 안 주면 기본값(원우 소식 157 / 위원회 90 — 아래 BookFrame 호출부)을 그대로 씁니다.
+   */
+  bottomReservePx?: number;
 }) {
   const { user, isAdmin } = useAuth();
   const [index, setIndex] = useState(0);
@@ -687,7 +747,7 @@ function AlbumBook({
     <BookFrame
       minHeightPx={fit && cardHeight ? cardHeight + 40 : 0}
       // 위원회 칸에는 "소식 올리기" 알약이 없어 그만큼 자리를 더 씁니다 — 카드가 화면 한가운데에 섭니다.
-      bottomReservePx={fit ? 90 : 157}
+      bottomReservePx={bottomReservePx ?? (fit ? 90 : 157)}
     >
       {deck}
       {sheets}
@@ -971,6 +1031,8 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
           coverImageUrl: uploaded[0].url,
           photoCount: uploaded.length,
           cohort,
+          // 어느 주(화~월)에 올렸는지 — 원우 소식 칸이 이번 주 것만 먼저 보여주는 데 씁니다(lib/week.ts).
+          weekId: currentWeekId(),
           createdBy: user.uid,
           // 카드에 "누가 올렸는지"를 적으려고 이름도 함께 남깁니다(2026-09-22). 카드는 원우수첩의 지금 이름을 먼저 씁니다.
           createdByName: profile?.name || "원우",
@@ -1241,6 +1303,110 @@ function AlbumManageSheet({
           className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
         >
           취소
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 지난 소식 — 이번 주 뒤로 접힌 지난 주들을 주차별로 훑어보는 자리 (2026-09-24 사용자 요청).
+ *
+ * 처음엔 주 목록(그 주의 날짜 범위 · 게시물 수)이 최근 순으로 서고, 한 주를 고르면 그 주의 소식이
+ * 원우 소식 칸과 똑같이 책장 넘기듯 보입니다 — AlbumBook을 그대로 다시 씁니다.
+ */
+function PastWeeksSheet({
+  weekIds,
+  albumsByWeek,
+  authors,
+  onClose,
+}: {
+  /** 최근 주가 먼저 */
+  weekIds: string[];
+  albumsByWeek: Map<string, PhotoAlbumDoc[]>;
+  authors: Map<string, UserDoc>;
+  onClose: () => void;
+}) {
+  const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
+
+  if (selectedWeek) {
+    const slides = (albumsByWeek.get(selectedWeek) ?? []).map((album) => ({
+      id: album.id,
+      title: album.title,
+      album,
+    }));
+    return (
+      <div
+        className="fixed inset-0 z-40 flex flex-col bg-canvas"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${weekRangeLabel(selectedWeek)} 원우 소식`}
+      >
+        <div className="flex shrink-0 items-center gap-1 px-3 pt-[calc(10px+env(safe-area-inset-top))] pb-3">
+          <button
+            type="button"
+            onClick={() => setSelectedWeek(null)}
+            aria-label="주 목록으로"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
+          >
+            <ChevronLeftIcon className="h-5 w-5" strokeWidth={2.4} />
+          </button>
+          <h2 className="text-[17px] font-bold text-ink">{weekRangeLabel(selectedWeek)} 원우 소식</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        </div>
+        {/* bottomReservePx 16 — 이 화면엔 "소식 올리기" 알약이 없어 아래에 안전영역만큼만 비워 둡니다. */}
+        <div className="min-h-0 flex-1 px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+          <AlbumBook slides={slides} authors={authors} bottomReservePx={16} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="지난 소식"
+      onClick={onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+      >
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+        <h2 className="mt-5 mb-1 text-[18px] font-bold text-ink">지난 소식</h2>
+
+        <div className="mt-3 flex flex-col gap-2">
+          {weekIds.map((weekId) => {
+            const count = albumsByWeek.get(weekId)?.length ?? 0;
+            return (
+              <button
+                key={weekId}
+                type="button"
+                onClick={() => setSelectedWeek(weekId)}
+                className="flex w-full items-center justify-between rounded-2xl bg-fill px-5 py-4 text-left transition active:opacity-70"
+              >
+                <span className="text-[16px] font-bold text-ink">{weekRangeLabel(weekId)}</span>
+                <span className="text-[14px] text-ink-muted">게시물 {count}개</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        >
+          닫기
         </button>
       </div>
     </div>

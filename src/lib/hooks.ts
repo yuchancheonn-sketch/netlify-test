@@ -39,6 +39,7 @@ import type {
   SessionCommentDoc,
   SessionDoc,
   UserDoc,
+  WeeklyDraftDoc,
 } from "@/lib/types";
 
 /** 목록형 화면이 공통으로 쓰는 상태 */
@@ -999,6 +1000,31 @@ export function useNotices(cohort: string): ListState<NoticeDoc> {
     }),
     [state, cohort],
   );
+}
+
+/**
+ * 이번주 원우 소식 카톡 초안 목록 — 운영진 화면(/admin)이 씁니다 (2026-09-24).
+ * 서버(Admin SDK)만 적고(/api/news/weekly-close, 매주 화요일) 앱은 읽기만 합니다.
+ * 규칙에서 운영진만 읽게 막아 두었으니, 이 훅은 운영진 화면에서만 부르세요.
+ */
+export function useWeeklyDrafts(): ListState<WeeklyDraftDoc> {
+  const [state, setState] = useState<ListState<WeeklyDraftDoc>>(EMPTY);
+
+  useEffect(() => {
+    const draftsQuery = query(collection(db, "weeklyDrafts"), orderBy("weekId", "desc"), limit(8));
+    return onSnapshot(
+      draftsQuery,
+      (snapshot) => {
+        const drafts = snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as WeeklyDraftDoc,
+        );
+        setState({ data: drafts, loading: false, error: null });
+      },
+      () => setState({ data: [], loading: false, error: "카톡 초안을 불러오지 못했어요." }),
+    );
+  }, []);
+
+  return state;
 }
 
 /**
