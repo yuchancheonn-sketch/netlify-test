@@ -96,9 +96,9 @@ export default function HomePage() {
         */}
         <section>
           {upcoming.loading || academy.loading ? (
-            /* 머리띠 카드(2026-09-25 D안)와 같은 높이 — 띠 약 36px + 몸통(위 12 · 제목 · 4 · 날짜/장소 · 아래 14) 약 73px ≈ 109px.
-               (2026-09-23~25의 두 줄 카드는 81px, 그전 세 줄 카드는 109px이었습니다.) */
-            <Skeleton className="h-[109px] rounded-3xl" />
+            /* 큰 D-day 카드(2026-09-25 C안)와 같은 높이 — 위아래 16px + 왼쪽 칸(D-day 28 · 6 · 날짜 12) 약 50px ≈ 82px.
+               (같은 날 잠깐 쓴 머리띠 카드는 109px, 2026-09-23~25의 두 줄 카드는 81px이었습니다.) */
+            <Skeleton className="h-[82px] rounded-3xl" />
           ) : nextEvent ? (
             <EventDdayCard event={nextEvent} href={nextEvent.href} external={nextEvent.external} />
           ) : (

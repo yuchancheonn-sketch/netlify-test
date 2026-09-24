@@ -13,10 +13,9 @@ import {
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 홈의 다가오는 모임(주요 일정). ★ 지금 모양(2026-09-25, D안 "주황 머리띠"):
- *   머리띠  "다가오는 일정 ··················· D-1"   (옅은 주황 바탕)
- *   1행     아구찜 번개                              >
- *   2행     09.15 (화) 오후 6:30  📍마산아구찜
+ * 홈의 다가오는 모임(주요 일정). ★ 지금 모양(2026-09-25, C안 "큰 D-day"):
+ *    D-1   │ 아구찜 번개                   >
+ *   09.15 화│ 오후 6:30 · 마산아구찜
  * 아래 주석들은 그 전 짜임의 기록입니다 — 예전 짜임: 1행 "D-1 09.15. 아구찜 번개", 2행 📍장소 🕒시간.
  *   (맨 위 "주요 일정" 이름표는 2026-09-23 사용자 요청으로 뺐습니다. 아래 주석의 "2행·3행"은 지금의 1·2행입니다.)
  *
@@ -56,15 +55,17 @@ export function EventDdayCard({
    * 예전에는 주황 바탕에 흰 글씨였습니다. 바탕이 흰색이 되면서 글씨는 먹색, D-day만 주황으로 둡니다.
    */
   /*
-   * ★ 2026-09-25 사용자 요청으로 "D · 주황 머리띠" 시안으로 바꿨습니다(다섯 시안 중에서 고름).
-   *   카드 위에 옅은 주황 띠 "다가오는 일정 ··· D-7", 그 아래 큰 제목, 맨 아래 날짜·시간과 장소.
+   * ★ 지금은 "C · 큰 D-day" 시안입니다 (2026-09-25 사용자 요청, 다섯 시안 중에서 고름).
+   *   왼쪽에 큰 주황 D-day와 그 아래 작은 날짜, 가는 세로 선, 오른쪽에 제목과 "시간 · 장소".
+   *   같은 날 잠깐 "D · 주황 머리띠"(카드 위 주황 띠 "다가오는 일정 D-7")였다가 이것으로 바꿨습니다.
    *   그 전(2026-09-23~25)에는 한 줄에 "D-7 10.02. 제목", 아래 장소·시간 두 줄 짜임이었습니다.
-   *   띠가 머리 끝까지 칠해지도록 카드가 overflow-hidden입니다.
    */
   const className =
-    "flex flex-col overflow-hidden rounded-3xl bg-surface text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    "flex items-center gap-4 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+  const dday = ddayLabel(event.date);
+  /** D-day 아래 작은 날짜 — "10.02 금" */
   const dateText = date
-    ? `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} (${WEEKDAYS[date.getDay()]})`
+    ? `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} ${WEEKDAYS[date.getDay()]}`
     : "";
 
   /*
@@ -74,42 +75,38 @@ export function EventDdayCard({
    */
   const inside = (
     <>
-      {/*
-        머리띠 — 주황 바탕에 흰 글씨 "다가오는 일정 D-7" (2026-09-25 사용자 요청: 옅은 주황 → 주황, 글씨 주황 → 흰색,
-        D-day를 오른쪽 끝에서 "다가오는 일정" 바로 옆으로). 둘 다 13px 굵게, D-day만 한 단 더 굵게.
-      */}
-      <span className="flex items-center gap-1.5 bg-brand-500 px-5 py-[9px] text-[13px] font-bold text-white">
-        <span>다가오는 일정</span>
-        <span className="font-extrabold">{ddayLabel(event.date)}</span>
+      {/* 왼쪽 칸 — 큰 D-day(28px 가장 굵게, 주황)와 그 아래 작은 날짜(12px 굵게, 회색). 폭 62px 고정, 가운데 맞춤. */}
+      <span className="flex w-[62px] shrink-0 flex-col items-center leading-none">
+        {/* "D-DAY"·"D-100"처럼 다섯 글자 이상이면 22px — 28px로는 62px 칸을 넘칩니다. */}
+        <span
+          className={`font-extrabold tracking-tight whitespace-nowrap text-brand-500 ${
+            dday.length >= 5 ? "text-[22px]" : "text-[28px]"
+          }`}
+        >
+          {dday}
+        </span>
+        {dateText ? (
+          <span className="mt-1.5 text-[12px] font-bold whitespace-nowrap text-ink-muted">{dateText}</span>
+        ) : null}
       </span>
 
-      <span className="flex items-center gap-3 pt-3 pr-4 pb-3.5 pl-5">
-        <span className="min-w-0 flex-1">
-          {/* 일정 이름 18px 굵게 — 길면 "…"로 줄입니다. */}
-          <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
-          {/*
-            날짜·시간 + 장소. 날짜·시간은 끝까지 보이고(shrink-0), 모자라면 장소만 "…"로 줄어듭니다.
-            장소 앞에만 핀을 둡니다(시계 아이콘은 날짜·시간이 한 덩어리라 뺐습니다).
-          */}
-          <span className="mt-1 flex min-w-0 items-center gap-2.5 text-[14px] font-medium text-ink-muted">
-            {dateText || time ? (
-              <span className="shrink-0">{[dateText, time].filter(Boolean).join(" ")}</span>
-            ) : null}
-            {event.location ? (
-              <span className="flex min-w-0 items-center gap-[3px]">
-                <PinIcon className="h-[15px] w-[15px] shrink-0" />
-                <span className="truncate">{event.location}</span>
-              </span>
-            ) : null}
+      {/* 가는 세로 선 — 왼쪽 D-day 칸과 오른쪽 글을 나눕니다. */}
+      <span aria-hidden="true" className="w-px shrink-0 self-stretch bg-line" />
+
+      <span className="min-w-0 flex-1">
+        {/* 일정 이름 17px 굵게 — 길면 "…"로 줄입니다. */}
+        <span className="block truncate text-[17px] leading-tight font-bold">{event.title}</span>
+        {/* "시간 · 장소" 한 줄 — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 "…". */}
+        {time || event.location ? (
+          <span className="mt-1 block truncate text-[14px] font-medium text-ink-muted">
+            {[time, event.location].filter(Boolean).join(" · ")}
           </span>
-        </span>
-        {/*
-          오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 굵기(2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
-          D안에서는 몸통(제목·장소 줄) 가운데에 섭니다.
-        */}
-        <span className="flex shrink-0 items-center text-ink-faint">
-          <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
-        </span>
+        ) : null}
+      </span>
+
+      {/* 오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 굵기(2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요. */}
+      <span className="flex shrink-0 items-center text-ink-faint">
+        <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
     </>
   );
