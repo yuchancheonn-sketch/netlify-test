@@ -24,7 +24,7 @@ export default function AdminPage() {
   const { isAdmin } = useAuth();
   /*
    * 고르기 전에는 null. 막아둔 사람이 있으면 그 탭에서 시작합니다.
-   * 월요일 저녁 "카톡 초안" 푸시는 /admin?tab=newsDraft를 열어 그 탭에서 바로 시작합니다 (2026-09-24).
+   * 월요일 저녁 "원우 소식" 초안 푸시는 /admin?tab=newsDraft를 열어 그 탭에서 바로 시작합니다 (2026-09-24).
    * (이 화면은 로그인 확인이 끝난 뒤 브라우저에서만 그려져서, 여기서 주소를 읽어도 화면이 어긋나지 않습니다.)
    */
   const [tab, setTab] = useState<Tab | null>(() =>
@@ -49,8 +49,9 @@ export default function AdminPage() {
       : []),
     { value: "roster", label: "원우 명단" },
     { value: "members", label: "권한 관리" },
-    // 매주 월요일 저녁 서버가 이번주 원우 소식 링크로 적는 단톡방용 카톡 초안 (2026-09-24).
-    { value: "newsDraft", label: "카톡 초안" },
+    // 매주 월요일 저녁 서버가 이번주 원우 소식 링크로 적는 단톡방용 초안 (2026-09-24).
+    // 탭 이름 "카톡 초안" → "원우 소식" (같은 날 사용자 요청).
+    { value: "newsDraft", label: "원우 소식" },
   ];
 
   if (!isAdmin) {
@@ -514,7 +515,7 @@ function MembersSection({ approved }: { approved: UserDoc[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 카톡 초안 (2026-09-24)                                               */
+/* 원우 소식 초안 (2026-09-24, 탭 이름 "원우 소식")                     */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -576,35 +577,41 @@ function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
 
   return (
     <li className="rounded-3xl bg-surface p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[16px] font-bold text-ink">{draft.weekLabel}</p>
-          <p className="text-[13px] text-ink-muted">게시물 {draft.postCount}개</p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={copy}
-            className={`rounded-full px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
-              canShare ? "bg-fill text-ink-muted" : "bg-brand-500 text-white"
-            }`}
-          >
-            {copied ? "복사했어요" : "복사하기"}
-          </button>
-          {canShare ? (
-            <button
-              type="button"
-              onClick={share}
-              className="rounded-full bg-brand-500 px-4 py-2 text-[13px] font-bold text-white transition active:scale-95"
-            >
-              카톡으로 보내기
-            </button>
-          ) : null}
-        </div>
-      </div>
-      <p className="mt-3 rounded-2xl bg-fill px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+      {/*
+        날짜 · 게시물 수를 한 줄에, 단추는 문구 아래로 (2026-09-24). 예전엔 단추가 날짜 옆에 서서 자리를 뺏어
+        "9월 22일 / ~28일"로 줄이 꺾였습니다.
+      */}
+      <p className="text-[16px] font-bold text-ink">
+        {draft.weekLabel}
+        <span className="ml-2 text-[13px] font-medium text-ink-muted">게시물 {draft.postCount}개</span>
+      </p>
+      {/*
+        [overflow-wrap:anywhere] — 긴 링크가 칸 밖으로 삐져나가 잘리던 것을 글자 단위로 줄을 넘기게 합니다
+        (2026-09-24 사용자 요청). break-keep은 한글 낱말을 지키려고 둔 것이라 그대로 두고, 넘칠 때만 끊습니다.
+      */}
+      <p className="mt-3 rounded-2xl bg-fill px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line break-keep text-ink-soft [overflow-wrap:anywhere]">
         {draft.draftText}
       </p>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={copy}
+          className={`flex-1 rounded-full py-2.5 text-[14px] font-bold transition active:scale-95 ${
+            canShare ? "bg-fill text-ink-muted" : "bg-brand-500 text-white"
+          }`}
+        >
+          {copied ? "복사했어요" : "복사하기"}
+        </button>
+        {canShare ? (
+          <button
+            type="button"
+            onClick={share}
+            className="flex-1 rounded-full bg-brand-500 py-2.5 text-[14px] font-bold text-white transition active:scale-95"
+          >
+            카톡으로 보내기
+          </button>
+        ) : null}
+      </div>
     </li>
   );
 }
