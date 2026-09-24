@@ -74,8 +74,11 @@ export function EventDdayCard({
    */
   const inside = (
     <>
-      {/* 머리띠 — 옅은 주황 바탕에 왼쪽 "다가오는 일정", 오른쪽 D-day. 둘 다 13px 주황 굵게, D-day만 한 단 더 굵게. */}
-      <span className="flex items-center justify-between bg-brand-50 px-5 py-[9px] text-[13px] font-bold text-brand-500">
+      {/*
+        머리띠 — 주황 바탕에 흰 글씨 "다가오는 일정 D-7" (2026-09-25 사용자 요청: 옅은 주황 → 주황, 글씨 주황 → 흰색,
+        D-day를 오른쪽 끝에서 "다가오는 일정" 바로 옆으로). 둘 다 13px 굵게, D-day만 한 단 더 굵게.
+      */}
+      <span className="flex items-center gap-1.5 bg-brand-500 px-5 py-[9px] text-[13px] font-bold text-white">
         <span>다가오는 일정</span>
         <span className="font-extrabold">{ddayLabel(event.date)}</span>
       </span>
