@@ -63,7 +63,8 @@ export default function SettingsPage() {
     >
       <PageHeader title="설정" back />
 
-      <div className="flex flex-col gap-7 px-4 pb-10">
+      {/* 칸 사이 20px(gap-5) — 2026-09-25 사용자 "박스 부분들 사이 간격 좁혀줘", 28px(gap-7)에서. */}
+      <div className="flex flex-col gap-5 px-4 pb-10">
         {isGuest ? null : <PushSection uid={user?.uid} />}
 
         {/*
