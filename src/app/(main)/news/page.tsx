@@ -64,11 +64,12 @@ export default function NewsPage() {
   /*
    * 원우 소식 칸에서는 화면이 위아래로 굴러가지 않게 잠급니다 (2026-09-23 사용자 요청).
    * 카드가 화면에 딱 맞게 서는 칸이라 굴릴 것이 없는데, 남아 있던 몇 px의 스크롤이 카드를 옆으로 미는
-   * 손짓을 자꾸 채 갔습니다. 위원회 칸은 카드가 길어질 수 있어 잠그지 않습니다.
-   * 칸을 바꾸거나 다른 탭으로 나가면 정리(cleanup)에서 곧 풀립니다 — 규칙은 globals.css의 data-lock-scroll.
+   * 손짓을 자꾸 채 갔습니다.
+   * ★ 위원회 칸도 잠급니다 (2026-09-25 사용자 "위원회창 만큼은 위아래로 스크롤 안 되게"). 예전엔 긴 카드를 굴려 읽게
+   *   잠그지 않았는데, 이제 긴 카드는 화면에 맞게 줄여 보여 줍니다(AlbumList의 fitScale).
+   * 다른 탭으로 나가면 정리(cleanup)에서 곧 풀립니다 — 규칙은 globals.css의 data-lock-scroll.
    */
   useEffect(() => {
-    if (subtab !== "member") return;
     document.body.dataset.lockScroll = "yes";
     return () => {
       delete document.body.dataset.lockScroll;

@@ -453,6 +453,15 @@ function AlbumBook({
   const [flippedId, setFlippedId] = useState<string | null>(null);
   /** 카드 자리 — 아래 touchmove 막기를 걸어 두는 곳 */
   const deckRef = useRef<HTMLDivElement | null>(null);
+  /** 카드 자리(틀)의 높이(px) — 긴 위원회 카드를 줄일 때 기준입니다(아래 fitScale). */
+  const [deckHeight, setDeckHeight] = useState(0);
+  useEffect(() => {
+    const deck = deckRef.current;
+    if (!deck) return;
+    const observer = new ResizeObserver(() => setDeckHeight(deck.offsetHeight));
+    observer.observe(deck);
+    return () => observer.disconnect();
+  }, []);
   /*
    * 지금 카드의 높이(px) — 두 곳에 씁니다 (2026-09-23).
    *  1. 순번 줄("3 / 8")을 카드 아래 8px에 두는 자리. 카드마다 길이가 달라도 자리가 뚝 끊기지 않게
@@ -488,6 +497,14 @@ function AlbumBook({
     /** 카드 위에서 눌렀는지 — 카드 바깥 빈자리를 눌러서는 뒤집히지 않게. */
     onCard: boolean;
   } | null>(null);
+
+  /*
+   * 화면보다 긴 위원회 카드(fit)를 화면에 맞게 줄이는 비율 (2026-09-25 사용자 "위원회창은 위아래로 스크롤 안 되게").
+   * 카드 자리 = 틀 높이 − 아래 순번 줄 40px. 카드가 그보다 길면 그만큼만 줄이고(scale), 짧으면 1(그대로)입니다.
+   * 인원이 많은 위원회나 조직도, 글씨 "크게"일 때만 줄어듭니다. 원우 소식 칸(fit 아님)은 늘 1입니다.
+   */
+  const fitSpace = deckHeight - 40;
+  const fitScale = fit && cardHeight > 0 && fitSpace > 0 && cardHeight > fitSpace ? fitSpace / cardHeight : 1;
 
   // 기수를 바꾸거나 소식이 지워져 목록이 짧아지면 마지막 장에 섭니다.
   const current = Math.min(index, slides.length - 1);
@@ -672,7 +689,8 @@ function AlbumBook({
         style={
           {
             // fit(위원회)에서는 카드가 잘리지 않고 다 보이므로 세로 손짓을 막지 않습니다 — 탭을 굴려 읽습니다.
-            touchAction: fit ? "pan-y" : "none",
+            // 위원회 칸도 이제 화면을 굴리지 않아(2026-09-25) 세로 손짓을 받을 일이 없습니다 — 둘 다 "none".
+            touchAction: "none",
             "--card-max": fit ? "none" : "calc(var(--frame-h) - 40px)",
           } as React.CSSProperties
         }
@@ -716,6 +734,14 @@ function AlbumBook({
                 className="pointer-events-auto relative w-full origin-bottom"
                 style={{ ...motion, transition }}
               >
+                {/* 화면보다 긴 위원회 카드를 화면에 맞게 줄이는 칸 — 아래 fitScale 주석. 보통은 1(그대로)입니다. */}
+                <div
+                  style={
+                    fitScale < 1
+                      ? { transform: `scale(${fitScale})`, transformOrigin: "center", transition: `transform ${TURN_MS}ms ${TURN_EASE}` }
+                      : undefined
+                  }
+                >
                 {/* 뒤에 종이가 한두 장 더 깔려 있는 것처럼 보이던 그림은 뺐습니다 (2026-09-23 사용자 요청). */}
                 {/*
                   뒤집히는 카드 (2026-09-22 사용자 요청 — 한 번 누르면 뒤집혀 세부 설명).
@@ -771,6 +797,7 @@ function AlbumBook({
                     </div>
                   ) : null}
                 </div>
+                </div>
               </div>
 
             </div>
@@ -787,7 +814,7 @@ function AlbumBook({
         <p
           className="pointer-events-none absolute inset-x-0 flex h-8 items-center justify-center text-[14px] font-bold text-ink-muted tabular-nums"
           style={{
-            top: `calc((100% - 40px) / 2 + ${cardHeight / 2 + 8}px)`,
+            top: `calc((100% - 40px) / 2 + ${(cardHeight * fitScale) / 2 + 8}px)`,
             transition: `top ${TURN_MS}ms ${TURN_EASE}`,
           }}
           aria-live="polite"
@@ -847,13 +874,13 @@ function AlbumBook({
   );
 
   /*
-   * 틀 — 기본은 화면에 딱 맞는 크기라 카드가 화면 한가운데에 섭니다(2026-09-23 사용자 "카드가 화면 정가운데에").
-   * fit(위원회)일 때는 카드가 화면보다 길면 그 길이(+순번 줄 40px)만큼 틀이 늘어나, 카드 안이 아니라
-   * 탭 전체를 굴려 읽습니다. 짧은 카드는 화면 크기 그대로라 가운데에 섭니다.
+   * 틀 — 늘 화면에 딱 맞는 크기라 카드가 화면 한가운데에 섭니다(2026-09-23 사용자 "카드가 화면 정가운데에").
+   * ★ 2026-09-25 사용자 "위원회창 만큼은 위아래로 스크롤 안 되게": 예전엔 fit(위원회)에서 카드가 화면보다 길면
+   *   틀이 그만큼 늘어나 탭 전체를 굴려 읽었습니다. 이제 틀은 늘리지 않고, 긴 카드는 fitScale로 줄여 화면에 맞춥니다.
+   *   (화면 스크롤 잠금은 news/page.tsx의 data-lock-scroll.)
    */
   return (
     <BookFrame
-      minHeightPx={fit && cardHeight ? cardHeight + 40 : 0}
       // 위원회 칸에는 "소식 올리기" 알약이 없어 그만큼 자리를 더 씁니다 — 카드가 화면 한가운데에 섭니다.
       bottomReservePx={bottomReservePx ?? (fit ? 90 : 157)}
     >
