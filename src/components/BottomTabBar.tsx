@@ -61,6 +61,9 @@ const TABS = [
   { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
 ] as const;
 
+/** 다섯 탭의 첫 화면 주소, 왼쪽부터. 화면을 옆으로 밀어 탭을 옮기는 MainShell이 씁니다. */
+export const TAB_ROOTS: readonly string[] = TABS.map(({ href }) => href);
+
 /** 지금 보고 있는 주소가 이 탭에 속하는지. 하위 화면(/events/3 등)까지 포함합니다. */
 function tabHolds(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
@@ -304,7 +307,8 @@ export default function BottomTabBar() {
     if (passed !== 0 && TABS[target]) {
       // 그 탭 자리에 세워두고 이동합니다. 주소가 따라오면 위에서 풀어줍니다.
       setDrag({ ...drag, dx: passed * drag.slot, settling: true, target });
-      router.push(TABS[target].href);
+      // replace — 탭끼리 옮긴 것은 기록에 쌓지 않습니다(아래 Link의 replace 주석).
+      router.replace(TABS[target].href);
     } else {
       setDrag({ ...drag, dx: 0, settling: true, target: null });
     }
@@ -487,8 +491,14 @@ export default function BottomTabBar() {
           return (
             /* 회색 알약이 뒤에 깔리도록, 칸을 알약보다 위에 세웁니다. */
             <li key={href} className="relative flex-1">
+              {/*
+                replace — 탭을 옮겨도 브라우저 기록에 쌓지 않습니다 (2026-09-25 사용자 요청).
+                쌓아 두면 아이폰에서 화면 왼쪽 끝을 밀 때 "뒤로 가기"로 앞서 보던 탭이 옆에서 끌려 나왔습니다.
+                하위 화면(설정·알림·모임 등)으로 들어가는 것은 그대로 기록에 남아 뒤로 갈 수 있습니다.
+              */}
               <Link
                 href={href}
+                replace
                 aria-current={active ? "page" : undefined}
                 onClick={(event) => {
                   // 알약을 끌다가 손을 뗀 것이면 링크를 열지 않습니다.
