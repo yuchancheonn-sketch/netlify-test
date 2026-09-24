@@ -13,9 +13,11 @@ import {
 import type { EventDoc } from "@/lib/types";
 
 /**
- * 홈의 다가오는 모임(주요 일정) — 주황 카드에 두 줄, 오른쪽 끝에 ">".
- *   1행  D-day + 날짜 + 일정 이름   "D-1  09.15.  아구찜 번개"
- *   2행  장소 + 시간                📍마산아구찜  🕒오후 6:30
+ * 홈의 다가오는 모임(주요 일정). ★ 지금 모양(2026-09-25, D안 "주황 머리띠"):
+ *   머리띠  "다가오는 일정 ··················· D-1"   (옅은 주황 바탕)
+ *   1행     아구찜 번개                              >
+ *   2행     09.15 (화) 오후 6:30  📍마산아구찜
+ * 아래 주석들은 그 전 짜임의 기록입니다 — 예전 짜임: 1행 "D-1 09.15. 아구찜 번개", 2행 📍장소 🕒시간.
  *   (맨 위 "주요 일정" 이름표는 2026-09-23 사용자 요청으로 뺐습니다. 아래 주석의 "2행·3행"은 지금의 1·2행입니다.)
  *
  * ★ 세 줄 짜임 (2026-09-14 사용자 요청). 그 전에는 왼쪽에 둘레가 차오르는 흰 D-day 원
@@ -53,8 +55,17 @@ export function EventDdayCard({
    * 흰 카드 + 회색 1px 테두리 — 홈의 다른 박스들과 같은 모양 (2026-09-23 사용자 "주요일정 박스의 색을 흰색으로").
    * 예전에는 주황 바탕에 흰 글씨였습니다. 바탕이 흰색이 되면서 글씨는 먹색, D-day만 주황으로 둡니다.
    */
+  /*
+   * ★ 2026-09-25 사용자 요청으로 "D · 주황 머리띠" 시안으로 바꿨습니다(다섯 시안 중에서 고름).
+   *   카드 위에 옅은 주황 띠 "다가오는 일정 ··· D-7", 그 아래 큰 제목, 맨 아래 날짜·시간과 장소.
+   *   그 전(2026-09-23~25)에는 한 줄에 "D-7 10.02. 제목", 아래 장소·시간 두 줄 짜임이었습니다.
+   *   띠가 머리 끝까지 칠해지도록 카드가 overflow-hidden입니다.
+   */
   const className =
-    "flex items-center gap-3 rounded-3xl bg-surface py-4 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    "flex flex-col overflow-hidden rounded-3xl bg-surface text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+  const dateText = date
+    ? `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} (${WEEKDAYS[date.getDay()]})`
+    : "";
 
   /*
    * 속은 한 벌이고 껍데기만 앱 안 링크(Link)와 바깥 링크(<a>)로 갈립니다.
@@ -63,62 +74,39 @@ export function EventDdayCard({
    */
   const inside = (
     <>
-      <span className="min-w-0 flex-1">
-        {/* 1행 이름표 "주요 일정"은 뺐습니다 (2026-09-23 사용자 요청). 이제 D-day 줄이 카드 맨 위입니다. */}
+      {/* 머리띠 — 옅은 주황 바탕에 왼쪽 "다가오는 일정", 오른쪽 D-day. 둘 다 13px 주황 굵게, D-day만 한 단 더 굵게. */}
+      <span className="flex items-center justify-between bg-brand-50 px-5 py-[9px] text-[13px] font-bold text-brand-500">
+        <span>다가오는 일정</span>
+        <span className="font-extrabold">{ddayLabel(event.date)}</span>
+      </span>
 
-        {/*
-          2행 — D-day + 날짜 + 일정 이름. 셋 다 크기·굵기·색이 같습니다(18px bold 흰색,
-          2026-09-14 사용자 요청 — 처음엔 날짜만 흰색 90%로 한 단 물렸었고, D-day는 3행에 있었습니다).
-          자리가 모자라면 이름만 "…"로 줄고 D-day·날짜는 끝까지 보입니다(shrink-0).
-        */}
-        {/*
-          줄 사이 간격: 1행→2행 8px(mt-2), 2행→3행 4px(mt-1) — 2행(D-day·날짜·이름)이 3행(장소·시간)과
-          한 덩어리로 읽히고 1행 "주요 일정" 이름표와는 떨어져 보이게 (2026-09-15 사용자 요청, 예전엔 4px/8px 반대).
-          두 간격의 합(12px)은 그대로라 카드 높이·홈 스켈레톤 높이는 바뀌지 않았습니다.
-        */}
-        <span className="flex min-w-0 items-baseline gap-2 text-[18px] leading-tight font-bold">
-          {/* D-day — 날짜 왼쪽. 흰 카드가 된 2026-09-23부터 이것만 주황이고 날짜·이름은 먹색입니다. */}
-          <span className="shrink-0 text-brand-500">{ddayLabel(event.date)}</span>
-          {date ? (
-            <span className="shrink-0">
-              {/* "09.15." — 월·일 모두 두 자리 + 끝에 점 (2026-09-14 사용자 요청, "9월 15일"에서 바꿈) */}
-              {String(date.getMonth() + 1).padStart(2, "0")}.{String(date.getDate()).padStart(2, "0")}.
-            </span>
-          ) : null}
-          {/* 일정 이름만 17px — 2026-09-15 사용자 요청으로 D-day·날짜(18px)보다 1px 작게. 줄은 items-baseline이라 아랫선이 맞습니다. */}
-          <span className="truncate text-[17px]">{event.title}</span>
-        </span>
-
-        {/*
-          3행 — 장소 + 시간. 둘 다 없는 일정이면 이 줄을 통째로 그리지 않습니다.
-          (D-day는 2026-09-14까지 이 줄 맨 앞에 있다가 사용자 요청으로 2행 날짜 왼쪽으로 옮겼습니다.)
-          장소 앞에 핀, 시간 앞에 시계. 아이콘이 둘을 갈라 주므로 사이의 " · "는 뺐습니다.
-          자리가 모자라면 장소만 "…"로 줄고 시간은 끝까지 보입니다(shrink-0).
-        */}
-        {event.location || time ? (
-          /* 글씨 15px · 아이콘 18px — 2026-09-15 사용자 요청으로 14px · 15px에서 키웠다가(16px), 같은 날 글씨만 15px로 줄였습니다. */
-          <span className="mt-1 flex min-w-0 items-center gap-3 text-[15px] font-medium text-ink-muted">
+      <span className="flex items-center gap-3 pt-3 pr-4 pb-3.5 pl-5">
+        <span className="min-w-0 flex-1">
+          {/* 일정 이름 18px 굵게 — 길면 "…"로 줄입니다. */}
+          <span className="block truncate text-[18px] leading-tight font-bold">{event.title}</span>
+          {/*
+            날짜·시간 + 장소. 날짜·시간은 끝까지 보이고(shrink-0), 모자라면 장소만 "…"로 줄어듭니다.
+            장소 앞에만 핀을 둡니다(시계 아이콘은 날짜·시간이 한 덩어리라 뺐습니다).
+          */}
+          <span className="mt-1 flex min-w-0 items-center gap-2.5 text-[14px] font-medium text-ink-muted">
+            {dateText || time ? (
+              <span className="shrink-0">{[dateText, time].filter(Boolean).join(" ")}</span>
+            ) : null}
             {event.location ? (
-              <span className="flex min-w-0 items-center gap-1">
-                <PinIcon className="h-[18px] w-[18px] shrink-0" />
+              <span className="flex min-w-0 items-center gap-[3px]">
+                <PinIcon className="h-[15px] w-[15px] shrink-0" />
                 <span className="truncate">{event.location}</span>
               </span>
             ) : null}
-            {time ? (
-              <span className="flex shrink-0 items-center gap-1">
-                <ClockIcon className="h-[18px] w-[18px]" />
-                {time}
-              </span>
-            ) : null}
           </span>
-        ) : null}
-      </span>
-      {/*
-        오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기(24px·2.1) — 2026-09-11에 두 꺾쇠의 가운데 값으로
-        맞췄습니다. 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
-      */}
-      <span className="flex shrink-0 items-center pr-4 pl-3 text-ink-faint">
-        <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
+        </span>
+        {/*
+          오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 굵기(2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
+          D안에서는 몸통(제목·장소 줄) 가운데에 섭니다.
+        */}
+        <span className="flex shrink-0 items-center text-ink-faint">
+          <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
+        </span>
       </span>
     </>
   );
