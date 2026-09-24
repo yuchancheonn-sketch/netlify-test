@@ -129,7 +129,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   return (
     <section
       onClick={centerSelf}
-      className="rounded-3xl bg-surface px-4 pt-4 pb-3 shadow-[var(--shadow-card-flat)]"
+      // pt-[15.5px] — "2026년 9월" 위 흰 여백 (2026-09-25 사용자 "0.5px 줄여줘", 16px에서).
+      className="rounded-3xl bg-surface px-4 pt-[15.5px] pb-3 shadow-[var(--shadow-card-flat)]"
     >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">
