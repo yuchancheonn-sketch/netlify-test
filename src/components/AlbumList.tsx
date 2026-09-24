@@ -95,6 +95,29 @@ export function WeekAlbumBook({ weekId }: { weekId: string }) {
   return <AlbumBook slides={slides} authors={authors} bottomReservePx={90} />;
 }
 
+const NO_AUTHORS = new Map<string, UserDoc>();
+
+/**
+ * 로그인 없이 보는 주간 소식지(app/letter/[slug])의 카드 책 (2026-09-24 사용자 요청
+ * "앱처럼 옆으로 넘기는 형식으로 똑같이… 본문이 길면 카드 뒤집기로 전체… 애니메이션·기능 통일").
+ *
+ * 앱의 원우 소식 칸과 같은 AlbumBook이라 넘기기·화살표·순번·뒤집기가 모두 같고, ⋯ (수정·지우기)만 없습니다.
+ * 소식은 서버가 읽어 넘깁니다(원우수첩을 못 읽으니 올린 원우 이름은 createdByName에 담겨 옵니다).
+ * 원우 소식 칸처럼 카드가 화면에 딱 맞게 서서 화면을 위아래로 굴리지 않습니다.
+ */
+export function LetterBook({ albums }: { albums: PhotoAlbumDoc[] }) {
+  useEffect(() => {
+    document.body.dataset.lockScroll = "yes";
+    return () => {
+      delete document.body.dataset.lockScroll;
+    };
+  }, []);
+
+  const slides = albums.map((album) => ({ id: album.id, title: album.title, album }));
+  // 아래에 탭바도 "소식 올리기" 알약도 없어 24px만 비웁니다(안전 영역은 BookFrame이 따로 뺌).
+  return <AlbumBook slides={slides} authors={NO_AUTHORS} bottomReservePx={24} readOnly />;
+}
+
 /**
  * 원우 소식 — 소식 탭의 첫 칸 (예전 이름 "행사 사진").
  *
@@ -376,6 +399,7 @@ function AlbumBook({
   authors,
   fit = false,
   bottomReservePx,
+  readOnly = false,
 }: {
   slides: Slide[];
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
@@ -391,6 +415,8 @@ function AlbumBook({
    * 안 주면 기본값(원우 소식 157 / 위원회 90 — 아래 BookFrame 호출부)을 그대로 씁니다.
    */
   bottomReservePx?: number;
+  /** true면 ⋯ (수정·지우기)를 아무에게도 달지 않습니다 — 로그인 없이 보는 소식지(LetterBook) (2026-09-24). */
+  readOnly?: boolean;
 }) {
   const { user, isAdmin } = useAuth();
   const [index, setIndex] = useState(0);
@@ -399,7 +425,8 @@ function AlbumBook({
   const [managing, setManaging] = useState<PhotoAlbumDoc | null>(null);
   const [editing, setEditing] = useState<PhotoAlbumDoc | null>(null);
   /** 올린 원우와 운영진만 ⋯ (수정·지우기)가 보입니다. */
-  const canManage = (album: PhotoAlbumDoc) => album.createdBy === user?.uid || isAdmin;
+  const canManage = (album: PhotoAlbumDoc) =>
+    !readOnly && (album.createdBy === user?.uid || isAdmin);
   /** 뒤집어 세부 설명을 보고 있는 소식의 id (2026-09-22 사용자 요청 — 카드를 한 번 누르면 뒤집힘) */
   const [flippedId, setFlippedId] = useState<string | null>(null);
   /** 카드 자리 — 아래 touchmove 막기를 걸어 두는 곳 */
