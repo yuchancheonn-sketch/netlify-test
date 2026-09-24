@@ -263,7 +263,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                     <span className="block text-[15px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
                       {item.title}
                     </span>
-                    <span className="mt-0.5 block text-[13px] leading-snug break-keep text-ink-muted">
+                    {/* mt-1 — 제목과 사이 4px (2026-09-25 사용자 "너무 붙어 있어, 조금만 띄워줘", 2px(mt-0.5)에서). */}
+                    <span className="mt-1 block text-[13px] leading-snug break-keep text-ink-muted">
                       {[item.time, item.location].filter(Boolean).join(" · ") || "시간 미정"}
                     </span>
                   </span>
