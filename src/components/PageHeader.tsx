@@ -202,7 +202,8 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
           onClick={() => goToLogin()}
           className="rounded-full bg-brand-500 px-4 py-1.5 text-[14px] font-bold text-white transition active:scale-95"
         >
-          로그인
+          {/* 글씨만 1px 위로 — 2026-09-24 사용자 요청. 단추가 flex가 아니라 span에 inline-block이 있어야 transform이 먹습니다. */}
+          <span className="inline-block -translate-y-px">로그인</span>
         </button>
         <HeaderIconLink href="/settings" label="설정 열기">
           <SettingsIcon className={HEADER_ICON_SIZE} />
