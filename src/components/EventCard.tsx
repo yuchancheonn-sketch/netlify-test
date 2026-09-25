@@ -74,9 +74,9 @@ export function EventDdayCard({
   const className =
     // pt-[17px] — 위 흰 여백 (2026-09-25 사용자 "1px 늘려줘", 16px(py-4)에서).
     // pb-[19px] — 아래 흰 여백 (같은 날 사용자 "1.5px 만큼 늘려줘" 두 번, 16 → 17.5 → 19px).
-    // pr-[18px] — 오른쪽 ">" 끝을 오늘의 OX 퀴즈 카드의 ">" 끝과 같은 줄(카드 끝에서 18px)에 맞춤
-    //   (2026-09-26 사용자 "위치도 같은 선에 정렬", 12px(pr-3)에서 — 그때는 6px 더 바깥에 섰습니다).
-    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[19px] pr-[18px] pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    // pr-[16.5px] — 오른쪽 ">" 끝을 오늘의 OX 퀴즈 카드의 ">" 끝과 같은 줄(카드 끝에서 16.5px)에 맞춤
+    //   (2026-09-26 사용자 "위치도 같은 선에 정렬" 12px → 18px, 이어서 두 카드 함께 "오른쪽으로 1.5px" → 16.5px).
+    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[19px] pr-[16.5px] pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
   /** D-day 옆 작은 날짜 — "10.02 금" */
   const dateText = date

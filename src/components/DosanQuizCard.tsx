@@ -143,9 +143,10 @@ export default function DosanQuizCard() {
           <h2 className="text-[18px] font-bold text-ink">오늘의 OX 퀴즈</h2>
           {/*
             오른쪽 위 — (푼 뒤에만) 해설 보기, 그리고 늘 ">" 역대 퀴즈(/quizzes).
-            -mr-1.5: ">"의 손끝 자리(32px)는 넉넉히 두고, 꺾쇠 끝은 카드 오른쪽 여백 줄에 맞춥니다.
+            -mr-[7.5px]: ">"의 손끝 자리(32px)는 넉넉히 두고, 꺾쇠 끝을 카드 끝에서 16.5px에 세웁니다 — 다가오는 일정
+            카드의 ">"와 같은 줄 (2026-09-26 사용자 "오른쪽으로 1.5px", -mr-1.5(6px)에서).
           */}
-          <div className="-mr-1.5 flex shrink-0 items-center gap-1">
+          <div className="-mr-[7.5px] flex shrink-0 items-center gap-1">
             {/*
               푼 뒤에 해설을 다시 여는 단추. 바로 옆에 ">"가 서므로 꺾쇠를 떼고 글자만 둡니다(2026-09-11).
               크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다.
