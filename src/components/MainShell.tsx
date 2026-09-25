@@ -63,7 +63,8 @@ export default function MainShell({ children }: { children: ReactNode }) {
           className={
             fullScreen
               ? "flex flex-1 flex-col"
-              : "flex-1 pb-[calc(78px+env(safe-area-inset-bottom))]"
+              : // 알약 바닥 높이 + 82px (홈 화면 앱은 예전 78px + 홈 바와 같음, Safari 등은 94px) — 2026-09-26.
+                "flex-1 pb-[calc(max(12px,calc(-4px+env(safe-area-inset-bottom)))+82px)]"
           }
         >
           {children}
@@ -95,7 +96,8 @@ export default function MainShell({ children }: { children: ReactNode }) {
  */
 function BottomTabBarScrim() {
   /** 화면 바닥부터 알약 한가운데까지 — 딱 이 구간만 덮습니다. */
-  const height = "calc(28px + env(safe-area-inset-bottom))";
+  // 알약 바닥 높이(BottomTabBar의 max(12px, -4px + 홈 바)) + 알약 높이의 절반 32px (2026-09-26, 예전엔 28px + 홈 바).
+  const height = "calc(max(12px, calc(-4px + env(safe-area-inset-bottom))) + 32px)";
   /** 위 끝에서 아무 효과 없이 시작해 아래로 갈수록 짙어지는 정도 */
   const fade = "linear-gradient(to bottom, transparent, black 75%)";
 

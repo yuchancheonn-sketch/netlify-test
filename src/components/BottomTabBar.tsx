@@ -364,10 +364,10 @@ export default function BottomTabBar() {
      * ★ 띄우는 값(아래 -4px)을 바꾸면 MainShell도 같이 고쳐야 합니다.
      *   흐림 층(BottomTabBarScrim)의 높이와 본문 아래 여백이 이 값에서 나옵니다.
      *
-     * ★ 음수라 알약의 아래 끝 4px은 화면 밖으로 나가 잘립니다.
-     *   홈 바가 있는 아이폰에서는 safe-area가 더해져 잘리지 않지만,
-     *   safe-area가 0인 브라우저·안드로이드에서는 둥근 아래 모서리가
-     *   그만큼 깎여 보입니다. 더 내리면 더 잘립니다.
+     * ★ 홈 바 높이(safe-area)가 0인 곳 — Safari·카카오톡에서 링크로 연 화면, 안드로이드 — 에서는
+     *   -4px 그대로면 알약 아래 4px이 화면 밖으로 나가 둥근 모서리가 잘렸습니다(2026-09-26 사용자 "밑에가 잘린다").
+     *   그래서 max(12px, …)로 바닥에서 최소 12px은 띄웁니다. 홈 화면 앱(홈 바 약 34px)은 예전 값 그대로입니다.
+     *   이 식은 MainShell의 흐림 층 높이·본문 아래 여백에도 똑같이 들어 있습니다 — 바꾸면 같이.
      *
      * 좌우 여백은 px-5(20px) — 화면 안쪽 카드들(px-4)보다 4px씩 더 두어
      * 알약이 카드보다 살짝 좁습니다. 떠 있는 알약이라 안으로 조금 들어와 있는
@@ -377,7 +377,7 @@ export default function BottomTabBar() {
     <nav
       aria-label="주요 메뉴"
       className="fixed inset-x-0 z-30 px-5"
-      style={{ bottom: "calc(-4px + env(safe-area-inset-bottom))" }}
+      style={{ bottom: "max(12px, calc(-4px + env(safe-area-inset-bottom)))" }}
     >
       {/*
         알약을 낮게 눌러 담으려고 안쪽 여백을 최소로 둡니다.
