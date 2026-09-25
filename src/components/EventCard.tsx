@@ -97,7 +97,8 @@ export function EventDdayCard({
           */}
           <span className="-ml-[2px] text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
-            <span className="text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
+            // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서).
+            <span className="text-[14.5px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
           ) : null}
         </span>
 
@@ -130,8 +131,11 @@ export function EventDdayCard({
                 {event.location ? (
                   // gap-0.5 — 핀과 장소 글씨 사이 2px (같은 날 사용자 "조금 더 붙여줘", 4px에서).
                   <span className="flex min-w-0 items-center gap-0.5">
-                    {/* 핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로. */}
-                    <PinIcon className="h-[18px] w-[18px] shrink-0" />
+                    {/*
+                      핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로.
+                      선 굵기 1.5 — 같은 날 "굵기 좀 줄여줘"(기본 1.8에서). -translate-y-[0.25px] — "0.25px 위로".
+                    */}
+                    <PinIcon strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0 -translate-y-[0.25px]" />
                     <span className="truncate">{event.location}</span>
                   </span>
                 ) : null}
