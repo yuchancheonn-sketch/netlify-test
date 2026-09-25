@@ -146,6 +146,17 @@ export function SplashScreen() {
           logoReady ? "animate-splash-in" : "opacity-0"
         }`}
       />
+      {/*
+        ★ 홈 화면 앱에서는 맨 위 시계 줄 자리를 주황이 아니라 앱 바탕 회색(canvas)으로 칠합니다
+          (2026-09-26 사용자 "로딩 화면이 사라지며 홈탭이 처음 나올 때 잠깐 위에 주황 공간이 있어").
+          아이폰은 시계 줄 색을 화면 맨 위 요소에서 따오는데, 로딩 화면이 사라진 뒤에도 잠깐 주황을 들고 있었습니다.
+          처음부터 홈과 같은 회색이면 넘어갈 때 바뀔 색이 없습니다. (확인 창이 뜰 때 주황 띠가 되던 것도 같은 뿌리로 봅니다 — globals.css)
+          카카오톡·Safari 안에서는 주소창이 그 자리를 덮으므로 걸지 않습니다.
+      */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 hidden h-[env(safe-area-inset-top)] bg-canvas [@media(display-mode:standalone)]:block"
+      />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
   );
