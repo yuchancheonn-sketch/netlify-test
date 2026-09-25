@@ -615,7 +615,8 @@ input[type="time"]::-webkit-date-and-time-value {
  * 않습니다 — 잠깐 스쳐 가는 화면이라, 뭔가가 계속 움직이면 오히려
  * 오래 기다린 것처럼 느껴집니다.
  *
- * 12px 아래에서 0.7초 동안 떠오릅니다 (2026-09-26 사용자 "로고가 아주 조금만 더 길게 올라왔으면" — 8px·0.5초에서).
+ * 12px 아래에서 0.6초 동안 떠오릅니다 (2026-09-26 사용자 "로고가 아주 조금만 더 길게 올라왔으면" — 8px·0.5초에서
+ * 12px·0.7초로, 이어서 "0.6초로").
  */
 @keyframes splash-in {
   from {
@@ -629,7 +630,7 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 @utility animate-splash-in {
-  animation: splash-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: splash-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
