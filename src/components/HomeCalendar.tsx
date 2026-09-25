@@ -187,8 +187,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   return (
     <section
       onClick={centerSelf}
-      // pt-[10.5px] — "2026년 9월" 위 흰 여백 (2026-09-25 사용자 "0.5px 줄여줘" → "좀 줄여줘" → "2px 더", 16 → 15.5 → 12.5 → 10.5px). OX 퀴즈와 함께.
-      className="rounded-3xl bg-surface px-4 pt-[10.5px] pb-3 shadow-[var(--shadow-card-flat)]"
+      // pt-[11.5px] — "2026년 9월" 위 흰 여백 (2026-09-25 사용자 요청 여러 번: 16 → 15.5 → 12.5 → 10.5 → "1px 늘려줘" 11.5px). OX 퀴즈와 함께.
+      className="rounded-3xl bg-surface px-4 pt-[11.5px] pb-3 shadow-[var(--shadow-card-flat)]"
     >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">

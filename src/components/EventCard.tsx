@@ -72,7 +72,8 @@ export function EventDdayCard({
    *   바로 앞은 아래 주석의 "C · 큰 D-day"(왼쪽 큰 D-day | 세로 선 | 제목)였습니다 — 되살리려면 git 기록.
    */
   const className =
-    "flex items-center gap-2 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    // pt-[17px] — 위 흰 여백 (2026-09-25 사용자 "1px 늘려줘", 16px(py-4)에서). 아래는 16px 그대로.
+    "flex items-center gap-2 rounded-3xl bg-surface pt-[17px] pb-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
   /** D-day 옆 작은 날짜 — "10.02 금" */
   const dateText = date
