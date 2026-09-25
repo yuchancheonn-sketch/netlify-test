@@ -163,7 +163,8 @@ export default function SettingsPage() {
               글씨만 2px 위로 (2026-09-15, 위 고르개들과 같이). 이 단추는 flex가 아니라서 그냥 span에는
               transform이 안 먹습니다(글줄 안 인라인 요소) — inline-block이 꼭 필요합니다.
             */}
-            <span className="inline-block -translate-y-[2px]">로그아웃</span>
+            {/* 1.75px — 2026-09-25 사용자 "0.25px 만큼 아래로" (2px에서). */}
+            <span className="inline-block -translate-y-[1.75px]">로그아웃</span>
           </button>
 
           {/*
