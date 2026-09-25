@@ -38,7 +38,14 @@ export const metadata: Metadata = {
     capable: true,
     // 아이폰 홈 화면 아이콘 아래 이름 — manifest의 short_name과 맞춥니다.
     title: APP_SHORT_NAME,
-    statusBarStyle: "default",
+    /*
+     * black-translucent — 홈 화면에 추가한 아이폰 앱이 상태바(시계·배터리 줄) 뒤까지 그립니다 (2026-09-26 사용자 "시도해봐").
+     * 시트를 열 때 까는 어두운 막이 상태바까지 덮어, 그 줄만 흰 띠로 남던 것을 없애려는 것입니다.
+     * ★ 대가: 상태바 글씨(시계·배터리)가 늘 흰색입니다 — 밝은 화면 위에서는 잘 안 보일 수 있습니다.
+     *   되돌리려면 "default"(앱이 상태바 아래부터 그림, 상태바는 흰 띠 + 검은 글씨).
+     * 상태바 높이만큼은 제목 줄(.page-header)·로그인·대화방 등이 env(safe-area-inset-top)으로 비워 둡니다.
+     */
+    statusBarStyle: "black-translucent",
   },
   icons: {
     icon: [
