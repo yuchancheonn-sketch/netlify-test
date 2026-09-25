@@ -525,8 +525,9 @@ export default function MembersPage() {
               onClick={() => setEditing({ entry: null })}
               className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-3 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
-              <PlusIcon className="h-5 w-5" />
-              원우 추가하기
+              {/* "+ 원우 추가하기" 통째로 1px 위로 (2026-09-26 사용자 요청). 단추가 flex라 각 칸에 transform이 먹습니다. */}
+              <PlusIcon className="h-5 w-5 -translate-y-px" />
+              <span className="-translate-y-px">원우 추가하기</span>
             </button>
           ) : null}
         </div>
