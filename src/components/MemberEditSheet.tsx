@@ -46,7 +46,8 @@ const MEMBER_TYPES: { value: MemberType; label: string }[] = [
  *   (사용자 "원우 정보 수정하기 창들도 흰색 배경에 회색 박스들로"). 그 전엔 회색 시트에 흰 칸 + 그림자(위아래 15.5px).
  */
 // 칸 색은 bg-field(fill과 canvas의 중간) — 2026-09-26 내 프로필 칸과 같은 색으로 맞춤(그 전엔 bg-canvas).
-const fieldClassName = `${inputClassName} bg-field! py-2.5! shadow-none!`;
+// 글씨 1px 위로(2026-09-26 사용자 요청) — 입력칸은 글씨만 옮길 수 없어 위 9px·아래 11px로 나눕니다(높이 44px 그대로).
+const fieldClassName = `${inputClassName} bg-field! pt-[9px]! pb-[11px]! shadow-none!`;
 
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -316,8 +317,11 @@ export default function MemberEditSheet({
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setMemberType(value)}
-                    /* py-[11.5px] — 위아래 11.5px (2026-09-15, py-3 12px에서 1px 낮춤) */
-                    className={`flex-1 rounded-2xl border-2 py-[11.5px] text-[14px] font-bold transition ${
+                    /*
+                      높이 44px — 위 입력칸들과 같게 (2026-09-26 사용자 요청, 그 전엔 위아래 11.5px로 약 48px).
+                      테두리 2px씩 + 글줄 21px + 위 8.5px·아래 10.5px = 44px. 위아래를 1px 다르게 둔 것은 글씨 1px 위로(같은 날 요청).
+                    */
+                    className={`flex-1 rounded-2xl border-2 pt-[8.5px] pb-[10.5px] text-[14px] font-bold transition ${
                       selected
                         ? "border-brand-500 bg-brand-50 text-brand-500"
                         : "border-transparent bg-field text-ink-soft"
