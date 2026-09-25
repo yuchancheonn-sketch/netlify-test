@@ -61,7 +61,8 @@ export default function HomePage() {
    * 로고는 로딩 화면과 같은 그림(public/brand/goose.png)입니다.
    * - 색: 앱 주황(bg-brand-500)과 똑같게 — 그림 모양으로 오려낸 틀(mask-image)에 주황을 채웁니다
    *   (같은 날 사용자 "주황색으로"; 처음엔 원래 파란 그림). 주황 토큰을 바꾸면 로고도 따라 바뀝니다.
-   * - 크기 33px·1px 아래로(translate-y-px) — 같은 날 사용자 "1px 내려주고, 1px 키워줘"(32px에서).
+   * - 크기 34.5px·2px 아래로 — 같은 날 사용자 "1px 내리고 1px 키워줘"(32px → 33px·1px),
+   *   이어서 "1px 내리고 1.5px 늘려줘"(→ 34.5px·2px).
    */
   const appName = (
     <span className="flex items-center gap-1.5">
@@ -69,7 +70,7 @@ export default function HomePage() {
       <span
         role="img"
         aria-label="도산아카데미"
-        className="h-[33px] w-[33px] shrink-0 translate-y-px bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+        className="h-[34.5px] w-[34.5px] shrink-0 translate-y-[2px] bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
       />
     </span>
   );
