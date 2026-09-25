@@ -105,7 +105,8 @@ function PastQuizCard({
       <p className="text-[13px] font-medium text-ink-faint">{dateLabel}</p>
 
       {/* break-keep: 줄 끝에서 낱말 가운데가 끊기지 않게 — 홈 퀴즈 카드와 같습니다. */}
-      <p className="mt-2 flex gap-2 text-[17px] leading-relaxed font-medium text-ink">
+      {/* gap-1.5 — "Q."와 질문 사이 6px, 홈 퀴즈 카드와 같이 (2026-09-25 사용자 요청, 8px에서). */}
+      <p className="mt-2 flex gap-1.5 text-[17px] leading-relaxed font-medium text-ink">
         <span className="shrink-0 font-bold text-brand-500">Q.</span>
         <span className="break-keep">{item.question}</span>
       </p>
