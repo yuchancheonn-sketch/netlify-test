@@ -176,7 +176,8 @@ export default function SettingsPage() {
             onClick={() => setConfirmingWithdraw(true)}
             // 모양은 로그인 안내 상자의 "되돌아가기"와 같게 (2026-09-25 사용자가 그 캡처를 보내며 요청):
             // 굵은 ink-soft 15px 글씨 + 옅은 ink-faint 밑줄(1.25px, 글씨에서 4.25px 아래). 누르는 자리는 위아래 py-3.
-            className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
+            // mt-[6.5px] — 로그아웃 단추와의 사이 (2026-09-25 사용자 "1.5px 만큼 위로", 8px에서).
+            className="mt-[6.5px] w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
           >
             탈퇴하기
           </button>
