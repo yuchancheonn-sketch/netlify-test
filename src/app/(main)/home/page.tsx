@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard } from "@/components/EventCard";
 import EventSheet from "@/components/EventSheet";
@@ -56,6 +57,17 @@ export default function HomePage() {
 
   const [nextEvent] = events;
 
+  /*
+   * 홈 제목 — 주황 "애기애타" + 오른쪽에 도산아카데미 로고 (2026-09-26 사용자 "애기애타 오른쪽에 도산아카데미 크기 맞춰서").
+   * 로고는 로딩 화면과 같은 그림(public/brand/goose.png, 원래 파란색)이고, 글줄 높이(약 34px)에 맞춰 32px로 둡니다.
+   */
+  const appName = (
+    <span className="flex items-center gap-1.5">
+      <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+      <Image src="/brand/goose.png" alt="도산아카데미" width={700} height={700} className="h-8 w-8 shrink-0" />
+    </span>
+  );
+
   return (
     <>
       {/*
@@ -71,11 +83,11 @@ export default function HomePage() {
         title={
           canSwitch ? (
             <span className="flex items-center gap-2">
-              <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+              {appName}
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+            appName
           )
         }
         right={<HeaderActions />}
