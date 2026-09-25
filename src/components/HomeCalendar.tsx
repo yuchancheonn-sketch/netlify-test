@@ -92,6 +92,25 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   const canDelete = !isGuest && (isAdmin || cohortOf(profile?.cohort) === cohort);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  /*
+   * 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운 등록 화면(/events/new)을 열고,
+   * 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
+   * 회색 동그라미(bg-canvas) + 진회색 + — 같은 날 "주황이라 너무 눈에 띈다"로 주황 채움에서 바꿈.
+   */
+  const addButton = (
+    <button
+      type="button"
+      onClick={() => {
+        if (requireLogin()) return;
+        router.push(`/events/new?date=${selected}&from=home`);
+      }}
+      aria-label="일정 추가"
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-ink-soft transition active:scale-95"
+    >
+      <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
+    </button>
+  );
+
   async function removeEvent(item: DayItem) {
     if (!window.confirm(`"${item.title}" 일정을 삭제할까요? 되돌릴 수 없어요.`)) return;
     setDeleteError(null);
@@ -280,7 +299,15 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           {selMonth}월 {selDay}일 ({selWeekday})
         </p>
         {selectedItems.length === 0 ? (
-          <p className="py-2 text-[14px] text-ink-faint">일정이 없어요</p>
+          /*
+            일정이 없는 날은 + 단추가 "일정이 없어요"와 같은 줄 높이 오른쪽 끝에 섭니다 (2026-09-25 사용자 요청).
+            absolute라 줄 높이를 늘리지 않습니다. right-[-6px] — 이 줄은 바깥 칸(px-1)보다 4px 안쪽이라, 예전 자리(박스 안쪽
+            오른쪽 끝)에 맞추는 4px에 "오른쪽으로 2px"를 더한 값. top-[calc(50%-1px)] — 줄 가운데에서 "위로 1px".
+          */
+          <p className="relative py-2 text-[14px] text-ink-faint">
+            일정이 없어요
+            <span className="absolute top-[calc(50%-1px)] right-[-6px] -translate-y-1/2">{addButton}</span>
+          </p>
         ) : (
           <ul className="mt-1.5 flex flex-col gap-1">
             {selectedItems.map((item) => {
@@ -392,23 +419,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         </button>
       )}
 
-      {/*
-        오른쪽 아래 주황 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운
-        등록 화면(/events/new)을 열고, 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
-      */}
-      <div className="mt-1 flex justify-end">
-        <button
-          type="button"
-          onClick={() => {
-            if (requireLogin()) return;
-            router.push(`/events/new?date=${selected}&from=home`);
-          }}
-          aria-label="일정 추가"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95"
-        >
-          <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
-        </button>
-      </div>
+      {/* 일정이 있는 날은 + 단추가 목록 아래 오른쪽 끝에 섭니다(없는 날은 위 "일정이 없어요" 줄 안). 오른쪽 2px·위 1px 옮김. */}
+      {selectedItems.length > 0 ? (
+        <div className="mt-1 flex translate-x-[2px] -translate-y-px justify-end">{addButton}</div>
+      ) : null}
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
     </section>
