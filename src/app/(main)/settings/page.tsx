@@ -243,7 +243,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
       >
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
-        <h2 className="mt-7 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
+        <h2 className="mt-4 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
 
         {/* 경고 상자·탈퇴 단추는 앱 주황 (2026-09-25 사용자 "여기도 주황색 테마로" — 처음엔 빨강 danger). */}
         <div className="mt-4 rounded-2xl bg-brand-500/10 px-4 py-3.5 text-[14px] leading-relaxed text-brand-500">
@@ -326,7 +326,8 @@ function LogoutSheet({
         {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
-        <h2 className="mt-7 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
+        {/* mt-4 — 손잡이 막대와 제목 사이 16px (2026-09-25 사용자 "위에 흰색 공백도 좀 줄여줘", 28px에서). 탈퇴 시트도 같이. */}
+        <h2 className="mt-4 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
 
         <button
           type="button"
