@@ -928,7 +928,8 @@ function AlbumCard({
       className="relative flex w-full flex-col overflow-hidden rounded-card bg-surface shadow-[var(--shadow-card)]"
       style={{ maxHeight: "var(--card-max, var(--frame-h))" }}
     >
-      <div className="shrink-0 px-5 pt-4 pb-3.5">
+      {/* pt-3 — 카드 위 흰 여백 12px (2026-09-25 사용자 "상단 여백 좀 줄여줘", 16px에서). 뒷면도 같이. */}
+      <div className="shrink-0 px-5 pt-3 pb-3.5">
         {/*
           올린 원우 — 이름, 그 아래 날짜 (2026-09-22 사용자 요청 "업로드한 원우가 누군지").
           이름은 원우수첩의 지금 이름을 먼저 씁니다(이름을 고치면 따라옵니다). 명단에 없으면 올릴 때 적어 둔 이름.
@@ -1009,8 +1010,9 @@ function AlbumCard({
         <h2 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
           {album.title}
         </h2>
+        {/* mt-1 — 제목과 본문 사이 4px (2026-09-25 사용자 "간격 좀 줄여줘", 8px에서). 뒷면도 같이. */}
         {body ? (
-          <p className="mt-2 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
+          <p className="mt-1 line-clamp-4 text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
             {body}
           </p>
         ) : null}
@@ -1033,7 +1035,8 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-[var(--shadow-card)]">
-      <div className="shrink-0 px-5 pt-4">
+      {/* pt-3 — 앞면과 같게 (2026-09-25, 16px에서). */}
+      <div className="shrink-0 px-5 pt-3">
         <p className="truncate text-[20px] font-bold text-ink">
           {authorName}
           {authorName !== "원우" ? (
@@ -1048,7 +1051,8 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
         </h2>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-2">
+      {/* pt-1 — 제목과 본문 사이 4px, 앞면과 같게 (2026-09-25, 8px에서). */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-2">
         {body ? (
           <p className="text-[15px] leading-relaxed whitespace-pre-line break-keep text-ink-soft">
             {body}
