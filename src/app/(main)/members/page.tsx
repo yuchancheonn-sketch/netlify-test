@@ -431,7 +431,7 @@ export default function MembersPage() {
             <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key} className="border-t border-line py-3 first:border-t-0">
-                  <Skeleton className="h-[81px] w-[144px] rounded-[10px]" />
+                  <Skeleton className="h-[72px] w-[128px] rounded-[10px]" />
                 </li>
               ))}
             </ul>
@@ -651,9 +651,8 @@ function MemberRow({
             섭니다.
         */
         // 128×72 — 16:9 그대로 조금 키움 (2026-09-26 사용자 "썸네일 크기 조금만 키워줘", 112×63에서). 아래 설명의 112×63은 그 전 값.
-        // 144×81 — 16:9 그대로 한 번 더 키움 (같은 날 사용자 "영상 썸네일 크기를 더 늘리고", 128×72에서).
         // rounded-[10px] — 모서리 덜 둥글게 (같은 날 사용자 요청, 14px(rounded-2xl)에서).
-        className="relative -ml-px h-[81px] w-[144px] shrink-0 overflow-hidden rounded-[10px] bg-fill transition active:scale-95"
+        className="relative -ml-px h-[72px] w-[128px] shrink-0 overflow-hidden rounded-[10px] bg-fill transition active:scale-95"
       >
         {/*
           ★ loading="lazy" + 폭·높이 못 박기 (2026-09-22).
@@ -668,8 +667,8 @@ function MemberRow({
             <img
               src={thumbnail}
               alt=""
-              width={144}
-              height={81}
+              width={128}
+              height={72}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover"
@@ -688,10 +687,10 @@ function MemberRow({
            */
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={thumbnailUrl(entry.photoURL, 288, 162)}
+            src={thumbnailUrl(entry.photoURL, 256, 144)}
             alt={`${entry.name} 프로필 사진`}
-            width={144}
-            height={81}
+            width={128}
+            height={72}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
@@ -810,11 +809,6 @@ function MemberRow({
             이 줄과 같이 바꾸지 마세요 — 배지는 연주황 알약 위의 주황 글씨라
             대비 문제가 없고, 주황이 남은 덕에 이 줄과 구별됩니다.
         */}
-        {/*
-          ★ 회사와 직책을 두 줄로 나눕니다 (2026-09-26 사용자 "소속이랑 직책 부분을 두줄로").
-            예전엔 "회사 · 직책" 한 줄이라 썸네일을 키우면서 좁아진 자리에서 직책이 먼저 잘렸습니다.
-            둘 중 하나만 있으면 한 줄입니다. 줄마다 따로 "…"로 잘립니다.
-        */}
         <p
           className={`mt-0.5 truncate text-[13px] ${
             affiliation ? "font-medium text-brand-500" : "text-ink-muted"
@@ -824,11 +818,8 @@ function MemberRow({
           {showCohort ? (
             <span className="font-bold text-ink-soft">{entry.cohort} · </span>
           ) : null}
-          {(entry.company || entry.position) || "아직 정보가 입력 안 됐어요"}
+          {affiliation || "아직 정보가 입력 안 됐어요"}
         </p>
-        {entry.company && entry.position ? (
-          <p className="truncate text-[13px] font-medium text-brand-500">{entry.position}</p>
-        ) : null}
       </button>
 
       {/* 원우 누구나 서로 채워줄 수 있어서, 내 칸이라고 달리 보이지 않습니다. */}
