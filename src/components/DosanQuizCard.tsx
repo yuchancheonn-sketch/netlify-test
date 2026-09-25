@@ -134,7 +134,7 @@ export default function DosanQuizCard() {
     <>
       {/* 위 여백 17px — 20px(pt-5) → 19px → 17px로 두 번 줄였습니다(2026-09-11). */}
       {/* pt-[12.5px] — 카드 위 흰 여백 (2026-09-25 사용자 요청 여러 번: 17 → 16.5 → 13.5 → 11.5 → "1px 늘려줘" 12.5px). 캘린더·다가오는 일정 박스와 함께. */}
-      <section className="rounded-3xl bg-surface px-5 pt-[12.5px] pb-5 shadow-[var(--shadow-card-flat)]">
+      <section className="rounded-card bg-surface px-5 pt-[12.5px] pb-5 shadow-[var(--shadow-card-flat)]">
         <div className="flex items-center justify-between gap-2">
           {/*
             제목은 "오늘의 도산" 카드의 제목과 같은 크기·굵기·색입니다(18px, 굵게, 검정).

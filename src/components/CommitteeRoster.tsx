@@ -119,7 +119,7 @@ function CommitteeCard({ committee }: { committee: Committee }) {
   const count = 1 + committee.viceChairs.length;
 
   return (
-    <article className="rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+    <article className="rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
       <div className="flex items-center justify-between gap-2">
         <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{committee.name}</h3>
         {/* 인원 수 — 그림의 오른쪽 위 알약과 같은 자리 */}
@@ -175,7 +175,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
   ];
 
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{committee.name}</h3>
         {/*

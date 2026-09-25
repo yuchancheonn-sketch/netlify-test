@@ -102,7 +102,7 @@ function Box({
 
 export default function CommitteeOrgChart() {
   return (
-    <article className="rounded-3xl bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+    <article className="rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
       <h2 className="text-[18px] font-bold text-ink">총괄 임원진 조직도</h2>
       <div aria-hidden="true" className="mt-2 h-[2.5px] w-10 rounded-full bg-brand-500" />
 
