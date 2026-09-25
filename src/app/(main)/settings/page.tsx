@@ -173,7 +173,9 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setConfirmingWithdraw(true)}
-            className="mx-auto mt-5 block text-[13px]! font-medium text-ink-faint underline underline-offset-2"
+            // 모양은 로그인 안내 상자의 "되돌아가기"와 같게 (2026-09-25 사용자가 그 캡처를 보내며 요청):
+            // 굵은 ink-soft 15px 글씨 + 옅은 ink-faint 밑줄(1.25px, 글씨에서 4.25px 아래). 누르는 자리는 위아래 py-3.
+            className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
           >
             탈퇴하기
           </button>
