@@ -420,10 +420,11 @@ export default function MembersPage() {
         <div className="mt-[18px] pb-6">
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.5px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
-            <ul className="flex flex-col gap-[13.5px]">
+            // 자리 표시도 선 목록 모양으로(2026-09-26) — 흰 바탕 한 장, 줄마다 사진 자리만 회색.
+            <ul className="-mx-4 -mt-[18px] bg-surface px-4">
               {[0, 1, 2, 3].map((key) => (
-                <li key={key}>
-                  <Skeleton className="h-[87px] rounded-3xl" />
+                <li key={key} className="border-t border-line py-3 first:border-t-0">
+                  <Skeleton className="h-[63px] w-[112px] rounded-2xl" />
                 </li>
               ))}
             </ul>
@@ -477,9 +478,15 @@ export default function MembersPage() {
                 "예전처럼 박스로 구분 짓도록 해봐"라고 해서 박스로 돌아왔습니다.
                 선으로 되돌리려면 git 기록에서 이 목록의 border-t(ml-0.5)와 MemberRow의 py-3 pl-0.5를 보세요.
             */
-            <ul className="flex flex-col gap-[13.5px]">
+            /*
+              ★ 2026-09-26 사용자 "박스 대신 그냥 회색 선으로 구분 지어 볼래?" — 흰 바탕 한 장에 줄마다 옅은 회색 선.
+                회색 바탕 위에 회색 선은 거의 안 보여서, 목록을 위쪽 흰 구역(제목·검색·구분 고르개)에 바로 이어 붙인
+                흰 바탕으로 둡니다: -mt-[18px](위 여백 없애기) · -mx-4 px-4(화면 끝까지 흰색) · bg-surface.
+                줄 사이 선은 li의 border-t(첫 줄 빼고). 박스로 되돌리려면 git 기록의 gap-[13.5px] 목록과 MemberRow의 흰 박스.
+            */
+            <ul className="-mx-4 -mt-[18px] bg-surface px-4">
               {visible.map((entry) => (
-                <li key={entry.key}>
+                <li key={entry.key} className="border-t border-line first:border-t-0">
                   <MemberRow
                     entry={entry}
                     number={numberOf.get(entry.key) ?? 0}
@@ -604,7 +611,8 @@ function MemberRow({
      * 글로우 효과도 없애줘"). 홈 카드들과 같은 값입니다.
      * 지나온 값: --shadow-card → --shadow-card-soft(2026-09-22 "글로우 아주아주 조금만 더 약하게") → 지금.
      */
-    <div className="flex items-center gap-[14px] rounded-3xl bg-surface p-3 shadow-[var(--shadow-card-flat)]">
+    // ★ 2026-09-26 박스 → 선: 흰 박스(rounded-3xl · bg-surface · 헤어라인 · p-3)를 걷고 위아래 12px만. 줄 사이 선은 목록(li)이 긋습니다.
+    <div className="flex items-center gap-[14px] py-3">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
