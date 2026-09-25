@@ -114,7 +114,8 @@ export function EventDdayCard({
               둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다.
             */}
             {timeText || event.location ? (
-              <span className="mt-1 flex items-center gap-3 text-[14px] leading-snug font-medium text-ink-muted">
+              // gap-2 — 시간과 장소 사이 8px (같은 날 사용자 "장소를 시간에 조금 더 붙여줘", 12px에서).
+              <span className="mt-1 flex items-center gap-2 text-[14px] leading-snug font-medium text-ink-muted">
                 {timeText ? (
                   <span className="flex shrink-0 items-center gap-1">
                     <ClockIcon className="h-4 w-4" />
@@ -123,7 +124,8 @@ export function EventDdayCard({
                 ) : null}
                 {event.location ? (
                   <span className="flex min-w-0 items-center gap-1">
-                    <PinIcon className="h-4 w-4 shrink-0" />
+                    {/* 핀 17.5px — 같은 날 사용자 "1.5px 키워줘"(16px에서). 시계는 16px 그대로. */}
+                    <PinIcon className="h-[17.5px] w-[17.5px] shrink-0" />
                     <span className="truncate">{event.location}</span>
                   </span>
                 ) : null}
