@@ -230,10 +230,12 @@ export default function EventForm({
             // 흰 바탕 + 옅은 회색 테두리 — 원우 소식 올리기 창의 "취소"와 같은 모양 (2026-09-26 사용자 요청, bg-fill 회색에서).
             className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)]"
           >
-            취소
+            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). flex가 아닌 단추라 inline-block이어야 transform이 먹습니다. */}
+            <span className="inline-block -translate-y-px">취소</span>
           </button>
           <PrimaryButton type="submit" loading={saving} size="sm">
-            {editing ? "수정 저장하기" : "일정 등록하기"}
+            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
+            <span className="-translate-y-px">{editing ? "수정 저장하기" : "일정 등록하기"}</span>
           </PrimaryButton>
         </div>
       ) : (
