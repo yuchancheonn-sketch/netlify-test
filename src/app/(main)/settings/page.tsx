@@ -239,7 +239,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(4px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
       >
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
@@ -291,6 +291,8 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
  * 화면 아래에서 올라오는 흰 시트: 위 가운데 손잡이 막대 · 큰 제목 "로그아웃 하시겠어요?" ·
  * 폭 가득 주황 "로그아웃" · 그 아래 글씨만 있는 "취소". 뒤는 어둡게 덮고, 어두운 곳을 눌러도 닫힙니다.
  * 캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다. 겉모양 짜임은 AccountMergeSheet와 같습니다.
+ * 시트 아래 여백은 홈 인디케이터 자리 + 4px (2026-09-25 사용자 "취소 밑에 흰색 공백 좀 줄여줘", 20px에서).
+ * "취소" 단추 자체의 아래 12px(py-3)이 더해집니다. 탈퇴 시트(WithdrawSheet)도 같은 값입니다.
  */
 function LogoutSheet({
   onClose,
@@ -318,7 +320,7 @@ function LogoutSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(4px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
       >
         {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
