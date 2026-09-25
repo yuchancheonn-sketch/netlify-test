@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import ToggleRow from "@/components/ToggleRow";
 import { ChevronRightIcon } from "@/components/icons";
 import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
-import { SectionTitle, Spinner } from "@/components/ui";
+import { Spinner } from "@/components/ui";
 import { withdrawMyAccount } from "@/lib/account-link";
 import { useAuth } from "@/lib/auth-context";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
@@ -204,6 +204,16 @@ export default function SettingsPage() {
       ) : null}
     </div>
   );
+}
+
+/**
+ * 설정 칸 제목 ("알림"·"글씨 크기"·"화면"·"계정") — 아이폰 설정 앱의 칸 제목처럼 (2026-09-25 사용자가 "사운드 및 햅틱"
+ * 캡처를 보내며 요청). 작은 15px 보통 굵기 회색(ink-muted) 글씨를 아래 알약 속 글씨와 같은 20px 들여 세우고,
+ * 알약과는 8px만 띄워 붙입니다. 예전엔 공용 SectionTitle(17px 굵은 먹색, 들여쓰기 없음, 아래 12px)이었습니다.
+ * 공용 부품은 다른 화면도 쓰므로 설정 화면에만 따로 둡니다.
+ */
+function SectionTitle({ children }: { children: ReactNode }) {
+  return <h2 className="mb-2 px-5 text-[15px] font-medium text-ink-muted">{children}</h2>;
 }
 
 /**
