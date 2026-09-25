@@ -66,6 +66,9 @@ export function EventDdayCard({
    *   ┃ 제목(굵게, 길면 줄을 바꿔 끝까지)   >
    *   ┃ 오후 6:30 ~ 오후 10:30 · 장소
    *   막대·제목·회색 줄은 HomeCalendar의 고른 날 일정 줄과 같은 결(막대 w-1, break-keep)입니다.
+   *   ★ 같은 날 "두 부분을 같은 비율로 좀 줄여줘"로 D-day·날짜·제목·시간 장소·아이콘·막대 위쪽을 모두 0.9배로 줄였습니다
+   *     (D-day 22→20, 날짜 14.5→13, 제목 17→15.5, 시간·장소 14→12.5, 시계 16→14.5, 핀 18→16, 막대 위쪽 4→3.5px).
+   *     아래 주석들의 옛 px 값은 그 전 기록입니다. 캘린더 일정 줄도 같은 값입니다.
    *   바로 앞은 아래 주석의 "C · 큰 D-day"(왼쪽 큰 D-day | 세로 선 | 제목)였습니다 — 되살리려면 git 기록.
    */
   const className =
@@ -96,10 +99,10 @@ export function EventDdayCard({
             D-day 크기를 바꾸면 이 값도 크기에 비례해 같이 바꿔 주세요.
           */}
           {/* [-webkit-text-stroke:0.3px] — 같은 날 "아주 조금만 더 굵게". 700 글씨에 얇은 테두리(다음 굵기 900은 너무 굵음). */}
-          <span className="-ml-[2px] text-[22px] font-bold tracking-tight [-webkit-text-stroke:0.3px_currentColor] whitespace-nowrap text-brand-500">{dday}</span>
+          <span className="-ml-[1.75px] text-[20px] font-bold tracking-tight [-webkit-text-stroke:0.3px_currentColor] whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
             // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서). -translate-y-px — "1px 위로".
-            <span className="-translate-y-px text-[14.5px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
+            <span className="-translate-y-px text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
           ) : null}
         </span>
 
@@ -121,7 +124,7 @@ export function EventDdayCard({
           */}
           <span
             aria-hidden="true"
-            className={`mt-[4px] w-[3px] shrink-0 self-stretch rounded-full ${external ? "bg-brand-500" : "bg-ink"}`}
+            className={`mt-[3.5px] w-[3px] shrink-0 self-stretch rounded-full ${external ? "bg-brand-500" : "bg-ink"}`}
           />
           {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
           <span className="min-w-0 flex-1 -translate-y-[0.5px]">
@@ -132,7 +135,7 @@ export function EventDdayCard({
               그 뒤 "아주 조금만 더 두껍게" — 600으로 돌아가면 너무 굵어서, 500 글씨에 0.25px 테두리를 둘러
               500과 600 사이로 만듭니다([-webkit-text-stroke]). 더 두껍게는 0.4px쯤, 그 이상은 font-semibold.
             */}
-            <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
+            <span className="line-clamp-2 text-[15.5px] leading-snug font-medium break-keep [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
               {event.title}
             </span>
             {/*
@@ -141,10 +144,10 @@ export function EventDdayCard({
             */}
             {timeText || event.location ? (
               // gap-2 — 시간과 장소 사이 8px (같은 날 사용자 "장소를 시간에 조금 더 붙여줘", 12px에서).
-              <span className="mt-1 flex items-center gap-2 text-[14px] leading-snug font-medium text-ink-muted">
+              <span className="mt-1 flex items-center gap-2 text-[12.5px] leading-snug font-medium text-ink-muted">
                 {timeText ? (
                   <span className="flex shrink-0 items-center gap-1">
-                    <ClockIcon className="h-4 w-4" />
+                    <ClockIcon className="h-[14.5px] w-[14.5px]" />
                     {timeText}
                   </span>
                 ) : null}
@@ -155,7 +158,7 @@ export function EventDdayCard({
                       핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로.
                       선 굵기 1.5 — 같은 날 "굵기 좀 줄여줘"(기본 1.8에서). -translate-y-[0.25px] — "0.25px 위로".
                     */}
-                    <PinIcon strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0 -translate-y-[0.25px]" />
+                    <PinIcon strokeWidth={1.5} className="h-[16px] w-[16px] shrink-0 -translate-y-[0.25px]" />
                     <span className="truncate">{event.location}</span>
                   </span>
                 ) : null}

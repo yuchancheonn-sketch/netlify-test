@@ -316,6 +316,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   (2026-09-25 사용자 "다가오는 일정 박스 스타일에 맞춰서"). 막대 3px·제목 윗머리에 맞춘 위쪽 4px,
                   제목 17px 500 + 0.25px 테두리·두 줄까지, 시계·핀 아이콘 달린 시간·장소 한 줄. 한쪽을 고치면 다른 쪽도 같이.
                   (그 전엔 막대 4px, 제목 15px 굵게·끝까지 줄바꿈, "시간 · 장소" 13px 글씨뿐이었습니다.)
+                  ★ 같은 날 두 곳을 함께 0.9배로 줄였습니다 — 제목 15.5px, 시간·장소 12.5px, 시계 14.5px, 핀 16px, 막대 위쪽 3.5px.
               */
               const body = (
                 <>
@@ -326,12 +327,12 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   */}
                   <span
                     aria-hidden="true"
-                    className={`mt-[4px] w-[3px] shrink-0 self-stretch rounded-full ${
+                    className={`mt-[3.5px] w-[3px] shrink-0 self-stretch rounded-full ${
                       item.kind === "academy" ? "bg-brand-500" : "bg-ink"
                     }`}
                   />
                   <span className="min-w-0 flex-1 -translate-y-[0.5px]">
-                    <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep text-ink [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
+                    <span className="line-clamp-2 text-[15.5px] leading-snug font-medium break-keep text-ink [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
                       {item.title}
                     </span>
                     {/*
@@ -339,10 +340,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                       다가오는 일정 박스는 한 줄 그대로입니다 — 여기만 다릅니다. 줄 사이 2px(gap-0.5).
                     */}
                     {item.time || item.location ? (
-                      <span className="mt-1 flex flex-col gap-0.5 text-[14px] leading-snug font-medium text-ink-muted">
+                      <span className="mt-1 flex flex-col gap-0.5 text-[12.5px] leading-snug font-medium text-ink-muted">
                         {item.time ? (
                           <span className="flex items-center gap-1">
-                            <ClockIcon className="h-4 w-4" />
+                            <ClockIcon className="h-[14.5px] w-[14.5px]" />
                             {item.time}
                           </span>
                         ) : null}
@@ -350,7 +351,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                           <span className="flex min-w-0 items-center gap-px">
                             <PinIcon
                               strokeWidth={1.5}
-                              className="h-[18px] w-[18px] shrink-0 -translate-y-[0.25px]"
+                              className="h-[16px] w-[16px] shrink-0 -translate-y-[0.25px]"
                             />
                             <span className="truncate">{item.location}</span>
                           </span>
