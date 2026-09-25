@@ -431,23 +431,6 @@ html:has(.bg-ink\/40) body {
 }
 
 /*
- * 위 바탕색만으로는 안 됐습니다 — 새 Safari는 화면 맨 위에 붙은 고정(fixed) 요소의 색으로 상태바를 칠하는데,
- * 시트의 막은 반투명이라 무시하고 흰색으로 칠했습니다(시트를 열면 그 줄이 회색에서 새하얀색으로 바뀜).
- * 그래서 막 맨 위에 "막을 바탕에 얹은 색"과 똑같은 불투명 띠를 한 줄 깝니다. 눈에는 막과 이어져 보입니다.
- * 높이는 상태바 높이(홈 화면 앱) — Safari처럼 그 값이 0이면 1px.
- */
-.fixed.bg-ink\/40::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: max(env(safe-area-inset-top), 1px);
-  background-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-canvas));
-  pointer-events: none;
-}
-
-/*
  * 세로 스크롤 잠그기 — 소식 탭 "원우 소식" 칸 (2026-09-23 사용자 "이 탭만큼은 위아래로 스크롤 안 되게,
  * 카드 넘길 때 오류가 너무 많이 나").
  * 그 칸은 카드가 화면에 딱 맞아 굴릴 것이 없는데, 몇 px 남은 스크롤이 옆으로 미는 손짓을 자꾸 채 갔습니다.
