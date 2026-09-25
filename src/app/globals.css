@@ -388,6 +388,16 @@ html[data-theme="dark"] {
   zoom: 1.2;
 }
 
+/*
+ * 화면 맨 위에서 더 당겨도 튕기지 않게 합니다 (2026-09-25 사용자 요청).
+ * 아이폰은 맨 위에서 당기면 화면 전체가 고무줄처럼 내려오며 그 위로 바탕(canvas 회색)이 드러납니다.
+ * 원우수첩은 위쪽이 흰 구역이라 제목 위에 회색 띠가 떠 보였습니다.
+ * 아래 body의 같은 값은 화면(뷰포트)으로 넘어가지 않아 효과가 없었고, html에 걸어야 먹습니다.
+ */
+html {
+  overscroll-behavior-y: none;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);

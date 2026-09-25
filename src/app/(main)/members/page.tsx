@@ -191,6 +191,13 @@ export default function MembersPage() {
 
   return (
     <>
+      {/*
+        ★ 위쪽 흰 구역 전체(제목 줄 · 검색 · 구분 고르개)가 붙박이입니다 (2026-09-25 사용자 요청 —
+          예전엔 제목 줄만 붙고 검색·고르개는 목록과 함께 굴러갔습니다).
+          PageHeader 자체도 sticky지만 이 상자 안에서는 제자리라, 상자째로 붙는 것과 같습니다.
+          z-30은 PageHeader와 같은 층입니다(그 주석 참고).
+      */}
+      <div className="sticky top-0 z-30 bg-surface">
       <PageHeader
         title={
           <span className="flex items-center gap-2">
@@ -215,14 +222,13 @@ export default function MembersPage() {
           여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
           (홈의 OX 퀴즈 카드 위 여백도 같은 까닭으로 본문 쪽에 있습니다.)
       */}
-      <div className="px-4">
-        {/*
+      {/*
           ★ 위쪽 한 덩어리(제목 줄 · 검색 · 구분 고르개)는 흰 바탕입니다 (2026-09-22 사용자 요청).
             그 아래 목록만 앱의 보통 바탕(canvas)입니다. 구분 고르개 맨 아래 회색 선이
             둘의 경계입니다(TextTabs "underline" 갈래가 긋습니다).
 
-            -mx-4 px-4 — 쓰는 쪽의 좌우 여백 16px을 되밀어 흰 바탕이 화면 끝까지 닿게 하고,
-            안쪽에서 같은 값으로 도로 들여 검색칸·고르개는 제자리에 둡니다.
+            px-4 — 검색칸·고르개를 화면 끝에서 16px 들입니다. 흰 바탕은 이 상자가 화면 끝까지 칠합니다
+            (2026-09-25 붙박이 상자로 옮기기 전엔 목록의 px-4 안이라 -mx-4로 되밀었습니다).
             pt-[8.5px] — 제목 줄과 검색칸 사이 (10px → 9.5px → 9px → 8.5px, 2026-09-23 사용자 "0.5px 만큼 줄여줘" 세 번).
             흰 구역 안에 있어야 합니다. 바깥에 두면
             그만큼이 canvas로 남아 제목 줄과 검색칸 사이에 회색 띠가 그어집니다.
@@ -231,7 +237,7 @@ export default function MembersPage() {
             제목 줄은 붙박이라 본문이 그 뒤로 지나가므로, 한쪽만 흰색이면 스크롤할 때
             제목 줄이 다른 색 띠로 떠 보입니다.
         */}
-        <div className="-mx-4 bg-surface px-4 pt-[8.5px]">
+        <div className="bg-surface px-4 pt-[8.5px]">
           {/* 검색 */}
           <div className="relative">
             {/*
@@ -402,6 +408,9 @@ export default function MembersPage() {
             className="mt-[9px]"
           />
         </div>
+      </div>
+
+      <div className="px-4">
 
         {/*
           목록.
