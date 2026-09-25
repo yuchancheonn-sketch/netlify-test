@@ -578,9 +578,9 @@ export default function ProfileForm({
                     : `border-transparent ${cardClassName}`
                 }`}
               >
-                {/* 수정 화면은 3px 위로 — 2px에서 1px 더 (2026-09-26 사용자 "글씨 1px씩 위로"). */}
+                {/* 수정 화면은 2px 위로 — 같은 날 "1px 위로"(3px)에서 "1px 아래로"로 되돌림(2026-09-26 사용자 요청). */}
                 <span
-                  className={`${flat ? "-translate-y-[3px]" : "-translate-y-[2px]"} text-[14px] font-bold ${
+                  className={`-translate-y-[2px] text-[14px] font-bold ${
                     selected ? "text-brand-500" : "text-ink-soft"
                   }`}
                 >
