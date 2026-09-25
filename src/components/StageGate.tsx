@@ -7,7 +7,6 @@ import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { APP_NAME } from "@/lib/constants";
 import { rememberReturnPath, takeReturnPath } from "@/lib/login-return";
-import { useSplashHoldDone } from "@/lib/use-splash-hold";
 import { warmCohortDirectory, warmHomeData } from "@/lib/hooks";
 import { cohortOf } from "@/lib/cohort";
 
@@ -55,48 +54,27 @@ export default function StageGate({
     if (stage === "ready" && user) warmCohortDirectory("member", user.uid, cohortOf(myCohort));
   }, [stage, user, myCohort]);
   /*
-   * 앱을 연 뒤 1.5초는 무조건 로딩 화면 (2026-09-26 사용자 요청, lib/use-splash-hold.ts).
-   * 그동안은 다른 화면으로 보내지도(redirect), 화면을 그리지도 않습니다.
+   * ★ 로딩 화면은 로그인 확인이 끝나면 바로 걷힙니다 — 최소 시간 없음 (2026-09-26 사용자 "예전처럼 짧은 로딩").
+   *   같은 날 "최소 1.5초 → 1초"를 넣었더니, 로딩 화면이 오래 떠 있는 동안 아이폰이 맨 위 시계 줄을 주황으로
+   *   완전히 바꿨다가, 로딩 화면이 걷힌 뒤 제 속도로 늦게 되돌려서 둘이 따로 사라져 보였습니다(그 속도는 앱에서 못 정함).
+   *   예전처럼 짧게 스쳐 가면 시계 줄이 주황으로 채 바뀌기 전에 끝납니다.
+   *   (사라질 때 옅어지기·위 주황 먼저 빼기·0.6초 기다리기도 해 봤지만 맞지 않아 모두 뺐습니다.)
    */
-  const splashDone = useSplashHoldDone();
 
   useEffect(() => {
-    if (!splashDone || stage === "loading" || allowed) return;
+    if (stage === "loading" || allowed) return;
     /*
      * 로그인을 마치면 기억해 둔 주소(lib/login-return.ts)로 보냅니다 (2026-09-24). 로그인하러 가기 전의 화면이나
      * 로그인 없이 못 여는 주소로 들어왔던 곳 — 카카오톡 안에서 링크를 열면 대개 로그아웃 상태라서입니다.
      */
     if (stage === "signedOut") rememberReturnPath();
     router.replace(stage === "ready" ? (takeReturnPath() ?? STAGE_PATH.ready) : STAGE_PATH[stage]);
-  }, [splashDone, stage, allowed, router]);
-
-  /*
-   * 로딩 화면은 뚝 끊지 않고 화면 위에서 0.3초 옅어지며 걷힙니다 — 앱을 연 뒤 처음 한 번만
-   * (2026-09-26 사용자 "로딩 화면이 사라지는 속도랑 아이폰 맨 위 주황이 사라지는 속도가 안 맞아", globals.css splash-out).
-   * 시작 주소(/)의 로딩 화면이 끝나면 홈 쪽 StageGate가 이어받아 옅어지게 하므로 모듈 값으로 한 번만 셉니다.
-   */
-  const [exitPlayed, setExitPlayed] = useState(() => splashExitDone);
+  }, [stage, allowed, router]);
 
   if (!isFirebaseConfigured) return <SetupNotice />;
-  if (!splashDone || !allowed) return <SplashScreen />;
-  return (
-    <>
-      {children}
-      {exitPlayed ? null : (
-        <SplashScreen
-          exiting
-          onExited={() => {
-            splashExitDone = true;
-            setExitPlayed(true);
-          }}
-        />
-      )}
-    </>
-  );
+  if (!allowed) return <SplashScreen />;
+  return <>{children}</>;
 }
-
-/** 이번에 앱을 연 뒤 로딩 화면이 옅어지며 걷히는 것을 이미 보여 줬는지 (위 exitPlayed). */
-let splashExitDone = false;
 
 /**
  * 인증 상태를 확인하는 동안 잠깐 보이는 화면.
@@ -115,14 +93,7 @@ let splashExitDone = false;
 /** 이번에 앱을 연 뒤 로딩 화면 로고가 한 번이라도 떠올랐는지 (아래 SplashScreen의 replay). */
 let logoShownOnce = false;
 
-export function SplashScreen({
-  exiting = false,
-  onExited,
-}: {
-  /** 화면 위에 덮인 채 옅어지며 걷히는 중 — 다 걷히면 onExited (StageGate). */
-  exiting?: boolean;
-  onExited?: () => void;
-} = {}) {
+export function SplashScreen() {
   /** 로고 그림을 다 받았는지 — 받은 뒤에 떠오르는 애니메이션을 겁니다(아래 Image 주석). */
   const [logoReady, setLogoReady] = useState(false);
   /*
@@ -151,33 +122,7 @@ export function SplashScreen({
         떨어졌습니다. 도구줄에 가려지는 몫(safe-area-inset-bottom)을 padding으로 빼면 보이는 주황 영역의 가운데에 섭니다.
         홈 화면 앱(standalone)은 예전 자리 그대로라 이 padding을 걸지 않습니다.
     */
-    // exiting — 탭바·제목 줄보다 위(z-[100])에 덮인 채 옅어지고, 그동안 누르는 것은 아래 화면으로 통과시킵니다.
-    <div
-      className={`fixed inset-0 flex items-center justify-center px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)] ${
-        exiting ? "animate-splash-out pointer-events-none z-[100] bg-canvas" : "bg-brand-500"
-      }`}
-      onAnimationEnd={(event) => {
-        // 로고의 떠오르는 애니메이션이 끝난 것도 여기로 올라오므로 이 상자 자신의 것만 봅니다.
-        if (exiting && event.target === event.currentTarget) onExited?.();
-      }}
-    >
-      {/*
-        ★ 걷히는 단계(exiting): 시계 줄 자리의 주황을 먼저 빼고, 아래 주황은 그대로 잠깐 더 둔 뒤 한 번에 없앱니다
-          (2026-09-26 사용자 "로딩 화면을 더 길게 해서라도 두 개가 동시에 사라지게").
-          아이폰은 시계 줄 색을 화면 맨 위 요소에서 따와 천천히 옮기는데, 그 속도는 앱에서 정할 수 없습니다.
-          그래서 위 주황을 먼저 빼 아이폰이 색을 옮기기 시작하게 하고, 그 시간(splash-out 길이)만큼 기다렸다가
-          아래 주황을 없애 둘이 함께 끝나게 합니다. 로딩 중(exiting 전)에는 위까지 모두 주황입니다.
-          (같은 날 거친 것: 시계 줄 회색 줄 → 0.3초 옅어지기 → 걷힐 때 위 주황 빼기+옅어지기(아래가 먼저 사라짐)
-           → 처음부터 위 회색(사용자 "아니야") → 지금)
-          바깥 상자는 그대로 화면 전체라 로고 자리는 움직이지 않습니다.
-          카카오톡·Safari 안(browser)에서는 아래 도구줄도 같은 식으로 물들어서 아래 안전 영역도 뺍니다.
-      */}
-      {exiting ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500 [@media(display-mode:browser)]:bottom-[env(safe-area-inset-bottom)]"
-        />
-      ) : null}
+    <div className="fixed inset-0 flex items-center justify-center bg-brand-500 px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)]">
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
@@ -213,15 +158,10 @@ export function SplashScreen({
             setLogoReady(true);
           }
         }}
-        // relative — 걷힐 때 깔리는 주황 판(absolute)보다 위에 그려지도록.
-        className={`relative h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
+        className={`h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
           replay ? "" : logoReady ? "animate-splash-in" : "opacity-0"
         }`}
       />
-      {/*
-        (같은 날 잠깐 홈 화면 앱의 시계 줄 자리를 회색 줄로 덮었다가 뺐습니다 — 사용자가 시계 줄은 주황 그대로 두고
-         로딩 화면과 함께 사라지게 맞추길 원했습니다. 지금은 로딩 화면이 0.3초 옅어지며 걷힙니다 — splash-out.)
-      */}
       <span className="sr-only">불러오는 중이에요</span>
     </div>
   );

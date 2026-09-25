@@ -652,25 +652,6 @@ input[type="time"]::-webkit-date-and-time-value {
   animation: splash-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/*
- * 로딩 화면이 걷히는 단계 — 0.6초 동안 그대로 있다가 끝에서 한 번에 사라집니다 (2026-09-26 사용자
- * "로딩 화면을 더 길게 해서라도 아이폰 맨 위 주황과 동시에 사라지게"). 이 동안 시계 줄 자리의 주황은 이미 빠져 있어
- * 아이폰이 시계 줄 색을 옮겨 가고, 그게 끝날 즈음 아래 주황도 사라집니다(components/StageGate.tsx).
- * 아직 맞지 않으면 이 0.6s만 늘리거나 줄이면 됩니다. (그 전엔 0.3초 동안 옅어졌는데 아래가 먼저 사라졌습니다.)
- */
-@keyframes splash-out {
-  0%,
-  99% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@utility animate-splash-out {
-  animation: splash-out 0.6s linear both;
-}
 
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
 @keyframes sheet-up {
