@@ -89,7 +89,8 @@ export function EventDdayCard({
       <span className="min-w-0 flex-1">
         {/* 맨 위 — 주황 D-day(굵게)와 회색 날짜. 막대의 왼쪽 끝과 같은 자리에서 시작해 막대 "위"에 섭니다. */}
         <span className="flex items-baseline gap-1.5 leading-none">
-          <span className="text-[17px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
+          {/* 22px — 같은 날 사용자 "5px 만큼 키워줘"(17px에서). */}
+          <span className="text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
             <span className="text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
           ) : null}
@@ -100,16 +101,13 @@ export function EventDdayCard({
           <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-brand-500" />
           <span className="min-w-0 flex-1">
             {/*
-              일정 이름 17px 굵게(600) — 자르지 않고 줄을 바꿔 끝까지 보여 줍니다(캡처처럼).
-              break-keep — 한글은 낱말 단위로 넘기고, 긴 영문·주소는 [overflow-wrap:anywhere]로 잘라 넘깁니다.
+              일정 이름 17px 굵게(600) — 한 줄, 길면 "…" (같은 날 사용자 "잘려도 좋으니 한 줄로" — 잠깐 줄을 바꿔 끝까지 보였음).
               굵기 600은 app/layout.tsx에서 글꼴을 받아 와야 그려집니다.
             */}
-            <span className="block text-[17px] leading-snug font-semibold break-keep [overflow-wrap:anywhere]">
-              {event.title}
-            </span>
-            {/* "시간 · 장소" — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 줄을 바꿉니다. */}
+            <span className="block truncate text-[17px] leading-snug font-semibold">{event.title}</span>
+            {/* "시간 · 장소" 한 줄 — 길면 "…". 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. */}
             {timeText || event.location ? (
-              <span className="mt-1 block text-[14px] leading-snug font-medium break-keep text-ink-muted [overflow-wrap:anywhere]">
+              <span className="mt-1 block truncate text-[14px] leading-snug font-medium text-ink-muted">
                 {[timeText, event.location].filter(Boolean).join(" · ")}
               </span>
             ) : null}
