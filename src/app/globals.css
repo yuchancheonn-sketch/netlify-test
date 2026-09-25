@@ -113,6 +113,12 @@
    *   첫 화면 색만 튑니다.
    */
   --color-canvas: #ececeb;
+  /*
+   * --color-field — 흰 창 위 입력칸의 회색 = fill과 canvas의 딱 중간 (2026-09-26 사용자 "내 프로필 칸과 원우 정보 창 칸의
+   * 평균 색으로"). 내 프로필은 fill, 원우 정보 창은 canvas를 쓰다가 이 값으로 모았습니다. 두 값을 섞는 식이라
+   * 어두운 화면에서도 두 어두운 색의 중간으로 저절로 따라갑니다.
+   */
+  --color-field: color-mix(in srgb, var(--color-fill) 50%, var(--color-canvas));
 
 
   --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system,

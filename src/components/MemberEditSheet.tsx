@@ -45,7 +45,8 @@ const MEMBER_TYPES: { value: MemberType; label: string }[] = [
  * ★ 2026-09-26부터 흰 시트 위 옅은 회색 칸, 그림자 없음, 높이 약 44px — 일정 등록·투표 만들기 시트와 같은 모양
  *   (사용자 "원우 정보 수정하기 창들도 흰색 배경에 회색 박스들로"). 그 전엔 회색 시트에 흰 칸 + 그림자(위아래 15.5px).
  */
-const fieldClassName = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
+// 칸 색은 bg-field(fill과 canvas의 중간) — 2026-09-26 내 프로필 칸과 같은 색으로 맞춤(그 전엔 bg-canvas).
+const fieldClassName = `${inputClassName} bg-field! py-2.5! shadow-none!`;
 
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -319,7 +320,7 @@ export default function MemberEditSheet({
                     className={`flex-1 rounded-2xl border-2 py-[11.5px] text-[14px] font-bold transition ${
                       selected
                         ? "border-brand-500 bg-brand-50 text-brand-500"
-                        : "border-transparent bg-canvas text-ink-soft"
+                        : "border-transparent bg-field text-ink-soft"
                     }`}
                   >
                     {label}
@@ -411,7 +412,7 @@ export default function MemberEditSheet({
             {videoError ? (
               <FieldError>{videoError}</FieldError>
             ) : videoThumb ? (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-canvas p-3">
+              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-field p-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={videoThumb}
@@ -449,7 +450,7 @@ export default function MemberEditSheet({
           {isMine ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-canvas py-[15.5px] text-[15px] font-bold text-ink-soft"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-field py-[15.5px] text-[15px] font-bold text-ink-soft"
             >
               사진·자기소개까지 고치기
             </Link>

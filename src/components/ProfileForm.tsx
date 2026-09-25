@@ -81,7 +81,8 @@ const fieldClassName = inputClassName.replace("py-4", "pt-[11px] pb-[15px]");
  * 처음 가입(onboarding) 화면은 그대로입니다. 글자 그대로 "bg-fill"·"shadow-none"이 있어야 Tailwind가 CSS를 만듭니다.
  */
 function flatBox(className: string): string {
-  return className.replace("bg-surface", "bg-fill").replace("shadow-[var(--shadow-card)]", "shadow-none");
+  // bg-field — fill과 canvas의 중간 회색 (2026-09-26 사용자 "원우 정보 창 칸과 평균 색으로", 그 전엔 bg-fill).
+  return className.replace("bg-surface", "bg-field").replace("shadow-[var(--shadow-card)]", "shadow-none");
 }
 
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
@@ -363,7 +364,11 @@ export default function ProfileForm({
 
   // 칸 모양 — 수정 화면만 회색 칸·그림자 없음 (위 flatBox)
   const flat = mode === "edit";
-  const field = flat ? flatBox(fieldClassName) : fieldClassName;
+  /*
+   * 수정 화면의 한 줄 칸 높이는 원우 정보 창(MemberEditSheet)과 같은 약 44px(위아래 10px) — 2026-09-26 사용자
+   * "회색 박스 높이를 원우 정보 창과 똑같게"(그 전엔 위 11px·아래 15px로 약 50px). 처음 가입 화면은 그대로.
+   */
+  const field = flat ? `${flatBox(inputClassName)} py-2.5!` : fieldClassName;
   const textareaClassName = flat ? flatBox(inputClassName) : inputClassName;
   const cardClassName = flat
     ? flatBox("bg-surface shadow-[var(--shadow-card)]")
@@ -558,7 +563,10 @@ export default function ProfileForm({
                   ★ 이름 위의 풀 그림 글자(🌿 일반 원우 · 🌱 대학생 원우)는 2026-09-15 사용자 요청으로 없앴습니다.
                     그래서 칸이 그 줄(약 33px + 사이 6px)만큼 낮아졌고, 이름 한 줄만 가운데 섭니다.
                 */
-                className={`flex flex-1 items-center justify-center rounded-2xl border-2 py-[13px] transition ${
+                // 수정 화면은 py-[11.5px] — 원우 정보 창의 구분 칸과 같은 높이 (2026-09-26 사용자 "높이 똑같게").
+                className={`flex flex-1 items-center justify-center rounded-2xl border-2 transition ${
+                  flat ? "py-[11.5px]" : "py-[13px]"
+                } ${
                   selected
                     ? "border-brand-500 bg-brand-50"
                     : `border-transparent ${cardClassName}`
