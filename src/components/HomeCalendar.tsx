@@ -307,10 +307,14 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                     <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep text-ink [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
                       {item.title}
                     </span>
+                    {/*
+                      시간과 장소는 두 줄로 나눠 섭니다 (2026-09-25 사용자 "캘린더 박스 일정에서는 두 줄로 분리").
+                      다가오는 일정 박스는 한 줄 그대로입니다 — 여기만 다릅니다. 줄 사이 2px(gap-0.5).
+                    */}
                     {item.time || item.location ? (
-                      <span className="mt-1 flex items-center gap-2 text-[14px] leading-snug font-medium text-ink-muted">
+                      <span className="mt-1 flex flex-col gap-0.5 text-[14px] leading-snug font-medium text-ink-muted">
                         {item.time ? (
-                          <span className="flex shrink-0 items-center gap-1">
+                          <span className="flex items-center gap-1">
                             <ClockIcon className="h-4 w-4" />
                             {item.time}
                           </span>
