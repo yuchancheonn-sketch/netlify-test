@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard } from "@/components/EventCard";
 import EventSheet from "@/components/EventSheet";
@@ -59,12 +58,19 @@ export default function HomePage() {
 
   /*
    * 홈 제목 — 주황 "애기애타" + 오른쪽에 도산아카데미 로고 (2026-09-26 사용자 "애기애타 오른쪽에 도산아카데미 크기 맞춰서").
-   * 로고는 로딩 화면과 같은 그림(public/brand/goose.png, 원래 파란색)이고, 글줄 높이(약 34px)에 맞춰 32px로 둡니다.
+   * 로고는 로딩 화면과 같은 그림(public/brand/goose.png)입니다.
+   * - 색: 앱 주황(bg-brand-500)과 똑같게 — 그림 모양으로 오려낸 틀(mask-image)에 주황을 채웁니다
+   *   (같은 날 사용자 "주황색으로"; 처음엔 원래 파란 그림). 주황 토큰을 바꾸면 로고도 따라 바뀝니다.
+   * - 크기 33px·1px 아래로(translate-y-px) — 같은 날 사용자 "1px 내려주고, 1px 키워줘"(32px에서).
    */
   const appName = (
     <span className="flex items-center gap-1.5">
       <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
-      <Image src="/brand/goose.png" alt="도산아카데미" width={700} height={700} className="h-8 w-8 shrink-0" />
+      <span
+        role="img"
+        aria-label="도산아카데미"
+        className="h-[33px] w-[33px] shrink-0 translate-y-px bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+      />
     </span>
   );
 
