@@ -13,7 +13,7 @@ import { cohortOf } from "@/lib/cohort";
  *   - 계정 합치기 기록(accountLinks), 이 원우의 알림 받는 기기(pushTokens)
  *   - users 문서 — 프로필 사진, 생일, 권한 같은 계정 정보가 함께 사라집니다.
  * ★ 남기는 것
- *   - 원우수첩 칸: users 문서의 이름·기수·회사·직책·연락처·직위·소개·영상을 **명단(roster)** 으로 옮겨,
+ *   - 원우수첩 칸 — ★ 어떤 경우에도 수첩에서 빠지지 않습니다(아래 withdrawAccount 주석): users 문서의 이름·기수·회사·직책·연락처·직위·소개·영상을 **명단(roster)** 으로 옮겨,
  *     "아직 가입 전" 원우처럼 수첩에 그대로 남깁니다(사진은 빠짐). 동기 명단이 비지 않게 하려는 것입니다.
  *   - 쓴 글·사진·채팅·댓글·투표 — 그대로 둡니다. 화면은 이름을 못 찾으면 글에 적어 둔 이름을 씁니다.
  *
@@ -26,10 +26,17 @@ export async function withdrawAccount(db: Firestore, auth: Auth, uid: string): P
   const userRef = db.collection("users").doc(uid);
   const user = await userRef.get();
 
-  if (user.exists && user.get("profileCompleted") === true && user.get("status") === "approved") {
-    await keepInRoster(db, uid, user.data() ?? {});
+  /*
+   * ★ 탈퇴해도 원우수첩에서는 절대 빠지지 않습니다 (2026-09-25 사용자 "뭐가 됐든 탈퇴하더라도 원우 목록에서 지워지지는 않도록").
+   *   명단으로 옮기기가 끝난 뒤에만 users 문서를 지웁니다 — 옮기다 실패하면 여기서 멈추고 아무것도 지우지 않습니다.
+   *   수첩에 보이던 원우(가입 승인 + 프로필 완성)는 명단 칸으로, 아직 안 보이던 원우도 이어져 있던 명단 칸은 풀어서
+   *   "가입 전" 칸으로 되살립니다(linkedUid가 남아 있으면 그 칸이 수첩에서 가려집니다 — lib/directory.ts).
+   */
+  if (user.exists) {
+    const listed = user.get("profileCompleted") === true && user.get("status") === "approved";
+    await keepInRoster(db, uid, user.data() ?? {}, listed);
+    await userRef.delete();
   }
-  if (user.exists) await userRef.delete();
 
   const aliases = await db.collection(ACCOUNT_LINKS).where("primaryUid", "==", uid).get();
   const devices = await db.collection("pushTokens").where("uid", "==", uid).get();
@@ -52,13 +59,28 @@ export async function withdrawAccount(db: Firestore, auth: Auth, uid: string): P
  * 없으면 같은 기수·이름의 이어지지 않은 칸이 딱 하나일 때 그 칸을 채우고, 둘 다 아니면 새로 만듭니다.
  * 값은 계정 쪽이 우선이고(수첩이 그렇게 보여 줌), 계정 쪽이 비어 있으면 명단의 값을 둡니다.
  */
-async function keepInRoster(db: Firestore, uid: string, data: Record<string, unknown>) {
+async function keepInRoster(
+  db: Firestore,
+  uid: string,
+  data: Record<string, unknown>,
+  /** 원우수첩에 보이던 원우인지 (가입 승인 + 프로필 완성) */
+  listed: boolean,
+) {
   const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
-  const name = text(data.name);
-  if (!name) return;
+  const linked = await db.collection("roster").where("linkedUid", "==", uid).get();
+
+  // 수첩에 안 보이던 원우 — 이어져 있던 명단 칸만 풀어 가입 전 칸으로 되살립니다(값은 명단 것 그대로).
+  if (!listed) {
+    await Promise.all(linked.docs.map((doc) => doc.ref.update({ linkedUid: null })));
+    return;
+  }
+
+  // 이름이 비는 일은 없어야 하지만, 비어도 칸이 사라지지 않게 명단 이름 → "이름 없음" 순으로 채웁니다.
+  const name = text(data.name) || text(linked.docs[0]?.get("name")) || "이름 없음";
   const cohort = cohortOf(text(data.cohort));
 
-  const linked = await db.collection("roster").where("linkedUid", "==", uid).limit(1).get();
+  // 이 계정에 이어진 명단 칸이 여럿이면 첫 칸을 채우고, 나머지도 풀어 둡니다(가려진 채 남지 않게).
+  await Promise.all(linked.docs.slice(1).map((doc) => doc.ref.update({ linkedUid: null })));
   let target = linked.docs[0]?.ref ?? null;
   if (!target) {
     const sameName = await db.collection("roster").where("name", "==", name).get();
