@@ -195,10 +195,14 @@ function LoginScreen() {
         {/*
           애기애타의 뜻. 상자 없이 사진 위에 바로 얹어 화면이 트여 보이게 했습니다.
           서예 로고와 결을 맞춰 명조체로 씁니다.
+          ★ 첫 화면(start)에만 둡니다 — 로그인·회원가입 방법 고르는 두 화면에서는 뺐습니다
+            (2026-09-26 사용자 "두 화면에서는 문구 빼줘"). 단추는 flex-1 여백 덕에 화면 아래에 그대로 붙어 있습니다.
         */}
-        <p className="text-center font-serif text-[19px] leading-relaxed font-semibold text-ink">
-          {APP_DEFINITION_BODY}
-        </p>
+        {step === "start" ? (
+          <p className="text-center font-serif text-[19px] leading-relaxed font-semibold text-ink">
+            {APP_DEFINITION_BODY}
+          </p>
+        ) : null}
 
         <div className="mt-5">
           {step === "start" ? (
