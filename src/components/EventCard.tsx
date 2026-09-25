@@ -99,7 +99,11 @@ export function EventDdayCard({
             D-day 크기를 바꾸면 이 값도 크기에 비례해 같이 바꿔 주세요.
           */}
           {/* [-webkit-text-stroke:0.3px] — 같은 날 "아주 조금만 더 굵게". 700 글씨에 얇은 테두리(다음 굵기 900은 너무 굵음). */}
-          <span className="-ml-[1.75px] text-[20px] font-bold tracking-tight [-webkit-text-stroke:0.3px_currentColor] whitespace-nowrap text-brand-500">{dday}</span>
+          {/*
+            21px·700 — 같은 날 사용자 "굵기 아주 조금만 줄이고, 크기는 조금만 키워줘": 20px에 둘렀던 0.3px 테두리를 걷고 1px 키움.
+            -ml-[1.9px]도 크기에 맞춰(22px일 때 2px).
+          */}
+          <span className="-ml-[1.9px] text-[21px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
             // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서). -translate-y-px — "1px 위로".
             <span className="-translate-y-px text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
