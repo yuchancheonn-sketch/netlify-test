@@ -7,7 +7,7 @@ import { useAuth, type AuthStage } from "@/lib/auth-context";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { APP_NAME } from "@/lib/constants";
 import { rememberReturnPath, takeReturnPath } from "@/lib/login-return";
-import { holdGateSplash, useGateSplashShowing, useSplashHoldDone } from "@/lib/use-splash-hold";
+import { useSplashHoldDone } from "@/lib/use-splash-hold";
 
 /**
  * 각 단계에서 사용자가 있어야 할 화면.
@@ -39,28 +39,24 @@ export default function StageGate({
   const router = useRouter();
   const allowed = allow.includes(stage);
   /*
-   * 앱을 연 뒤 최소 1초 로딩 화면은 맨 위의 SplashOverlay 한 장이 맡습니다(2026-09-26). 그 아래에서는 평소대로
-   * 곧바로 알맞은 화면으로 보내고, 준비 중인 동안은 제 로딩 화면(GateSplash)을 그려 SplashOverlay를 붙잡아 둡니다.
+   * 앱을 연 뒤 1.5초는 무조건 로딩 화면 (2026-09-26 사용자 요청, lib/use-splash-hold.ts).
+   * 그동안은 다른 화면으로 보내지도(redirect), 화면을 그리지도 않습니다.
    */
+  const splashDone = useSplashHoldDone();
+
   useEffect(() => {
-    if (stage === "loading" || allowed) return;
+    if (!splashDone || stage === "loading" || allowed) return;
     /*
      * 로그인을 마치면 기억해 둔 주소(lib/login-return.ts)로 보냅니다 (2026-09-24). 로그인하러 가기 전의 화면이나
      * 로그인 없이 못 여는 주소로 들어왔던 곳 — 카카오톡 안에서 링크를 열면 대개 로그아웃 상태라서입니다.
      */
     if (stage === "signedOut") rememberReturnPath();
     router.replace(stage === "ready" ? (takeReturnPath() ?? STAGE_PATH.ready) : STAGE_PATH[stage]);
-  }, [stage, allowed, router]);
+  }, [splashDone, stage, allowed, router]);
 
   if (!isFirebaseConfigured) return <SetupNotice />;
-  if (!allowed) return <GateSplash />;
+  if (!splashDone || !allowed) return <SplashScreen />;
   return <>{children}</>;
-}
-
-/** StageGate가 준비 중일 때 그리는 로딩 화면 — 떠 있는 동안 맨 위 SplashOverlay가 걷히지 않게 붙잡습니다. */
-function GateSplash() {
-  useEffect(() => holdGateSplash(), []);
-  return <SplashScreen />;
 }
 
 /**
@@ -129,38 +125,6 @@ export function SplashScreen() {
         }`}
       />
       <span className="sr-only">불러오는 중이에요</span>
-    </div>
-  );
-}
-
-/**
- * 앱을 열 때 맨 위에 한 장 덮는 로딩 화면 — 흐려지면서(블러) 서서히 사라집니다 (2026-09-26 사용자 요청
- * "바로 꺼지는 게 아니라 자연스럽게 블러 처리되면서 사라졌으면").
- *
- * 각 화면의 StageGate도 로딩 화면을 그리지만, 첫 화면(/)에서 홈으로 넘어가는 순간 그 화면째 사라져서
- * 사라지는 모습을 입힐 수가 없었습니다. 그래서 이 한 장을 앱 맨 바깥(app/layout.tsx)에 깔아 두고,
- * 그 아래에서 로그인 확인·화면 이동이 끝나면 걷어 냅니다.
- *
- * 걷는 때: 최소 1초(lib/use-splash-hold.ts)가 지났고 로그인 확인(stage)이 끝났을 때 — 그 뒤 0.45초 동안
- * 흐려지며 투명해지고(animate-splash-out), 끝나면 아예 지웁니다. 앱을 처음 열 때 한 번뿐입니다.
- */
-export function SplashOverlay() {
-  const { stage } = useAuth();
-  const holdDone = useSplashHoldDone();
-  const gateShowing = useGateSplashShowing();
-  const [gone, setGone] = useState(false);
-  if (gone) return null;
-  const leaving = holdDone && stage !== "loading" && !gateShowing;
-  return (
-    <div
-      aria-hidden={leaving}
-      className={`fixed inset-0 z-[100] ${leaving ? "animate-splash-out pointer-events-none" : ""}`}
-      onAnimationEnd={(event) => {
-        // 안쪽 로고의 등장 애니메이션이 끝날 때도 이 이벤트가 올라오므로, 이 상자 자신의 것만 봅니다.
-        if (event.target === event.currentTarget && leaving) setGone(true);
-      }}
-    >
-      <SplashScreen />
     </div>
   );
 }

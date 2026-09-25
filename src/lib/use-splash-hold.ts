@@ -43,32 +43,3 @@ function getSnapshot() {
 export function useSplashHoldDone(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
-
-/*
- * 지금 "아직 준비 중"이라 제 로딩 화면을 그리고 있는 StageGate 수 (2026-09-26).
- * 맨 위 로딩 화면(SplashOverlay)은 이 수가 0이 될 때까지 걷지 않습니다 — 첫 화면(/)에서 홈으로 넘어가는
- * 사이에 걷히면 그 아래 화면 전환이 그대로 보여서입니다.
- */
-let gateSplashCount = 0;
-const gateListeners = new Set<() => void>();
-
-export function holdGateSplash(): () => void {
-  gateSplashCount += 1;
-  gateListeners.forEach((listener) => listener());
-  return () => {
-    gateSplashCount -= 1;
-    gateListeners.forEach((listener) => listener());
-  };
-}
-
-/** 제 로딩 화면을 그리고 있는 StageGate가 하나라도 있는지. */
-export function useGateSplashShowing(): boolean {
-  return useSyncExternalStore(
-    (listener) => {
-      gateListeners.add(listener);
-      return () => gateListeners.delete(listener);
-    },
-    () => gateSplashCount > 0,
-    () => true,
-  );
-}

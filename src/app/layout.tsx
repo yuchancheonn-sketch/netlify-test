@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
-import { SplashOverlay } from "@/components/StageGate";
 import ThemeSync from "@/components/ThemeSync";
 import { AuthProvider } from "@/lib/auth-context";
 import {
@@ -116,11 +115,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: DISPLAY_SETTINGS_SCRIPT }} />
         {/* 앱을 켜 둔 채로 폰의 다크 모드가 바뀌면 그때도 따라가게 합니다. */}
         <ThemeSync />
-        <AuthProvider>
-          {children}
-          {/* 앱을 열 때 맨 위에 덮는 로딩 화면 — 흐려지며 사라집니다(components/StageGate.tsx, 2026-09-26). */}
-          <SplashOverlay />
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
