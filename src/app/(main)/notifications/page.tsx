@@ -141,7 +141,8 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
           예전엔 줄 맨 왼쪽의 44px 연회색 칸(bg-fill) 안에 22px 그림이었고, 그 전엔 주황 칸에 흰 그림이었습니다.
         */}
         <span className="flex items-center gap-1.5">
-          <NoticeGlyph type={notice.type} className="h-[17px] w-[17px] shrink-0 text-ink-soft" />
+          {/* 19px — 같은 날 사용자 "2px 키워줘"(17px에서). */}
+          <NoticeGlyph type={notice.type} className="h-[19px] w-[19px] shrink-0 text-ink-soft" />
           <span className="min-w-0 truncate text-[15px] leading-snug font-bold text-ink">
             {notice.title}
           </span>
