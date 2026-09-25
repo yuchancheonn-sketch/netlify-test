@@ -84,7 +84,7 @@ export function SplashScreen() {
     */
     <div className="fixed inset-0 flex items-center justify-center bg-brand-500 px-8">
       {/*
-        원본이 700×700이라 화면에 그리는 140px의 다섯 배입니다.
+        원본이 700×700이라 화면에 그리는 160px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
 
         w-[140px] h-auto로 크기를 다시 잡아, 나중에 정사각형이 아닌 그림으로
@@ -97,7 +97,8 @@ export function SplashScreen() {
         height={700}
         priority
         // brightness-0 invert — 투명 PNG의 그림 부분(기러기·글씨)을 모두 흰색으로 칠합니다. 그림 파일은 그대로 둡니다.
-        className="animate-splash-in h-auto w-[140px] brightness-0 invert"
+        // w-[160px] — 로고를 조금 더 크게 (2026-09-25 사용자 요청, 140px에서).
+        className="animate-splash-in h-auto w-[160px] brightness-0 invert"
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
