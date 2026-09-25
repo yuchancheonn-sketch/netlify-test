@@ -106,7 +106,8 @@ function NotificationsPageContent() {
               return (
                 <li key={notice.id} className={firstOfDay && index > 0 ? "mt-2" : ""}>
                   {firstOfDay ? (
-                    <p className="mb-2 px-1 text-[13px] font-bold text-ink-muted">{dayLabel(notice)}</p>
+                    // 가운데 정렬 — 같은 날 사용자 "날짜는 가운데로".
+                    <p className="mb-2 text-center text-[13px] font-bold text-ink-muted">{dayLabel(notice)}</p>
                   ) : null}
                   <NoticeRow
                     notice={notice}
