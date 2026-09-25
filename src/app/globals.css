@@ -630,6 +630,25 @@ input[type="time"]::-webkit-date-and-time-value {
   animation: splash-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/*
+ * 로딩 화면이 걷힐 때 — 흐려지며(blur) 서서히 투명해집니다 (2026-09-26 사용자 요청).
+ * components/StageGate.tsx의 SplashOverlay가 씁니다. forwards로 끝 모습(투명)을 붙잡아 두고, 끝나면 지웁니다.
+ */
+@keyframes splash-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(14px);
+  }
+}
+
+@utility animate-splash-out {
+  animation: splash-out 0.45s ease-out forwards;
+}
+
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
 @keyframes sheet-up {
   from {
