@@ -26,8 +26,12 @@ export interface DosanQuiz {
   question: string;
 }
 
+/*
+ * 따옴표는 둥근 것(‘ ’ “ ”)이 아니라 곧은 것(' ")을 씁니다 (2026-09-25 사용자 "따옴표 모양들이 다 각지게").
+ * 새 문제·해설(dosan-quiz-answers.ts)을 적을 때도 같습니다.
+ */
 export const DOSAN_QUIZZES: DosanQuiz[] = [
-  { id: "ho", question: "‘도산’은 안창호 선생의 본명이다." },
+  { id: "ho", question: "'도산'은 안창호 선생의 본명이다." },
   { id: "birthplace", question: "안창호 선생은 평안남도에서 태어났다." },
   { id: "daesung", question: "안창호 선생은 평양에 대성학교를 세웠다." },
   { id: "sinminhoe", question: "신민회는 누구나 이름을 걸고 드나들던 공개 단체였다." },
@@ -42,7 +46,7 @@ export const DOSAN_QUIZZES: DosanQuiz[] = [
   { id: "provisional-president", question: "안창호 선생은 대한민국 임시정부의 초대 대통령이었다." },
   {
     id: "quote-nakmang",
-    question: "‘낙망은 청년의 죽음이요, 청년이 죽으면 민족이 죽는다’는 도산의 말씀이다.",
+    question: "'낙망은 청년의 죽음이요, 청년이 죽으면 민족이 죽는다'는 도산의 말씀이다.",
   },
   {
     id: "to-america",
@@ -53,7 +57,7 @@ export const DOSAN_QUIZZES: DosanQuiz[] = [
   { id: "dosan-park", question: "선생의 묘소가 있는 도산공원은 서울 강남구에 있다." },
   {
     id: "quote-eolleong",
-    question: "‘얼렁얼렁이 우리나라를 망하게 했다’는 대성학교 학생들에게 한 훈유다.",
+    question: "'얼렁얼렁이 우리나라를 망하게 했다'는 대성학교 학생들에게 한 훈유다.",
   },
   {
     id: "arrest-1932",
@@ -62,7 +66,7 @@ export const DOSAN_QUIZZES: DosanQuiz[] = [
   { id: "heungsadan-today", question: "흥사단은 광복 뒤 해체되어 지금은 남아 있지 않다." },
   {
     id: "quote-sarang",
-    question: "‘서로 사랑하면 살고, 서로 싸우면 죽는다’는 도산이 흥사단우에게 한 말씀이다.",
+    question: "'서로 사랑하면 살고, 서로 싸우면 죽는다'는 도산이 흥사단우에게 한 말씀이다.",
   },
   {
     id: "cheongnyeon-hakuhoe",
