@@ -213,7 +213,15 @@ export default function SettingsPage() {
  * 공용 부품은 다른 화면도 쓰므로 설정 화면에만 따로 둡니다.
  */
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-2 px-5 text-[15px] font-medium text-ink-muted">{children}</h2>;
+  /*
+   * 같은 날 사용자 조정: 16px(15px에서) · "아주 조금 더 진한 회색" · 왼쪽으로 3px(20px → 17px 들여쓰기).
+   * 색은 ink-muted에 한 단 진한 ink-soft를 1/4 섞은 값 — 토큰끼리 섞어 어두운 화면에서도 저절로 맞습니다.
+   */
+  return (
+    <h2 className="mb-2 pl-[17px] text-[16px] font-medium text-[color-mix(in_srgb,var(--color-ink-muted)_75%,var(--color-ink-soft))]">
+      {children}
+    </h2>
+  );
 }
 
 /**
