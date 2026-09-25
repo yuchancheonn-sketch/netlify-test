@@ -734,10 +734,19 @@ function AlbumBook({
                 style={{ ...motion, transition }}
               >
                 {/* 화면보다 긴 위원회 카드를 화면에 맞게 줄이는 칸 — 아래 fitScale 주석. 보통은 1(그대로)입니다. */}
+                {/*
+                  --fit-scale — 줄인 비율을 카드 안에 알려 줍니다. 카드 아래 안내 글씨("눌러서 다음 장 보기" 등)가
+                  이 값으로 나눠 제 크기(12px)로 보이게 합니다 (2026-09-26 사용자 "같은 크기로" — 조직도만 줄어 작아 보였음).
+                */}
                 <div
                   style={
                     fitScale < 1
-                      ? { transform: `scale(${fitScale})`, transformOrigin: "center", transition: `transform ${TURN_MS}ms ${TURN_EASE}` }
+                      ? ({
+                          transform: `scale(${fitScale})`,
+                          transformOrigin: "center",
+                          transition: `transform ${TURN_MS}ms ${TURN_EASE}`,
+                          "--fit-scale": fitScale,
+                        } as React.CSSProperties)
                       : undefined
                   }
                 >

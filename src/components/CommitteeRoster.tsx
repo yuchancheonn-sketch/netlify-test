@@ -147,7 +147,8 @@ function CommitteeCard({ committee }: { committee: Committee }) {
       </div>
 
       {/* 뒷면의 "다시 누르면 앞면으로"와 같은 모양·자리 (2026-09-25 사용자 요청 — 앞면에도 뒤집을 수 있다는 표시). */}
-      <p className="mt-2 text-center text-[12px] text-ink-faint">눌러서 뒷면 보기</p>
+      {/* 12px ÷ --fit-scale — 카드가 화면에 맞게 줄어도 안내는 늘 12px로 (조직도 카드 안내와 같게, 2026-09-26). */}
+      <p className="mt-2 text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">눌러서 뒷면 보기</p>
     </article>
   );
 }
@@ -217,7 +218,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
         </div>
       </div>
 
-      <p className="mt-2 shrink-0 text-center text-[12px] text-ink-faint">다시 누르면 앞면으로</p>
+      <p className="mt-2 shrink-0 text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">다시 누르면 앞면으로</p>
 
       {editing ? (
         <CommitteeEditSheet

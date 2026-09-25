@@ -179,8 +179,10 @@ export default function CommitteeOrgChart() {
       {/*
         조직도 카드는 뒷면이 없어 누르면 다음 카드로 넘어갑니다(AlbumList handlePointerUp) — 그걸 알려 주는 안내
         (2026-09-26 사용자 요청). 위원회 카드의 "눌러서 뒷면 보기"와 같은 모양·자리입니다(CommitteeRoster.tsx).
+        ★ 글씨 크기는 12px ÷ --fit-scale — 이 카드는 화면보다 길어 통째로 줄여 그려지는데(AlbumList fitScale),
+          그 비율만큼 되돌려 화면에서는 위원회 카드 안내와 똑같이 12px로 보이게 합니다.
       */}
-      <p className="mt-2 text-center text-[12px] text-ink-faint">눌러서 다음 장 보기</p>
+      <p className="mt-2 text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">눌러서 다음 장 보기</p>
     </article>
   );
 }
