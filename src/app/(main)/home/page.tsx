@@ -64,14 +64,15 @@ export default function HomePage() {
    * - 크기 34.5px·2px 아래로 — 같은 날 사용자 "1px 내리고 1px 키워줘"(32px → 33px·1px),
    *   이어서 "1px 내리고 1.5px 늘려줘"(→ 34.5px·2px), "0.5px 올리고 1.5px 늘려줘"(→ 36px·1.5px), "1.5px 키워줘"(→ 37.5px).
    */
+  // ★ 로고는 "애기애타" 왼쪽에 (2026-09-26 사용자 "로고를 애기애타 왼쪽으로 옮겨봐" — 처음엔 오른쪽).
   const appName = (
     <span className="flex items-center gap-1.5">
-      <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
       <span
         role="img"
         aria-label="도산아카데미"
         className="h-[37.5px] w-[37.5px] shrink-0 translate-y-[1.5px] bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
       />
+      <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
     </span>
   );
 
