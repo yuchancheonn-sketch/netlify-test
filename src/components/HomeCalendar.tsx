@@ -4,7 +4,14 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteDoc, doc } from "firebase/firestore";
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  PinIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@/components/icons";
 import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -277,31 +284,48 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         ) : (
           <ul className="mt-1.5 flex flex-col gap-1">
             {selectedItems.map((item) => {
+              /*
+                ★ 한 줄 모양은 홈의 "다가오는 일정" 박스(components/EventCard.tsx의 EventDdayCard)와 같습니다
+                  (2026-09-25 사용자 "다가오는 일정 박스 스타일에 맞춰서"). 막대 3px·제목 윗머리에 맞춘 위쪽 4px,
+                  제목 17px 500 + 0.25px 테두리·두 줄까지, 시계·핀 아이콘 달린 시간·장소 한 줄. 한쪽을 고치면 다른 쪽도 같이.
+                  (그 전엔 막대 4px, 제목 15px 굵게·끝까지 줄바꿈, "시간 · 장소" 13px 글씨뿐이었습니다.)
+              */
               const body = (
                 <>
                   {/*
                     왼쪽 막대 — 도산아카데미 사이트에서 이어진 공식 일정은 주황, 원우가 올린 우리 기수 모임(번개 등)은 먹색
                     (2026-09-25 사용자 요청. 2026-09-23부터 이날까지는 둘 다 주황이었습니다).
-                    self-stretch — 제목이 두세 줄로 늘어나면 막대도 그만큼 길어집니다(예전엔 36px 고정).
+                    self-stretch — 제목이 두 줄로 늘어나면 막대도 그만큼 길어집니다.
                   */}
                   <span
                     aria-hidden="true"
-                    className={`w-1 shrink-0 self-stretch rounded-full ${
+                    className={`mt-[4px] w-[3px] shrink-0 self-stretch rounded-full ${
                       item.kind === "academy" ? "bg-brand-500" : "bg-ink"
                     }`}
                   />
-                  <span className="min-w-0 flex-1">
-                    {/*
-                      제목은 자르지 않고 줄을 바꿔 끝까지 보여 줍니다 (2026-09-23 사용자 "두 줄이든 세 줄이든 끝까지").
-                      break-keep — 한글은 낱말 단위로 넘깁니다. 긴 영문·주소는 [overflow-wrap:anywhere]로 잘라 넘깁니다.
-                    */}
-                    <span className="block text-[15px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">
+                  <span className="min-w-0 flex-1 -translate-y-[0.5px]">
+                    <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep text-ink [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
                       {item.title}
                     </span>
-                    {/* mt-1 — 제목과 사이 4px (2026-09-25 사용자 "너무 붙어 있어, 조금만 띄워줘", 2px(mt-0.5)에서). */}
-                    <span className="mt-1 block text-[13px] leading-snug break-keep text-ink-muted">
-                      {[item.time, item.location].filter(Boolean).join(" · ") || "시간 미정"}
-                    </span>
+                    {item.time || item.location ? (
+                      <span className="mt-1 flex items-center gap-2 text-[14px] leading-snug font-medium text-ink-muted">
+                        {item.time ? (
+                          <span className="flex shrink-0 items-center gap-1">
+                            <ClockIcon className="h-4 w-4" />
+                            {item.time}
+                          </span>
+                        ) : null}
+                        {item.location ? (
+                          <span className="flex min-w-0 items-center gap-px">
+                            <PinIcon
+                              strokeWidth={1.5}
+                              className="h-[18px] w-[18px] shrink-0 -translate-y-[0.25px]"
+                            />
+                            <span className="truncate">{item.location}</span>
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : null}
                   </span>
                 </>
               );
