@@ -137,8 +137,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         {/*
           "오늘의 도산"·"오늘의 OX 퀴즈" 제목과 같은 18px 굵게 먹색 (2026-09-25 사용자 "글씨 크기 똑같게").
           크기는 원래 같았는데 여기만 tabular-nums(숫자 폭 고르게)가 붙어 숫자가 넓게 그려져 달라 보였습니다 — 그래서 뺐습니다.
+          ★ 19px — 같은 날 사용자 "OX 퀴즈 제목보다 작아 보인다". 18px로 같아도 "2026년 9월"은 대부분 숫자라,
+            한글보다 키가 낮은 숫자 탓에 작아 보였습니다. 눈으로 같게 보이도록 이 제목만 1px 키웠습니다.
         */}
-        <h2 className="text-[18px] font-bold text-ink">
+        <h2 className="text-[19px] font-bold text-ink">
           {view.year}년 {view.month + 1}월
         </h2>
         <div className="-mr-2 flex items-center">
