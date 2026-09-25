@@ -9,7 +9,8 @@ import type { ReactNode } from "react";
  * "사운드 및 햅틱" 화면처럼 온오프 버튼으로. 켜진 색은 앱 브랜드색(주황)입니다.
  *
  * 스위치 모양은 사용자가 보낸 아이폰 캡처 그대로입니다(2026-09-24) — 동그란 손잡이가 아니라
- * **가로로 긴 알약 손잡이**가 바탕 안에 2px 띄워 앉습니다. 바탕 62×28, 손잡이 38×24.
+ * **가로로 긴 알약 손잡이**가 바탕 안에 2px 띄워 앉습니다. 바탕 68×28, 손잡이 38×24.
+ * (바탕 폭 62px → 68px, 2026-09-25 사용자 "흰 알약 비율이 커서 회색 알약 가로를 조금만 더" — 손잡이는 그대로.)
  *
  * 줄 전체가 버튼입니다 — 작은 스위치만 정확히 누르지 않아도 줄 어디를 눌러도 바뀝니다.
  * 상자 높이는 위아래 py-3으로, 로그아웃 단추·관리자 화면 줄과 같은 약 48px입니다.
@@ -46,17 +47,17 @@ export default function ToggleRow({
         {icon}
         <span
           aria-hidden="true"
-          className={`relative h-[28px] w-[62px] shrink-0 rounded-full transition-colors duration-200 ${
+          className={`relative h-[28px] w-[68px] shrink-0 rounded-full transition-colors duration-200 ${
             checked ? "bg-brand-500" : "bg-line"
           }`}
         >
-          {/* 손잡이 — 켜지면 오른쪽으로 20px(62 − 38 − 2 − 2). 꺼졌을 때만 옅은 그림자로 바탕과 떼어 보입니다. */}
+          {/* 손잡이 — 켜지면 오른쪽으로 26px(68 − 38 − 2 − 2). 바탕 폭을 바꾸면 이 값도 같이. 꺼졌을 때만 옅은 그림자로 바탕과 떼어 보입니다. */}
           <span
             className={`absolute top-[2px] left-[2px] h-[24px] w-[38px] rounded-full bg-white ${
               checked ? "" : "shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
             }`}
             style={{
-              transform: checked ? "translateX(20px)" : "translateX(0)",
+              transform: checked ? "translateX(26px)" : "translateX(0)",
               transition: "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           />
