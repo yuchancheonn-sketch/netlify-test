@@ -182,7 +182,10 @@ export default function CommitteeOrgChart() {
         ★ 글씨 크기는 12px ÷ --fit-scale — 이 카드는 화면보다 길어 통째로 줄여 그려지는데(AlbumList fitScale),
           그 비율만큼 되돌려 화면에서는 위원회 카드 안내와 똑같이 12px로 보이게 합니다.
       */}
-      <p className="mt-2 text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">눌러서 다음 장 보기</p>
+      {/* 화면에서 1px 아래로 (2026-09-26 사용자 요청) — 카드가 줄어 그려지니 1px도 --fit-scale로 나눠 줍니다. */}
+      <p className="mt-2 translate-y-[calc(1px/var(--fit-scale,1))] text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">
+        눌러서 다음 장 보기
+      </p>
     </article>
   );
 }
