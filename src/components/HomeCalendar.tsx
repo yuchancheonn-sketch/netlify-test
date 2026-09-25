@@ -96,6 +96,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
    * 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운 등록 화면(/events/new)을 열고,
    * 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
    * 회색 동그라미(bg-canvas) + 진회색 + — 같은 날 "주황이라 너무 눈에 띈다"로 주황 채움에서 바꿈.
+   * + 는 흰색 — 같은 날 사용자 요청(진회색 ink-soft에서).
    */
   const addButton = (
     <button
@@ -105,7 +106,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         router.push(`/events/new?date=${selected}&from=home`);
       }}
       aria-label="일정 추가"
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-ink-soft transition active:scale-95"
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-white transition active:scale-95"
     >
       <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
     </button>
