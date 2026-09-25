@@ -73,8 +73,8 @@ export function EventDdayCard({
    */
   const className =
     // pt-[17px] — 위 흰 여백 (2026-09-25 사용자 "1px 늘려줘", 16px(py-4)에서).
-    // pb-[17.5px] — 아래 흰 여백 (같은 날 사용자 "1.5px 만큼 넣어줘", 16px에서).
-    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[17.5px] pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    // pb-[19px] — 아래 흰 여백 (같은 날 사용자 "1.5px 만큼 늘려줘" 두 번, 16 → 17.5 → 19px).
+    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[19px] pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
   /** D-day 옆 작은 날짜 — "10.02 금" */
   const dateText = date
