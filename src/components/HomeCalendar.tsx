@@ -300,21 +300,25 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
 
       {/* 고른 날의 일정 */}
       <div className="mt-2 border-t border-line px-1 pt-3">
-        <p className="text-[13px] font-bold text-ink-muted">
-          {selMonth}월 {selDay}일 ({selWeekday})
-        </p>
-        {selectedItems.length === 0 ? (
-          /*
-            일정이 없는 날은 + 단추가 "일정이 없어요"와 같은 줄 높이 오른쪽 끝에 섭니다 (2026-09-25 사용자 요청).
-            absolute라 줄 높이를 늘리지 않습니다. right-[-6px] — 이 줄은 바깥 칸(px-1)보다 4px 안쪽이라, 예전 자리(박스 안쪽
-            오른쪽 끝)에 맞추는 4px에 "오른쪽으로 2px"를 더한 값. top-[calc(50%-1px)] — 줄 가운데에서 "위로 1px".
-          */
-          <p className="relative py-2 text-[14px] text-ink-faint">
-            일정이 없어요
-            {/* top-[calc(50%-4px)] — 같은 날 "3px 더 위로"(50%−1px에서). 일정 있는 날의 자리도 같이 3px 올림. */}
-            <span className="absolute top-[calc(50%-4px)] right-[-6px] -translate-y-1/2">{addButton}</span>
+        {/*
+          일정이 없는 날은 + 단추가 날짜 줄("9월 25일 (금)")과 "일정이 없어요" 두 줄의 한가운데 높이, 오른쪽 끝에 섭니다
+          (2026-09-25 사용자 "이 두 부분이랑 같은 높이로 정렬". 그 전엔 "일정이 없어요" 한 줄 가운데에 맞췄습니다).
+          absolute라 줄 높이를 늘리지 않습니다. right-[-6px] — 바깥 칸(px-1)을 넘어 박스 안쪽 오른쪽 끝 + "오른쪽으로 2px".
+          top-[calc(50%-4px)] — 두 줄 덩어리의 가운데. 덩어리 아래에 "일정이 없어요"의 아래 여백 8px(py-2)이 붙어 있어,
+          그 절반만큼 올려 글자 두 줄의 가운데에 맞춥니다.
+        */}
+        <div className="relative">
+          <p className="text-[13px] font-bold text-ink-muted">
+            {selMonth}월 {selDay}일 ({selWeekday})
           </p>
-        ) : (
+          {selectedItems.length === 0 ? (
+            <>
+              <p className="py-2 text-[14px] text-ink-faint">일정이 없어요</p>
+              <span className="absolute top-[calc(50%-4px)] right-[-6px] -translate-y-1/2">{addButton}</span>
+            </>
+          ) : null}
+        </div>
+        {selectedItems.length === 0 ? null : (
           <ul className="mt-1.5 flex flex-col gap-1">
             {selectedItems.map((item) => {
               /*
