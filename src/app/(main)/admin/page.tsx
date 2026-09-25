@@ -550,7 +550,17 @@ function NewsDraftSection() {
   );
 }
 
-function NewsDraftCard({ draft }: { draft: WeeklyDraftDoc }) {
+/*
+ * 예전 초안의 소식지 링크(/letter/{주}-{열쇠})를 앱의 그 주 원우 소식 화면(/news/week/{주})으로 바꿔 씁니다
+ * (2026-09-25 사용자 "카톡으로 보낼 링크를 앱의 원우소식 창 링크로"). 새 초안은 서버가 처음부터 새 링크로 만듭니다
+ * (api/news/weekly-close) — 이건 그 전에 저장된 초안을 위한 것입니다.
+ */
+function withAppWeekLink(text: string): string {
+  return text.replace(/\/letter\/(\d{4}-\d{2}-\d{2})-[0-9a-f]+/g, "/news/week/$1");
+}
+
+function NewsDraftCard({ draft: stored }: { draft: WeeklyDraftDoc }) {
+  const draft = { ...stored, draftText: withAppWeekLink(stored.draftText) };
   const [copied, setCopied] = useState(false);
   /*
    * 폰의 공유 창 — 카카오톡 → 원우 단톡방을 고르면 문구가 그대로 갑니다 (2026-09-24 사용자 "단톡방에 올리기").

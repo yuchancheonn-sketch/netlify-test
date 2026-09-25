@@ -14,7 +14,8 @@ import { fetchWeekPosts, letterPath } from "@/lib/week-letter-server";
  * App Hosting에는 예약 실행이 없고 Cloud Functions는 결제수단이 필요해서 GitHub의 무료 예약 실행을 씁니다.
  *
  *   1. 이번 주(지난 화요일~오늘 월요일)에 올라온 원우 소식 수를 세고
- *   2. "이번주 원우 소식이에요" + 로그인 없이 보는 소식지 주소(/letter/{그 주}-{열쇠}, app/letter)를 weeklyDrafts/{그 주}에 적고
+ *   2. "이번주 원우 소식이에요" + 앱의 그 주 원우 소식 화면 주소(/news/week/{그 주})를 weeklyDrafts/{그 주}에 적고
+ *      (2026-09-25부터. 그 전엔 로그인 없이 보는 소식지 /letter/{그 주}-{열쇠}였습니다.)
  *   3. 운영진에게 "초안이 준비됐어요" 푸시를 보냅니다.
  * 보내기는 운영진이 /admin "원우 소식" 탭의 "카톡으로 보내기"(폰 공유 창)나 복사로 원우 단톡방에 올립니다
  * (같은 날 사용자 선택 — 카카오톡 채널 가입자에게 자동으로 보내는 길은 유료 비즈니스 메시지뿐이라 쓰지 않음).
@@ -61,9 +62,14 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, weekId, postCount: 0, skipped: true });
   }
 
+  /*
+   * 링크는 앱의 그 주 원우 소식 화면(/news/week/{주}) — 2026-09-25 사용자 요청
+   * ("카톡으로 보낼 링크를 앱의 원우소식 창 링크로"). 그 전엔 로그인 없이 보는 소식지(/letter/…, 위 path)였습니다.
+   * 소식지 주소 자체는 그대로 살아 있어, 이미 나간 링크도 열립니다.
+   */
   const draftText =
     `이번주 원우 소식이에요 📮\n${weekLabel} · 소식 ${posts.length}개\n\n` +
-    `${APP_URL}${path}`;
+    `${APP_URL}/news/week/${weekId}`;
 
   await db.collection("weeklyDrafts").doc(weekId).set({
     weekId,
