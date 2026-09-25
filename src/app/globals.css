@@ -652,6 +652,24 @@ input[type="time"]::-webkit-date-and-time-value {
   animation: splash-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/*
+ * 로딩 화면이 걷힐 때 0.3초 동안 옅어집니다 (2026-09-26 사용자 "로딩 화면이 사라지는 속도랑 아이폰 맨 위 주황이
+ * 사라지는 속도가 안 맞아"). 아이폰은 시계 줄 색을 한 번에 바꾸지 않고 짧게 옮겨 가는데, 로딩 화면만 뚝 사라지면
+ * 시계 줄 주황이 혼자 남아 보였습니다. 흐림(blur) 없이 투명도만 — 흐림은 같은 날 사용자가 별로라고 해서 뺐습니다.
+ */
+@keyframes splash-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@utility animate-splash-out {
+  animation: splash-out 0.3s ease-out both;
+}
+
 /* 모달·바텀시트가 아래에서 부드럽게 올라오는 효과 */
 @keyframes sheet-up {
   from {
