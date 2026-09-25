@@ -197,7 +197,8 @@ export default function DosanQuizCard() {
             </p>
             <div className="mt-3">
               <PrimaryButton onClick={() => goToLogin()} size="compact">
-                나의 등수 보러가기
+                {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
+                <span className="-translate-y-px">나의 등수 보러가기</span>
               </PrimaryButton>
             </div>
           </>
