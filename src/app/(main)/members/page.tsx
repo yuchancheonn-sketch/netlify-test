@@ -359,7 +359,8 @@ export default function MembersPage() {
                     (사용자 "검색 박스랑 기본 배경의 회색이랑 같은 색이 되도록"). 흰 구역 위라 또렷이 보입니다.
                     어두운 화면에서는 canvas(#121315)가 surface보다 어두워 칸이 한 단 들어가 보입니다.
               */
-              className="w-full rounded-[14px] bg-canvas pt-[8px] pr-14 pb-[10px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
+              // pt-[8.5px] pb-[10.5px] — 높이 1px 늘림, 위아래 0.5px씩(글씨 1px 위로 둔 차이는 그대로) — 2026-09-26 사용자 요청.
+              className="w-full rounded-[14px] bg-canvas pt-[8.5px] pr-14 pb-[10.5px] pl-5 text-[16px] text-ink outline-none placeholder:text-[15px] placeholder:text-ink-muted"
             />
           </div>
 
