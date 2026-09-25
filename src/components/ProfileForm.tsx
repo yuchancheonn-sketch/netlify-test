@@ -368,7 +368,12 @@ export default function ProfileForm({
    * 수정 화면의 한 줄 칸 높이는 원우 정보 창(MemberEditSheet)과 같은 약 44px(위아래 10px) — 2026-09-26 사용자
    * "회색 박스 높이를 원우 정보 창과 똑같게"(그 전엔 위 11px·아래 15px로 약 50px). 처음 가입 화면은 그대로.
    */
-  const field = flat ? `${flatBox(inputClassName)} py-2.5!` : fieldClassName;
+  /*
+   * 글씨 1px 위로(2026-09-26 사용자 요청) — 입력칸은 글씨만 옮길 수 없어 위 9px·아래 11px로 나눕니다(높이 44px 그대로).
+   * ★ 끝에 띄어쓰기를 둡니다 — 아래 선택 상자들이 `${field}appearance-none …`처럼 바로 이어 붙여 씁니다.
+   *   띄어쓰기가 없으면 마지막 단어와 붙어 둘 다 깨졌습니다(기수 칸 화살표가 둘로 보이고 높이가 안 맞던 까닭).
+   */
+  const field = flat ? `${flatBox(inputClassName)} pt-[9px]! pb-[11px]! ` : `${fieldClassName} `;
   const textareaClassName = flat ? flatBox(inputClassName) : inputClassName;
   const cardClassName = flat
     ? flatBox("bg-surface shadow-[var(--shadow-card)]")
@@ -563,17 +568,19 @@ export default function ProfileForm({
                   ★ 이름 위의 풀 그림 글자(🌿 일반 원우 · 🌱 대학생 원우)는 2026-09-15 사용자 요청으로 없앴습니다.
                     그래서 칸이 그 줄(약 33px + 사이 6px)만큼 낮아졌고, 이름 한 줄만 가운데 섭니다.
                 */
-                // 수정 화면은 py-[11.5px] — 원우 정보 창의 구분 칸과 같은 높이 (2026-09-26 사용자 "높이 똑같게").
+                // 수정 화면은 py-[9.5px] — 테두리 2px씩 + 글줄 21px + 위아래 9.5px = 44px, 다른 칸들과 같은 높이
+                // (2026-09-26 사용자 "높이 똑같게" 11.5px → 9.5px).
                 className={`flex flex-1 items-center justify-center rounded-2xl border-2 transition ${
-                  flat ? "py-[11.5px]" : "py-[13px]"
+                  flat ? "py-[9.5px]" : "py-[13px]"
                 } ${
                   selected
                     ? "border-brand-500 bg-brand-50"
                     : `border-transparent ${cardClassName}`
                 }`}
               >
+                {/* 수정 화면은 3px 위로 — 2px에서 1px 더 (2026-09-26 사용자 "글씨 1px씩 위로"). */}
                 <span
-                  className={`-translate-y-[2px] text-[14px] font-bold ${
+                  className={`${flat ? "-translate-y-[3px]" : "-translate-y-[2px]"} text-[14px] font-bold ${
                     selected ? "text-brand-500" : "text-ink-soft"
                   }`}
                 >
