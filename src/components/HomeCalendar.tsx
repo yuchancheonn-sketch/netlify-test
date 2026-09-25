@@ -320,7 +320,15 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           ) : null}
         </div>
         {selectedItems.length === 0 ? null : (
-          <ul className="mt-1.5 flex flex-col gap-1">
+          /*
+            일정이 있는 날은 + 단추가 일정 목록의 세로 가운데, 오른쪽 끝에 섭니다 (2026-09-26 사용자 "내 폰 캘린더에 연결보다
+            위, 일정 막대 가운데에" — 그 전엔 목록·연결 단추 아래 맨 끝). 일정이 하나면 그 막대의 가운데와 같습니다.
+            pr-12 — + 자리(40px)만큼 목록 오른쪽을 비워, 원우에게 보이는 × 삭제 단추와 겹치지 않게 합니다.
+            right-[-6px]는 "일정이 없어요" 줄의 + 와 같은 가로 자리입니다.
+          */
+          <div className="relative mt-1.5 pr-12">
+          <span className="absolute top-1/2 right-[-6px] -translate-y-1/2">{addButton}</span>
+          <ul className="flex flex-col gap-1">
             {selectedItems.map((item) => {
               /*
                 ★ 한 줄 모양은 홈의 "다가오는 일정" 박스(components/EventCard.tsx의 EventDdayCard)와 같습니다
@@ -402,6 +410,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               );
             })}
           </ul>
+          </div>
         )}
         {deleteError ? (
           <p role="alert" className="mt-1 text-[13px] font-medium text-danger">
@@ -427,10 +436,6 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         </button>
       )}
 
-      {/* 일정이 있는 날은 + 단추가 목록 아래 오른쪽 끝에 섭니다(없는 날은 위 "일정이 없어요" 줄 안). 오른쪽 2px·위 1px 옮김. */}
-      {selectedItems.length > 0 ? (
-        <div className="mt-1 flex translate-x-[2px] -translate-y-[4px] justify-end">{addButton}</div>
-      ) : null}
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
       {adding ? <EventSheet initialDate={selected} onClose={() => setAdding(false)} /> : null}
