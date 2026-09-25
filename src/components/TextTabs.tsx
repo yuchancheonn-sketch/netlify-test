@@ -86,7 +86,7 @@ export default function TextTabs<T extends string>({
   const textClass = header
     ? "text-[22px] tracking-tight"
     : underline
-      ? "text-[16px]"
+      ? "text-[17px]" // 17px — 2026-09-26 사용자 "1px씩 더 키워줘"(16px에서). 19px는 칸을 넘칩니다(위 설명).
       : "text-[19px]";
 
   /*
