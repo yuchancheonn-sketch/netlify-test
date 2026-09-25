@@ -41,7 +41,11 @@ const MEMBER_TYPES: { value: MemberType; label: string }[] = [
  * 공용 inputClassName(ui.tsx, 위아래 16px)은 다른 화면도 쓰므로 건드리지 않고 여기서만 15.5px씩으로 바꿔 씁니다.
  * "py-[15.5px]"가 소스에 글자 그대로 있어야 Tailwind가 CSS를 만듭니다.
  */
-const fieldClassName = inputClassName.replace("py-4", "py-[15.5px]");
+/*
+ * ★ 2026-09-26부터 흰 시트 위 옅은 회색 칸, 그림자 없음, 높이 약 44px — 일정 등록·투표 만들기 시트와 같은 모양
+ *   (사용자 "원우 정보 수정하기 창들도 흰색 배경에 회색 박스들로"). 그 전엔 회색 시트에 흰 칸 + 그림자(위아래 15.5px).
+ */
+const fieldClassName = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
 
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -229,7 +233,8 @@ export default function MemberEditSheet({
       */}
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-canvas sm:rounded-[16px]"
+        // 흰 바탕(2026-09-26, bg-canvas에서) — 칸은 위 fieldClassName의 회색.
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
         style={sheetStyle}
       >
         {/* 손잡이 바 — 위아래로 넉넉한 손끝 자리를 두어 작은 바보다 누르기 쉽습니다. */}
@@ -314,7 +319,7 @@ export default function MemberEditSheet({
                     className={`flex-1 rounded-2xl border-2 py-[11.5px] text-[14px] font-bold transition ${
                       selected
                         ? "border-brand-500 bg-brand-50 text-brand-500"
-                        : "border-transparent bg-surface text-ink-soft shadow-[var(--shadow-card)]"
+                        : "border-transparent bg-canvas text-ink-soft"
                     }`}
                   >
                     {label}
@@ -406,7 +411,7 @@ export default function MemberEditSheet({
             {videoError ? (
               <FieldError>{videoError}</FieldError>
             ) : videoThumb ? (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-[var(--shadow-card)]">
+              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-canvas p-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={videoThumb}
@@ -444,7 +449,7 @@ export default function MemberEditSheet({
           {isMine ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[15.5px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-canvas py-[15.5px] text-[15px] font-bold text-ink-soft"
             >
               사진·자기소개까지 고치기
             </Link>
