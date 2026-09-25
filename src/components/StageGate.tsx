@@ -100,7 +100,9 @@ export function SplashScreen() {
         // w-[150px] — 로고 크기 (2026-09-25 사용자 요청: 140px → 160px로 키웠다가 150px로 줄임).
         // -mt-5 — 로고를 화면 정가운데보다 10px 위로 (2026-09-25 사용자 요청). flex 가운데 정렬이라
         //   위 여백 -20px이면 그림이 절반인 10px만큼 올라갑니다. 등장 애니메이션(transform)과 겹치지 않게 margin으로 뺍니다.
-        className="animate-splash-in -mt-5 h-auto w-[150px] brightness-0 invert"
+        //   ★ 홈 화면에 추가한 앱(display-mode: standalone)에서만 올립니다 (2026-09-26 사용자 "카카오톡에서 열면 정가운데로").
+        //     카카오톡·Safari 안에서는 위아래 주소창·도구줄 사이가 기준이라 올리지 않아야 정가운데로 보입니다.
+        className="animate-splash-in h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5"
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
