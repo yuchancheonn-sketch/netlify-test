@@ -110,11 +110,12 @@ export function EventDdayCard({
         <span className="mt-[9px] flex gap-2.5">
           {/* 막대 3px — 같은 날 사용자 "두께 좀 줄여줘"(4px, w-1에서). */}
           {/*
-            mt-[7.5px] — 막대 위쪽 끝을 제목 글자의 윗머리 높이에 맞춥니다 (같은 날 사용자 요청. 그 전엔 0.5px씩 두 번 줄여 1px).
-            제목 줄(17px, 줄 높이 1.375)은 글자 위에 빈 줄 간격이 있어, 줄 맨 위보다 약 7.5px 아래에서 글자가 시작합니다
-            (사용자 캡처에서 잰 값). 제목 크기·줄 높이를 바꾸면 이 값도 같이. 아래 끝은 그대로.
+            mt-[4px] — 막대 위쪽 끝을 제목 글자의 윗머리 높이에 맞춥니다 (같은 날 사용자 요청. 그 전엔 0.5px씩 두 번 줄여 1px).
+            제목 줄(17px, 줄 높이 1.375)은 글자 위에 빈 줄 간격이 있어, 줄 맨 위보다 약 4px 아래에서 한글 윗머리가 시작합니다
+            (글꼴 치수로 셈: 글줄 위 여백 + 한글이 글꼴 윗선보다 낮게 그려지는 몫 − 글 덩어리를 올린 0.5px).
+            캡처로 재어 7.5px로 했다가 "너무 줄었다"고 해서 계산값으로 고쳤습니다. 제목 크기·줄 높이를 바꾸면 이 값도 같이.
           */}
-          <span aria-hidden="true" className="mt-[7.5px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
+          <span aria-hidden="true" className="mt-[4px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
           {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
           <span className="min-w-0 flex-1 -translate-y-[0.5px]">
             {/*
