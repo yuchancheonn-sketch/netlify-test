@@ -272,7 +272,8 @@ function HeaderIconLink({
  * 알림함을 한 번도 연 적이 없으면 가입한 시각을 기준으로 삼습니다 — 안 그러면 새로 들어온 원우에게
  * 지난 알림 전부가 "새 알림"으로 켜집니다.
  */
-function HeaderBellLink({ tone }: { tone: "canvas" | "surface" }) {
+// tone은 점의 테 색에 쓰던 값인데 테를 없애(2026-09-26) 지금은 쓰지 않습니다. 부르는 쪽은 그대로 둡니다.
+function HeaderBellLink({ tone: _tone }: { tone: "canvas" | "surface" }) {
   const { user, profile } = useAuth();
   const { data: notices } = useNotices(cohortOf(profile?.cohort));
   const seenAt = useNoticesSeenAt(user?.uid);
@@ -285,11 +286,13 @@ function HeaderBellLink({ tone }: { tone: "canvas" | "surface" }) {
     <HeaderIconLink href="/notifications" label={hasNew ? "알림 열기 (새 알림 있음)" : "알림 열기"}>
       <BellIcon className={HEADER_ICON_SIZE} />
       {hasNew ? (
+        /*
+          테두리 없이 빨간색으로만 채운 점 (2026-09-26 사용자 요청). 예전엔 제목 줄 바탕색 2px 테(ring)를 둘러
+          종 선과 떼어 보이게 했습니다 — 되살리려면 ring-2 + tone에 따라 ring-surface/ring-canvas.
+        */
         <span
           aria-hidden="true"
-          className={`absolute top-[7px] right-[8px] h-2 w-2 rounded-full bg-danger ring-2 ${
-            tone === "surface" ? "ring-surface" : "ring-canvas"
-          }`}
+          className="absolute top-[7px] right-[8px] h-2 w-2 rounded-full bg-danger"
         />
       ) : null}
     </HeaderIconLink>
