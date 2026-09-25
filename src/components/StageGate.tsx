@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth, type AuthStage } from "@/lib/auth-context";
@@ -74,6 +74,8 @@ export default function StageGate({
  * 한쪽만 바뀌므로 그대로 함께 씁니다.
  */
 export function SplashScreen() {
+  /** 로고 그림을 다 받았는지 — 받은 뒤에 떠오르는 애니메이션을 겁니다(아래 Image 주석). */
+  const [logoReady, setLogoReady] = useState(false);
   return (
     /*
       ★ fixed inset-0 — 로고를 **보이는 화면의 정가운데**에 둡니다 (2026-09-15 사용자 요청).
@@ -108,7 +110,19 @@ export function SplashScreen() {
         //   위 여백 -20px이면 그림이 절반인 10px만큼 올라갑니다. 등장 애니메이션(transform)과 겹치지 않게 margin으로 뺍니다.
         //   ★ 홈 화면에 추가한 앱(display-mode: standalone)에서만 올립니다 (2026-09-26 사용자 "카카오톡에서 열면 정가운데로").
         //     카카오톡·Safari 안에서는 위아래 주소창·도구줄 사이가 기준이라 올리지 않아야 정가운데로 보입니다.
-        className="animate-splash-in h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5"
+        /*
+          ★ 등장 애니메이션(animate-splash-in, 아래에서 8px 떠오르며 나타남)은 그림이 다 받아진 뒤에 시작합니다
+            (2026-09-26 사용자 "전 버전처럼 로고가 자연스럽게 살짝 올라오게"). 처음부터 걸어 두면 그림을 받는 동안
+            0.5초짜리 애니메이션이 먼저 끝나 버려, 그림이 뒤늦게 뚝 나타나 보였습니다.
+            받기 전에는 투명(opacity-0). 이미 받아 둔 그림은 ref에서 complete로 바로 알아챕니다.
+        */
+        onLoad={() => setLogoReady(true)}
+        ref={(image) => {
+          if (image?.complete && image.naturalWidth > 0) setLogoReady(true);
+        }}
+        className={`h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
+          logoReady ? "animate-splash-in" : "opacity-0"
+        }`}
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>

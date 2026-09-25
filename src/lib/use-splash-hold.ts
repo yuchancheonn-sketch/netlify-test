@@ -3,13 +3,13 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * 앱을 연 뒤 로딩 화면(SplashScreen)을 최소한 보여 줄 시간 (2026-09-26 사용자 "로딩중 화면이 무조건 1.5초 정도 보이도록").
+ * 앱을 연 뒤 로딩 화면(SplashScreen)을 최소한 보여 줄 시간 — 1초 (2026-09-26 사용자 "무조건 1.5초 정도" → 같은 날 "1초로 줄여줘").
  * 로그인 확인이 금방 끝나도 이 시간이 지나기 전에는 로딩 화면을 걷지 않습니다(components/StageGate.tsx).
  *
  * 기준은 "페이지를 연 순간"(performance.now()가 0인 때)입니다 — 앱을 처음 열거나 새로고침할 때만 걸리고,
  * 앱 안에서 탭을 옮겨 다닐 때는 이미 지났으므로 다시 기다리지 않습니다.
  */
-export const SPLASH_MIN_MS = 1500;
+export const SPLASH_MIN_MS = 1000;
 
 let done = false;
 const listeners = new Set<() => void>();
