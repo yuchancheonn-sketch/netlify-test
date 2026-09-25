@@ -115,7 +115,14 @@ export function EventDdayCard({
             (글꼴 치수로 셈: 글줄 위 여백 + 한글이 글꼴 윗선보다 낮게 그려지는 몫 − 글 덩어리를 올린 0.5px).
             캡처로 재어 7.5px로 했다가 "너무 줄었다"고 해서 계산값으로 고쳤습니다. 제목 크기·줄 높이를 바꾸면 이 값도 같이.
           */}
-          <span aria-hidden="true" className="mt-[4px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
+          {/*
+            막대 색 — 도산아카데미 사이트에서 이어진 공식 일정(external)은 주황, 원우가 올린 우리 기수 일정은 먹색
+            (2026-09-25 사용자 요청. 홈 캘린더의 고른 날 일정 줄과 같은 기준).
+          */}
+          <span
+            aria-hidden="true"
+            className={`mt-[4px] w-[3px] shrink-0 self-stretch rounded-full ${external ? "bg-brand-500" : "bg-ink"}`}
+          />
           {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
           <span className="min-w-0 flex-1 -translate-y-[0.5px]">
             {/*

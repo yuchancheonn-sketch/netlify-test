@@ -2,10 +2,15 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import { useRequireLogin } from "@/components/LoginRequired";
+import { useRouter } from "next/navigation";
+import { deleteDoc, doc } from "firebase/firestore";
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
+import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { Spinner } from "@/components/ui";
-import { inCohort } from "@/lib/cohort";
+import { useAuth } from "@/lib/auth-context";
+import { cohortOf, inCohort } from "@/lib/cohort";
+import { db } from "@/lib/firebase";
+import { commitWrite } from "@/lib/firestore-commit";
 import {
   calendarSubscribeLinks,
   isCalendarLinked,
@@ -38,6 +43,8 @@ const dateKey = (year: number, month: number, day: number) => `${year}-${pad(mon
 interface DayItem {
   key: string;
   kind: "cohort" | "academy";
+  /** 우리 기수 일정(events)의 문서 id — 지울 때 씁니다. 도산아카데미 일정은 비어 있습니다. */
+  eventId: string;
   title: string;
   time: string;
   location: string;
@@ -67,6 +74,28 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
   const events = useEvents();
   const academy = useAcademyEvents();
 
+  /*
+   * 우리 기수 일정 더하기·지우기 (2026-09-25 사용자 요청 — "해당 기수 원우들이 자유롭게 일정 추가, 지울려면 지울 수도").
+   * 지우기는 그 기수 원우 누구나(운영진은 어느 기수든) — firestore.rules의 events delete와 같은 기준입니다.
+   * 도산아카데미 사이트에서 이어진 일정은 앱에서 지울 수 없어 단추를 달지 않습니다.
+   */
+  const router = useRouter();
+  const isGuest = useIsGuest();
+  const { profile, isAdmin } = useAuth();
+  const canDelete = !isGuest && (isAdmin || cohortOf(profile?.cohort) === cohort);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function removeEvent(item: DayItem) {
+    if (!window.confirm(`"${item.title}" 일정을 삭제할까요? 되돌릴 수 없어요.`)) return;
+    setDeleteError(null);
+    try {
+      // 지우면 useEvents 구독이 알아서 이 줄과 날짜 밑 점을 내립니다.
+      await commitWrite(deleteDoc(doc(db, "events", item.eventId)));
+    } catch {
+      setDeleteError("일정을 삭제하지 못했어요.");
+    }
+  }
+
   // 도산아카데미 새 글 일정 넣기 — 상태는 건드리지 않습니다(들어오면 useAcademyEvents가 받아 옵니다).
   useEffect(() => {
     requestAcademySync();
@@ -79,6 +108,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     push(event.date, {
       key: `e-${event.id}`,
       kind: "cohort",
+      eventId: event.id,
       title: event.title,
       time: timeLabel(event.startTime, event.endTime),
       location: event.location,
@@ -89,6 +119,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     push(event.date, {
       key: `a-${event.id}`,
       kind: "academy",
+      eventId: "",
       title: event.title,
       time: timeLabel(event.startTime, event.endTime),
       location: event.location,
@@ -275,26 +306,45 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                 </>
               );
               return (
-                <li key={item.key}>
+                <li key={item.key} className="flex items-center gap-1">
                   {item.kind === "academy" ? (
                     <a
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex gap-2.5 rounded-xl py-1.5 transition active:bg-fill"
+                      className="flex min-w-0 flex-1 gap-2.5 rounded-xl py-1.5 transition active:bg-fill"
                     >
                       {body}
                     </a>
                   ) : (
-                    <Link href={item.href} className="flex gap-2.5 rounded-xl py-1.5 transition active:bg-fill">
+                    <Link
+                      href={item.href}
+                      className="flex min-w-0 flex-1 gap-2.5 rounded-xl py-1.5 transition active:bg-fill"
+                    >
                       {body}
                     </Link>
                   )}
+                  {/* 우리 기수 일정만 오른쪽에 옅은 × — 누르면 확인 뒤 지웁니다(2026-09-25). */}
+                  {item.kind === "cohort" && canDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => void removeEvent(item)}
+                      aria-label={`${item.title} 일정 삭제`}
+                      className="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill"
+                    >
+                      <XMarkIcon className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
         )}
+        {deleteError ? (
+          <p role="alert" className="mt-1 text-[13px] font-medium text-danger">
+            {deleteError}
+          </p>
+        ) : null}
       </div>
 
       {/*
@@ -313,6 +363,24 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           내 폰 캘린더에 연결
         </button>
       )}
+
+      {/*
+        오른쪽 아래 주황 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운
+        등록 화면(/events/new)을 열고, 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
+      */}
+      <div className="mt-1 flex justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            if (requireLogin()) return;
+            router.push(`/events/new?date=${selected}&from=home`);
+          }}
+          aria-label="일정 추가"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95"
+        >
+          <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
+        </button>
+      </div>
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
     </section>

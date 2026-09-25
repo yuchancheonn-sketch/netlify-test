@@ -11,7 +11,7 @@ import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { inCohort } from "@/lib/cohort";
+import { cohortOf, inCohort } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
 import { formatMonthDay, todayString } from "@/lib/format";
@@ -189,9 +189,12 @@ export default function EventsPage() {
  * 둘 다 없으면 아무것도 그리지 않아 카드가 한 줄 그대로입니다.
  */
 function EventExtras({ event }: { event: EventDoc }) {
-  const { user, isAdmin } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const canManage = isAdmin || event.createdBy === user?.uid;
+  const canEdit = isAdmin || event.createdBy === user?.uid;
+  // 삭제는 그 기수 원우 누구나 (2026-09-25 — firestore.rules의 events delete와 같은 기준).
+  const canDelete = canEdit || (!!profile && cohortOf(profile.cohort) === cohortOf(event.cohort));
+  const canManage = canEdit || canDelete;
 
   if (!event.description && !canManage) return null;
 
@@ -215,12 +218,14 @@ function EventExtras({ event }: { event: EventDoc }) {
       {canManage ? (
         /* 원우수첩의 "수정" 단추와 같은 결의 작은 테두리 단추. 크기 뒤 !는 globals.css의 button 규칙 때문입니다. */
         <div className="mt-3 flex justify-end gap-2">
-          <Link
-            href={`/events/${event.id}/edit`}
-            className="rounded-full border border-line px-3 py-1 text-[13px] font-bold text-ink-soft transition active:scale-95"
-          >
-            수정
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/events/${event.id}/edit`}
+              className="rounded-full border border-line px-3 py-1 text-[13px] font-bold text-ink-soft transition active:scale-95"
+            >
+              수정
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={handleDelete}

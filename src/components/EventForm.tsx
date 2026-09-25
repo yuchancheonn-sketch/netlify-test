@@ -21,7 +21,17 @@ import type { EventDoc } from "@/lib/types";
  * 등록은 원우 누구나, 수정은 그 일정을 올린 사람과 운영진만 이 폼을 봅니다.
  * (권한 확인은 이 폼이 아니라 Firestore 보안 규칙이 최종적으로 합니다.)
  */
-export default function EventForm({ event }: { event?: EventDoc }) {
+export default function EventForm({
+  event,
+  initialDate = "",
+  doneHref = "/events",
+}: {
+  event?: EventDoc;
+  /** 새 일정의 날짜 칸을 미리 채울 값 — 홈 캘린더의 + 단추가 고른 날을 넘깁니다(2026-09-25). */
+  initialDate?: string;
+  /** 저장한 뒤 갈 곳. 홈 캘린더에서 왔으면 홈으로 돌아갑니다(2026-09-25). */
+  doneHref?: string;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   /**
@@ -32,7 +42,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
   const editing = Boolean(event);
 
   const [title, setTitle] = useState(event?.title ?? "");
-  const [date, setDate] = useState(event?.date ?? "");
+  const [date, setDate] = useState(event?.date ?? initialDate);
   const [startTime, setStartTime] = useState(event?.startTime ?? "");
   const [endTime, setEndTime] = useState(event?.endTime ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
@@ -103,7 +113,7 @@ export default function EventForm({ event }: { event?: EventDoc }) {
       if (!event && result === "saved") {
         void requestPush("event", { eventId: target.id });
       }
-      router.replace("/events");
+      router.replace(doneHref);
     } catch (caught) {
       setSaveError(
         saveErrorMessage(

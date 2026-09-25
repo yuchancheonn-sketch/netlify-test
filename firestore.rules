@@ -220,8 +220,12 @@ service cloud.firestore {
      * 번개 모임처럼 원우가 직접 여는 일정이 많아서입니다. 올릴 때 createdBy가 본인이어야
      * 합니다 — 새 일정 알림(/api/push/event)도 그 값으로 보낸 사람을 확인합니다.
      *
-     * 고치고 지우는 것은 올린 사람과 운영진만. 남이 올린 일정이 조용히 바뀌거나
-     * 사라지면 원우들이 헷갈립니다. createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
+     * 고치는 것은 올린 사람과 운영진만. 남이 올린 일정이 조용히 바뀌면 원우들이 헷갈립니다.
+     * createdBy는 고쳐서 넘겨받을 수 없게 묶습니다.
+     *
+     * ★ 지우는 것은 **그 기수 원우 누구나** (2026-09-25 사용자 "해당 기수 원우들이 자유롭게 일정 추가…
+     *   지울려면 지울 수도"). 그 전엔 올린 사람과 운영진만이었습니다. 기수 칸이 없는 옛 일정은 10기로 봅니다.
+     *   도산아카데미 일정(academyEvents)은 따로라 여기 규칙과 상관없이 앱에서 지울 수 없습니다.
      */
     match /events/{eventId} {
       allow read: if true;
@@ -232,7 +236,9 @@ service cloud.firestore {
                     && request.resource.data.get('createdBy', '')
                          == resource.data.get('createdBy', '');
       allow delete: if isMember()
-                    && (resource.data.get('createdBy', '') == request.auth.uid || isAdmin());
+                    && (resource.data.get('createdBy', '') == request.auth.uid
+                        || isAdmin()
+                        || resource.data.get('cohort', '10기') == myCohort());
 
       // rsvps(참석/불참/미정)는 2026-09-11에 "참석하시나요?"를 없애며 규칙에서도 뺐습니다.
     }
