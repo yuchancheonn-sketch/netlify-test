@@ -37,6 +37,20 @@ const notoSerifKr = Noto_Serif_KR({
 });
 
 export const metadata: Metadata = {
+  /*
+   * 링크 미리보기(카카오톡·문자 등) — 2026-09-26 사용자 "링크 미리보기가 로딩 화면처럼 보이게".
+   * 그림은 app/opengraph-image.png(주황 바탕 + 흰 로고, scripts/make-og-image.mjs로 만듦)을 Next.js가 알아서 붙입니다.
+   * metadataBase는 그 그림 주소를 https://aegiaeta.web.app/… 온전한 주소로 적게 하려는 것입니다.
+   * 예전엔 미리보기 그림·설명이 없어, 카카오톡이 페이지 안의 로고 원본을 크게 잘라 쓰고 설명은 "여기를 눌러 링크를 확인하세요"였습니다.
+   */
+  metadataBase: new URL("https://aegiaeta.web.app"),
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: APP_NAME,
+    title: APP_NAME,
+    description: APP_TAGLINE,
+  },
   title: APP_NAME,
   description: APP_TAGLINE,
   applicationName: APP_NAME,
