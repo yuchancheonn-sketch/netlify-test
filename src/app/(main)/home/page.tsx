@@ -63,15 +63,19 @@ export default function HomePage() {
         글씨는 다른 탭 제목("원우수첩", "자료" …)과 크기·굵기까지 똑같습니다.
         운영진에게만 이름 옆에 기수 고르기가 붙습니다.
       */}
+      {/*
+        ★ 홈의 앱 이름("애기애타")만 주황·24.5px (2026-09-26 사용자 "다른 탭은 그대로, 왼쪽 위 애기애타만 주황색으로,
+          2.5px 키워줘"). 다른 탭 제목은 PageHeader 기본(22px 먹색) 그대로이고, 운영진의 기수 고르개도 그대로 먹색입니다.
+      */}
       <PageHeader
         title={
           canSwitch ? (
             <span className="flex items-center gap-2">
-              {APP_DEFINITION_TITLE}
+              <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            APP_DEFINITION_TITLE
+            <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
           )
         }
         right={<HeaderActions />}
