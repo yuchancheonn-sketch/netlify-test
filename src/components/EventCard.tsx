@@ -102,19 +102,24 @@ export function EventDdayCard({
           ) : null}
         </span>
 
-        {/* 주황 막대 + 글 — 막대는 글이 두세 줄로 늘면 그만큼 길어집니다(self-stretch). */}
-        <span className="mt-2.5 flex gap-2.5">
+        {/*
+          주황 막대 + 글 — 막대는 글이 두세 줄로 늘면 그만큼 길어집니다(self-stretch).
+          mt-[9px] — 막대와 글을 통째로 1px 위로 (같은 날 사용자 요청, 10px(mt-2.5)에서).
+        */}
+        <span className="mt-[9px] flex gap-2.5">
           {/* 막대 3px — 같은 날 사용자 "두께 좀 줄여줘"(4px, w-1에서). */}
-          {/* mt-[0.5px] — 막대 위쪽 끝을 0.5px 짧게 (같은 날 사용자 요청). 아래 끝은 그대로. */}
-          <span aria-hidden="true" className="mt-[0.5px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
+          {/* mt-[1px] — 막대 위쪽 끝을 1px 짧게 (같은 날 사용자 "0.5px 줄여줘" 두 번). 아래 끝은 그대로. */}
+          <span aria-hidden="true" className="mt-[1px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
           {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
           <span className="min-w-0 flex-1 -translate-y-[0.5px]">
             {/*
               일정 이름 17px — 두 줄까지, 넘치면 "…"(line-clamp-2). 같은 날 사용자 요청으로
               끝까지 → 한 줄 → 두 줄. break-keep으로 한글은 낱말 단위로 넘깁니다.
               굵기 500(font-medium) — 같은 날 "아주 조금만 더 얇게"(600에서).
+              그 뒤 "아주 조금만 더 두껍게" — 600으로 돌아가면 너무 굵어서, 500 글씨에 0.25px 테두리를 둘러
+              500과 600 사이로 만듭니다([-webkit-text-stroke]). 더 두껍게는 0.4px쯤, 그 이상은 font-semibold.
             */}
-            <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep [overflow-wrap:anywhere]">
+            <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep [overflow-wrap:anywhere] [-webkit-text-stroke:0.25px_currentColor]">
               {event.title}
             </span>
             {/*
