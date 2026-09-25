@@ -1115,14 +1115,20 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onEdit}
-            className="mt-4 w-full rounded-2xl bg-brand-50 py-[10.75px] text-[15px] font-bold text-brand-500"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-50 py-[10.75px] text-[15px] font-bold text-brand-500"
           >
             {/* 남의 칸도 "정보 수정하기" (2026-09-15 사용자 요청 — 예전엔 "정보 채워주기") */}
+            {/*
+              앞 아이콘은 연필 선 아이콘(PencilIcon — 원우 목록 줄 오른쪽 연필과 같은 그림), 22px (2026-09-26 사용자
+              "아이콘을 이 그림으로 바꾸고 크기는 2배"; 그 전엔 글자 "✎"로 약 11px). 색은 글씨와 같은 주황.
+              22px은 글줄(22.5px)을 넘지 않아 단추 높이가 그대로입니다.
+            */}
+            <PencilIcon className="h-[22px] w-[22px] shrink-0" />
             {/*
               ★ 이 창의 단추들(1:1 채팅·전화·문자·정보 수정하기·닫기 등)은 위아래 10.75px — 15px 글씨(글줄 22.5px)와 합쳐
                 약 44px로 입력칸 높이와 같습니다 (2026-09-26 사용자 "박스들 높이 좀 줄여줘", 13.5px·15.5px에서).
             */}
-            ✎ {isMe ? "내 정보 수정하기" : "정보 수정하기"}
+            <span>{isMe ? "내 정보 수정하기" : "정보 수정하기"}</span>
           </button>
 
           {isMe ? (
