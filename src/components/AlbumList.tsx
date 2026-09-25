@@ -939,10 +939,11 @@ function AlbumCard({
           <div className="min-w-0 flex-1">
             {/*
               이름 20px + 호칭 "원우" (2026-09-22 사용자 요청 — 17px에서 키우고 호칭을 붙임).
+              → 18.5px (2026-09-25 사용자 "1.5px 줄여줘"). 뒷면도 같이. 호칭 "원우"(17px)는 그대로.
               호칭은 한 단 작고 옅게(17px·보통 굵기·ink-muted) 두어 이름이 먼저 읽힙니다.
               이름을 모를 때(authorName이 "원우")는 "원우 원우"가 되지 않게 호칭을 붙이지 않습니다.
             */}
-            <p className="truncate text-[20px] font-bold text-ink">
+            <p className="truncate text-[18.5px] font-bold text-ink">
               {authorName}
               {authorName !== "원우" ? (
                 <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
@@ -1036,7 +1037,7 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
     <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-[var(--shadow-card)]">
       {/* pt-3 — 앞면과 같게 (2026-09-25, 16px에서). */}
       <div className="shrink-0 px-5 pt-3">
-        <p className="truncate text-[20px] font-bold text-ink">
+        <p className="truncate text-[18.5px] font-bold text-ink">
           {authorName}
           {authorName !== "원우" ? (
             <span className="ml-1 text-[17px] font-medium text-ink-muted">원우</span>
