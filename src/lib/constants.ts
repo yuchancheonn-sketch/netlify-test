@@ -161,3 +161,5 @@ export const BRAND_COLOR = "#FD5702"; // 2026-09-22 #FF7210 → #FD5702 (디지�
  */
 /* globals.css의 --color-canvas와 항상 같은 값. 홈 화면에 추가한 앱이 켜질 때(스플래시)의 바탕색입니다. */
 export const BRAND_BACKGROUND = "#ECECEB"; // 2026-09-25 #EEEEED → #ECECEB (사용자 "아주 조금만 더 진한 회색")
+/** 어두운 화면의 앱 바탕 — globals.css의 --dark-canvas와 같은 값. 테마 색(app/layout.tsx)에 씁니다(2026-09-26). */
+export const BRAND_BACKGROUND_DARK = "#121315";

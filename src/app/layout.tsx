@@ -3,7 +3,13 @@ import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import ThemeSync from "@/components/ThemeSync";
 import { AuthProvider } from "@/lib/auth-context";
-import { APP_NAME, APP_SHORT_NAME, APP_TAGLINE, BRAND_COLOR } from "@/lib/constants";
+import {
+  APP_NAME,
+  APP_SHORT_NAME,
+  APP_TAGLINE,
+  BRAND_BACKGROUND,
+  BRAND_BACKGROUND_DARK,
+} from "@/lib/constants";
 import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
 
 /**
@@ -53,7 +59,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: BRAND_COLOR,
+  /*
+   * 테마 색 = 앱 바탕 회색(다크 모드는 다크 바탕) — 2026-09-26 사용자 "위아래가 주황색으로 이상하게 돼".
+   * 예전엔 주황(BRAND_COLOR)이었는데, 아이폰 Safari는 반투명 막이 덮인 확인 창이 뜨면 맨 위 시계 줄·아래 주소창 둘레를
+   * 페이지 바탕 대신 이 색으로 칠해서 위아래가 주황 띠가 됐습니다. 바탕색과 같게 두면 창이 떠도 티가 나지 않습니다.
+   * (안드로이드 크롬의 주소창 색도 이 값을 따라 주황 → 회색이 됩니다.)
+   */
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: BRAND_BACKGROUND },
+    { media: "(prefers-color-scheme: dark)", color: BRAND_BACKGROUND_DARK },
+  ],
   width: "device-width",
   initialScale: 1,
   // 홈 화면에 추가했을 때 노치·홈 인디케이터 영역까지 화면을 씁니다.

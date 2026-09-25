@@ -4,7 +4,6 @@ import {
   APP_SHORT_NAME,
   APP_TAGLINE,
   BRAND_BACKGROUND,
-  BRAND_COLOR,
 } from "@/lib/constants";
 
 /**
@@ -34,7 +33,8 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "any",
     lang: "ko",
     background_color: BRAND_BACKGROUND,
-    theme_color: BRAND_COLOR,
+    // 앱 바탕 회색 — 주황이면 확인 창이 뜰 때 상태바가 주황 띠가 됩니다(app/layout.tsx의 themeColor 주석, 2026-09-26).
+    theme_color: BRAND_BACKGROUND,
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
