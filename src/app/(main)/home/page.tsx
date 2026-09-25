@@ -63,6 +63,9 @@ export default function HomePage() {
    *   (같은 날 사용자 "주황색으로"; 처음엔 원래 파란 그림). 주황 토큰을 바꾸면 로고도 따라 바뀝니다.
    * - 크기 34.5px·2px 아래로 — 같은 날 사용자 "1px 내리고 1px 키워줘"(32px → 33px·1px),
    *   이어서 "1px 내리고 1.5px 늘려줘"(→ 34.5px·2px), "0.5px 올리고 1.5px 늘려줘"(→ 36px·1.5px).
+   * ★ 같은 날 "DOSAN ACADEMY 글자는 빼고 기러기만" — 기러기만 따낸 그림(goose-mark.png, scripts/make-goose-mark.mjs)으로
+   *   바꿨습니다. 그림이 가로로 넓어(652×427) 칸도 34×22px로 그 비율에 맞춥니다. 36px 로고 속 기러기와 비슷한 폭입니다.
+   *   글자 들어간 로고로 되돌리려면 mask를 goose.png로, 칸을 36px 정사각형·translate-y-[1.5px]로.
    */
   const appName = (
     <span className="flex items-center gap-1.5">
@@ -70,7 +73,7 @@ export default function HomePage() {
       <span
         role="img"
         aria-label="도산아카데미"
-        className="h-[36px] w-[36px] shrink-0 translate-y-[1.5px] bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+        className="h-[22px] w-[34px] shrink-0 bg-brand-500 [mask-image:url(/brand/goose-mark.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
       />
     </span>
   );
