@@ -421,7 +421,7 @@ export default function MembersPage() {
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.5px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
             // 자리 표시도 선 목록 모양으로(2026-09-26) — 흰 바탕 한 장, 줄마다 사진 자리만 회색.
-            <ul className="-mx-4 -mt-[18px] bg-surface px-4">
+            <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key} className="border-t border-line py-3 first:border-t-0">
                   <Skeleton className="h-[63px] w-[112px] rounded-2xl" />
@@ -484,7 +484,8 @@ export default function MembersPage() {
                 흰 바탕으로 둡니다: -mt-[18px](위 여백 없애기) · -mx-4 px-4(화면 끝까지 흰색) · bg-surface.
                 줄 사이 선은 li의 border-t(첫 줄 빼고). 박스로 되돌리려면 git 기록의 gap-[13.5px] 목록과 MemberRow의 흰 박스.
             */
-            <ul className="-mx-4 -mt-[18px] bg-surface px-4">
+            // pt-2 — 첫 원우 위 흰 여백을 8px 더 (2026-09-26 사용자 "첫 번째 사람 위 여백 더"; 줄 안 12px과 합쳐 20px).
+            <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
               {visible.map((entry) => (
                 <li key={entry.key} className="border-t border-line first:border-t-0">
                   <MemberRow
