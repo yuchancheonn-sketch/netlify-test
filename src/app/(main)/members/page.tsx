@@ -862,7 +862,8 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
       >
         <ChatIcon className="h-5 w-5" />
-        {name} 원우와 1:1 채팅
+        {/* 글씨만 1px 위로, 아이콘은 제자리 (2026-09-26 사용자 요청). 단추가 flex라 span에 transform이 먹습니다. */}
+        <span className="-translate-y-px">{name} 원우와 1:1 채팅</span>
       </button>
     </div>
   );
@@ -977,13 +978,14 @@ function MemberDetailSheet({
                 href={`tel:${phoneHref(entry.phone)}`}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
               >
-                📞 전화
+                {/* 글씨만 1px 위로, 그림 글자는 제자리 (2026-09-26 사용자 요청). */}
+                📞 <span className="-translate-y-px">전화</span>
               </a>
               <a
                 href={`sms:${phoneHref(entry.phone)}`}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-[13.5px] text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
               >
-                ✉️ 문자
+                ✉️ <span className="-translate-y-px">문자</span>
               </a>
             </div>
           ) : null}
