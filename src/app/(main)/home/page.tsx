@@ -65,8 +65,9 @@ export default function HomePage() {
    *   이어서 "1px 내리고 1.5px 늘려줘"(→ 34.5px·2px), "0.5px 올리고 1.5px 늘려줘"(→ 36px·1.5px), "1.5px 키워줘"(→ 37.5px).
    */
   // ★ 로고는 "애기애타" 왼쪽에 (2026-09-26 사용자 "로고를 애기애타 왼쪽으로 옮겨봐" — 처음엔 오른쪽).
+  // gap-1 — 로고와 글씨 사이 4px (같은 날 사용자 "조금만 더 붙여줘", 6px에서).
   const appName = (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-center gap-1">
       <span
         role="img"
         aria-label="도산아카데미"
