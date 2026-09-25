@@ -42,7 +42,7 @@ export function EventDdayCard({
   external = false,
 }: {
   /** 우리 기수 모임(EventDoc)이거나 도산아카데미 일정 — 카드가 쓰는 칸만 받습니다 (2026-09-23). */
-  event: Pick<EventDoc, "title" | "date" | "startTime" | "location">;
+  event: Pick<EventDoc, "title" | "date" | "startTime" | "location"> & { endTime?: string };
   /** 눌렀을 때 갈 곳. 기본은 모임 목록, 도산아카데미 일정은 원래 글 주소입니다. */
   href?: string;
   /** 앱 밖 주소(도산아카데미 글)면 새 창으로 엽니다. */
@@ -60,14 +60,24 @@ export function EventDdayCard({
    *   같은 날 잠깐 "D · 주황 머리띠"(카드 위 주황 띠 "다가오는 일정 D-7")였다가 이것으로 바꿨습니다.
    *   그 전(2026-09-23~25)에는 한 줄에 "D-7 10.02. 제목", 아래 장소·시간 두 줄 짜임이었습니다.
    */
+  /*
+   * ★ 지금은 "주황 막대" 짜임입니다 (2026-09-25 사용자가 홈 달력의 일정 줄 캡처를 보내며 "이렇게 해봐").
+   *     D-7 · 10.02 금                 ← 주황 D-day(막대 바로 위) + 회색 날짜
+   *   ┃ 제목(굵게, 길면 줄을 바꿔 끝까지)   >
+   *   ┃ 오후 6:30 ~ 오후 10:30 · 장소
+   *   막대·제목·회색 줄은 HomeCalendar의 고른 날 일정 줄과 같은 결(막대 w-1, break-keep)입니다.
+   *   바로 앞은 아래 주석의 "C · 큰 D-day"(왼쪽 큰 D-day | 세로 선 | 제목)였습니다 — 되살리려면 git 기록.
+   */
   const className =
-    // gap-3 — 세로 선 양옆 12px (2026-09-25 사용자 "디데이랑 제목이 너무 멀어, 가깝게" — 16px에서).
-    "flex items-center gap-3 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    "flex items-center gap-2 rounded-3xl bg-surface py-4 pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
-  /** D-day 아래 작은 날짜 — "10.02 금" */
+  /** D-day 옆 작은 날짜 — "10.02 금" */
   const dateText = date
     ? `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} ${WEEKDAYS[date.getDay()]}`
     : "";
+  /** "오후 6:30 ~ 오후 10:30" — 이제 줄을 바꿀 수 있어 끝나는 시간까지 적습니다(예전엔 한 줄이라 시작만). */
+  const timeText =
+    time && event.endTime ? `${time} ~ ${formatTime(event.endTime)}` : time;
 
   /*
    * 속은 한 벌이고 껍데기만 앱 안 링크(Link)와 바깥 링크(<a>)로 갈립니다.
@@ -76,43 +86,35 @@ export function EventDdayCard({
    */
   const inside = (
     <>
-      {/*
-        왼쪽 칸 — 큰 D-day(28px 가장 굵게, 주황)와 그 아래 작은 날짜(12px 굵게, 회색), 가운데 맞춤.
-        폭은 글자만큼만 (2026-09-25 사용자 "디데이랑 제목 더 가깝게" — 처음엔 62px 고정이라 "D-7" 양옆이 비어 제목이 멀어 보였습니다).
-      */}
-      <span className="flex shrink-0 flex-col items-center leading-none">
-        {/* "D-DAY"·"D-100"처럼 다섯 글자 이상이면 22px — 28px면 칸이 넓어져 제목 자리를 많이 뺏습니다. */}
-        {/* 굵기 700(font-bold) — 2026-09-25 사용자 "아주 조금만 더 얇게", 800(font-extrabold)에서 한 단계. */}
-        <span
-          className={`font-bold tracking-tight whitespace-nowrap text-brand-500 ${
-            // 22px — 2026-09-25 사용자 요청(28px → 26px → 24px → 23px → 22px, "1px 만큼 줄여줘" 두 번). 긴 글자도 1px씩 같이 줄임.
-            dday.length >= 5 ? "text-[20px]" : "text-[22px]"
-          }`}
-        >
-          {dday}
-        </span>
-        {dateText ? (
-          <span className="mt-1.5 text-[12px] font-bold whitespace-nowrap text-ink-muted">{dateText}</span>
-        ) : null}
-      </span>
-
-      {/* 가는 세로 선 — 왼쪽 D-day 칸과 오른쪽 글을 나눕니다. */}
-      <span aria-hidden="true" className="w-px shrink-0 self-stretch bg-line" />
-
       <span className="min-w-0 flex-1">
-        {/*
-          일정 이름 17px 굵게 — 한 줄, 길면 "…"로 줄입니다.
-          (2026-09-25에 줄을 바꿔 끝까지 보이게 했다가 같은 날 사용자 "그전이 낫다"로 되돌렸습니다.)
-          굵기 600(font-semibold) — 같은 날 사용자 "아주아주 조금만 더 얇게", 700(font-bold)에서 한 단계.
-          600은 app/layout.tsx에서 글꼴을 받아 와야 그려집니다.
-        */}
-        <span className="block truncate text-[17px] leading-tight font-semibold">{event.title}</span>
-        {/* "시간 · 장소" 한 줄 — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 "…". */}
-        {time || event.location ? (
-          <span className="mt-1 block truncate text-[14px] font-medium text-ink-muted">
-            {[time, event.location].filter(Boolean).join(" · ")}
+        {/* 맨 위 — 주황 D-day(굵게)와 회색 날짜. 막대의 왼쪽 끝과 같은 자리에서 시작해 막대 "위"에 섭니다. */}
+        <span className="flex items-baseline gap-1.5 leading-none">
+          <span className="text-[17px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
+          {dateText ? (
+            <span className="text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
+          ) : null}
+        </span>
+
+        {/* 주황 막대 + 글 — 막대는 글이 두세 줄로 늘면 그만큼 길어집니다(self-stretch). */}
+        <span className="mt-2.5 flex gap-2.5">
+          <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-brand-500" />
+          <span className="min-w-0 flex-1">
+            {/*
+              일정 이름 17px 굵게(600) — 자르지 않고 줄을 바꿔 끝까지 보여 줍니다(캡처처럼).
+              break-keep — 한글은 낱말 단위로 넘기고, 긴 영문·주소는 [overflow-wrap:anywhere]로 잘라 넘깁니다.
+              굵기 600은 app/layout.tsx에서 글꼴을 받아 와야 그려집니다.
+            */}
+            <span className="block text-[17px] leading-snug font-semibold break-keep [overflow-wrap:anywhere]">
+              {event.title}
+            </span>
+            {/* "시간 · 장소" — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 줄을 바꿉니다. */}
+            {timeText || event.location ? (
+              <span className="mt-1 block text-[14px] leading-snug font-medium break-keep text-ink-muted [overflow-wrap:anywhere]">
+                {[timeText, event.location].filter(Boolean).join(" · ")}
+              </span>
+            ) : null}
           </span>
-        ) : null}
+        </span>
       </span>
 
       {/* 오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 굵기(2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요. */}
