@@ -20,7 +20,9 @@ function EditEventPageContent() {
 
   return (
     <>
-      <PageHeader title="일정 수정" back />
+      {/* 흰 바탕 — 등록 화면과 같게(2026-09-25, events/new/page.tsx 주석). */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <PageHeader title="일정 수정" back tone="surface" />
       {loading ? (
         <div className="flex flex-col gap-4 px-5">
           <Skeleton className="h-16 rounded-2xl" />

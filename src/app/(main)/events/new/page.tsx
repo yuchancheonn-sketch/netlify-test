@@ -15,7 +15,12 @@ import PageHeader from "@/components/PageHeader";
 function NewEventPageContent({ date, fromHome }: { date: string; fromHome: boolean }) {
   return (
     <>
-      <PageHeader title="일정 등록" back />
+      {/*
+        흰 바탕 (2026-09-25 사용자 "배경색은 흰색으로, 박스는 회색으로"). 화면 전체에 붙박이 흰 판을 맨 뒤(-z-10)에 깝니다 —
+        내용이 짧아도 아래 탭바 둘레까지 흰색이 되게. 제목 줄도 흰색(tone="surface")이어야 스크롤할 때 띠가 안 생깁니다.
+      */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <PageHeader title="일정 등록" back tone="surface" />
       <EventForm initialDate={date} doneHref={fromHome ? "/home" : "/events"} />
     </>
   );

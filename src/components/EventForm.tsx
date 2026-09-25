@@ -46,7 +46,8 @@ export default function EventForm({
   const [startTime, setStartTime] = useState(event?.startTime ?? "");
   const [endTime, setEndTime] = useState(event?.endTime ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
-  const [description, setDescription] = useState(event?.description ?? "");
+  // 안내 내용 칸은 2026-09-25에 없앴지만, 고칠 때 예전 안내가 지워지지 않게 원래 값은 들고 있습니다.
+  const [description] = useState(event?.description ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -127,6 +128,13 @@ export default function EventForm({
     }
   }
 
+  /*
+   * 이 폼의 입력칸 — 흰 화면 위 옅은 회색 상자, 그림자 없음, 높이 약 44px (2026-09-25 사용자 "박스 높이 줄이고,
+   * 배경은 흰색, 박스는 회색"). 공용 inputClassName(흰 카드 + 그림자, 약 58px)은 다른 화면도 쓰므로 여기서만 덮어씁니다.
+   * 바탕 흰색은 이 폼을 쓰는 등록·수정 화면(events/new · events/[id]/edit)이 깝니다.
+   */
+  const fieldClassName = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
+
   return (
     <form onSubmit={handleSubmit} className="px-5 pb-10">
       <div className="mb-6">
@@ -136,7 +144,7 @@ export default function EventForm({
           value={title}
           onChange={(changed) => setTitle(changed.target.value)}
           placeholder="예) 10기 3회차 수업"
-          className={inputClassName}
+          className={fieldClassName}
         />
         {errors.title ? <FieldError>{errors.title}</FieldError> : null}
       </div>
@@ -148,7 +156,7 @@ export default function EventForm({
           type="date"
           value={date}
           onChange={(changed) => setDate(changed.target.value)}
-          className={inputClassName}
+          className={fieldClassName}
         />
         {errors.date ? <FieldError>{errors.date}</FieldError> : null}
       </div>
@@ -161,7 +169,7 @@ export default function EventForm({
             type="time"
             value={startTime}
             onChange={(changed) => setStartTime(changed.target.value)}
-            className={inputClassName}
+            className={fieldClassName}
           />
         </div>
         <div className="flex-1">
@@ -173,7 +181,7 @@ export default function EventForm({
             type="time"
             value={endTime}
             onChange={(changed) => setEndTime(changed.target.value)}
-            className={inputClassName}
+            className={fieldClassName}
           />
         </div>
       </div>
@@ -188,23 +196,15 @@ export default function EventForm({
           value={location}
           onChange={(changed) => setLocation(changed.target.value)}
           placeholder="예) 도산아카데미 강의실"
-          className={inputClassName}
+          className={fieldClassName}
         />
       </div>
 
-      <div className="mb-8">
-        <FieldLabel htmlFor="event-description" hint="선택">
-          안내 내용
-        </FieldLabel>
-        <textarea
-          id="event-description"
-          value={description}
-          onChange={(changed) => setDescription(changed.target.value)}
-          rows={5}
-          placeholder="준비물, 오시는 길 등 원우들에게 알릴 내용을 적어 주세요."
-          className={`${inputClassName} resize-none leading-relaxed`}
-        />
-      </div>
+      {/*
+        "안내 내용" 칸은 없앴습니다 (2026-09-25 사용자 요청). 예전에 적어 둔 안내는 저장할 때 그대로 남기고
+        (description 상태는 원래 값으로 둠), 모임 목록 카드에도 그대로 보입니다. 되살리려면 git 기록의 textarea.
+      */}
+      <div className="mb-2" />
 
       {saveError ? (
         <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
