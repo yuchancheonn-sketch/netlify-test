@@ -206,8 +206,8 @@ export default function SettingsPage() {
 
 /**
  * 탈퇴 확인 시트 (2026-09-25 사용자 요청 — "정말 탈퇴할까요?"와 함께 정보가 사라진다는 경고 문구).
- * 겉모양은 아래 LogoutSheet와 같고, 제목 아래 빨간 경고 상자를 둡니다. 탈퇴 단추는 되돌릴 수 없는 일이라
- * 주황이 아니라 빨강(danger)입니다. 경고 문구는 서버가 실제로 지우는 것과 맞춰 둡니다(lib/account-withdraw-server.ts).
+ * 겉모양은 아래 LogoutSheet와 같고, 제목 아래 옅은 주황 경고 상자를 둡니다. 경고 상자·탈퇴 단추는 처음엔
+ * 빨강(danger)이었는데 같은 날 사용자 요청으로 앱 주황으로 바꿨습니다. 경고 문구는 서버가 실제로 지우는 것과 맞춰 둡니다(lib/account-withdraw-server.ts).
  */
 function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
@@ -245,7 +245,8 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
 
         <h2 className="mt-7 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
 
-        <div className="mt-4 rounded-2xl bg-danger/10 px-4 py-3.5 text-[14px] leading-relaxed text-danger">
+        {/* 경고 상자·탈퇴 단추는 앱 주황 (2026-09-25 사용자 "여기도 주황색 테마로" — 처음엔 빨강 danger). */}
+        <div className="mt-4 rounded-2xl bg-brand-500/10 px-4 py-3.5 text-[14px] leading-relaxed text-brand-500">
           <p className="font-bold">⚠️ 탈퇴하면 되돌릴 수 없어요</p>
           <ul className="mt-1.5 list-disc pl-5">
             <li>로그인 계정이 바로 삭제되고, 합쳐 둔 구글·카카오·휴대폰 로그인도 모두 지워져요.</li>
@@ -267,7 +268,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
           type="button"
           disabled={busy}
           onClick={withdraw}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-danger py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
         >
           {busy ? <Spinner className="h-5 w-5" /> : null}
           탈퇴하기
