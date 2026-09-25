@@ -162,10 +162,11 @@ export default function DosanQuizCard() {
             <Link
               href="/quizzes"
               aria-label="역대 퀴즈 보기"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition active:bg-fill"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[color-mix(in_srgb,var(--color-ink-faint)_50%,var(--color-ink-muted))] transition active:bg-fill"
             >
               {/*
-                홈 D-day 카드의 ">"와 같은 크기·굵기(24px·2.1) — 한쪽을 바꾸면 EventCard.tsx도 같이 바꿔 주세요.
+                홈 다가오는 일정 카드의 ">"와 같은 크기·굵기·색(24px·2.1, ink-faint와 ink-muted의 중간 — 2026-09-26) —
+                한쪽을 바꾸면 EventCard.tsx도 같이 바꿔 주세요. 가로 끝도 두 카드가 같은 줄(카드 끝에서 18px)입니다.
               */}
               <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
             </Link>

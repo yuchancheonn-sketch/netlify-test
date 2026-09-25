@@ -74,7 +74,9 @@ export function EventDdayCard({
   const className =
     // pt-[17px] — 위 흰 여백 (2026-09-25 사용자 "1px 늘려줘", 16px(py-4)에서).
     // pb-[19px] — 아래 흰 여백 (같은 날 사용자 "1.5px 만큼 늘려줘" 두 번, 16 → 17.5 → 19px).
-    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[19px] pr-3 pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
+    // pr-[18px] — 오른쪽 ">" 끝을 오늘의 OX 퀴즈 카드의 ">" 끝과 같은 줄(카드 끝에서 18px)에 맞춤
+    //   (2026-09-26 사용자 "위치도 같은 선에 정렬", 12px(pr-3)에서 — 그때는 6px 더 바깥에 섰습니다).
+    "flex items-center gap-2 rounded-card bg-surface pt-[17px] pb-[19px] pr-[18px] pl-5 text-ink shadow-[var(--shadow-card-flat)] transition active:opacity-80";
   const dday = ddayLabel(event.date);
   /** D-day 옆 작은 날짜 — "10.02 금" */
   const dateText = date
@@ -174,8 +176,12 @@ export function EventDdayCard({
         </span>
       </span>
 
-      {/* 오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 굵기(2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요. */}
-      <span className="flex shrink-0 items-center text-ink-faint">
+      {/*
+        오늘의 OX 퀴즈 카드 오른쪽 위 ">"와 같은 크기·굵기·색(24px·2.1). 한쪽을 바꾸면 DosanQuizCard.tsx도 같이 바꿔 주세요.
+        색은 옅은 회색(ink-faint)과 진한 회색(ink-muted)의 딱 중간 (2026-09-26 사용자 "두 > 크기를 평균으로 똑같이" —
+        크기는 둘 다 24px로 같았는데 색이 달라 퀴즈 쪽이 커 보였습니다).
+      */}
+      <span className="flex shrink-0 items-center text-[color-mix(in_srgb,var(--color-ink-faint)_50%,var(--color-ink-muted))]">
         <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
       </span>
     </>
