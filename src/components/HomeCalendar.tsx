@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { deleteDoc, doc } from "firebase/firestore";
 import {
   ChevronLeftIcon,
@@ -12,6 +11,7 @@ import {
   PlusIcon,
   XMarkIcon,
 } from "@/components/icons";
+import EventSheet from "@/components/EventSheet";
 import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -86,15 +86,16 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
    * 지우기는 그 기수 원우 누구나(운영진은 어느 기수든) — firestore.rules의 events delete와 같은 기준입니다.
    * 도산아카데미 사이트에서 이어진 일정은 앱에서 지울 수 없어 단추를 달지 않습니다.
    */
-  const router = useRouter();
+  /** 일정 등록 시트(EventSheet)가 떠 있는지 */
+  const [adding, setAdding] = useState(false);
   const isGuest = useIsGuest();
   const { profile, isAdmin } = useAuth();
   const canDelete = !isGuest && (isAdmin || cohortOf(profile?.cohort) === cohort);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   /*
-   * 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운 등록 화면(/events/new)을 열고,
-   * 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
+   * 동그라미 + — 우리 기수 일정 더하기 (2026-09-25 사용자 요청). 고른 날로 날짜를 채운 일정 등록 시트(EventSheet)를
+   * 아래에서 띄웁니다(같은 날 등록 화면 /events/new로 넘어가던 것에서 바꿈). 로그인 안 한 사람은 로그인 안내부터.
    * 회색 동그라미(bg-canvas) + 진회색 + — 같은 날 "주황이라 너무 눈에 띈다"로 주황 채움에서 바꿈.
    * + 는 흰색 — 같은 날 사용자 요청(진회색 ink-soft에서).
    * ★ 지금은 흰 동그라미 + 옅은 그림자 + 먹색 굵은 + (같은 날 사용자가 보낸 "×" 닫기 단추 캡처 모양으로 바꿈).
@@ -107,7 +108,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
       type="button"
       onClick={() => {
         if (requireLogin()) return;
-        router.push(`/events/new?date=${selected}&from=home`);
+        // 등록 화면으로 넘어가지 않고 아래에서 올라오는 시트로 (2026-09-25 사용자 "투표 만들기 창처럼").
+        setAdding(true);
       }}
       aria-label="일정 추가"
       className="flex h-10 w-10 items-center justify-center rounded-full bg-fill text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
@@ -436,6 +438,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
       ) : null}
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
+      {adding ? <EventSheet initialDate={selected} onClose={() => setAdding(false)} /> : null}
     </section>
   );
 }

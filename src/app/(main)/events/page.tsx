@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { deleteDoc, doc } from "firebase/firestore";
 import CohortPicker from "@/components/CohortPicker";
 import { EventListItem } from "@/components/EventCard";
+import EventSheet from "@/components/EventSheet";
+import { useRequireLogin } from "@/components/LoginRequired";
 import MonthCalendar from "@/components/MonthCalendar";
 import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
@@ -28,6 +30,9 @@ export default function EventsPage() {
   const { cohort, canSwitch, setCohort } = useViewCohort();
   const [view, setView] = useState<ViewMode>("list");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  /** 일정 등록 시트(EventSheet)가 떠 있는지 */
+  const [adding, setAdding] = useState(false);
+  const requireLogin = useRequireLogin();
 
   /*
    * 오른쪽으로 밀어서 홈으로 — 왼쪽 위 < 버튼(backHref)과 같은 곳으로 갑니다.
@@ -172,13 +177,19 @@ export default function EventsPage() {
         올린 사람과 운영진만 됩니다(아래 EventExtras · firestore.rules).
         밀려나는 상자 바깥에 둡니다(위 설명).
       */}
-      <Link
-        href="/events/new"
-        className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+      {/* 누르면 일정 등록 시트(EventSheet)가 아래에서 올라옵니다 (2026-09-25, 그 전엔 /events/new 화면으로). */}
+      <button
+        type="button"
+        onClick={() => {
+          if (requireLogin()) return;
+          setAdding(true);
+        }}
+        className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-brand-500 px-6 py-3.5 text-[15px]! font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
       >
         <PlusIcon className="h-5 w-5" />
         일정 등록
-      </Link>
+      </button>
+      {adding ? <EventSheet onClose={() => setAdding(false)} /> : null}
     </div>
   );
 }

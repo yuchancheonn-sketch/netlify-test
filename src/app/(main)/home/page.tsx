@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard } from "@/components/EventCard";
+import EventSheet from "@/components/EventSheet";
+import { useRequireLogin } from "@/components/LoginRequired";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
 import { CalendarIcon, PlusIcon } from "@/components/icons";
@@ -20,6 +22,9 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 
 export default function HomePage() {
   const upcoming = useUpcomingEvents();
+  /** "다가오는 모임이 아직 없어요" 상자의 "+ 등록"이 띄우는 일정 등록 시트 */
+  const [adding, setAdding] = useState(false);
+  const requireLogin = useRequireLogin();
   /*
    * 홈은 기수마다 따로입니다 — 일정·투표·수업 기록 모두 보고 있는 기수의 것만.
    * 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서 바꿔 볼 수 있습니다.
@@ -128,13 +133,18 @@ export default function HomePage() {
               <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">
                 다가오는 모임이 아직 없어요
               </p>
-              <Link
-                href="/events/new"
-                className="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px] font-medium text-ink-faint transition active:bg-fill"
+              {/* 누르면 일정 등록 시트(EventSheet)가 아래에서 올라옵니다 (2026-09-25, 그 전엔 /events/new 화면으로). */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (requireLogin()) return;
+                  setAdding(true);
+                }}
+                className="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px]! font-medium text-ink-faint transition active:bg-fill"
               >
                 <PlusIcon className="h-4 w-4" />
                 등록
-              </Link>
+              </button>
             </div>
           )}
         </section>
@@ -189,6 +199,8 @@ export default function HomePage() {
         {/* 맨 아래 — 과정을 여는 도산아카데미의 기관 정보. 다른 앱의 사업자 정보 자리입니다. */}
         <DosanAcademyFooter />
       </div>
+
+      {adding ? <EventSheet onClose={() => setAdding(false)} /> : null}
     </>
   );
 }

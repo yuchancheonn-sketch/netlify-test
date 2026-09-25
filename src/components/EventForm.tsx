@@ -25,12 +25,20 @@ export default function EventForm({
   event,
   initialDate = "",
   doneHref = "/events",
+  onDone,
+  className = "px-5 pb-10",
 }: {
   event?: EventDoc;
   /** 새 일정의 날짜 칸을 미리 채울 값 — 홈 캘린더의 + 단추가 고른 날을 넘깁니다(2026-09-25). */
   initialDate?: string;
   /** 저장한 뒤 갈 곳. 홈 캘린더에서 왔으면 홈으로 돌아갑니다(2026-09-25). */
   doneHref?: string;
+  /**
+   * 시트(EventSheet) 안에서 쓸 때 — 저장하면 다른 화면으로 가는 대신 이걸 부르고(시트 닫기),
+   * 아래 단추 줄에 "취소"를 함께 세웁니다(투표 만들기 시트와 같은 짜임, 2026-09-25).
+   */
+  onDone?: () => void;
+  className?: string;
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -114,7 +122,8 @@ export default function EventForm({
       if (!event && result === "saved") {
         void requestPush("event", { eventId: target.id });
       }
-      router.replace(doneHref);
+      if (onDone) onDone();
+      else router.replace(doneHref);
     } catch (caught) {
       setSaveError(
         saveErrorMessage(
@@ -136,7 +145,7 @@ export default function EventForm({
   const fieldClassName = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
 
   return (
-    <form onSubmit={handleSubmit} className="px-5 pb-10">
+    <form onSubmit={handleSubmit} className={className}>
       <div className="mb-6">
         <FieldLabel htmlFor="event-title">제목</FieldLabel>
         <input
@@ -212,9 +221,25 @@ export default function EventForm({
         </p>
       ) : null}
 
-      <PrimaryButton type="submit" loading={saving}>
-        {editing ? "수정 저장하기" : "일정 등록하기"}
-      </PrimaryButton>
+      {onDone ? (
+        /* 시트에서는 투표 만들기 시트처럼 "취소 | 등록하기" 한 줄 (PollCard.tsx의 같은 자리 주석 참고). */
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onDone}
+            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+          >
+            취소
+          </button>
+          <PrimaryButton type="submit" loading={saving} size="sm">
+            {editing ? "수정 저장하기" : "일정 등록하기"}
+          </PrimaryButton>
+        </div>
+      ) : (
+        <PrimaryButton type="submit" loading={saving}>
+          {editing ? "수정 저장하기" : "일정 등록하기"}
+        </PrimaryButton>
+      )}
     </form>
   );
 }
