@@ -72,8 +72,8 @@ export default function HomePage() {
         aria-label="도산아카데미"
         className="h-[37.5px] w-[37.5px] shrink-0 translate-y-[1.5px] bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
       />
-      {/* 23px — 2026-09-26 사용자 "1.5px 줄여줘"(24.5px에서; 그 전엔 다른 탭과 같은 22px). */}
-      <span className="text-[23px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+      {/* 22px — 다른 탭 제목과 같은 크기 (2026-09-26 사용자: 24.5px → 23px → "22px로"). */}
+      <span className="text-[22px] text-brand-500">{APP_DEFINITION_TITLE}</span>
     </span>
   );
 
