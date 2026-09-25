@@ -431,7 +431,7 @@ export default function MembersPage() {
             <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key} className="border-t border-line py-3 first:border-t-0">
-                  <Skeleton className="h-[72px] w-[128px] rounded-2xl" />
+                  <Skeleton className="h-[72px] w-[128px] rounded-[10px]" />
                 </li>
               ))}
             </ul>
@@ -651,7 +651,8 @@ function MemberRow({
             섭니다.
         */
         // 128×72 — 16:9 그대로 조금 키움 (2026-09-26 사용자 "썸네일 크기 조금만 키워줘", 112×63에서). 아래 설명의 112×63은 그 전 값.
-        className="relative -ml-px h-[72px] w-[128px] shrink-0 overflow-hidden rounded-2xl bg-fill transition active:scale-95"
+        // rounded-[10px] — 모서리 덜 둥글게 (같은 날 사용자 요청, 14px(rounded-2xl)에서).
+        className="relative -ml-px h-[72px] w-[128px] shrink-0 overflow-hidden rounded-[10px] bg-fill transition active:scale-95"
       >
         {/*
           ★ loading="lazy" + 폭·높이 못 박기 (2026-09-22).
