@@ -107,7 +107,8 @@ export function EventDdayCard({
             21px·700 — 같은 날 사용자 "굵기 아주 조금만 줄이고, 크기는 조금만 키워줘": 20px에 둘렀던 0.3px 테두리를 걷고 1px 키움.
             -ml-[1.9px]도 크기에 맞춰(22px일 때 2px).
           */}
-          <span className="-ml-[1.9px] text-[21px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
+          {/* [-webkit-text-stroke:0.2px] — 2026-09-26 사용자 "아주 조금만 더 굵게". 700 글씨에 얇은 테두리(전에 0.3px은 걷었음). */}
+          <span className="-ml-[1.9px] text-[21px] font-bold tracking-tight whitespace-nowrap [-webkit-text-stroke:0.2px_currentColor] text-brand-500">{dday}</span>
           {dateText ? (
             // 15px — 같은 날 사용자 요청(13 → 14.5 → 0.9배 13 → "2px 키워줘" 15px). 위로 2px(-translate-y-[2px]) — "1px 위로" 두 번.
             <span className="-translate-y-[2px] text-[15px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
