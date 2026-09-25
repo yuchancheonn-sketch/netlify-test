@@ -859,7 +859,7 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[10.75px] text-[15px] font-bold text-white transition active:scale-[0.99]"
       >
         <ChatIcon className="h-5 w-5" />
         {/* 글씨만 1px 위로, 아이콘은 제자리 (2026-09-26 사용자 요청). 단추가 flex라 span에 transform이 먹습니다. */}
@@ -976,14 +976,14 @@ function MemberDetailSheet({
             <div className="mt-3 flex gap-3">
               <a
                 href={`tel:${phoneHref(entry.phone)}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13.5px] text-[15px] font-bold text-white transition active:scale-[0.99]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[10.75px] text-[15px] font-bold text-white transition active:scale-[0.99]"
               >
                 {/* 글씨만 1px 위로, 그림 글자는 제자리 (2026-09-26 사용자 요청). */}
                 📞 <span className="-translate-y-px">전화</span>
               </a>
               <a
                 href={`sms:${phoneHref(entry.phone)}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-[13.5px] text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-50 py-[10.75px] text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
               >
                 ✉️ <span className="-translate-y-px">문자</span>
               </a>
@@ -1093,16 +1093,20 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onEdit}
-            className="mt-4 w-full rounded-2xl bg-brand-50 py-[15.5px] text-[15px] font-bold text-brand-500"
+            className="mt-4 w-full rounded-2xl bg-brand-50 py-[10.75px] text-[15px] font-bold text-brand-500"
           >
             {/* 남의 칸도 "정보 수정하기" (2026-09-15 사용자 요청 — 예전엔 "정보 채워주기") */}
+            {/*
+              ★ 이 창의 단추들(1:1 채팅·전화·문자·정보 수정하기·닫기 등)은 위아래 10.75px — 15px 글씨(글줄 22.5px)와 합쳐
+                약 44px로 입력칸 높이와 같습니다 (2026-09-26 사용자 "박스들 높이 좀 줄여줘", 13.5px·15.5px에서).
+            */}
             ✎ {isMe ? "내 정보 수정하기" : "정보 수정하기"}
           </button>
 
           {isMe ? (
             <Link
               href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[15.5px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[10.75px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
             >
               사진·자기소개까지 고치기
             </Link>
@@ -1111,7 +1115,7 @@ function MemberDetailSheet({
           <button
             type="button"
             onClick={onClose}
-            className="mt-3 w-full rounded-2xl bg-fill py-[15.5px] text-[15px] font-bold text-ink-soft"
+            className="mt-3 w-full rounded-2xl bg-fill py-[10.75px] text-[15px] font-bold text-ink-soft"
           >
             닫기
           </button>
