@@ -243,7 +243,11 @@ export default function AlbumList({
         <button
           type="button"
           onClick={() => setViewingPast(true)}
-          className="fixed bottom-[calc(93px+env(safe-area-inset-bottom))] left-5 z-20 flex items-center gap-1.5 rounded-full bg-surface px-5 py-4 text-[15px] font-bold text-ink-muted shadow-[var(--shadow-card-flat)] transition active:scale-95"
+          /*
+            오른쪽 + 단추와 같은 모양 — 옅은 알약(bg-fill) + 은은한 그림자 + 진회색 글씨, 높이도 같은 52px
+            (2026-09-26 사용자 "왼쪽 단추 디자인을 오른쪽 단추같이", 흰 알약 + 헤어라인에서).
+          */
+          className="fixed bottom-[calc(93px+env(safe-area-inset-bottom))] left-5 z-20 flex h-[52px] items-center gap-1.5 rounded-full bg-fill px-5 text-[15px] font-bold text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
         >
           지난 소식
         </button>
