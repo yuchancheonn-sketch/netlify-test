@@ -98,17 +98,35 @@ export function EventDdayCard({
 
         {/* 주황 막대 + 글 — 막대는 글이 두세 줄로 늘면 그만큼 길어집니다(self-stretch). */}
         <span className="mt-2.5 flex gap-2.5">
-          <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-brand-500" />
+          {/* 막대 3px — 같은 날 사용자 "두께 좀 줄여줘"(4px, w-1에서). */}
+          <span aria-hidden="true" className="w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
           <span className="min-w-0 flex-1">
             {/*
-              일정 이름 17px 굵게(600) — 한 줄, 길면 "…" (같은 날 사용자 "잘려도 좋으니 한 줄로" — 잠깐 줄을 바꿔 끝까지 보였음).
-              굵기 600은 app/layout.tsx에서 글꼴을 받아 와야 그려집니다.
+              일정 이름 17px — 두 줄까지, 넘치면 "…"(line-clamp-2). 같은 날 사용자 요청으로
+              끝까지 → 한 줄 → 두 줄. break-keep으로 한글은 낱말 단위로 넘깁니다.
+              굵기 500(font-medium) — 같은 날 "아주 조금만 더 얇게"(600에서).
             */}
-            <span className="block truncate text-[17px] leading-snug font-semibold">{event.title}</span>
-            {/* "시간 · 장소" 한 줄 — 길면 "…". 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. */}
+            <span className="line-clamp-2 text-[17px] leading-snug font-medium break-keep [overflow-wrap:anywhere]">
+              {event.title}
+            </span>
+            {/*
+              시간·장소 한 줄 — 앞에 시계·핀 아이콘 (같은 날 사용자 요청). 시간은 자르지 않고, 장소만 길면 "…".
+              둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다.
+            */}
             {timeText || event.location ? (
-              <span className="mt-1 block truncate text-[14px] leading-snug font-medium text-ink-muted">
-                {[timeText, event.location].filter(Boolean).join(" · ")}
+              <span className="mt-1 flex items-center gap-3 text-[14px] leading-snug font-medium text-ink-muted">
+                {timeText ? (
+                  <span className="flex shrink-0 items-center gap-1">
+                    <ClockIcon className="h-4 w-4" />
+                    {timeText}
+                  </span>
+                ) : null}
+                {event.location ? (
+                  <span className="flex min-w-0 items-center gap-1">
+                    <PinIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{event.location}</span>
+                  </span>
+                ) : null}
               </span>
             ) : null}
           </span>
