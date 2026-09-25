@@ -523,7 +523,11 @@ export default function MembersPage() {
             <button
               type="button"
               onClick={() => setEditing({ entry: null })}
-              className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-surface py-3 text-[15px] font-bold text-brand-500 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+              /*
+                테두리 — 카드 헤어라인(line)보다 조금 진한 회색: line 65% + ink-faint 35% (2026-09-26 사용자 "조금만 더 진하게").
+                바탕이 흰색이 되면서 테두리만으로 단추가 보여서, 글로우 그림자(shadow-card)는 걷고 1px 테두리만 둡니다.
+              */
+              className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-[color-mix(in_srgb,var(--color-line)_65%,var(--color-ink-faint))] bg-surface py-[11px] text-[15px] font-bold text-brand-500 transition active:scale-[0.99]"
             >
               {/* "+ 원우 추가하기" 통째로 1px 위로 (2026-09-26 사용자 요청). 단추가 flex라 각 칸에 transform이 먹습니다. */}
               <PlusIcon className="h-5 w-5 -translate-y-px" />
