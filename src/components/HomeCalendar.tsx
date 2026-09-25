@@ -311,7 +311,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           */
           <p className="relative py-2 text-[14px] text-ink-faint">
             일정이 없어요
-            <span className="absolute top-[calc(50%-1px)] right-[-6px] -translate-y-1/2">{addButton}</span>
+            {/* top-[calc(50%-4px)] — 같은 날 "3px 더 위로"(50%−1px에서). 일정 있는 날의 자리도 같이 3px 올림. */}
+            <span className="absolute top-[calc(50%-4px)] right-[-6px] -translate-y-1/2">{addButton}</span>
           </p>
         ) : (
           <ul className="mt-1.5 flex flex-col gap-1">
@@ -427,7 +428,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
 
       {/* 일정이 있는 날은 + 단추가 목록 아래 오른쪽 끝에 섭니다(없는 날은 위 "일정이 없어요" 줄 안). 오른쪽 2px·위 1px 옮김. */}
       {selectedItems.length > 0 ? (
-        <div className="mt-1 flex translate-x-[2px] -translate-y-px justify-end">{addButton}</div>
+        <div className="mt-1 flex translate-x-[2px] -translate-y-[4px] justify-end">{addButton}</div>
       ) : null}
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
