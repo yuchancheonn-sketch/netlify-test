@@ -270,7 +270,8 @@ export default function AlbumList({
           // ★ 글씨 없는 주황 동그라미 + (2026-09-25 사용자 "소식 올리기는 지우고 원 안에 + 만, + 크기·굵기 키워줘").
           //   예전엔 "+ 소식 올리기" 알약(높이 52px). 동그라미도 52px라 BookFrame이 비워 두는 157px 셈은 그대로입니다.
           aria-label="소식 올리기"
-          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] transition active:scale-95"
+          // 옅은 동그라미 + 그림자 + 진회색 + — 홈 캘린더의 + 단추와 같은 모양 (2026-09-26 사용자 요청, 주황 채움에서).
+          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-fill text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
         >
           {/* + 26px·선 2.8 — 예전 20px·2.1에서 키움. */}
           <PlusIcon className="h-[26px] w-[26px]" strokeWidth={2.8} />
@@ -1020,7 +1021,13 @@ function AlbumCard({
             src={viewerUrl(album.coverImageUrl, 1200)}
             alt={`${album.title} 대표 사진`}
             draggable={false}
-            className="block h-auto w-full object-contain"
+            /*
+              ★ 사진은 무조건 카드 폭에 꽉 차게 (2026-09-26 사용자 "무조건 사진의 가로 길이를 박스 가로 길이와 똑같게").
+                예전엔 object-contain이라, 세로로 긴 사진이 아래 maxHeight에 걸리면 비율을 지키느라 좁아지고
+                양옆이 흰 여백으로 남았습니다. 이제 object-cover — 폭은 늘 꽉 차고, 한도를 넘는 세로만 위아래가 잘립니다.
+                (한도에 안 걸리는 보통 사진은 h-auto라 예전처럼 잘리지 않고 통째로 보입니다.)
+            */
+            className="block h-auto w-full object-cover"
             style={{ maxHeight: `calc(var(--card-max, var(--frame-h)) - ${textReserve}px)` }}
           />
         ) : (
