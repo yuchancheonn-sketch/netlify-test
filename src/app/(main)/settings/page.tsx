@@ -146,7 +146,9 @@ export default function SettingsPage() {
             <Link
               href="/admin"
               // rounded-full — 알약 모양 (2026-09-25 사용자 요청, 위 스위치 줄들과 같이).
-              className="mb-3 flex items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+              // min-h-[52px] — 높이를 스위치 줄(ToggleRow)과 같게 (같은 날 사용자 요청). 그 줄은 스위치 28px + 위아래 12px씩이라
+              //   52px인데, 이 줄은 글씨(약 25.5px)가 가장 높아 약 49.5px였습니다. 스위치 크기를 바꾸면 이 값도 같이.
+              className="mb-3 flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
               <span className="-translate-y-[2px] text-[17px] font-bold text-ink">관리자 화면</span>
