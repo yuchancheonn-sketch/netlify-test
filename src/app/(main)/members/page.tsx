@@ -1128,7 +1128,8 @@ function MemberDetailSheet({
               ★ 이 창의 단추들(1:1 채팅·전화·문자·정보 수정하기·닫기 등)은 위아래 10.75px — 15px 글씨(글줄 22.5px)와 합쳐
                 약 44px로 입력칸 높이와 같습니다 (2026-09-26 사용자 "박스들 높이 좀 줄여줘", 13.5px·15.5px에서).
             */}
-            <span>{isMe ? "내 정보 수정하기" : "정보 수정하기"}</span>
+            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청), 연필은 제자리. */}
+            <span className="-translate-y-px">{isMe ? "내 정보 수정하기" : "정보 수정하기"}</span>
           </button>
 
           {isMe ? (
@@ -1145,7 +1146,8 @@ function MemberDetailSheet({
             onClick={onClose}
             className="mt-3 w-full rounded-2xl bg-fill py-[10.75px] text-[15px] font-bold text-ink-soft"
           >
-            닫기
+            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). flex가 아닌 단추라 inline-block이어야 transform이 먹습니다. */}
+            <span className="inline-block -translate-y-px">닫기</span>
           </button>
         </div>
       </div>
