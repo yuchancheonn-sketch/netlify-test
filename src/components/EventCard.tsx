@@ -97,8 +97,8 @@ export function EventDdayCard({
           */}
           <span className="-ml-[2px] text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
-            // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서).
-            <span className="text-[14.5px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
+            // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서). -translate-y-px — "1px 위로".
+            <span className="-translate-y-px text-[14.5px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
           ) : null}
         </span>
 
