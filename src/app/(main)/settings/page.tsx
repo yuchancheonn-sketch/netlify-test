@@ -239,11 +239,11 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(4px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(2px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
       >
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
-        <h2 className="mt-4 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
+        <h2 className="mt-5 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
 
         {/* 경고 상자·탈퇴 단추는 앱 주황 (2026-09-25 사용자 "여기도 주황색 테마로" — 처음엔 빨강 danger). */}
         <div className="mt-4 rounded-2xl bg-brand-500/10 px-4 py-3.5 text-[14px] leading-relaxed text-brand-500">
@@ -292,7 +292,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
  * 화면 아래에서 올라오는 흰 시트: 위 가운데 손잡이 막대 · 큰 제목 "로그아웃 하시겠어요?" ·
  * 폭 가득 주황 "로그아웃" · 그 아래 글씨만 있는 "취소". 뒤는 어둡게 덮고, 어두운 곳을 눌러도 닫힙니다.
  * 캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다. 겉모양 짜임은 AccountMergeSheet와 같습니다.
- * 시트 아래 여백은 홈 인디케이터 자리 + 4px (2026-09-25 사용자 "취소 밑에 흰색 공백 좀 줄여줘", 20px에서).
+ * 시트 아래 여백은 홈 인디케이터 자리 + 2px (2026-09-25 사용자 요청: "취소 밑에 흰색 공백 좀 줄여줘" 20px → 4px → 2px).
  * "취소" 단추 자체의 아래 12px(py-3)이 더해집니다. 탈퇴 시트(WithdrawSheet)도 같은 값입니다.
  */
 function LogoutSheet({
@@ -321,13 +321,13 @@ function LogoutSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(4px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(2px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
       >
         {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
-        {/* mt-4 — 손잡이 막대와 제목 사이 16px (2026-09-25 사용자 "위에 흰색 공백도 좀 줄여줘", 28px에서). 탈퇴 시트도 같이. */}
-        <h2 className="mt-4 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
+        {/* mt-5 — 손잡이 막대와 제목 사이 20px (2026-09-25 사용자 요청: 28px → 16px → 20px). 탈퇴 시트도 같이. */}
+        <h2 className="mt-5 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
 
         <button
           type="button"
