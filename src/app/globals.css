@@ -411,6 +411,25 @@ html {
   overscroll-behavior-y: none;
 }
 
+/*
+ * 확인 창·아래 시트가 뜰 때 맨 위 시계 줄이 주황 띠가 되던 것 (2026-09-26 사용자 "앱 최상단에 주황색 없애줘,
+ * 차라리 흰색이면 괜찮을 것 같아" — 홈 화면 앱을 다시 설치해도 그대로였음).
+ * 아이폰은 시계 줄 색을 화면 맨 위에 붙은 요소의 바탕색에서 따오는데, 반투명 막(bg-ink/40)은 색으로 쓰지 못하고
+ * 앱을 열 때 화면을 덮었던 주황 로딩 화면 색을 그대로 들고 있는 것으로 보입니다(테마 색은 이미 회색).
+ * 그래서 막 맨 위에 불투명한 줄을 깔아 그 색을 쓰게 합니다. 색은 막이 회색 바탕을 덮은 색과 같아 눈에는 이어져 보입니다.
+ * 높이: 시계 줄 아래까지(safe-area) — 시계 줄 밑으로 화면이 들어가지 않는 경우에도 맨 위 2px은 깝니다.
+ */
+.fixed.inset-0.bg-ink\/40::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: max(env(safe-area-inset-top), 2px);
+  background-color: color-mix(in srgb, var(--color-canvas) 60%, var(--color-ink));
+  pointer-events: none;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);

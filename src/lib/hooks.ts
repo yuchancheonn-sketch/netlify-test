@@ -23,6 +23,7 @@ import {
   toChatRoom,
 } from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
+import { useLiveList, warmLiveList } from "@/lib/live-list";
 import type {
   AcademyEventDoc,
   ChatReadDoc,
@@ -144,26 +145,55 @@ export function useAllUsers(): ListState<UserDoc> {
  *   "10기"를 채워 넣었습니다(가입 원우·명단 모두). 새로 가입하는 원우는 프로필에서 기수를 꼭 고릅니다.
  * status·cohort 둘 다 "같다" 조건이라 콘솔에서 복합 색인을 만들 필요가 없습니다.
  */
+/*
+ * ★ 한 번 받은 수첩은 앱이 켜져 있는 동안 들고 있습니다(lib/live-list.ts, 2026-09-26 사용자 "원우탭이 너무 로딩이
+ *   오래 걸려"). 탭을 오가도 회색 자리 표시 없이 곧바로 보이고, 내 기수 수첩은 로딩 화면 동안 미리 받습니다
+ *   (warmCohortDirectory — StageGate). 키에 기수와 uid가 들어가 기수를 바꾸면 그 기수 것을 따로 받습니다.
+ */
 export function useCohortMembers(cohort: string): ListState<UserDoc> {
-  const [entry, setEntry] = useState<{ cohort: string; state: ListState<UserDoc> } | null>(null);
   const viewer = useViewer();
+  const uid = useAuth().user?.uid ?? "";
+  return useLiveList(directoryKey("members", viewer, uid, cohort), startCohortMembers(viewer, cohort));
+}
 
-  useEffect(() => {
-    if (viewer === "loading") return;
+/**
+ * 원우수첩 한 권 — 고른 기수의 명단(roster)만. 이유는 useCohortMembers와 같습니다.
+ * "전체"(ALL_COHORTS)를 고르면 그때만 명단 전체를 받습니다.
+ */
+export function useCohortRoster(cohort: string): ListState<RosterDoc> {
+  const viewer = useViewer();
+  const uid = useAuth().user?.uid ?? "";
+  return useLiveList(directoryKey("roster", viewer, uid, cohort), startCohortRoster(viewer, cohort));
+}
+
+type Viewer = ReturnType<typeof useViewer>;
+
+function directoryKey(kind: "members" | "roster", viewer: Viewer, uid: string, cohort: string) {
+  if (viewer === "loading") return null;
+  return viewer === "guest" ? `guest-${kind}:${cohort}` : `${kind}:${uid}:${cohort}`;
+}
+
+/** 둘러보는 사람은 원우·명단을 한 번의 요청으로 받습니다 — 두 목록이 같은 요청을 나눠 씁니다. */
+const publicDirectoryRequests = new Map<string, ReturnType<typeof fetchPublicDirectory>>();
+function publicDirectoryOnce(cohort: string) {
+  let request = publicDirectoryRequests.get(cohort);
+  if (!request) {
+    request = fetchPublicDirectory(cohort);
+    publicDirectoryRequests.set(cohort, request);
+    // 실패하면 다음에 새로 받도록 비웁니다.
+    request.catch(() => publicDirectoryRequests.delete(cohort));
+  }
+  return request;
+}
+
+function startCohortMembers(viewer: Viewer, cohort: string) {
+  return (emit: (state: ListState<UserDoc>) => void) => {
+    const failed = () => emit({ data: [], loading: false, error: "원우 목록을 불러오지 못했어요." });
     if (viewer === "guest") {
-      let alive = true;
-      fetchPublicDirectory(cohort)
-        .then(({ members }) =>
-          alive && setEntry({ cohort, state: { data: members.sort(byName), loading: false, error: null } }),
-        )
-        .catch(
-          () =>
-            alive &&
-            setEntry({ cohort, state: { data: [], loading: false, error: "원우 목록을 불러오지 못했어요." } }),
-        );
-      return () => {
-        alive = false;
-      };
+      publicDirectoryOnce(cohort)
+        .then(({ members }) => emit({ data: [...members].sort(byName), loading: false, error: null }))
+        .catch(failed);
+      return;
     }
     /*
      * "전체"(ALL_COHORTS)는 일부러 고를 때만 모든 기수를 받습니다 — 기본은 내 기수라,
@@ -177,7 +207,7 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
             where("status", "==", "approved"),
             where("cohort", "==", cohort),
           );
-    return onSnapshot(
+    onSnapshot(
       membersQuery,
       (snapshot) => {
         const members = snapshot.docs
@@ -185,44 +215,23 @@ export function useCohortMembers(cohort: string): ListState<UserDoc> {
           // 아직 온보딩을 마치지 않은 사람은 수첩에 띄우지 않습니다.
           .filter((member) => member.profileCompleted)
           .sort((a, b) => a.name.localeCompare(b.name, "ko"));
-        setEntry({ cohort, state: { data: members, loading: false, error: null } });
+        emit({ data: members, loading: false, error: null });
       },
-      () =>
-        setEntry({
-          cohort,
-          state: { data: [], loading: false, error: "원우 목록을 불러오지 못했어요." },
-        }),
+      failed,
     );
-  }, [cohort, viewer]);
-
-  // 기수를 바꾼 직후에는 옛 기수 목록을 보이지 않고 불러오는 중으로 둡니다.
-  return entry?.cohort === cohort ? entry.state : EMPTY;
+  };
 }
 
-/**
- * 원우수첩 한 권 — 고른 기수의 명단(roster)만. 이유는 useCohortMembers와 같습니다.
- * "전체"(ALL_COHORTS)를 고르면 그때만 명단 전체를 받습니다.
- */
-export function useCohortRoster(cohort: string): ListState<RosterDoc> {
-  const [entry, setEntry] = useState<{ cohort: string; state: ListState<RosterDoc> } | null>(
-    null,
-  );
-  const viewer = useViewer();
-
-  useEffect(() => {
-    if (viewer === "loading") return;
+function startCohortRoster(viewer: Viewer, cohort: string) {
+  return (emit: (state: ListState<RosterDoc>) => void) => {
+    const failed = () => emit({ data: [], loading: false, error: "명단을 불러오지 못했어요." });
     if (viewer === "guest") {
-      let alive = true;
-      fetchPublicDirectory(cohort)
-        .then(({ roster }) => alive && setEntry({ cohort, state: { data: roster, loading: false, error: null } }))
-        .catch(
-          () => alive && setEntry({ cohort, state: { data: [], loading: false, error: "명단을 불러오지 못했어요." } }),
-        );
-      return () => {
-        alive = false;
-      };
+      publicDirectoryOnce(cohort)
+        .then(({ roster }) => emit({ data: roster, loading: false, error: null }))
+        .catch(failed);
+      return;
     }
-    return onSnapshot(
+    onSnapshot(
       cohort === ALL_COHORTS
         ? collection(db, "roster")
         : query(collection(db, "roster"), where("cohort", "==", cohort)),
@@ -230,17 +239,19 @@ export function useCohortRoster(cohort: string): ListState<RosterDoc> {
         const entries = snapshot.docs.map(
           (document) => ({ id: document.id, ...document.data() }) as RosterDoc,
         );
-        setEntry({ cohort, state: { data: entries, loading: false, error: null } });
+        emit({ data: entries, loading: false, error: null });
       },
-      () =>
-        setEntry({
-          cohort,
-          state: { data: [], loading: false, error: "명단을 불러오지 못했어요." },
-        }),
+      failed,
     );
-  }, [cohort, viewer]);
+  };
+}
 
-  return entry?.cohort === cohort ? entry.state : EMPTY;
+/** 로딩 화면 동안 내 기수 수첩을 미리 받기 시작합니다 (StageGate). */
+export function warmCohortDirectory(viewer: Viewer, uid: string, cohort: string) {
+  const membersKey = directoryKey("members", viewer, uid, cohort);
+  const rosterKey = directoryKey("roster", viewer, uid, cohort);
+  if (membersKey) warmLiveList(membersKey, startCohortMembers(viewer, cohort));
+  if (rosterKey) warmLiveList(rosterKey, startCohortRoster(viewer, cohort));
 }
 
 export function useRoster(): ListState<RosterDoc> {
@@ -279,32 +290,31 @@ function startMinutes(event: EventDoc): number {
 }
 
 export function useEvents(): ListState<EventDoc> {
-  const [state, setState] = useState<ListState<EventDoc>>(EMPTY);
+  // 한 번 받은 일정은 앱이 켜져 있는 동안 들고 있습니다 — 로딩 화면 동안 미리 받습니다(warmHomeData, 2026-09-26).
+  return useLiveList("events", startEvents);
+}
 
-  useEffect(() => {
-    const eventsQuery = query(collection(db, "events"), orderBy("date"));
-    return onSnapshot(
-      eventsQuery,
-      (snapshot) => {
-        const events = snapshot.docs
-          .map((document) => ({ id: document.id, ...document.data() }) as EventDoc)
-          /*
-           * 빠른 일정이 위로. 날짜가 같으면 시작 시각이 이른 쪽이 먼저입니다.
-           *
-           * 날짜 정렬은 Firestore가 해주지만 같은 날끼리의 순서는 정해주지
-           * 않습니다. 시각까지 Firestore에 맡기려면 색인을 따로 만들어 올려야
-           * 하는데, 일정이 몇십 개뿐이라 여기서 한 번 더 세우는 편이 낫습니다.
-           */
-          .sort(
-            (a, b) => a.date.localeCompare(b.date) || startMinutes(a) - startMinutes(b),
-          );
-        setState({ data: events, loading: false, error: null });
-      },
-      () => setState({ data: [], loading: false, error: "일정을 불러오지 못했어요." }),
-    );
-  }, []);
-
-  return state;
+function startEvents(emit: (state: ListState<EventDoc>) => void) {
+  const eventsQuery = query(collection(db, "events"), orderBy("date"));
+  onSnapshot(
+    eventsQuery,
+    (snapshot) => {
+      const events = snapshot.docs
+        .map((document) => ({ id: document.id, ...document.data() }) as EventDoc)
+        /*
+         * 빠른 일정이 위로. 날짜가 같으면 시작 시각이 이른 쪽이 먼저입니다.
+         *
+         * 날짜 정렬은 Firestore가 해주지만 같은 날끼리의 순서는 정해주지
+         * 않습니다. 시각까지 Firestore에 맡기려면 색인을 따로 만들어 올려야
+         * 하는데, 일정이 몇십 개뿐이라 여기서 한 번 더 세우는 편이 낫습니다.
+         */
+        .sort(
+          (a, b) => a.date.localeCompare(b.date) || startMinutes(a) - startMinutes(b),
+        );
+      emit({ data: events, loading: false, error: null });
+    },
+    () => emit({ data: [], loading: false, error: "일정을 불러오지 못했어요." }),
+  );
 }
 
 /**
@@ -312,24 +322,29 @@ export function useEvents(): ListState<EventDoc> {
  * 서버가 새 글에서 읽어 적으므로 앱은 읽기만 합니다 — lib/academy-calendar-server.ts.
  */
 export function useAcademyEvents(): ListState<AcademyEventDoc> {
-  const [state, setState] = useState<ListState<AcademyEventDoc>>(EMPTY);
+  // useEvents와 같이 앱이 켜져 있는 동안 들고 있고, 로딩 화면 동안 미리 받습니다(2026-09-26).
+  return useLiveList("academyEvents", startAcademyEvents);
+}
 
-  useEffect(() => {
-    return onSnapshot(
-      query(collection(db, "academyEvents"), orderBy("date")),
-      (snapshot) =>
-        setState({
-          data: snapshot.docs.map(
-            (document) => ({ id: document.id, ...document.data() }) as AcademyEventDoc,
-          ),
-          loading: false,
-          error: null,
-        }),
-      () => setState({ data: [], loading: false, error: "도산아카데미 일정을 불러오지 못했어요." }),
-    );
-  }, []);
+function startAcademyEvents(emit: (state: ListState<AcademyEventDoc>) => void) {
+  onSnapshot(
+    query(collection(db, "academyEvents"), orderBy("date")),
+    (snapshot) =>
+      emit({
+        data: snapshot.docs.map(
+          (document) => ({ id: document.id, ...document.data() }) as AcademyEventDoc,
+        ),
+        loading: false,
+        error: null,
+      }),
+    () => emit({ data: [], loading: false, error: "도산아카데미 일정을 불러오지 못했어요." }),
+  );
+}
 
-  return state;
+/** 로딩 화면 동안 홈의 일정(D-day 카드·캘린더)을 미리 받기 시작합니다 (StageGate). */
+export function warmHomeData() {
+  warmLiveList("events", startEvents);
+  warmLiveList("academyEvents", startAcademyEvents);
 }
 
 /**

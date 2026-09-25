@@ -8,6 +8,8 @@ import { isFirebaseConfigured } from "@/lib/firebase";
 import { APP_NAME } from "@/lib/constants";
 import { rememberReturnPath, takeReturnPath } from "@/lib/login-return";
 import { useSplashHoldDone } from "@/lib/use-splash-hold";
+import { warmCohortDirectory, warmHomeData } from "@/lib/hooks";
+import { cohortOf } from "@/lib/cohort";
 
 /**
  * 각 단계에서 사용자가 있어야 할 화면.
@@ -35,9 +37,23 @@ export default function StageGate({
   allow: AuthStage[];
   children: ReactNode;
 }) {
-  const { stage } = useAuth();
+  const { stage, user, profile } = useAuth();
   const router = useRouter();
   const allowed = allow.includes(stage);
+
+  /*
+   * 로딩 화면이 떠 있는 동안 홈 일정과 내 기수 원우수첩을 미리 받기 시작합니다
+   * (2026-09-26 사용자 "홈 일정 칸이랑 원우탭이 너무 로딩이 오래 걸려"). 예전엔 로딩 화면(1초)이 끝나
+   * 화면이 그려진 뒤에야 받기 시작했습니다. 받은 것은 앱이 켜져 있는 동안 들고 있습니다(lib/live-list.ts).
+   * 구독을 거는 것뿐이라 effect 안에서 setState는 하지 않습니다.
+   */
+  useEffect(() => {
+    warmHomeData();
+  }, []);
+  const myCohort = profile?.cohort;
+  useEffect(() => {
+    if (stage === "ready" && user) warmCohortDirectory("member", user.uid, cohortOf(myCohort));
+  }, [stage, user, myCohort]);
   /*
    * 앱을 연 뒤 1.5초는 무조건 로딩 화면 (2026-09-26 사용자 요청, lib/use-splash-hold.ts).
    * 그동안은 다른 화면으로 보내지도(redirect), 화면을 그리지도 않습니다.
