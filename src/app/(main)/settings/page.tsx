@@ -216,11 +216,11 @@ export default function SettingsPage() {
  */
 function SectionTitle({ children }: { children: ReactNode }) {
   /*
-   * 같은 날 사용자 조정: 16px(15px에서) · "아주 조금 더 진한 회색" · 왼쪽으로 3px, 다시 4px(20px → 17px → 13px 들여쓰기).
+   * 같은 날 사용자 조정: 16px(15px에서) · "아주 조금 더 진한 회색" · 왼쪽으로 3px, 4px, 1.5px(20 → 17 → 13 → 11.5px 들여쓰기).
    * 색은 ink-muted에 한 단 진한 ink-soft를 1/4 섞은 값 — 토큰끼리 섞어 어두운 화면에서도 저절로 맞습니다.
    */
   return (
-    <h2 className="mb-2 pl-[13px] text-[16px] font-medium text-[color-mix(in_srgb,var(--color-ink-muted)_75%,var(--color-ink-soft))]">
+    <h2 className="mb-2 pl-[11.5px] text-[16px] font-medium text-[color-mix(in_srgb,var(--color-ink-muted)_75%,var(--color-ink-soft))]">
       {children}
     </h2>
   );
