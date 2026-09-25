@@ -321,15 +321,15 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         </div>
         {selectedItems.length === 0 ? null : (
           /*
-            일정이 있는 날은 + 단추가 일정 목록의 세로 가운데, 오른쪽 끝에 섭니다 (2026-09-26 사용자 "내 폰 캘린더에 연결보다
-            위, 일정 막대 가운데에" — 그 전엔 목록·연결 단추 아래 맨 끝). 일정이 하나면 그 막대의 가운데와 같습니다.
+            일정이 있는 날은 + 단추가 **마지막 일정** 줄의 세로 가운데(막대 가운데), 오른쪽 끝에 섭니다 (2026-09-26 사용자
+            "내 폰 캘린더에 연결보다 위, 일정 막대 가운데에" → "여러 개일 때는 마지막 일정의 막대 가운데"). 단추는 마지막 줄(li) 안에 둡니다.
             pr-12 — + 자리(40px)만큼 목록 오른쪽을 비워, 원우에게 보이는 × 삭제 단추와 겹치지 않게 합니다.
-            right-[-6px]는 "일정이 없어요" 줄의 + 와 같은 가로 자리입니다.
+            right-[-54px] — 줄 오른쪽 끝에서 그 비운 48px을 넘어 "일정이 없어요" 줄의 + 와 같은 가로 자리(−6px)까지.
           */
-          <div className="relative mt-1.5 pr-12">
-          <span className="absolute top-1/2 right-[-6px] -translate-y-1/2">{addButton}</span>
+          <div className="mt-1.5 pr-12">
           <ul className="flex flex-col gap-1">
-            {selectedItems.map((item) => {
+            {selectedItems.map((item, itemIndex) => {
+              const isLast = itemIndex === selectedItems.length - 1;
               /*
                 ★ 한 줄 모양은 홈의 "다가오는 일정" 박스(components/EventCard.tsx의 EventDdayCard)와 같습니다
                   (2026-09-25 사용자 "다가오는 일정 박스 스타일에 맞춰서"). 막대 3px·제목 윗머리에 맞춘 위쪽 4px,
@@ -381,7 +381,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                 </>
               );
               return (
-                <li key={item.key} className="flex items-center gap-1">
+                <li key={item.key} className="relative flex items-center gap-1">
+                  {isLast ? (
+                    <span className="absolute top-1/2 right-[-54px] -translate-y-1/2">{addButton}</span>
+                  ) : null}
                   {item.kind === "academy" ? (
                     <a
                       href={item.href}
