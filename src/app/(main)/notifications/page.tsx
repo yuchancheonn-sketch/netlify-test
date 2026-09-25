@@ -16,7 +16,6 @@ import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markNoticesSeen } from "@/lib/chat-read";
 import { cohortOf } from "@/lib/cohort";
-import { formatChatListTime } from "@/lib/format";
 import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 import type { NoticeDoc } from "@/lib/types";
@@ -95,20 +94,47 @@ function NotificationsPageContent() {
             <EmptyState icon={<BellIcon className="h-10 w-10" />} title="아직 온 알림이 없어요" />
           </div>
         ) : (
+          /*
+            날짜는 줄 오른쪽이 아니라 박스 위에 글씨만 (2026-09-25 사용자 요청). 같은 날 온 알림은 한 묶음으로,
+            날짜는 그날 가장 최근 알림(목록이 최근 순이라 묶음의 첫 줄) 위에 한 번만 적습니다.
+            묶음 사이 20px, 묶음 안 줄 사이는 예전과 같은 12px.
+          */
           <ul className="flex flex-col gap-3">
-            {notices.map((notice) => (
-              <li key={notice.id}>
-                <NoticeRow
-                  notice={notice}
-                  isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline}
-                />
-              </li>
-            ))}
+            {notices.map((notice, index) => {
+              const day = dayKey(notice);
+              const firstOfDay = index === 0 || dayKey(notices[index - 1]) !== day;
+              return (
+                <li key={notice.id} className={firstOfDay && index > 0 ? "mt-2" : ""}>
+                  {firstOfDay ? (
+                    <p className="mb-2 px-1 text-[13px] font-bold text-ink-muted">{dayLabel(notice)}</p>
+                  ) : null}
+                  <NoticeRow
+                    notice={notice}
+                    isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
     </div>
   );
+}
+
+/** 같은 날인지 가르는 열쇠 — 폰의 지역 시간 기준 날짜. 시각이 아직 없는(방금 온) 알림은 오늘로 봅니다. */
+function dayKey(notice: NoticeDoc): string {
+  return (notice.createdAt?.toDate() ?? new Date()).toDateString();
+}
+
+/** 묶음 위 날짜 글씨 — "오늘", "어제", 그 밖에는 "9월 21일 (월)". */
+function dayLabel(notice: NoticeDoc): string {
+  const date = notice.createdAt?.toDate() ?? new Date();
+  const today = new Date();
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "오늘";
+  if (date.toDateString() === yesterday.toDateString()) return "어제";
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${"일월화수목금토"[date.getDay()]})`;
 }
 
 /** 알림 종류마다의 그림 — 일정은 달력, 투표는 기표 도장, 영상은 재생, 소식은 확성기 */
@@ -125,8 +151,6 @@ function NoticeGlyph({ type, className }: { type: NoticeDoc["type"]; className: 
 }
 
 function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
-  const createdAt = notice.createdAt?.toDate();
-
   return (
     <Link
       href={notice.url}
@@ -152,12 +176,9 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
         ) : null}
       </span>
 
-      <span className="flex shrink-0 flex-col items-end gap-1">
-        {createdAt ? (
-          <span className="text-[12px] text-ink-faint">{formatChatListTime(createdAt)}</span>
-        ) : null}
-        <ChevronRightIcon className="h-4 w-4 text-ink-faint" />
-      </span>
+      {/* 날짜는 줄 오른쪽에서 빼 박스 위로 옮겼습니다(2026-09-25) — 오른쪽엔 꺾쇠만. */}
+      <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
+
     </Link>
   );
 }
