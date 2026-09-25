@@ -123,6 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return onSnapshot(
       doc(db, "users", uid),
       (snapshot) => {
+        /*
+         * 기기에 저장된 값(캐시)에 내 문서가 없다는 첫 소식은 믿지 않고 서버 답을 기다립니다 (2026-09-26 사용자
+         * "로딩 화면이 사라질 때 깜빡여"). 그대로 받으면 잠깐 "가입 전"으로 보여 가입 화면으로 갔다가
+         * 서버 답이 오면 홈으로 돌아오면서, 그 사이 로딩 화면이 한 번 더 떴습니다.
+         */
+        if (!snapshot.exists() && snapshot.metadata.fromCache) return;
         setProfileEntry({
           uid,
           doc: snapshot.exists() ? (snapshot.data() as UserDoc) : null,

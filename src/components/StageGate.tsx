@@ -89,9 +89,18 @@ export default function StageGate({
  * 때문입니다(scripts/generate-icons.mjs). 같은 그림을 두 벌 두면 언젠가
  * 한쪽만 바뀌므로 그대로 함께 씁니다.
  */
+/** 이번에 앱을 연 뒤 로딩 화면 로고가 한 번이라도 떠올랐는지 (아래 SplashScreen의 replay). */
+let logoShownOnce = false;
+
 export function SplashScreen() {
   /** 로고 그림을 다 받았는지 — 받은 뒤에 떠오르는 애니메이션을 겁니다(아래 Image 주석). */
   const [logoReady, setLogoReady] = useState(false);
+  /*
+   * ★ 떠오르는 애니메이션은 앱을 연 뒤 처음 한 번만 (2026-09-26 사용자 "로딩 화면이 사라질 때 깜빡여").
+   *   시작 주소(/)의 로딩 화면이 끝나고 홈 쪽 로딩 화면이 새로 그려지는 일이 있는데, 그때마다 로고가
+   *   투명에서 다시 떠올라 한 번 깜빡였습니다. 두 번째부터는 로고를 처음부터 그대로 보여 줍니다.
+   */
+  const [replay] = useState(() => logoShownOnce);
   return (
     /*
       ★ fixed inset-0 — 로고를 **보이는 화면의 정가운데**에 둡니다 (2026-09-15 사용자 요청).
@@ -138,12 +147,18 @@ export function SplashScreen() {
             0.5초짜리 애니메이션이 먼저 끝나 버려, 그림이 뒤늦게 뚝 나타나 보였습니다.
             받기 전에는 투명(opacity-0). 이미 받아 둔 그림은 ref에서 complete로 바로 알아챕니다.
         */
-        onLoad={() => setLogoReady(true)}
+        onLoad={() => {
+          logoShownOnce = true;
+          setLogoReady(true);
+        }}
         ref={(image) => {
-          if (image?.complete && image.naturalWidth > 0) setLogoReady(true);
+          if (image?.complete && image.naturalWidth > 0) {
+            logoShownOnce = true;
+            setLogoReady(true);
+          }
         }}
         className={`h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
-          logoReady ? "animate-splash-in" : "opacity-0"
+          replay ? "" : logoReady ? "animate-splash-in" : "opacity-0"
         }`}
       />
       {/*
