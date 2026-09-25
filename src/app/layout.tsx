@@ -14,7 +14,8 @@ import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
 const notoSansKr = Noto_Sans_KR({
   variable: "--font-noto-sans-kr",
   subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+  // 600은 2026-09-25에 더함 — 모임 카드 제목을 700보다 "아주아주 조금만 더 얇게"(사용자 요청). 없으면 600이 700으로 그려집니다.
+  weight: ["400", "500", "600", "700", "900"],
   display: "swap",
 });
 

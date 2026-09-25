@@ -85,8 +85,8 @@ export function EventDdayCard({
         {/* 굵기 700(font-bold) — 2026-09-25 사용자 "아주 조금만 더 얇게", 800(font-extrabold)에서 한 단계. */}
         <span
           className={`font-bold tracking-tight whitespace-nowrap text-brand-500 ${
-            // 23px — 2026-09-25 사용자 요청(28px → 26px → 24px → 23px "1px 만큼 줄여줘"). 긴 글자(22px)도 1px 같이 줄임.
-            dday.length >= 5 ? "text-[21px]" : "text-[23px]"
+            // 22px — 2026-09-25 사용자 요청(28px → 26px → 24px → 23px → 22px, "1px 만큼 줄여줘" 두 번). 긴 글자도 1px씩 같이 줄임.
+            dday.length >= 5 ? "text-[20px]" : "text-[22px]"
           }`}
         >
           {dday}
@@ -103,8 +103,10 @@ export function EventDdayCard({
         {/*
           일정 이름 17px 굵게 — 한 줄, 길면 "…"로 줄입니다.
           (2026-09-25에 줄을 바꿔 끝까지 보이게 했다가 같은 날 사용자 "그전이 낫다"로 되돌렸습니다.)
+          굵기 600(font-semibold) — 같은 날 사용자 "아주아주 조금만 더 얇게", 700(font-bold)에서 한 단계.
+          600은 app/layout.tsx에서 글꼴을 받아 와야 그려집니다.
         */}
-        <span className="block truncate text-[17px] leading-tight font-bold">{event.title}</span>
+        <span className="block truncate text-[17px] leading-tight font-semibold">{event.title}</span>
         {/* "시간 · 장소" 한 줄 — 둘 중 없는 것은 빼고, 둘 다 없으면 줄째 없앱니다. 길면 "…". */}
         {time || event.location ? (
           <span className="mt-1 block truncate text-[14px] font-medium text-ink-muted">
