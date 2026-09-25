@@ -90,7 +90,13 @@ export function SplashScreen() {
       바탕은 앱 주황(bg-brand-500), 로고는 완전 흰색 (2026-09-25 사용자 요청 — 예전엔 bg-canvas 회색 바탕에 파란 로고).
       주황은 어두운 화면에서도 같은 색이라 테마와 상관없이 똑같이 보입니다.
     */
-    <div className="fixed inset-0 flex items-center justify-center bg-brand-500 px-8">
+    /*
+      ★ 브라우저(카카오톡·Safari 안)에서는 위아래 안전 영역을 빼고 가운데를 잡습니다 (2026-09-26 사용자 "카톡에서 로딩 화면이
+        버퍼링 같다"). 카카오톡 창이 자리를 잡으면서 화면 아래쪽이 도구줄 밑까지 늘어나, 로고가 늘어난 영역의 가운데로 뚝
+        떨어졌습니다. 도구줄에 가려지는 몫(safe-area-inset-bottom)을 padding으로 빼면 보이는 주황 영역의 가운데에 섭니다.
+        홈 화면 앱(standalone)은 예전 자리 그대로라 이 padding을 걸지 않습니다.
+    */
+    <div className="fixed inset-0 flex items-center justify-center bg-brand-500 px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)]">
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
