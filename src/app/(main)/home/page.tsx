@@ -66,16 +66,18 @@ export default function HomePage() {
       {/*
         ★ 홈의 앱 이름("애기애타")만 주황·24.5px (2026-09-26 사용자 "다른 탭은 그대로, 왼쪽 위 애기애타만 주황색으로,
           2.5px 키워줘"). 다른 탭 제목은 PageHeader 기본(22px 먹색) 그대로이고, 운영진의 기수 고르개도 그대로 먹색입니다.
+        ★ 같은 날 한자 "愛己愛他"로 바꿈(사용자 "한자 애기애타로 바꿔볼래?"). 화면 읽기 프로그램은 aria-label로 "애기애타"라고 읽습니다.
+          앱 이름 상수(APP_DEFINITION_TITLE)는 다른 곳도 쓰므로 여기서만 한자로 씁니다.
       */}
       <PageHeader
         title={
           canSwitch ? (
             <span className="flex items-center gap-2">
-              <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+              <span className="text-[24.5px] text-brand-500" aria-label={APP_DEFINITION_TITLE}>愛己愛他</span>
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            <span className="text-[24.5px] text-brand-500">{APP_DEFINITION_TITLE}</span>
+            <span className="text-[24.5px] text-brand-500" aria-label={APP_DEFINITION_TITLE}>愛己愛他</span>
           )
         }
         right={<HeaderActions />}
