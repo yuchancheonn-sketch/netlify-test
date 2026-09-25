@@ -468,23 +468,34 @@ function AlbumBook({
    *  2. fit일 때(위원회 칸) 카드 자리 전체의 높이 — 카드가 길면 그만큼 자리가 늘어납니다.
    * 카드가 그려진 뒤·크기가 바뀔 때마다 ResizeObserver가 알려 줍니다.
    */
-  const [cardHeight, setCardHeight] = useState(0);
-  const cardObserver = useRef<ResizeObserver | null>(null);
-  const measureCard = (element: HTMLDivElement | null) => {
-    cardObserver.current?.disconnect();
-    cardObserver.current = null;
+  /*
+   * ★ 카드마다 따로 잽니다 (2026-09-26 사용자 "카톡에서 위원회 카드 넘길 때 축소됐다가 커졌다가").
+   *   예전엔 지금 카드 하나만 재서, 넘기는 동안 뒤에서 올라오는 카드도 지금 카드의 줄임 비율로 그려졌다가
+   *   다 넘어가는 순간 제 비율로 바뀌며 줄었다 커졌습니다(화면이 짧은 카카오톡에서 줄어드는 카드가 많아 잘 보였음).
+   *   이제 그려지는 카드(지금 카드 + 넘기는 중 뒤 카드)를 모두 재 두고, 카드마다 제 길이로 비율을 정합니다.
+   */
+  const [cardHeights, setCardHeights] = useState<Record<string, number>>({});
+  const cardObservers = useRef(new Map<string, { element: HTMLElement; observer: ResizeObserver }>());
+  const measureCard = (id: string) => (element: HTMLDivElement | null) => {
+    const existing = cardObservers.current.get(id);
+    if (existing && existing.element === element) return;
+    existing?.observer.disconnect();
+    cardObservers.current.delete(id);
     if (!element) return;
     /*
      * ★ offsetHeight로 잽니다 — getBoundingClientRect()는 안 됩니다 (2026-09-25 사용자 "이 카드만 회전할 때 내려갔다가 올라가").
      *   카드는 뒤집힐 때 perspective 3D로 돌아서, 도는 동안 화면에 보이는 크기(getBoundingClientRect)가 커졌다 작아집니다.
      *   그 값으로 재면 높이가 흔들리고, 화면보다 긴 카드(fit — 대외협력위원회처럼 인원 많은 카드)는 그 높이로 자리를 잡아서
      *   카드가 아래로 내려갔다 올라왔습니다. offsetHeight는 변형(transform)을 무시한 원래 높이라 도는 동안에도 그대로입니다.
-     *   (measureCard는 그릴 때마다 새 함수라 리액트가 그릴 때마다 다시 부릅니다 — 회전 중에도 계속 재는 까닭.)
      */
-    setCardHeight(element.offsetHeight);
-    const observer = new ResizeObserver(() => setCardHeight(element.offsetHeight));
+    const save = () =>
+      setCardHeights((previous) =>
+        previous[id] === element.offsetHeight ? previous : { ...previous, [id]: element.offsetHeight },
+      );
+    save();
+    const observer = new ResizeObserver(save);
     observer.observe(element);
-    cardObserver.current = observer;
+    cardObservers.current.set(id, { element, observer });
   };
   const drag = useRef<{
     x: number;
@@ -503,10 +514,15 @@ function AlbumBook({
    * 인원이 많은 위원회나 조직도, 글씨 "크게"일 때만 줄어듭니다. 원우 소식 칸(fit 아님)은 늘 1입니다.
    */
   const fitSpace = deckHeight - 40;
-  const fitScale = fit && cardHeight > 0 && fitSpace > 0 && cardHeight > fitSpace ? fitSpace / cardHeight : 1;
+  /** 카드 한 장의 줄임 비율 — 카드마다 제 길이로 (위 cardHeights 주석). */
+  const scaleFor = (height: number) =>
+    fit && height > 0 && fitSpace > 0 && height > fitSpace ? fitSpace / height : 1;
 
   // 기수를 바꾸거나 소식이 지워져 목록이 짧아지면 마지막 장에 섭니다.
   const current = Math.min(index, slides.length - 1);
+  /** 지금 카드의 높이와 줄임 비율 — 아래 순번 줄("3 / 8") 자리를 정합니다. */
+  const cardHeight = cardHeights[slides[current]?.id ?? ""] ?? 0;
+  const fitScale = scaleFor(cardHeight);
   const hasPrev = current > 0;
   const hasNext = current < slides.length - 1;
 
@@ -713,6 +729,8 @@ function AlbumBook({
         {slots.map(({ slide, isCurrent }) => {
           const album = slide.album;
           const flipped = isCurrent && flippedId === slide.id;
+          /** 이 카드의 줄임 비율 — 뒤 카드도 제 길이로(2026-09-26). 아직 못 잰 첫 순간은 1. */
+          const slideScale = scaleFor(cardHeights[slide.id] ?? 0);
           const motion = isCurrent
             ? {
                 transform: `translateX(${direction * progress * 112}%) rotate(${direction * progress * 5}deg)`,
@@ -738,14 +756,17 @@ function AlbumBook({
                   --fit-scale — 줄인 비율을 카드 안에 알려 줍니다. 카드 아래 안내 글씨("눌러서 다음 장 보기" 등)가
                   이 값으로 나눠 제 크기(12px)로 보이게 합니다 (2026-09-26 사용자 "같은 크기로" — 조직도만 줄어 작아 보였음).
                 */}
+                {/*
+                  비율이 바뀔 때 애니메이션(transition)은 걸지 않습니다(2026-09-26) — 카드마다 제 비율이 처음부터 정해져
+                  있어서 바뀔 일이 없고, 걸어 두면 잰 값이 늦게 들어오는 첫 순간에 줄어드는 모습이 보입니다.
+                */}
                 <div
                   style={
-                    fitScale < 1
+                    slideScale < 1
                       ? ({
-                          transform: `scale(${fitScale})`,
+                          transform: `scale(${slideScale})`,
                           transformOrigin: "center",
-                          transition: `transform ${TURN_MS}ms ${TURN_EASE}`,
-                          "--fit-scale": fitScale,
+                          "--fit-scale": slideScale,
                         } as React.CSSProperties)
                       : undefined
                   }
@@ -759,7 +780,7 @@ function AlbumBook({
                 */}
                 <div
                   data-album-card
-                  ref={isCurrent ? measureCard : undefined}
+                  ref={measureCard(slide.id)}
                   className="relative [transform-style:preserve-3d]"
                   style={{
                     transform: `perspective(1600px) rotateY(${flipped ? 180 : 0}deg)`,
