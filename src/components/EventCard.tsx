@@ -128,7 +128,7 @@ export function EventDdayCard({
                   </span>
                 ) : null}
                 {event.location ? (
-                  {/* gap-0.5 — 핀과 장소 글씨 사이 2px (같은 날 사용자 "조금 더 붙여줘", 4px에서). */}
+                  // gap-0.5 — 핀과 장소 글씨 사이 2px (같은 날 사용자 "조금 더 붙여줘", 4px에서).
                   <span className="flex min-w-0 items-center gap-0.5">
                     {/* 핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로. */}
                     <PinIcon className="h-[18px] w-[18px] shrink-0" />
