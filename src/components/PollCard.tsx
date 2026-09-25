@@ -589,6 +589,11 @@ export function PollCreateSheet({
   const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
   // 시트가 떠 있는 동안 뒤쪽 홈 화면은 스크롤되지 않습니다.
   useLockBodyScroll();
+  /*
+   * 입력칸 — 흰 시트 위 옅은 회색 칸, 그림자 없음, 높이 약 44px. 일정 등록 폼(EventForm의 fieldClassName)과 같은 값
+   * (2026-09-25). 공용 inputClassName은 다른 화면도 쓰므로 여기서만 덮어씁니다.
+   */
+  const grayField = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
   const title = kind === "vote" ? "투표 만들기" : "의견 모으기";
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
@@ -677,7 +682,11 @@ export function PollCreateSheet({
       */}
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-canvas sm:rounded-[16px]"
+        /*
+          흰 바탕(bg-surface)에 옅은 회색 칸 — 일정 등록 시트와 같은 모양 (2026-09-25 사용자 "다른 창들처럼").
+          그 전엔 회색 바탕(bg-canvas)에 흰 칸 + 그림자였습니다. 칸 모양은 아래 grayField.
+        */
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
         style={sheetStyle}
       >
         {/* 손잡이 바 — 끌어내려 닫을 수 있습니다. */}
@@ -703,7 +712,7 @@ export function PollCreateSheet({
           <div className="mb-5">
             <FieldLabel>누구에게 물어볼까요</FieldLabel>
             <div
-              className="flex rounded-full bg-surface p-1 shadow-[var(--shadow-card)]"
+              className="flex rounded-full bg-canvas p-1"
               role="radiogroup"
               aria-label="물어볼 대상"
             >
@@ -746,7 +755,7 @@ export function PollCreateSheet({
                   ? "예) 수료식 날짜를 언제로 할까요?"
                   : "예) 남은 기간에 바라는 점이 있나요?"
               }
-              className={inputClassName}
+              className={grayField}
             />
           </div>
 
@@ -761,7 +770,7 @@ export function PollCreateSheet({
                       value={option}
                       onChange={(changed) => setOption(index, changed.target.value)}
                       placeholder={`${index + 1}번`}
-                      className={inputClassName}
+                      className={grayField}
                     />
                     {/* 두 개까지는 지울 수 없습니다 — 하나만 남으면 물어볼 것이 없습니다. */}
                     {options.length > POLL_MIN_OPTIONS ? (
@@ -799,7 +808,7 @@ export function PollCreateSheet({
               만드는 사람에게 먼저 알려줍니다 — 모아 놓고 "누가 썼는지 보자"가
               안 되는 것을 나중에 알면 곤란합니다.
             */
-            <div className="mb-5 rounded-2xl bg-surface px-4 py-4 shadow-[var(--shadow-card)]">
+            <div className="mb-5 rounded-2xl bg-canvas px-4 py-4">
               <p className="text-[13px] leading-relaxed text-ink-muted">
                 고를 것 없이 원우들이 글로 답합니다.
                 <br />
