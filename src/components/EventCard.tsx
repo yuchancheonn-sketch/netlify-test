@@ -105,8 +105,10 @@ export function EventDdayCard({
         {/* 주황 막대 + 글 — 막대는 글이 두세 줄로 늘면 그만큼 길어집니다(self-stretch). */}
         <span className="mt-2.5 flex gap-2.5">
           {/* 막대 3px — 같은 날 사용자 "두께 좀 줄여줘"(4px, w-1에서). */}
-          <span aria-hidden="true" className="w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
-          <span className="min-w-0 flex-1">
+          {/* mt-[0.5px] — 막대 위쪽 끝을 0.5px 짧게 (같은 날 사용자 요청). 아래 끝은 그대로. */}
+          <span aria-hidden="true" className="mt-[0.5px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
+          {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
+          <span className="min-w-0 flex-1 -translate-y-[0.5px]">
             {/*
               일정 이름 17px — 두 줄까지, 넘치면 "…"(line-clamp-2). 같은 날 사용자 요청으로
               끝까지 → 한 줄 → 두 줄. break-keep으로 한글은 낱말 단위로 넘깁니다.
