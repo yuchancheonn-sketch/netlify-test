@@ -143,7 +143,8 @@ export function LoginPromptProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setPrompt(null)}
-                className="w-full py-3 text-[15px]! font-bold text-ink-soft"
+                // 옅은 회색 밑줄 — 로그인 안내 상자의 "되돌아가기"와 같은 모양 (2026-09-26 사용자 요청).
+                className="w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
               >
                 둘러보기 계속
               </button>
