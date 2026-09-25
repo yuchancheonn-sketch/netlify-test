@@ -56,8 +56,8 @@ export default function DosanAcademyFooter() {
         />
       </button>
 
+      {/* gap-px — 펼친 정보의 줄 사이 1px (2026-09-25 사용자 "아주 조금 더 줄여줘", 2px에서). */}
       {open ? (
-        {/* gap-px — 줄 사이 1px (2026-09-25 사용자 "아주 조금 더 줄여줘", 2px에서). */}
         <div className="mt-1.5 flex flex-col gap-px">
           <p>주소 : 서울 종로구 대학로 122, 5층(동숭동, 흥사단)</p>
           <p>이사장 : 구자관 · 원장 : 김철균</p>
