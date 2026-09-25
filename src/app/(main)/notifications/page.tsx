@@ -112,12 +112,12 @@ function NotificationsPageContent() {
 }
 
 /** 알림 종류마다의 그림 — 일정은 달력, 투표는 기표 도장, 영상은 재생, 소식은 확성기 */
-function NoticeGlyph({ type }: { type: NoticeDoc["type"] }) {
-  if (type === "event") return <CalendarIcon className="h-[22px] w-[22px]" />;
-  if (type === "poll") return <VoteStampIcon className="h-[22px] w-[22px]" strokeWidth={2.2} />;
-  if (type === "news") return <MegaphoneIcon className="h-[22px] w-[22px]" />;
+function NoticeGlyph({ type, className }: { type: NoticeDoc["type"]; className: string }) {
+  if (type === "event") return <CalendarIcon className={className} />;
+  if (type === "poll") return <VoteStampIcon className={className} strokeWidth={2.2} />;
+  if (type === "news") return <MegaphoneIcon className={className} />;
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-[22px] w-[22px]" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <rect x="3" y="5" width="18" height="14" rx="3.5" stroke="currentColor" strokeWidth="1.9" />
       <path d="M10.2 9.2v5.6l4.6-2.8z" fill="currentColor" />
     </svg>
@@ -130,21 +130,21 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
   return (
     <Link
       href={notice.url}
-      className={`flex items-center gap-3 rounded-3xl p-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
+      // px-4 — 왼쪽 그림 칸을 걷으면서 글이 카드 끝에 붙지 않게 좌우를 16px로(예전 p-3.5 = 14px).
+      className={`flex items-center gap-3 rounded-3xl px-4 py-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
         isNew ? "bg-brand-50" : "bg-surface"
       }`}
     >
-      {/*
-        연한 회색 칸(bg-fill)에 진한 회색 그림(ink-soft) — 2026-09-22 사용자 요청.
-        예전엔 날짜 칸·D-day 카드처럼 주황을 꽉 채우고 그림은 흰색이었습니다.
-      */}
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fill text-ink-soft">
-        <NoticeGlyph type={notice.type} />
-      </span>
-
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] leading-snug font-bold text-ink">
-          {notice.title}
+        {/*
+          종류 그림은 제목 왼쪽에 작게(17px, 진회색) — 2026-09-25 사용자 "아이콘 박스는 없애고, 아이콘만 줄여서 제목 왼쪽으로".
+          예전엔 줄 맨 왼쪽의 44px 연회색 칸(bg-fill) 안에 22px 그림이었고, 그 전엔 주황 칸에 흰 그림이었습니다.
+        */}
+        <span className="flex items-center gap-1.5">
+          <NoticeGlyph type={notice.type} className="h-[17px] w-[17px] shrink-0 text-ink-soft" />
+          <span className="min-w-0 truncate text-[15px] leading-snug font-bold text-ink">
+            {notice.title}
+          </span>
         </span>
         {notice.body ? (
           <span className="mt-0.5 block truncate text-[13px] text-ink-muted">{notice.body}</span>
