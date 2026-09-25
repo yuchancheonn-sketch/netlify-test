@@ -215,8 +215,8 @@ export default function DosanQuizCard() {
         ) : (
           <>
             {/* break-keep: 줄 끝에서 "선생 / 이"처럼 낱말 가운데가 끊기지 않게 낱말 단위로 넘깁니다. */}
-            {/* gap-1.5 — "Q."와 질문 사이 6px (2026-09-25 사용자 "조금만 더 붙여줘", 8px에서). 퀴즈 기록 화면도 같은 값. */}
-            <p className="flex gap-1.5 pt-2 text-[17px] leading-relaxed font-medium text-ink">
+            {/* gap-1 — "Q."와 질문 사이 4px (2026-09-25 사용자 "더 붙여줘" 두 번, 8px → 6px → 4px). 퀴즈 기록 화면도 같은 값. */}
+            <p className="flex gap-1 pt-2 text-[17px] leading-relaxed font-medium text-ink">
               {/*
                 Q는 글꼴 글자 대신 굵은 Q 아이콘(QMarkIcon) — 사진처럼 꼬리가 길게 뚫고 나가는 모양(2026-09-22).
                 크기: 0.9em(≈15px)에서 2px 키웠습니다(2026-09-22 사용자 요청).
