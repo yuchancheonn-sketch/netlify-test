@@ -56,28 +56,6 @@ export default function HomePage() {
 
   const [nextEvent] = events;
 
-  /*
-   * 홈 제목 — 주황 "애기애타" + 오른쪽에 도산아카데미 로고 (2026-09-26 사용자 "애기애타 오른쪽에 도산아카데미 크기 맞춰서").
-   * 로고는 로딩 화면과 같은 그림(public/brand/goose.png)입니다.
-   * - 색: 앱 주황(bg-brand-500)과 똑같게 — 그림 모양으로 오려낸 틀(mask-image)에 주황을 채웁니다
-   *   (같은 날 사용자 "주황색으로"; 처음엔 원래 파란 그림). 주황 토큰을 바꾸면 로고도 따라 바뀝니다.
-   * - 크기 34.5px·2px 아래로 — 같은 날 사용자 "1px 내리고 1px 키워줘"(32px → 33px·1px),
-   *   이어서 "1px 내리고 1.5px 늘려줘"(→ 34.5px·2px), "0.5px 올리고 1.5px 늘려줘"(→ 36px·1.5px), "1.5px 키워줘"(→ 37.5px).
-   */
-  // ★ 로고는 "애기애타" 왼쪽에 (2026-09-26 사용자 "로고를 애기애타 왼쪽으로 옮겨봐" — 처음엔 오른쪽).
-  // gap-1 — 로고와 글씨 사이 4px (같은 날 사용자 "조금만 더 붙여줘", 6px에서).
-  const appName = (
-    <span className="flex items-center gap-1">
-      <span
-        role="img"
-        aria-label="도산아카데미"
-        className="h-[37.5px] w-[37.5px] shrink-0 translate-y-[1.5px] bg-brand-500 [mask-image:url(/brand/goose.png)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
-      />
-      {/* 22px — 다른 탭 제목과 같은 크기 (2026-09-26 사용자: 24.5px → 23px → "22px로"). */}
-      <span className="text-[22px] text-brand-500">{APP_DEFINITION_TITLE}</span>
-    </span>
-  );
-
   return (
     <>
       {/*
@@ -85,19 +63,15 @@ export default function HomePage() {
         글씨는 다른 탭 제목("원우수첩", "자료" …)과 크기·굵기까지 똑같습니다.
         운영진에게만 이름 옆에 기수 고르기가 붙습니다.
       */}
-      {/*
-        ★ 홈의 앱 이름("애기애타")만 주황·24.5px (2026-09-26 사용자 "다른 탭은 그대로, 왼쪽 위 애기애타만 주황색으로,
-          2.5px 키워줘"). 다른 탭 제목은 PageHeader 기본(22px 먹색) 그대로이고, 운영진의 기수 고르개도 그대로 먹색입니다.
-      */}
       <PageHeader
         title={
           canSwitch ? (
             <span className="flex items-center gap-2">
-              {appName}
+              {APP_DEFINITION_TITLE}
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            appName
+            APP_DEFINITION_TITLE
           )
         }
         right={<HeaderActions />}
