@@ -98,7 +98,9 @@ export function SplashScreen() {
         priority
         // brightness-0 invert — 투명 PNG의 그림 부분(기러기·글씨)을 모두 흰색으로 칠합니다. 그림 파일은 그대로 둡니다.
         // w-[160px] — 로고를 조금 더 크게 (2026-09-25 사용자 요청, 140px에서).
-        className="animate-splash-in h-auto w-[160px] brightness-0 invert"
+        // -mt-5 — 로고를 화면 정가운데보다 10px 위로 (2026-09-25 사용자 요청). flex 가운데 정렬이라
+        //   위 여백 -20px이면 그림이 절반인 10px만큼 올라갑니다. 등장 애니메이션(transform)과 겹치지 않게 margin으로 뺍니다.
+        className="animate-splash-in -mt-5 h-auto w-[160px] brightness-0 invert"
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
