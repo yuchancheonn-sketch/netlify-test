@@ -227,7 +227,8 @@ export default function EventForm({
           <button
             type="button"
             onClick={onDone}
-            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+            // 흰 바탕 + 옅은 회색 테두리 — 원우 소식 올리기 창의 "취소"와 같은 모양 (2026-09-26 사용자 요청, bg-fill 회색에서).
+            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)]"
           >
             취소
           </button>

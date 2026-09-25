@@ -829,7 +829,8 @@ export function PollCreateSheet({
                 옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
                 0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
               */
-              className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
+              // 흰 바탕 + 옅은 회색 테두리 — 원우 소식·일정 등록 창의 "취소"와 같은 모양 (2026-09-26, bg-fill 회색에서).
+              className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)]"
             >
               취소
             </button>
