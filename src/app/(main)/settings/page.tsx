@@ -9,6 +9,7 @@ import ToggleRow from "@/components/ToggleRow";
 import { ChevronRightIcon } from "@/components/icons";
 import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
 import { SectionTitle, Spinner } from "@/components/ui";
+import { withdrawMyAccount } from "@/lib/account-link";
 import { useAuth } from "@/lib/auth-context";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
@@ -22,7 +23,8 @@ import { useSwipeBack } from "@/lib/use-swipe-back";
  * 그 기기의 설정을 따릅니다 — 폰은 보통, 집 태블릿은 크게 같은 식으로요.
  *
  * 맨 아래 "계정" 칸은 예외입니다 — 권한·로그인 계정, 운영진 화면으로 가는 문(운영진에게만 보임),
- * 로그아웃, 탈퇴 안내가 모여 있습니다(2026-09-14~15에 내 프로필·설정 곳곳에서 옮겨 옴).
+ * 로그아웃, 탈퇴하기가 모여 있습니다(2026-09-14~15에 내 프로필·설정 곳곳에서 옮겨 옴. 탈퇴는 2026-09-25에
+ * "운영진에게 알려주세요" 안내에서 직접 하는 단추로 바뀜).
  */
 export default function SettingsPage() {
   const { textScale, resolved, setTextScale, setTheme } = useDisplaySettings();
@@ -35,6 +37,8 @@ export default function SettingsPage() {
   const isGuest = useIsGuest();
   /** "로그아웃 하시겠어요?" 시트가 떠 있는지 */
   const [confirmingLogout, setConfirmingLogout] = useState(false);
+  /** "정말 탈퇴할까요?" 시트가 떠 있는지 */
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
 
   /*
    * 오른쪽으로 밀어서 앞 화면으로 — 내 프로필 화면과 같은 손짓입니다.
@@ -162,12 +166,17 @@ export default function SettingsPage() {
             <span className="inline-block -translate-y-[2px]">로그아웃</span>
           </button>
 
-          {/* 탈퇴 안내 — 내 프로필에서 함께 옮겨 왔습니다(2026-09-15). */}
-          <p className="mt-5 text-center text-[12px] leading-relaxed text-ink-faint">
-            탈퇴를 원하시면 운영진에게 알려주세요.
-            <br />
-            작성한 글과 사진을 함께 정리해 드릴게요.
-          </p>
+          {/*
+            탈퇴하기 — 로그아웃 아래 작은 회색 글씨 단추 (2026-09-25 사용자 요청. 그 전엔 "운영진에게 알려주세요" 안내만).
+            누르면 바로 지우지 않고 경고가 담긴 확인 시트(WithdrawSheet)를 띄웁니다.
+          */}
+          <button
+            type="button"
+            onClick={() => setConfirmingWithdraw(true)}
+            className="mx-auto mt-5 block text-[13px]! font-medium text-ink-faint underline underline-offset-2"
+          >
+            탈퇴하기
+          </button>
         </section>
         )}
       </div>
@@ -181,7 +190,96 @@ export default function SettingsPage() {
           }}
         />
       ) : null}
+
+      {confirmingWithdraw ? (
+        <WithdrawSheet
+          onClose={() => setConfirmingWithdraw(false)}
+          onDone={() => router.replace("/login")}
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * 탈퇴 확인 시트 (2026-09-25 사용자 요청 — "정말 탈퇴할까요?"와 함께 정보가 사라진다는 경고 문구).
+ * 겉모양은 아래 LogoutSheet와 같고, 제목 아래 빨간 경고 상자를 둡니다. 탈퇴 단추는 되돌릴 수 없는 일이라
+ * 주황이 아니라 빨강(danger)입니다. 경고 문구는 서버가 실제로 지우는 것과 맞춰 둡니다(lib/account-withdraw-server.ts).
+ */
+function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function withdraw() {
+    setBusy(true);
+    setFailed(false);
+    try {
+      await withdrawMyAccount();
+      onDone();
+    } catch {
+      // 로그아웃은 이미 됐을 수 있어, 다시 로그인해서 시도하도록 안내합니다.
+      setFailed(true);
+      setBusy(false);
+    }
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="탈퇴 확인"
+      onClick={busy ? undefined : onClose}
+      onTouchStart={(event) => event.stopPropagation()}
+      onTouchMove={(event) => event.stopPropagation()}
+      onTouchEnd={(event) => event.stopPropagation()}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+      >
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+
+        <h2 className="mt-7 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
+
+        <div className="mt-4 rounded-2xl bg-danger/10 px-4 py-3.5 text-[14px] leading-relaxed text-danger">
+          <p className="font-bold">⚠️ 탈퇴하면 되돌릴 수 없어요</p>
+          <ul className="mt-1.5 list-disc pl-5">
+            <li>로그인 계정이 바로 삭제되고, 합쳐 둔 구글·카카오·휴대폰 로그인도 모두 지워져요.</li>
+            <li>프로필 사진, 생일, 알림 설정 같은 내 계정 정보가 모두 사라져요.</li>
+            <li>다시 쓰려면 처음부터 새로 가입해야 해요.</li>
+          </ul>
+        </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
+          원우수첩의 이름·회사·연락처와 그동안 쓴 글·사진·채팅은 남아요.
+        </p>
+
+        {failed ? (
+          <p role="alert" className="mt-3 text-[13px] leading-relaxed text-danger">
+            탈퇴하지 못했어요. 다시 로그인한 뒤 한 번 더 시도해 주세요.
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={withdraw}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-danger py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
+        >
+          {busy ? <Spinner className="h-5 w-5" /> : null}
+          탈퇴하기
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onClose}
+          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        >
+          취소
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }
 

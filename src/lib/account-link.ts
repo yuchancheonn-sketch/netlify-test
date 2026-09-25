@@ -1,5 +1,10 @@
 import type { FirebaseError } from "firebase/app";
-import { PhoneAuthProvider, signInWithCredential, signInWithCustomToken } from "firebase/auth";
+import {
+  PhoneAuthProvider,
+  signInWithCredential,
+  signInWithCustomToken,
+  signOut,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 /**
@@ -59,6 +64,25 @@ export async function adoptIntoPhoneAccount(caught: unknown): Promise<boolean> {
   });
   if (result.token) await signInWithCustomToken(auth, result.token);
   return true;
+}
+
+/**
+ * 탈퇴 (2026-09-25) — 무엇을 지우는지는 lib/account-withdraw-server.ts.
+ *
+ * ★ 로그인 토큰을 먼저 받아 두고 **로그아웃부터 한 뒤** 서버를 부릅니다. 서버가 users 문서를 먼저 지우는데,
+ *   로그인한 채면 그 순간 앱이 "가입 전"으로 보고 가입 화면으로 튀어 버립니다. 받아 둔 토큰은 로그아웃해도
+ *   한 시간 동안 유효해서 서버 확인에는 문제가 없습니다.
+ */
+export async function withdrawMyAccount(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("not-signed-in");
+  const idToken = await user.getIdToken(true);
+  await signOut(auth);
+  const response = await fetch("/api/account/withdraw", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!response.ok) throw new Error(`withdraw ${response.status}`);
 }
 
 /** 이 로그인이 본계정에 이어져 있으면 본계정으로 바꿔 탑니다. 바꿨으면 true. */
