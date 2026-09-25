@@ -154,26 +154,30 @@ export function SplashScreen({
     // exiting — 탭바·제목 줄보다 위(z-[100])에 덮인 채 옅어지고, 그동안 누르는 것은 아래 화면으로 통과시킵니다.
     <div
       className={`fixed inset-0 flex items-center justify-center px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)] ${
-        exiting ? "animate-splash-out pointer-events-none z-[100]" : ""
-      } bg-canvas`}
+        exiting ? "animate-splash-out pointer-events-none z-[100] bg-canvas" : "bg-brand-500"
+      }`}
       onAnimationEnd={(event) => {
         // 로고의 떠오르는 애니메이션이 끝난 것도 여기로 올라오므로 이 상자 자신의 것만 봅니다.
         if (exiting && event.target === event.currentTarget) onExited?.();
       }}
     >
       {/*
-        ★ 주황은 시계 줄 아래부터만 칠하고, 바깥 상자(화면 전체)의 바탕은 홈과 같은 회색(canvas)입니다
-          (2026-09-26 사용자 "로딩 화면이 사라진 뒤에도 위 주황이 남아" — 스크린샷에서 홈이 다 그려진 뒤에도 시계 줄이 주황빛).
+        ★ 걷히는 단계(exiting): 시계 줄 자리의 주황을 먼저 빼고, 아래 주황은 그대로 잠깐 더 둔 뒤 한 번에 없앱니다
+          (2026-09-26 사용자 "로딩 화면을 더 길게 해서라도 두 개가 동시에 사라지게").
           아이폰은 시계 줄 색을 화면 맨 위 요소에서 따와 천천히 옮기는데, 그 속도는 앱에서 정할 수 없습니다.
-          처음부터 시계 줄 자리를 홈과 같은 회색으로 두면 로딩 화면이 걷혀도 바뀔 색이 없습니다.
-          (같은 날 거친 것: 시계 줄 회색 줄(홈 화면 앱만) → 0.3초 옅어지기 → 걷힐 때만 위 주황 빼기 → 지금)
-          로고는 바깥 상자 기준으로 가운데라 자리가 그대로입니다.
+          그래서 위 주황을 먼저 빼 아이폰이 색을 옮기기 시작하게 하고, 그 시간(splash-out 길이)만큼 기다렸다가
+          아래 주황을 없애 둘이 함께 끝나게 합니다. 로딩 중(exiting 전)에는 위까지 모두 주황입니다.
+          (같은 날 거친 것: 시계 줄 회색 줄 → 0.3초 옅어지기 → 걷힐 때 위 주황 빼기+옅어지기(아래가 먼저 사라짐)
+           → 처음부터 위 회색(사용자 "아니야") → 지금)
+          바깥 상자는 그대로 화면 전체라 로고 자리는 움직이지 않습니다.
           카카오톡·Safari 안(browser)에서는 아래 도구줄도 같은 식으로 물들어서 아래 안전 영역도 뺍니다.
       */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500 [@media(display-mode:browser)]:bottom-[env(safe-area-inset-bottom)]"
-      />
+      {exiting ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500 [@media(display-mode:browser)]:bottom-[env(safe-area-inset-bottom)]"
+        />
+      ) : null}
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
