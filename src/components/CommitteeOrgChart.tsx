@@ -175,6 +175,12 @@ export default function CommitteeOrgChart() {
           ))}
         </div>
       </div>
+
+      {/*
+        조직도 카드는 뒷면이 없어 누르면 다음 카드로 넘어갑니다(AlbumList handlePointerUp) — 그걸 알려 주는 안내
+        (2026-09-26 사용자 요청). 위원회 카드의 "눌러서 뒷면 보기"와 같은 모양·자리입니다(CommitteeRoster.tsx).
+      */}
+      <p className="mt-2 text-center text-[12px] text-ink-faint">눌러서 다음 장 보기</p>
     </article>
   );
 }
