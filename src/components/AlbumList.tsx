@@ -67,7 +67,7 @@ export function WeekAlbumBook({ weekId }: { weekId: string }) {
   if (loading) {
     return (
       <BookFrame bottomReservePx={90}>
-        <Skeleton className="h-full w-full rounded-[24px]" />
+        <Skeleton className="h-full w-full rounded-card" />
       </BookFrame>
     );
   }
@@ -197,7 +197,7 @@ export default function AlbumList({
   if (loading) {
     return (
       <BookFrame>
-        <Skeleton className="h-full w-full rounded-[24px]" />
+        <Skeleton className="h-full w-full rounded-card" />
       </BookFrame>
     );
   }
@@ -776,7 +776,7 @@ function AlbumBook({
                         fit일 때는 길이를 그대로 두어 카드 안에서 굴리지 않아도 다 보입니다(사용자 요청).
                       */
                       <div
-                        className={fit ? "" : "overflow-y-auto overscroll-contain rounded-[24px]"}
+                        className={fit ? "" : "overflow-y-auto overscroll-contain rounded-card"}
                         style={fit ? undefined : { maxHeight: "var(--card-max, var(--frame-h))" }}
                       >
                         {slide.node}
@@ -925,7 +925,7 @@ function AlbumCard({
 
   return (
     <article
-      className="relative flex w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]"
+      className="relative flex w-full flex-col overflow-hidden rounded-card bg-surface shadow-[var(--shadow-card)]"
       style={{ maxHeight: "var(--card-max, var(--frame-h))" }}
     >
       <div className="shrink-0 px-5 pt-4 pb-3.5">
@@ -1032,7 +1032,7 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
   const authorName = author?.name || album.createdByName || "원우";
 
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[var(--shadow-card)]">
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-[var(--shadow-card)]">
       <div className="shrink-0 px-5 pt-4">
         <p className="truncate text-[20px] font-bold text-ink">
           {authorName}
