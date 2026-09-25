@@ -56,12 +56,11 @@ export default function StageGate({
 /**
  * 인증 상태를 확인하는 동안 잠깐 보이는 화면.
  *
- * 앱 바탕(bg-canvas) 한가운데에 도산아카데미 로고만 둡니다.
+ * 주황 바탕(bg-brand-500) 한가운데에 흰색 도산아카데미 로고만 둡니다 (2026-09-25부터).
  * 도는 동그라미도, 점도, 글씨도 없습니다 — 잠깐 스쳐 가는 화면이라 조용할수록 좋습니다.
  *
- * ★ 바탕은 bg-canvas입니다. 지금 canvas는 모든 탭이 같은 옅은 회색(#EEEEED, 2026-09-23)이라
- *   로딩이 끝나 탭이 나타날 때 바탕색이 바뀌지 않습니다.
- *   홈 화면에 추가한 앱의 스플래시(manifest의 BRAND_BACKGROUND)도 같은 값입니다.
+ * (예전엔 바탕이 bg-canvas 회색이라 로딩이 끝나 탭이 나타날 때 바탕색이 바뀌지 않았습니다.
+ *  홈 화면에 추가한 앱의 스플래시(manifest의 BRAND_BACKGROUND)는 아직 그 회색 그대로입니다.)
  *
  * 로고는 public/brand/goose.png입니다. 파일 이름이 로고 같지 않은 것은
  * 앱 아이콘의 기러기 무늬를 이 그림에서 따내느라 먼저 들어온 파일이기
@@ -79,7 +78,11 @@ export function SplashScreen() {
         그 안의 flex 가운데 정렬이 곧 화면 정가운데입니다.
       (로고 그림 goose.png 자체는 700×700 안에 좌우 26/27px·위아래 30/29px 여백으로 이미 가운데입니다.)
     */
-    <div className="fixed inset-0 flex items-center justify-center bg-canvas px-8">
+    /*
+      바탕은 앱 주황(bg-brand-500), 로고는 완전 흰색 (2026-09-25 사용자 요청 — 예전엔 bg-canvas 회색 바탕에 파란 로고).
+      주황은 어두운 화면에서도 같은 색이라 테마와 상관없이 똑같이 보입니다.
+    */
+    <div className="fixed inset-0 flex items-center justify-center bg-brand-500 px-8">
       {/*
         원본이 700×700이라 화면에 그리는 140px의 다섯 배입니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
@@ -93,7 +96,8 @@ export function SplashScreen() {
         width={700}
         height={700}
         priority
-        className="animate-splash-in h-auto w-[140px]"
+        // brightness-0 invert — 투명 PNG의 그림 부분(기러기·글씨)을 모두 흰색으로 칠합니다. 그림 파일은 그대로 둡니다.
+        className="animate-splash-in h-auto w-[140px] brightness-0 invert"
       />
       <span className="sr-only">불러오는 중이에요</span>
     </div>
