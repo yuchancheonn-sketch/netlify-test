@@ -211,7 +211,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   isToday
                     ? "bg-brand-500 font-bold text-white"
                     : isSelected
-                      ? "bg-ink font-bold text-white"
+                      ? // text-surface — 어두운 화면에선 bg-ink가 흰 동그라미가 되니 숫자는 검게(밝은 화면은 그대로 흰 글씨).
+                        //   2026-09-25 사용자 요청 ("다크테마에서 흰색 원 안에 숫자는 검은색으로").
+                        "bg-ink font-bold text-surface"
                       : index % 7 === 0
                         ? "text-danger"
                         : "text-ink"
