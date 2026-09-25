@@ -153,14 +153,23 @@ export function SplashScreen({
     */
     // exiting — 탭바·제목 줄보다 위(z-[100])에 덮인 채 옅어지고, 그동안 누르는 것은 아래 화면으로 통과시킵니다.
     <div
-      className={`fixed inset-0 flex items-center justify-center bg-brand-500 px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)] ${
-        exiting ? "animate-splash-out pointer-events-none z-[100]" : ""
+      className={`fixed inset-0 flex items-center justify-center px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)] ${
+        exiting ? "animate-splash-out pointer-events-none z-[100]" : "bg-brand-500"
       }`}
       onAnimationEnd={(event) => {
         // 로고의 떠오르는 애니메이션이 끝난 것도 여기로 올라오므로 이 상자 자신의 것만 봅니다.
         if (exiting && event.target === event.currentTarget) onExited?.();
       }}
     >
+      {/*
+        ★ 걷히는 동안에는 주황을 시계 줄 아래부터만 칠합니다 (2026-09-26 사용자 "옅어지게 했더니 오히려 위 주황이 더 오래 남아").
+          아이폰은 맨 위에 주황 상자가 남아 있는 한 시계 줄을 주황으로 두고, 상자가 다 사라진 뒤에야 색을 옮기기 시작했습니다.
+          걷히기 시작하는 순간 시계 줄 자리에서 주황을 빼면 그때부터 함께 옮겨 갑니다.
+          바깥 상자는 그대로 화면 전체라 로고 자리는 움직이지 않습니다.
+      */}
+      {exiting ? (
+        <div aria-hidden="true" className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500" />
+      ) : null}
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
@@ -196,7 +205,8 @@ export function SplashScreen({
             setLogoReady(true);
           }
         }}
-        className={`h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
+        // relative — 걷힐 때 깔리는 주황 판(absolute)보다 위에 그려지도록.
+        className={`relative h-auto w-[150px] brightness-0 invert [@media(display-mode:standalone)]:-mt-5 ${
           replay ? "" : logoReady ? "animate-splash-in" : "opacity-0"
         }`}
       />
