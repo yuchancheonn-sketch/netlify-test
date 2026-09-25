@@ -431,7 +431,7 @@ export default function MembersPage() {
             <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key} className="border-t border-line py-3 first:border-t-0">
-                  <Skeleton className="h-[72px] w-[128px] rounded-[10px]" />
+                  <Skeleton className="h-[76.5px] w-[136px] rounded-[10px]" />
                 </li>
               ))}
             </ul>
@@ -651,8 +651,9 @@ function MemberRow({
             섭니다.
         */
         // 128×72 — 16:9 그대로 조금 키움 (2026-09-26 사용자 "썸네일 크기 조금만 키워줘", 112×63에서). 아래 설명의 112×63은 그 전 값.
+        // 136×76.5 — 16:9 그대로 조금만 더 (같은 날 사용자 "조금만 더 키워줘", 128×72에서. 144×81은 크다고 되돌림).
         // rounded-[10px] — 모서리 덜 둥글게 (같은 날 사용자 요청, 14px(rounded-2xl)에서).
-        className="relative -ml-px h-[72px] w-[128px] shrink-0 overflow-hidden rounded-[10px] bg-fill transition active:scale-95"
+        className="relative -ml-px h-[76.5px] w-[136px] shrink-0 overflow-hidden rounded-[10px] bg-fill transition active:scale-95"
       >
         {/*
           ★ loading="lazy" + 폭·높이 못 박기 (2026-09-22).
@@ -667,8 +668,8 @@ function MemberRow({
             <img
               src={thumbnail}
               alt=""
-              width={128}
-              height={72}
+              width={136}
+              height={77}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover"
@@ -687,10 +688,10 @@ function MemberRow({
            */
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={thumbnailUrl(entry.photoURL, 256, 144)}
+            src={thumbnailUrl(entry.photoURL, 272, 153)}
             alt={`${entry.name} 프로필 사진`}
-            width={128}
-            height={72}
+            width={136}
+            height={77}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
