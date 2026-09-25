@@ -145,7 +145,8 @@ export default function SettingsPage() {
           {isAdmin ? (
             <Link
               href="/admin"
-              className="mb-3 flex items-center justify-between rounded-2xl bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+              // rounded-full — 알약 모양 (2026-09-25 사용자 요청, 위 스위치 줄들과 같이).
+              className="mb-3 flex items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
               <span className="-translate-y-[2px] text-[17px] font-bold text-ink">관리자 화면</span>
