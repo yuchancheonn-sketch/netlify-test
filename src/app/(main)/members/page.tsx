@@ -613,7 +613,8 @@ function MemberRow({
      * 지나온 값: --shadow-card → --shadow-card-soft(2026-09-22 "글로우 아주아주 조금만 더 약하게") → 지금.
      */
     // ★ 2026-09-26 박스 → 선: 흰 박스(rounded-3xl · bg-surface · 헤어라인 · p-3)를 걷고 위아래 12px만. 줄 사이 선은 목록(li)이 긋습니다.
-    <div className="flex items-center gap-[14px] py-3">
+    // pl-[1.5px] — 사진·이름·회사를 통째로 1.5px 오른쪽으로 (같은 날 사용자 요청). 오른쪽 연필은 제자리.
+    <div className="flex items-center gap-[14px] py-3 pl-[1.5px]">
       {/* 사진 · 영상 썸네일 */}
       <button
         type="button"
