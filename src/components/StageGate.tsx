@@ -9,6 +9,7 @@ import { APP_NAME } from "@/lib/constants";
 import { rememberReturnPath, takeReturnPath } from "@/lib/login-return";
 import { warmCohortDirectory, warmHomeData } from "@/lib/hooks";
 import { cohortOf } from "@/lib/cohort";
+import { useSplashHoldDone } from "@/lib/use-splash-hold";
 
 /**
  * 각 단계에서 사용자가 있어야 할 화면.
@@ -54,25 +55,26 @@ export default function StageGate({
     if (stage === "ready" && user) warmCohortDirectory("member", user.uid, cohortOf(myCohort));
   }, [stage, user, myCohort]);
   /*
-   * ★ 로딩 화면은 로그인 확인이 끝나면 바로 걷힙니다 — 최소 시간 없음 (2026-09-26 사용자 "예전처럼 짧은 로딩").
-   *   같은 날 "최소 1.5초 → 1초"를 넣었더니, 로딩 화면이 오래 떠 있는 동안 아이폰이 맨 위 시계 줄을 주황으로
-   *   완전히 바꿨다가, 로딩 화면이 걷힌 뒤 제 속도로 늦게 되돌려서 둘이 따로 사라져 보였습니다(그 속도는 앱에서 못 정함).
-   *   예전처럼 짧게 스쳐 가면 시계 줄이 주황으로 채 바뀌기 전에 끝납니다.
-   *   (사라질 때 옅어지기·위 주황 먼저 빼기·0.6초 기다리기도 해 봤지만 맞지 않아 모두 뺐습니다.)
+   * 앱을 연 뒤 1초는 무조건 로딩 화면 (2026-09-26 사용자 요청, lib/use-splash-hold.ts).
+   * 그동안은 다른 화면으로 보내지도(redirect), 화면을 그리지도 않습니다.
+   * ★ 같은 날 한때 빼고 "짧은 로딩"으로 두었다가 사용자 "로딩화면 1초로 해줘"로 되살렸습니다.
+   *   로딩 화면이 걷힌 뒤 아이폰 맨 위 시계 줄의 주황이 조금 늦게 사라지는 것은 아이폰 동작이라 앱에서 못 맞춥니다
+   *   (옅어지기·위 주황 먼저 빼기·0.6초 기다리기·예전 버전 비교까지 해 봄). 없애려면 로딩 중 시계 줄 자리만 회색으로.
    */
+  const splashDone = useSplashHoldDone();
 
   useEffect(() => {
-    if (stage === "loading" || allowed) return;
+    if (!splashDone || stage === "loading" || allowed) return;
     /*
      * 로그인을 마치면 기억해 둔 주소(lib/login-return.ts)로 보냅니다 (2026-09-24). 로그인하러 가기 전의 화면이나
      * 로그인 없이 못 여는 주소로 들어왔던 곳 — 카카오톡 안에서 링크를 열면 대개 로그아웃 상태라서입니다.
      */
     if (stage === "signedOut") rememberReturnPath();
     router.replace(stage === "ready" ? (takeReturnPath() ?? STAGE_PATH.ready) : STAGE_PATH[stage]);
-  }, [stage, allowed, router]);
+  }, [splashDone, stage, allowed, router]);
 
   if (!isFirebaseConfigured) return <SetupNotice />;
-  if (!allowed) return <SplashScreen />;
+  if (!splashDone || !allowed) return <SplashScreen />;
   return <>{children}</>;
 }
 
