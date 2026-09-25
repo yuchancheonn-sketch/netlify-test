@@ -97,6 +97,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
    * 저장하면 홈으로 돌아옵니다. 로그인 안 한 사람은 로그인 안내부터.
    * 회색 동그라미(bg-canvas) + 진회색 + — 같은 날 "주황이라 너무 눈에 띈다"로 주황 채움에서 바꿈.
    * + 는 흰색 — 같은 날 사용자 요청(진회색 ink-soft에서).
+   * ★ 지금은 흰 동그라미 + 옅은 그림자 + 먹색 굵은 + (같은 날 사용자가 보낸 "×" 닫기 단추 캡처 모양으로 바꿈).
+   *   동그라미는 bg-fill — 밝은 화면에선 캡처처럼 거의 흰 옅은 미색(#F5F5F4)이라 그림자로 떠 보이고,
+   *   어두운 화면에선 카드보다 한 단 밝은 회색이 되어 저절로 구별됩니다.
    */
   const addButton = (
     <button
@@ -106,9 +109,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         router.push(`/events/new?date=${selected}&from=home`);
       }}
       aria-label="일정 추가"
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-white transition active:scale-95"
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-fill text-ink shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
     >
-      <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
+      <PlusIcon className="h-5 w-5" strokeWidth={2.6} />
     </button>
   );
 
