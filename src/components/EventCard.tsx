@@ -89,8 +89,13 @@ export function EventDdayCard({
       <span className="min-w-0 flex-1">
         {/* 맨 위 — 주황 D-day(굵게)와 회색 날짜. 막대의 왼쪽 끝과 같은 자리에서 시작해 막대 "위"에 섭니다. */}
         <span className="flex items-baseline gap-1.5 leading-none">
-          {/* 22px — 같은 날 사용자 "5px 만큼 키워줘"(17px에서). */}
-          <span className="text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
+          {/*
+            22px — 같은 날 사용자 "5px 만큼 키워줘"(17px에서).
+            -ml-[2px] — "D"의 세로 획을 막대 왼쪽 끝과 딱 맞춥니다(같은 날 사용자 요청). 글자는 제 칸 왼쪽에 여백이
+            조금 붙어 그려져서(22px 굵은 D는 약 2px), 같은 자리에서 시작해도 막대보다 안쪽으로 들어가 보였습니다.
+            D-day 크기를 바꾸면 이 값도 크기에 비례해 같이 바꿔 주세요.
+          */}
+          <span className="-ml-[2px] text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
             <span className="text-[13px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
           ) : null}
