@@ -56,7 +56,12 @@ export function LoginRequired({
   const goToLogin = useGoToLogin();
   if (compact) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface py-2.5 pr-2.5 pl-4 shadow-[var(--shadow-card)]">
+      /*
+        테두리는 1px 실선, 카드 헤어라인보다 조금 진한 회색(line 65% + ink-faint 35%) — 원우수첩 "원우 추가하기" 단추와 같은 값
+        (2026-09-26 사용자 "이 박스 테두리도 더 진한 회색으로"; 그 전엔 shadow-card의 옅은 헤어라인·글로우).
+        테두리가 1px씩 자리를 차지하니 위아래 여백을 10px → 9px로 줄여 높이는 그대로입니다.
+      */
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--color-line)_65%,var(--color-ink-faint))] bg-surface py-[9px] pr-2.5 pl-4">
         <p className="min-w-0 text-[14px] font-medium break-keep text-ink-soft">{message}</p>
         <button
           type="button"
