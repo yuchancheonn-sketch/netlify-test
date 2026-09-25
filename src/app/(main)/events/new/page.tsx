@@ -12,7 +12,7 @@ import PageHeader from "@/components/PageHeader";
  * 홈 캘린더의 + 단추는 /events/new?date=2026-09-25&from=home 으로 옵니다 (2026-09-25) —
  * 날짜 칸을 고른 날로 채우고, 저장하면 홈으로 돌아갑니다.
  */
-function NewEventPageContent({ date, fromHome }: { date: string; fromHome: boolean }) {
+function NewEventPageContent({ date }: { date: string }) {
   return (
     <>
       {/*
@@ -21,7 +21,8 @@ function NewEventPageContent({ date, fromHome }: { date: string; fromHome: boole
       */}
       <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
       <PageHeader title="일정 등록" back tone="surface" />
-      <EventForm initialDate={date} doneHref={fromHome ? "/home" : "/events"} />
+      {/* 저장하면 늘 홈으로 — 모임 목록(/events)은 2026-09-26에 없앴습니다. */}
+      <EventForm initialDate={date} doneHref="/home" />
     </>
   );
 }
@@ -30,13 +31,13 @@ function NewEventPageContent({ date, fromHome }: { date: string; fromHome: boole
 export default function NewEventPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; from?: string }>;
+  searchParams: Promise<{ date?: string }>;
 }) {
   const params = use(searchParams);
   const date = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : "";
   return (
     <GuestGate title="일정 등록">
-      <NewEventPageContent date={date} fromHome={params.from === "home"} />
+      <NewEventPageContent date={date} />
     </GuestGate>
   );
 }

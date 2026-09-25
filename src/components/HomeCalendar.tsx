@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
 import { deleteDoc, doc } from "firebase/firestore";
 import {
   ChevronLeftIcon,
@@ -145,7 +144,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
       title: event.title,
       time: timeLabel(event.startTime, event.endTime),
       location: event.location,
-      href: "/events",
+      href: "", // 누르는 줄이 아님(모임 목록 2026-09-26 없앰)
     });
   }
   for (const event of academy.data) {
@@ -385,12 +384,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                       {body}
                     </a>
                   ) : (
-                    <Link
-                      href={item.href}
-                      className="flex min-w-0 flex-1 gap-2.5 rounded-xl py-1.5 transition active:bg-fill"
-                    >
-                      {body}
-                    </Link>
+                    /* 우리 기수 모임 줄은 누르는 줄이 아닙니다 — 가던 모임 목록(/events)을 2026-09-26에 없앴습니다. */
+                    <div className="flex min-w-0 flex-1 gap-2.5 py-1.5">{body}</div>
                   )}
                   {/* 우리 기수 일정만 오른쪽에 옅은 × — 누르면 확인 뒤 지웁니다(2026-09-25). */}
                   {item.kind === "cohort" && canDelete ? (

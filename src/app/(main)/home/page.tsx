@@ -45,7 +45,8 @@ export default function HomePage() {
   const events = [
     ...upcoming.data
       .filter((event) => inCohort(event, cohort))
-      .map((event) => ({ ...event, key: `e-${event.id}`, href: "/events", external: false })),
+      // 우리 기수 모임은 갈 화면이 없어(모임 목록 2026-09-26 없앰) href 없이 — 누르는 카드가 아닙니다.
+      .map((event) => ({ ...event, key: `e-${event.id}`, href: undefined, external: false })),
     ...academy.data
       .filter((event) => event.date >= today)
       .map((event) => ({ ...event, key: `a-${event.id}`, href: event.link, external: true })),

@@ -1,15 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
-import { ChevronRightIcon, ClockIcon, PeopleCountIcon, PinIcon } from "@/components/icons";
-import {
-  ddayLabel,
-  formatDotDate,
-  formatTime,
-  parseDateString,
-  WEEKDAYS,
-} from "@/lib/format";
+import { ChevronRightIcon, ClockIcon, PinIcon } from "@/components/icons";
+import { ddayLabel, formatTime, parseDateString, WEEKDAYS } from "@/lib/format";
 import type { EventDoc } from "@/lib/types";
 
 /**
@@ -38,12 +31,15 @@ import type { EventDoc } from "@/lib/types";
  */
 export function EventDdayCard({
   event,
-  href = "/events",
+  href,
   external = false,
 }: {
   /** 우리 기수 모임(EventDoc)이거나 도산아카데미 일정 — 카드가 쓰는 칸만 받습니다 (2026-09-23). */
   event: Pick<EventDoc, "title" | "date" | "startTime" | "location"> & { endTime?: string };
-  /** 눌렀을 때 갈 곳. 기본은 모임 목록, 도산아카데미 일정은 원래 글 주소입니다. */
+  /**
+   * 눌렀을 때 갈 곳 — 도산아카데미 일정은 원래 글 주소. 안 주면 누르는 카드가 아니고 오른쪽 ">"도 없습니다.
+   * (우리 기수 모임은 예전엔 모임 목록 /events로 갔는데, 그 화면을 2026-09-26에 없애 이제 주지 않습니다.)
+   */
   href?: string;
   /** 앱 밖 주소(도산아카데미 글)면 새 창으로 엽니다. */
   external?: boolean;
@@ -182,12 +178,15 @@ export function EventDdayCard({
         색은 옅은 회색(ink-faint)과 진한 회색(ink-muted)의 딱 중간 (2026-09-26 사용자 "두 > 크기를 평균으로 똑같이" —
         크기는 둘 다 24px로 같았는데 색이 달라 퀴즈 쪽이 커 보였습니다).
       */}
-      <span className="flex shrink-0 items-center text-[color-mix(in_srgb,var(--color-ink-faint)_50%,var(--color-ink-muted))]">
-        <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
-      </span>
+      {href ? (
+        <span className="flex shrink-0 items-center text-[color-mix(in_srgb,var(--color-ink-faint)_50%,var(--color-ink-muted))]">
+          <ChevronRightIcon className="h-6 w-6" strokeWidth={2.1} />
+        </span>
+      ) : null}
     </>
   );
 
+  if (!href) return <div className={className}>{inside}</div>;
   return external ? (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
       {inside}
@@ -199,103 +198,3 @@ export function EventDdayCard({
   );
 }
 
-/**
- * 일정 목록에 쓰는 한 줄 카드.
- * 왼쪽에 요일/일/월을 담은 날짜 블록을 두는 참고 디자인 형태입니다.
- *
- * @param href     주면 눌러서 가는 카드(오른쪽 ">")가 됩니다 — 홈의 이후 일정은 모임 목록으로.
- * @param children 안 주면 그냥 카드이고, 주면 한 줄 아래 같은 카드 안에 붙습니다 — 모임 목록은
- *                 여기에 안내와 수정·삭제를 답니다(모임 상세 화면을 없앤 2026-09-11부터).
- */
-export function EventListItem({
-  event,
-  href,
-  external = false,
-  children,
-}: {
-  /** 우리 기수 모임이거나 도산아카데미 일정 — 이 카드가 쓰는 칸만 받습니다 (2026-09-23). */
-  event: Pick<EventDoc, "title" | "date" | "startTime" | "endTime" | "location">;
-  href?: string;
-  /** 앱 밖 주소(도산아카데미 글)면 새 창으로 엽니다. */
-  external?: boolean;
-  children?: ReactNode;
-}) {
-  const date = parseDateString(event.date);
-
-  const row = (
-    <>
-      {/*
-        날짜 칸 — 주황으로 꽉 채우고 글씨는 흰색 (2026-09-11).
-        예전엔 연한 주황(brand-50) 바탕에 주황 글씨였는데, 어두운 화면에서 그 바탕이 탁한 갈색으로
-        보여 네 시안(주황 채움 / 달력 한 장 / 주황 테두리 / 상자 없이) 가운데 사용자가 "주황 채움"을 골랐습니다.
-        홈 맨 위 D-day 카드(주황 바탕 + 흰 글씨)와 같은 결이고, 밝은·어두운 화면에서 똑같이 보입니다.
-        요일·월은 흰색을 조금 풀어 가운데 날짜가 먼저 읽히게 합니다.
-      */}
-      <div className="flex h-[74px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-500">
-        <span className="text-[12px] font-bold text-white/90">
-          {date ? WEEKDAYS[date.getDay()] : ""}
-        </span>
-        <span className="text-[24px] font-bold leading-tight text-white">
-          {date ? date.getDate() : "-"}
-        </span>
-        <span className="text-[11px] font-medium text-white/90">
-          {date ? `${date.getMonth() + 1}월` : ""}
-        </span>
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[17px] font-bold text-ink">{event.title}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-muted">
-          {event.startTime ? (
-            <span className="flex items-center gap-1">
-              <ClockIcon className="h-4 w-4" />
-              {event.endTime
-                ? `${formatTime(event.startTime)} ~ ${formatTime(event.endTime)}`
-                : formatTime(event.startTime)}
-            </span>
-          ) : null}
-          {event.location ? (
-            <span className="flex min-w-0 items-center gap-1">
-              <PinIcon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{event.location}</span>
-            </span>
-          ) : null}
-        </div>
-        <p className="mt-1 flex items-center gap-1 text-[13px] text-ink-faint">
-          <PeopleCountIcon className="h-4 w-4" />
-          {formatDotDate(event.date)}
-        </p>
-      </div>
-    </>
-  );
-
-  const box = "rounded-3xl bg-surface p-3.5 shadow-[var(--shadow-card)]";
-
-  if (href) {
-    // href를 넘기는 곳은 홈뿐이라, 홈 카드들처럼 글로우 없이 헤어라인만 둡니다 (2026-09-23 사용자 요청).
-    // 모임 화면(href 없음)은 그대로 --shadow-card입니다.
-    const linkClassName = `${box.replace("shadow-[var(--shadow-card)]", "shadow-[var(--shadow-card-flat)]")} flex items-center gap-4 transition active:scale-[0.99]`;
-    const inside = (
-      <>
-        {row}
-        <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-      </>
-    );
-    return external ? (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
-        {inside}
-      </a>
-    ) : (
-      <Link href={href} className={linkClassName}>
-        {inside}
-      </Link>
-    );
-  }
-
-  return (
-    <div className={box}>
-      <div className="flex items-center gap-4">{row}</div>
-      {children}
-    </div>
-  );
-}

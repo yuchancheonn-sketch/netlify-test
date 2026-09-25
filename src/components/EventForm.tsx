@@ -24,7 +24,7 @@ import type { EventDoc } from "@/lib/types";
 export default function EventForm({
   event,
   initialDate = "",
-  doneHref = "/events",
+  doneHref = "/home", // 모임 목록(/events)을 2026-09-26에 없애 홈으로
   onDone,
   className = "px-5 pb-10",
 }: {
