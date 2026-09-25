@@ -95,7 +95,8 @@ export function EventDdayCard({
             조금 붙어 그려져서(22px 굵은 D는 약 2px), 같은 자리에서 시작해도 막대보다 안쪽으로 들어가 보였습니다.
             D-day 크기를 바꾸면 이 값도 크기에 비례해 같이 바꿔 주세요.
           */}
-          <span className="-ml-[2px] text-[22px] font-bold tracking-tight whitespace-nowrap text-brand-500">{dday}</span>
+          {/* [-webkit-text-stroke:0.3px] — 같은 날 "아주 조금만 더 굵게". 700 글씨에 얇은 테두리(다음 굵기 900은 너무 굵음). */}
+          <span className="-ml-[2px] text-[22px] font-bold tracking-tight [-webkit-text-stroke:0.3px_currentColor] whitespace-nowrap text-brand-500">{dday}</span>
           {dateText ? (
             // 14.5px — 같은 날 사용자 "1.5px 만큼 키워줘"(13px에서). -translate-y-px — "1px 위로".
             <span className="-translate-y-px text-[14.5px] font-medium whitespace-nowrap text-ink-muted">{dateText}</span>
@@ -108,8 +109,12 @@ export function EventDdayCard({
         */}
         <span className="mt-[9px] flex gap-2.5">
           {/* 막대 3px — 같은 날 사용자 "두께 좀 줄여줘"(4px, w-1에서). */}
-          {/* mt-[1px] — 막대 위쪽 끝을 1px 짧게 (같은 날 사용자 "0.5px 줄여줘" 두 번). 아래 끝은 그대로. */}
-          <span aria-hidden="true" className="mt-[1px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
+          {/*
+            mt-[7.5px] — 막대 위쪽 끝을 제목 글자의 윗머리 높이에 맞춥니다 (같은 날 사용자 요청. 그 전엔 0.5px씩 두 번 줄여 1px).
+            제목 줄(17px, 줄 높이 1.375)은 글자 위에 빈 줄 간격이 있어, 줄 맨 위보다 약 7.5px 아래에서 글자가 시작합니다
+            (사용자 캡처에서 잰 값). 제목 크기·줄 높이를 바꾸면 이 값도 같이. 아래 끝은 그대로.
+          */}
+          <span aria-hidden="true" className="mt-[7.5px] w-[3px] shrink-0 self-stretch rounded-full bg-brand-500" />
           {/* -translate-y-[0.5px] — 제목·시간·장소 글 덩어리를 0.5px 위로 (같은 날 사용자 요청). 막대는 따라가지 않습니다. */}
           <span className="min-w-0 flex-1 -translate-y-[0.5px]">
             {/*
