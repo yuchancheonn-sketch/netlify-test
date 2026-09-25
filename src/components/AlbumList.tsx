@@ -226,8 +226,8 @@ export default function AlbumList({
             title={canAdd ? "아직 이번 주 소식이 없어요" : "아직 올라온 소식이 없어요"}
             description={
               canAdd
-                ? "아래 '소식 올리기'로 이번 주 첫 소식을 올려 보세요."
-                : "아래 '소식 올리기'로 첫 소식을 올려 보세요."
+                ? "아래 + 단추로 이번 주 첫 소식을 올려 보세요."
+                : "아래 + 단추로 첫 소식을 올려 보세요."
             }
           />
         </div>
@@ -267,14 +267,13 @@ export default function AlbumList({
             setCreating(true);
           }}
           // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
-          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-full bg-brand-500 px-6 py-4 text-[15px] font-bold text-white shadow-[var(--shadow-float)] transition active:scale-95"
+          // ★ 글씨 없는 주황 동그라미 + (2026-09-25 사용자 "소식 올리기는 지우고 원 안에 + 만, + 크기·굵기 키워줘").
+          //   예전엔 "+ 소식 올리기" 알약(높이 52px). 동그라미도 52px라 BookFrame이 비워 두는 157px 셈은 그대로입니다.
+          aria-label="소식 올리기"
+          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] transition active:scale-95"
         >
-          <PlusIcon className="h-5 w-5" />
-          {/*
-            단추 글씨 "앨범 만들기" → "사진 올리기" → "소식 올리기" (2026-09-22 사용자 요청). 누르면 아래 소식 올리기 창.
-            글씨만 1px 위로, "+"는 제자리 (2026-09-25 사용자 요청). 단추가 flex라 span에 transform이 먹습니다.
-          */}
-          <span className="-translate-y-px">소식 올리기</span>
+          {/* + 26px·선 2.8 — 예전 20px·2.1에서 키움. */}
+          <PlusIcon className="h-[26px] w-[26px]" strokeWidth={2.8} />
         </button>
       ) : null}
 
