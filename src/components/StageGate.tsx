@@ -154,22 +154,26 @@ export function SplashScreen({
     // exiting — 탭바·제목 줄보다 위(z-[100])에 덮인 채 옅어지고, 그동안 누르는 것은 아래 화면으로 통과시킵니다.
     <div
       className={`fixed inset-0 flex items-center justify-center px-8 [@media(display-mode:browser)]:pt-[env(safe-area-inset-top)] [@media(display-mode:browser)]:pb-[env(safe-area-inset-bottom)] ${
-        exiting ? "animate-splash-out pointer-events-none z-[100]" : "bg-brand-500"
-      }`}
+        exiting ? "animate-splash-out pointer-events-none z-[100]" : ""
+      } bg-canvas`}
       onAnimationEnd={(event) => {
         // 로고의 떠오르는 애니메이션이 끝난 것도 여기로 올라오므로 이 상자 자신의 것만 봅니다.
         if (exiting && event.target === event.currentTarget) onExited?.();
       }}
     >
       {/*
-        ★ 걷히는 동안에는 주황을 시계 줄 아래부터만 칠합니다 (2026-09-26 사용자 "옅어지게 했더니 오히려 위 주황이 더 오래 남아").
-          아이폰은 맨 위에 주황 상자가 남아 있는 한 시계 줄을 주황으로 두고, 상자가 다 사라진 뒤에야 색을 옮기기 시작했습니다.
-          걷히기 시작하는 순간 시계 줄 자리에서 주황을 빼면 그때부터 함께 옮겨 갑니다.
-          바깥 상자는 그대로 화면 전체라 로고 자리는 움직이지 않습니다.
+        ★ 주황은 시계 줄 아래부터만 칠하고, 바깥 상자(화면 전체)의 바탕은 홈과 같은 회색(canvas)입니다
+          (2026-09-26 사용자 "로딩 화면이 사라진 뒤에도 위 주황이 남아" — 스크린샷에서 홈이 다 그려진 뒤에도 시계 줄이 주황빛).
+          아이폰은 시계 줄 색을 화면 맨 위 요소에서 따와 천천히 옮기는데, 그 속도는 앱에서 정할 수 없습니다.
+          처음부터 시계 줄 자리를 홈과 같은 회색으로 두면 로딩 화면이 걷혀도 바뀔 색이 없습니다.
+          (같은 날 거친 것: 시계 줄 회색 줄(홈 화면 앱만) → 0.3초 옅어지기 → 걷힐 때만 위 주황 빼기 → 지금)
+          로고는 바깥 상자 기준으로 가운데라 자리가 그대로입니다.
+          카카오톡·Safari 안(browser)에서는 아래 도구줄도 같은 식으로 물들어서 아래 안전 영역도 뺍니다.
       */}
-      {exiting ? (
-        <div aria-hidden="true" className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500" />
-      ) : null}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-[env(safe-area-inset-top)] bottom-0 bg-brand-500 [@media(display-mode:browser)]:bottom-[env(safe-area-inset-bottom)]"
+      />
       {/*
         원본이 700×700이라 화면에 그리는 150px의 네 배가 넘습니다.
         고해상도 화면에서도 또렷하고, next/image가 알아서 줄여 내보냅니다.
