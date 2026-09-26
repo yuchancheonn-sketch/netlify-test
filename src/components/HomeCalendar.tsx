@@ -372,7 +372,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                           <span className="flex min-w-0 items-center gap-px">
                             <PinIcon
                               strokeWidth={1.5}
-                              className="h-[16px] w-[16px] shrink-0 -translate-y-[0.25px]"
+                              // 17px — 2026-09-27 사용자 "장소 아이콘 1px씩 키워줘"(16px에서).
+                              className="h-[17px] w-[17px] shrink-0 -translate-y-[0.25px]"
                             />
                             <span className="truncate">{item.location}</span>
                           </span>
