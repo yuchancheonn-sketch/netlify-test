@@ -59,6 +59,27 @@ async function drawSquare(file: File, size: number): Promise<HTMLCanvasElement> 
 }
 
 /**
+ * 프로필 사진 편집(PhotoCropSheet)에서 원우가 고른 정사각형 부분만 잘라 size×size로 줄입니다 (2026-09-27).
+ * sourceX·sourceY·side는 원본 사진의 픽셀 단위입니다.
+ */
+export async function cropImageSquare(
+  image: HTMLImageElement,
+  sourceX: number,
+  sourceY: number,
+  side: number,
+  size: number,
+): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("이미지를 편집할 수 없는 브라우저예요.");
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, sourceX, sourceY, side, side, 0, 0, size, size);
+  return toBlob(canvas, 0.9);
+}
+
+/**
  * 일반 사진용: 가로세로 비율은 유지하면서 긴 변이 maxSize를 넘지 않도록 줄입니다.
  * (채팅 이미지 첨부·행사 사진 업로드에서 사용)
  */

@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { uploadImage } from "@/lib/cloudinary";
-import { cropToSquare } from "@/lib/image";
+import PhotoCropSheet from "@/components/PhotoCropSheet";
 import { COHORTS, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import { linkRosterEntry } from "@/lib/roster-link";
 import { linkToExistingMember } from "@/lib/account-link";
@@ -159,6 +159,8 @@ export default function ProfileForm({
   /** 같은 원우 계정이 있어 휴대폰 인증을 묻는 시트(계정 합치기, 2026-09-22) */
   const [mergePrompt, setMergePrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /** 편집 중인 사진(objectURL) — 있으면 사진 편집 화면을 띄웁니다 (2026-09-27) */
+  const [cropSource, setCropSource] = useState<string | null>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -172,17 +174,29 @@ export default function ProfileForm({
     [form, initial],
   );
 
-  async function handlePickPhoto(event: React.ChangeEvent<HTMLInputElement>) {
+  function handlePickPhoto(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     // 같은 파일을 다시 골라도 onChange가 뜨도록 값을 비웁니다.
     event.target.value = "";
     if (!file || !user) return;
+    // 바로 올리지 않고 편집 화면(PhotoCropSheet)을 먼저 띄웁니다 — 어느 부분을 쓸지 원우가 고릅니다(2026-09-27 사용자 요청).
+    setSaveError(null);
+    setCropSource(URL.createObjectURL(file));
+  }
 
+  /** 편집 화면을 닫고 사진 주소(objectURL)를 치웁니다. */
+  function closeCrop() {
+    if (cropSource) URL.revokeObjectURL(cropSource);
+    setCropSource(null);
+  }
+
+  async function uploadCroppedPhoto(blob: Blob) {
+    closeCrop();
     setUploading(true);
     setSaveError(null);
     try {
       /*
-       * 사진은 가운데를 정사각형으로 잘라 줄인 뒤 Cloudinary(행사 사진과 같은 보관소)에 올리고,
+       * 사진은 편집 화면에서 고른 정사각형 부분을 줄인 뒤 Cloudinary(행사 사진과 같은 보관소)에 올리고,
        * 계정 문서에는 그 주소만 적습니다(2026-09-11).
        *
        * 예전엔 사진을 문자열(data URL)로 만들어 계정 문서 안에 통째로 넣었습니다. 그러면
@@ -192,7 +206,6 @@ export default function ProfileForm({
        * 올린 사진은 아래 "저장"을 눌러야 프로필에 반영됩니다(주소가 이 폼에만 들어갑니다).
        * 저장하지 않고 나가면 Cloudinary에 사진 한 장이 남지만, 서명 없는 업로드라 앱에서 지울 수는 없습니다.
        */
-      const blob = await cropToSquare(file, PROFILE_IMAGE_SIZE);
       const uploaded = await uploadImage(blob, "profile.jpg");
       update("photoURL", uploaded.url);
     } catch (caught) {
@@ -763,6 +776,15 @@ export default function ProfileForm({
         <p className="mt-3 text-center text-[12px] text-ink-faint">
           바뀐 내용이 있을 때 저장할 수 있어요
         </p>
+      ) : null}
+
+      {cropSource ? (
+        <PhotoCropSheet
+          src={cropSource}
+          size={PROFILE_IMAGE_SIZE}
+          onCancel={closeCrop}
+          onDone={(blob) => void uploadCroppedPhoto(blob)}
+        />
       ) : null}
 
       {mergePrompt ? (
