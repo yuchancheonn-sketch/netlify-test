@@ -27,11 +27,6 @@ const SITE_URL = "https://dosan21.kr";
  *   피드 그림은 대부분 700×700 정사각 포스터이고 가끔 16:9입니다(2026-09-11에 재어 봄).
  *   영상처럼 16:9 틀에 채우면 포스터 위아래의 글씨가 잘려 나갑니다.
  */
-/*
- * 카드 테두리 — 자료탭 바탕이 흰색이 되며 공용 헤어라인(--color-line)이 흐려 보여, 이 목록만 한 단 진한 회색 1px로
- * (ring-1 ring-ink/[0.16], 2026-09-27 사용자 "복습 영상·일정 박스의 회색 테두리 더 진하게"). 그 전엔 shadow-[var(--shadow-card)].
- * 먹색(ink)을 옅게 쓰므로 어두운 화면에서도 따로 적을 것이 없습니다.
- */
 export default function NewsList() {
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +74,7 @@ export default function NewsList() {
 
   if (error) {
     return (
-      <div className="rounded-3xl bg-surface ring-1 ring-ink/[0.16]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <ErrorState message={error} />
         <div className="px-6 pb-6 text-center">
           <a
@@ -97,7 +92,7 @@ export default function NewsList() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-3xl bg-surface ring-1 ring-ink/[0.16]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<MegaphoneIcon className="h-10 w-10" />}
           title="올라온 소식이 없어요"
@@ -116,7 +111,7 @@ export default function NewsList() {
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block overflow-hidden rounded-2xl bg-surface ring-1 ring-ink/[0.16] transition active:scale-[0.99]"
+              className="block overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] transition active:scale-[0.99]"
             >
               {item.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -157,7 +152,7 @@ export default function NewsList() {
         href={SITE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 ring-1 ring-ink/[0.16]"
+        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
       >
         도산아카데미 홈페이지 열기 ↗
       </a>

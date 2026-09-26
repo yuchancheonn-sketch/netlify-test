@@ -19,11 +19,6 @@ const CHANNEL_URL = "https://www.youtube.com/@dosanacademy";
  *
  * 카드 사이 14px — 홈의 카드 사이·원우수첩 줄 사이와 같은 값(2026-09-22). 자리 표시 목록과 진짜 목록이 같아야 합니다.
  */
-/*
- * 카드 테두리 — 자료탭 바탕이 흰색이 되며 공용 헤어라인(--color-line)이 흐려 보여, 이 목록만 한 단 진한 회색 1px로
- * (ring-1 ring-ink/[0.16], 2026-09-27 사용자 "복습 영상·일정 박스의 회색 테두리 더 진하게"). 그 전엔 shadow-[var(--shadow-card)].
- * 먹색(ink)을 옅게 쓰므로 어두운 화면에서도 따로 적을 것이 없습니다.
- */
 export default function VideoList() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +66,7 @@ export default function VideoList() {
 
   if (error) {
     return (
-      <div className="rounded-3xl bg-surface ring-1 ring-ink/[0.16]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <ErrorState message={error} />
         <div className="px-6 pb-6 text-center">
           <a
@@ -89,7 +84,7 @@ export default function VideoList() {
 
   if (videos.length === 0) {
     return (
-      <div className="rounded-3xl bg-surface ring-1 ring-ink/[0.16]">
+      <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
         <EmptyState
           icon={<span className="text-[40px]">🎬</span>}
           title="아직 올라온 영상이 없어요"
@@ -104,7 +99,7 @@ export default function VideoList() {
       <ul className="flex flex-col gap-[14px]">
         {videos.map((video) => (
           <li key={video.id}>
-            <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-ink/[0.16]">
+            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
               {playingId === video.id ? (
                 <iframe
                   src={embedUrl(video.id)}
@@ -164,7 +159,7 @@ export default function VideoList() {
         href={CHANNEL_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 ring-1 ring-ink/[0.16]"
+        className="mt-5 block rounded-2xl bg-surface py-3.5 text-center text-[14px] font-bold text-brand-500 shadow-[var(--shadow-card)]"
       >
         도산아카데미 유튜브 채널 열기 ↗
       </a>
