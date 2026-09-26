@@ -413,12 +413,19 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                     <div className="flex min-w-0 flex-1 gap-2.5 py-1.5">{body}</div>
                   )}
                   {/* 우리 기수 일정만 오른쪽에 옅은 × — 누르면 확인 뒤 지웁니다(2026-09-25). */}
+                  {/*
+                    × 자리 (2026-09-27 사용자 "일정 지우기 버튼 오른쪽에 붙여줘"):
+                    마지막이 아닌 줄은 박스 오른쪽 끝, + 단추와 같은 세로줄(right-[-54px] 쪽 40px 칸의 가운데)에 붙입니다.
+                    마지막 줄은 그 자리에 + 가 있어 겹치므로 예전처럼 줄 끝(+ 왼쪽)에 둡니다.
+                  */}
                   {item.kind === "cohort" && canDelete ? (
                     <button
                       type="button"
                       onClick={() => void removeEvent(item)}
                       aria-label={`${item.title} 일정 삭제`}
-                      className="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill"
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill ${
+                        isLast ? "-mr-1" : "absolute top-1/2 right-[-52px] -translate-y-1/2"
+                      }`}
                     >
                       <XMarkIcon className="h-4 w-4" strokeWidth={2.2} />
                     </button>
