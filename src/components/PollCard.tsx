@@ -593,7 +593,11 @@ export function PollCreateSheet({
    * 입력칸 — 흰 시트 위 옅은 회색 칸, 그림자 없음, 높이 약 44px. 일정 등록 폼(EventForm의 fieldClassName)과 같은 값
    * (2026-09-25). 공용 inputClassName은 다른 화면도 쓰므로 여기서만 덮어씁니다.
    */
-  const grayField = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
+  /*
+   * 글씨 2px 위로 (2026-09-27 사용자 "박스 속 글씨들 2px씩 위로") — 입력칸은 글씨만 옮길 수 없어
+   * 위아래 10px씩(py-2.5)을 위 8px·아래 12px로 나눕니다. 칸 높이(약 44px)는 그대로입니다.
+   */
+  const grayField = `${inputClassName} bg-canvas! pt-[8px]! pb-[12px]! shadow-none!`;
   const title = kind === "vote" ? "투표 만들기" : "의견 모으기";
   const [question, setQuestion] = useState("");
   /** 처음에는 찬성·반대를 채워 둡니다 — 가장 흔한 물음이라 그대로 쓰면 됩니다. */
