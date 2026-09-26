@@ -35,12 +35,15 @@ export default function DosanAcademyFooter() {
           이용약관
         </a>
         <span aria-hidden="true" className="h-2.5 w-px bg-line" />
-        {/* 누리집에서도 개인정보처리방침만 굵게 씁니다 (법에서 눈에 띄게 두라고 정한 항목). */}
+        {/*
+          누리집에서도 개인정보처리방침만 굵게 씁니다 (법에서 눈에 띄게 두라고 정한 항목).
+          -ml-[1.5px] — 세로선 쪽으로 1.5px 더 왼쪽 (2026-09-27 사용자 요청). 세로선 뒤 사이가 6px → 4.5px.
+        */}
         <a
           href={`${SITE_URL}/?mode=privacy`}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold"
+          className="-ml-[1.5px] font-bold"
         >
           개인정보처리방침
         </a>
