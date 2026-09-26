@@ -132,7 +132,7 @@ export default function SessionEditSheet({
               id="session-instructor"
               value={instructor}
               onChange={(changed) => setInstructor(changed.target.value)}
-              placeholder="예) 홍길동"
+              placeholder="안창호"
               maxLength={SESSION_INSTRUCTOR_MAX_LENGTH}
               className={inputClassName}
             />

@@ -276,7 +276,7 @@ export default function MemberEditSheet({
                 setName(event.target.value.slice(0, 20));
                 setNameError(null);
               }}
-              placeholder="예) 홍길동"
+              placeholder="안창호"
               className={fieldClassName}
             />
             {nameError ? <FieldError>{nameError}</FieldError> : null}

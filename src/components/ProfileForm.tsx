@@ -439,7 +439,7 @@ export default function ProfileForm({
           id="name"
           value={form.name}
           onChange={(event) => update("name", event.target.value)}
-          placeholder="예) 홍길동"
+          placeholder="안창호"
           className={field}
         />
         {errors.name ? <FieldError>{errors.name}</FieldError> : null}
