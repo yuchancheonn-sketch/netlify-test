@@ -6,7 +6,8 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { UsersIcon } from "@/components/icons";
+import { ChatBellIcon, StarIcon, UsersIcon } from "@/components/icons";
+import { useChatPrefs } from "@/lib/chat-prefs";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { otherUidOf, previewText, roomTitle } from "@/lib/chat-rooms";
@@ -49,10 +50,17 @@ function ChatListPageContent() {
    * 기수 단체방을 늘 맨 위에 둡니다 — 최근 순 정렬에 섞지 않습니다.
    * 카톡의 공지방처럼 자리가 고정돼 있어야 "무조건 있는 방"으로 읽힙니다.
    */
-  const rooms = useMemo(
-    () => (cohortRoom ? [cohortRoom, ...directRooms] : directRooms),
-    [cohortRoom, directRooms],
-  );
+  /*
+   * 즐겨찾기한 1:1 방은 단체방 바로 아래로 (2026-09-27 — 대화방 위 별 단추, lib/chat-prefs.ts).
+   * 즐겨찾기끼리, 나머지끼리는 원래대로 최근 순입니다(directRooms가 이미 최근 순).
+   */
+  const chatPrefs = useChatPrefs(uid);
+  const rooms = useMemo(() => {
+    const favorite = directRooms.filter((room) => chatPrefs.favorites.has(room.id));
+    const rest = directRooms.filter((room) => !chatPrefs.favorites.has(room.id));
+    const ordered = [...favorite, ...rest];
+    return cohortRoom ? [cohortRoom, ...ordered] : ordered;
+  }, [cohortRoom, directRooms, chatPrefs.favorites]);
 
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
@@ -145,6 +153,8 @@ function ChatListPageContent() {
                     title={roomTitle(room, uid ?? "", nameByUid)}
                     other={memberByUid.get(otherUidOf(room.id, uid ?? "") ?? "")}
                     unread={unreadRooms[room.id] ?? false}
+                    favorite={chatPrefs.favorites.has(room.id)}
+                    muted={chatPrefs.muted.has(room.id)}
                   />
                 </li>
               ))}
@@ -175,6 +185,8 @@ function ChatRoomRow({
   title,
   other,
   unread,
+  favorite,
+  muted,
 }: {
   room: ChatRoomDoc;
   title: string;
@@ -182,6 +194,10 @@ function ChatRoomRow({
   other?: UserDoc;
   /** 이 방에 안 읽은 새 메시지가 있는지. 몇 개인지는 세지 않습니다. */
   unread: boolean;
+  /** 즐겨찾기한 방 — 이름 옆에 작은 별 */
+  favorite: boolean;
+  /** 알림을 끈 방 — 이름 옆에 작은 종(사선) */
+  muted: boolean;
 }) {
   const preview = previewText(room);
 
@@ -232,7 +248,14 @@ function ChatRoomRow({
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[16px] font-bold text-ink">{title}</p>
+        {/* 이름 옆 작은 표시 — 즐겨찾기 별(주황)·알림 끔 종(회색), 카톡의 핀·음소거 자리 (2026-09-27). */}
+        <p className="flex min-w-0 items-center gap-1 text-[16px] font-bold text-ink">
+          <span className="truncate">{title}</span>
+          {favorite ? (
+            <StarIcon className="h-3.5 w-3.5 shrink-0 text-brand-500" filled strokeWidth={1.6} />
+          ) : null}
+          {muted ? <ChatBellIcon className="h-3.5 w-3.5 shrink-0 text-ink-faint" muted /> : null}
+        </p>
         {/* mt-px — 방 이름과의 사이 2px → 1px, 미리보기 1px 위로 (2026-09-27 사용자 요청). */}
         <p className="mt-px line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">
           {preview ||

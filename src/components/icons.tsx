@@ -550,6 +550,46 @@ export function BellIcon({ className, strokeWidth = 1.9 }: IconProps) {
   );
 }
 
+/**
+ * 대화방 알림 종 — 속을 채운 모양 (2026-09-27, 대화방 위 동그란 단추). muted면 사선을 그어 "알림 꺼짐".
+ * 사선 둘레는 바탕색(단추의 surface)으로 한 번 더 그어, 채운 종과 사선이 떨어져 보이게 합니다.
+ */
+export function ChatBellIcon({ className, muted }: { className?: string; muted?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 1.8H4.4z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+      <path d="M9.8 20.2a2.3 2.3 0 0 0 4.4 0z" fill="currentColor" />
+      {muted ? (
+        <>
+          <path d="M4 3.5 20 21" stroke="var(--color-surface)" strokeWidth={4.2} strokeLinecap="round" />
+          <path d="M4 3.5 20 21" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
+/** 별 — 대화방 즐겨찾기 (2026-09-27). filled면 속을 채웁니다(즐겨찾기 켜짐). */
+export function StarIcon({ className, strokeWidth = 1.9, filled }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M12 3.6l2.55 5.17 5.7.83-4.13 4.02.98 5.68L12 16.62l-5.1 2.68.98-5.68L3.75 9.6l5.7-.83z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className, strokeWidth = 1.9 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">

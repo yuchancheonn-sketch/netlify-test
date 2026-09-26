@@ -545,6 +545,21 @@ service cloud.firestore {
     }
 
     /*
+     * 방마다 알림을 끈 원우 (2026-09-27) — 문서 id는 방 id, 칸은 {uid: true}.
+     * 알림 서버(/api/push/chat, Admin SDK)만 읽습니다. 앱은 읽지 못합니다 — 누가 알림을 껐는지 남이 볼 까닭이 없습니다.
+     * 쓰기는 그 방을 쓸 수 있는 원우가 **자기 uid 칸 하나만** 넣고 뺄 수 있습니다(lib/chat-prefs.ts).
+     */
+    match /chatMutes/{roomId} {
+      allow read: if false;
+      allow create: if isMember()
+                    && canUseRoom(roomId)
+                    && request.resource.data.keys().hasOnly([request.auth.uid]);
+      allow update: if isMember()
+                    && canUseRoom(roomId)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([request.auth.uid]);
+    }
+
+    /*
      * 헤더 알림함(종)에 쌓이는 알림 (2026-09-11) — 새 일정, 새 복습 영상·소식.
      * 서버(Admin SDK)만 적습니다: /api/push/event, Netlify 예약 함수 feed-push. 앱에서는 읽기만 합니다.
      * 사람마다 따로 적지 않고 한 건씩이라, 앱이 내 기수 것과 "all"만 골라 보여줍니다.

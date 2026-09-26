@@ -4,7 +4,14 @@ import GuestGate from "@/components/GuestGate";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
-import { ArrowUpIcon, ChatIcon, ChevronLeftIcon } from "@/components/icons";
+import {
+  ArrowUpIcon,
+  ChatBellIcon,
+  ChatIcon,
+  ChevronLeftIcon,
+  StarIcon,
+} from "@/components/icons";
+import { setRoomFavorite, setRoomMuted, useChatPrefs } from "@/lib/chat-prefs";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
@@ -21,6 +28,13 @@ import { useApprovedMembers, useMessages } from "@/lib/hooks";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 import { CHAT_PAGE_SIZE, MARK_READ_GAP } from "@/lib/constants";
 import type { MessageDoc } from "@/lib/types";
+
+/**
+ * 제목 줄의 동그란 흰 단추(뒤로·종·별) — 44px, 옅은 그림자 (2026-09-27 사용자 요청).
+ * globals.css의 button 규칙과 상관없이 아이콘만 담아 글씨 크기는 따지지 않습니다.
+ */
+const roundButtonClassName =
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-ink shadow-[var(--shadow-card)] transition active:scale-95";
 
 /**
  * 대화방 — 당근 채팅 화면의 짜임새를 그대로 따릅니다.
@@ -55,6 +69,10 @@ function ChatRoomPageContent({
    */
   const [editingId, setEditingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  /** 이 방 즐겨찾기(별)·알림 끔(종) — chatReads/{uid} (lib/chat-prefs.ts, 2026-09-27) */
+  const chatPrefs = useChatPrefs(uid);
+  const isFavorite = chatPrefs.favorites.has(roomId);
+  const isMuted = chatPrefs.muted.has(roomId);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageId = messages.at(-1)?.id;
@@ -355,25 +373,51 @@ function ChatRoomPageContent({
           뒤로는 제목 줄이 스크롤 바깥에 있어 애초에 움직이지 않습니다.
           지워도 되지만, 나중에 구조를 되돌릴 때를 생각해 남겨 둡니다.
         */}
+        {/*
+          ★ 동그란 흰 단추들 (2026-09-27 사용자 요청 — 보내 준 그림처럼):
+            왼쪽 뒤로가기, 오른쪽 종(이 방 알림 켜기·끄기)과 별(즐겨찾기). 44px 흰 동그라미 + 옅은 그림자.
+            제목은 양쪽 단추와 상관없이 화면 한가운데 — 가운데에 절대 위치로 두고(sticky 상자가 기준), 좌우 108px을 비워 단추와 안 겹치게 자릅니다.
+            아래 줄 사이 선(border-b)은 단추 그림자와 겹쳐 지저분해 뺐습니다.
+        */}
         <header
-          className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-surface px-2 pb-2.5"
+          className="sticky top-0 z-20 flex items-center justify-between bg-surface px-3 pb-2.5"
           style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
         >
           <button
             type="button"
             onClick={() => router.push("/chat")}
             aria-label="채팅 목록으로"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink active:bg-fill"
+            className={roundButtonClassName}
           >
-            <ChevronLeftIcon className="h-7 w-7" />
+            <ChevronLeftIcon className="h-6 w-6" strokeWidth={1.8} />
           </button>
 
-          <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-          </div>
+          <p className="pointer-events-none absolute inset-x-[108px] truncate text-center text-[17px] font-bold text-ink">
+            {title}
+          </p>
 
-          {/* 왼쪽 뒤로가기와 폭을 맞춰 제목이 한가운데 오게 합니다. */}
-          <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => uid && void setRoomMuted(uid, roomId, !isMuted).catch(() => undefined)}
+              aria-label={isMuted ? "이 방 알림 켜기" : "이 방 알림 끄기"}
+              aria-pressed={isMuted}
+              className={roundButtonClassName}
+            >
+              <ChatBellIcon className="h-[22px] w-[22px]" muted={isMuted} />
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                uid && void setRoomFavorite(uid, roomId, !isFavorite).catch(() => undefined)
+              }
+              aria-label={isFavorite ? "즐겨찾기 빼기" : "즐겨찾기"}
+              aria-pressed={isFavorite}
+              className={`${roundButtonClassName} ${isFavorite ? "text-brand-500!" : ""}`}
+            >
+              <StarIcon className="h-[23px] w-[23px]" filled={isFavorite} />
+            </button>
+          </div>
         </header>
 
         {/*

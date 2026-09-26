@@ -93,6 +93,18 @@ export async function POST(request: Request) {
     title = senderName;
   }
 
+  /*
+   * 이 방 알림을 끈 원우는 뺍니다 (2026-09-27 — 대화방 위 종 단추, lib/chat-prefs.ts).
+   * chatMutes/{roomId} 한 건만 읽습니다 — 단체방이어도 받는 사람마다 따로 읽지 않습니다.
+   * 읽기에 실패하면 거르지 않고 보냅니다(알림이 덜 가는 것보다 더 가는 편이 낫습니다).
+   */
+  try {
+    const mutes = (await db.collection("chatMutes").doc(roomId).get()).data() ?? {};
+    recipientUids = recipientUids.filter((uid) => mutes[uid] !== true);
+  } catch {
+    // 그대로 보냅니다.
+  }
+
   if (recipientUids.length === 0) return Response.json({ ok: true, sent: 0 });
 
   const result = await sendPushToUsers({

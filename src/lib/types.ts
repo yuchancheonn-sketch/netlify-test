@@ -494,6 +494,16 @@ export interface ChatReadDoc {
    * 같은 문서에 둔 이유는 위와 같습니다 — 가볍고, 본인만 읽고 쓰는 규칙이 이미 있습니다(2026-09-11).
    */
   noticesSeenAt?: Timestamp | null;
+  /**
+   * 즐겨찾기한 방 (방 id → true) — 대화방 위 별 단추 (2026-09-27).
+   * 채팅 목록에서 기수 단체방 바로 아래, 다른 1:1 방보다 위에 섭니다.
+   */
+  favoriteRooms?: Record<string, boolean>;
+  /**
+   * 알림을 끈 방 (방 id → true) — 대화방 위 종 단추 (2026-09-27).
+   * 이 값은 화면 표시용이고, 알림 서버가 실제로 보는 것은 chatMutes/{roomId}입니다(lib/chat-prefs.ts).
+   */
+  mutedRooms?: Record<string, boolean>;
 }
 
 /**
