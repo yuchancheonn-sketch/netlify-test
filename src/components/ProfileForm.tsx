@@ -86,7 +86,9 @@ function flatBox(className: string): string {
   return className
     .replace("bg-surface", "bg-field")
     .replace("shadow-[var(--shadow-card)]", "shadow-none")
-    .replace("focus:border-brand-300", "focus:border-transparent");
+    .replace("focus:border-brand-300", "focus:border-transparent")
+    // 둘레 색을 조금 진하게 — brand-100과 brand-200의 중간쯤(brand-200을 60%로) (2026-09-27 사용자 요청).
+    .replace("focus:ring-brand-100", "focus:ring-brand-200/60");
 }
 
 /** 칸 이름 오른쪽 "선택" 글씨 색 — 옅은 회색(ink-faint)보다 한 단계 진하게 (2026-09-27 사용자 요청). */
