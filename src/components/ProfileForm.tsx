@@ -88,7 +88,9 @@ function flatBox(className: string): string {
     .replace("shadow-[var(--shadow-card)]", "shadow-none")
     .replace("focus:border-brand-300", "focus:border-transparent")
     // 둘레 색을 조금 진하게 — brand-100과 brand-200의 중간쯤(brand-200을 60%로) (2026-09-27 사용자 요청).
-    .replace("focus:ring-brand-100", "focus:ring-brand-200/60");
+    .replace("focus:ring-brand-100", "focus:ring-brand-200/60")
+    // 칸 안 글씨 16px → 17px (2026-09-27 사용자 "박스 안 글씨 1px 키워줘").
+    .replace("text-[16px]", "text-[17px]");
 }
 
 /** 칸 이름 오른쪽 "선택" 글씨 색 — 옅은 회색(ink-faint)보다 한 단계 진하게 (2026-09-27 사용자 요청). */
@@ -592,9 +594,10 @@ export default function ProfileForm({
                 {/*
                   2px 위로 — 같은 날 "1px 위로"(3px)에서 "1px 아래로"로 되돌림(2026-09-26 사용자 요청).
                   → 1.5px 위로 — "0.5px 내려줘"(2026-09-27 사용자 요청).
+                  글씨 14px → 15px — "박스 안 글씨 1px 키워줘"(2026-09-27 사용자 요청).
                 */}
                 <span
-                  className={`-translate-y-[1.5px] text-[14px] font-bold ${
+                  className={`-translate-y-[1.5px] text-[15px] font-bold ${
                     selected ? "text-brand-500" : "text-ink-soft"
                   }`}
                 >
