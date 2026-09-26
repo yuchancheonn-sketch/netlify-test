@@ -180,7 +180,8 @@ function LoginScreen() {
           제목이 약 18px 길어진 만큼 아래 사진 시작점(top-[155px])도 173px로 함께 내렸습니다 — 제목과 머리 사이 간격을 그대로 두려고.
         */}
         <div className="flex flex-col items-center text-center">
-          <p className="text-[18px] font-bold text-brand-500">{COURSE_FULL_NAME}</p>
+          {/* 색은 먹색(검정) — 2026-09-27 사용자 요청(주황 brand-500에서). */}
+          <p className="text-[18px] font-bold text-ink">{COURSE_FULL_NAME}</p>
           <h1 className="mt-1 text-[44px] leading-tight font-bold tracking-tight text-ink">{APP_NAME}</h1>
         </div>
 
