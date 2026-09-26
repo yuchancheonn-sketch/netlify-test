@@ -148,10 +148,17 @@ export async function sendChatMessage({
   roomId,
   sender,
   text,
+  imageUrl = null,
 }: {
   roomId: string;
   sender: { uid: string; profile: UserDoc | null };
+  /** 사진만 보낼 때는 빈 글자입니다. */
   text: string;
+  /**
+   * 사진 메시지의 Cloudinary 주소 (2026-09-27 사용자 요청 — 채팅 사진 보내기).
+   * 사진 파일은 Cloudinary에 있고, 메시지 문서에는 이 짧은 주소만 담깁니다.
+   */
+  imageUrl?: string | null;
 }): Promise<void> {
   /*
    * 아는 방 모양인지 먼저 봅니다 — 1:1 방이거나 기수 단체방이어야 합니다.
@@ -178,9 +185,12 @@ export async function sendChatMessage({
     // 채팅에는 본명으로 나옵니다. (별칭 기능은 2026-09-15에 없앴습니다)
     senderName,
     text,
-    imageUrl: null,
+    imageUrl,
     createdAt: serverTimestamp(),
   });
+
+  // 채팅 목록 미리보기·알림에는 사진이면 "사진"이라고 적습니다(카톡과 같음).
+  const previewLabel = messagePreviewText({ text, imageUrl });
 
   await setDoc(
     doc(db, "chatRooms", roomId),
@@ -206,7 +216,7 @@ export async function sendChatMessage({
             */
             memberUids: roomId.split(DIRECT_SEPARATOR),
           }),
-      lastMessageText: text,
+      lastMessageText: previewLabel,
       lastMessageSenderId: sender.uid,
       lastMessageAt: serverTimestamp(),
     },
@@ -214,7 +224,12 @@ export async function sendChatMessage({
   );
 
   // 상대 원우 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
-  void requestPush("chat", { roomId, text });
+  void requestPush("chat", { roomId, text: imageUrl && !text ? "사진을 보냈어요." : previewLabel });
+}
+
+/** 목록 미리보기에 적을 말 — 글이 있으면 글, 사진만 있으면 "사진". */
+export function messagePreviewText(message: { text: string; imageUrl: string | null }): string {
+  return message.text || (message.imageUrl ? "사진" : "");
 }
 
 /**
@@ -291,7 +306,7 @@ export async function deleteChatMessage({
    * 방은 첫 메시지를 보낼 때 생긴다는 규칙과 짝이 맞습니다.
    */
   const preview: Record<string, unknown> = {
-    lastMessageText: previous?.text ?? "",
+    lastMessageText: previous ? messagePreviewText(previous) : "",
     lastMessageSenderId: previous?.senderId ?? "",
   };
 
