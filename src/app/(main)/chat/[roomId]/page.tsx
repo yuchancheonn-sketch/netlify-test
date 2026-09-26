@@ -577,6 +577,24 @@ function ChatRoomPageContent({
             value={draft}
             rows={1}
             onChange={(event) => setDraft(event.target.value)}
+            /*
+              컴퓨터에서만: 끝맺음 기호(. ! ? …)로 끝난 채 엔터를 치면 보냅니다 (2026-09-27 사용자 요청).
+              글자로 끝나면 엔터는 그대로 줄바꿈입니다. 폰(손가락 입력)은 엔터가 늘 줄바꿈 — 보내기는 단추로만.
+              - 컴퓨터인지는 누르는 순간 "마우스처럼 정밀한 포인터"(pointer: fine)로 봅니다.
+              - 한글을 조합하는 중(isComposing)의 엔터는 글자를 확정하는 엔터라 건드리지 않습니다.
+                안 거르면 "안녕?" 뒤 조합 중인 글자가 있을 때 두 번 보내지거나 마지막 글자가 빠집니다.
+              - Shift+엔터는 늘 줄바꿈입니다.
+              - 커서 앞까지의 글을 봅니다 — 문장 중간에서 줄을 바꾸는 경우를 위해.
+            */
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+              if (!window.matchMedia("(pointer: fine)").matches) return;
+              const area = event.currentTarget;
+              const beforeCursor = area.value.slice(0, area.selectionStart).trimEnd();
+              if (!/[.!?…。！？]$/.test(beforeCursor)) return;
+              event.preventDefault();
+              area.form?.requestSubmit();
+            }}
             /* 커서가 들어오면 자판이 올라온 것으로 봅니다 (위 useEffect 설명 참고). */
             onFocus={() => {
               document.body.dataset.keyboard = "open";
