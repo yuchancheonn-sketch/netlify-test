@@ -166,7 +166,8 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
     <Link
       href={notice.url}
       // px-4 — 왼쪽 그림 칸을 걷으면서 글이 카드 끝에 붙지 않게 좌우를 16px로(예전 p-3.5 = 14px).
-      className={`flex items-center gap-3 rounded-3xl px-4 py-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
+      // 박스(둥근 모서리 rounded-3xl·테두리 shadow-card)만 뺐습니다 (2026-09-27 사용자 "박스만 없애고 아무것도 건들지마").
+      className={`flex items-center gap-3 px-4 py-3.5 transition active:scale-[0.99] ${
         isNew ? "bg-brand-50" : "bg-surface"
       }`}
     >
