@@ -429,9 +429,7 @@ export default function ProfileForm({
           onChange={handlePickPhoto}
           className="hidden"
         />
-        <p className="mt-3 text-[12px] text-ink-faint">
-          사진은 가운데를 기준으로 정사각형으로 잘려요
-        </p>
+        {/* 사진 아래 안내("사진은 가운데를 기준으로 정사각형으로 잘려요")는 2026-09-27 사용자 요청으로 지웠습니다. */}
       </div>
 
       {/* 이름 */}
