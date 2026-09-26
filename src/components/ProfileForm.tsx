@@ -85,6 +85,9 @@ function flatBox(className: string): string {
   return className.replace("bg-surface", "bg-field").replace("shadow-[var(--shadow-card)]", "shadow-none");
 }
 
+/** 칸 이름 오른쪽 "선택" 글씨 색 — 옅은 회색(ink-faint)보다 한 단계 진하게 (2026-09-27 사용자 요청). */
+const HINT_TONE = "text-ink-muted";
+
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -471,7 +474,7 @@ export default function ProfileForm({
 
       {/* 생일 */}
       <div className="mb-6">
-        <FieldLabel hint="선택">생일</FieldLabel>
+        <FieldLabel hintClassName={HINT_TONE} hint="선택">생일</FieldLabel>
         {/*
           연도 → 월 → 일, 세 칸을 한 줄에 (2026-09-15 사용자 요청 — 예전엔 월·일 한 줄 + 아래 연도 한 줄).
           태어난 해를 먼저 적고 월·일을 고르는 순서가 말로 생일을 부르는 순서와 같습니다.
@@ -550,7 +553,7 @@ export default function ProfileForm({
       {/* 구분 — 1·2기엔 대학생 원우가 없어 고르개를 보이지 않습니다(lib/cohort.ts의 hasYouthMembers). */}
       {hasYouthMembers(form.cohort) ? (
       <div className="mb-6">
-        <FieldLabel hint="선택">구분</FieldLabel>
+        <FieldLabel hintClassName={HINT_TONE} hint="선택">구분</FieldLabel>
         <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
           {MEMBER_TYPES.map(({ value, label }) => {
             const selected = form.memberType === value;
@@ -595,7 +598,7 @@ export default function ProfileForm({
 
       {/* 회사·직책 — 원우수첩 카드에 이름 아래로 보입니다. */}
       <div className="mb-6">
-        <FieldLabel htmlFor="company" hint="선택">
+        <FieldLabel htmlFor="company" hintClassName={HINT_TONE} hint="선택">
           회사·소속
         </FieldLabel>
         <input
@@ -611,7 +614,7 @@ export default function ProfileForm({
       </div>
 
       <div className="mb-6">
-        <FieldLabel htmlFor="position" hint="선택">
+        <FieldLabel htmlFor="position" hintClassName={HINT_TONE} hint="선택">
           직책
         </FieldLabel>
         <input
@@ -631,7 +634,7 @@ export default function ProfileForm({
         기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다.
       */}
       <div className="mb-6">
-        <FieldLabel htmlFor="councilRole" hint="선택">
+        <FieldLabel htmlFor="councilRole" hintClassName={HINT_TONE} hint="선택">
           원우회 직위
         </FieldLabel>
         <input
@@ -649,6 +652,7 @@ export default function ProfileForm({
       <div className="mb-6">
         <FieldLabel
           htmlFor="introduction"
+          hintClassName={HINT_TONE}
           hint={
             <span className="tabular-nums">
               선택 · {form.introduction.length}/{INTRODUCTION_MAX_LENGTH}자
@@ -672,7 +676,7 @@ export default function ProfileForm({
 
       {/* 소개 영상 */}
       <div className="mb-8">
-        <FieldLabel htmlFor="introVideoUrl" hint="선택">
+        <FieldLabel htmlFor="introVideoUrl" hintClassName={HINT_TONE} hint="선택">
           소개 영상 링크
         </FieldLabel>
         <input
