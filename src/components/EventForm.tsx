@@ -64,6 +64,8 @@ export default function EventForm({
     const next: Record<string, string> = {};
     if (!title.trim()) next.title = "일정 제목을 입력해 주세요.";
     if (!date) next.date = "날짜를 골라 주세요.";
+    // 시작 시간은 꼭 넣어야 합니다 (2026-09-27 사용자 "시작시간은 필수, 종료시간은 선택"). 예전엔 둘 다 비워도 됐습니다.
+    if (!startTime) next.startTime = "시작 시간을 골라 주세요.";
     if (startTime && endTime && endTime < startTime) {
       next.endTime = "종료 시간이 시작 시간보다 빨라요.";
     }
@@ -172,7 +174,10 @@ export default function EventForm({
 
       <div className="mb-6 flex gap-3">
         <div className="flex-1">
-          <FieldLabel htmlFor="event-start">시작 시간</FieldLabel>
+          {/* 오른쪽 빨간 "필수" — 프로필의 필수 칸과 같은 표시 (2026-09-27). */}
+          <FieldLabel htmlFor="event-start" hint={<span className="text-danger">필수</span>}>
+            시작 시간
+          </FieldLabel>
           <input
             id="event-start"
             type="time"
@@ -194,6 +199,7 @@ export default function EventForm({
           />
         </div>
       </div>
+      {errors.startTime ? <FieldError>{errors.startTime}</FieldError> : null}
       {errors.endTime ? <FieldError>{errors.endTime}</FieldError> : null}
 
       <div className="mb-6">
