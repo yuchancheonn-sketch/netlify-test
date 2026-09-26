@@ -26,7 +26,11 @@ export default function DosanAcademyFooter() {
 
   return (
     <footer className="px-1 pt-4 pb-2 text-[12px] leading-relaxed text-ink">
-      <p className="flex items-center gap-2.5 text-ink">
+      {/*
+        gap-1.5 — 이용약관과 개인정보처리방침 사이 10px → 6px (2026-09-27 사용자 "더 붙여주고, 같은 줄에").
+        whitespace-nowrap — 글씨가 커져도(보기 설정) 줄이 갈리지 않게 둘을 한 줄에 둡니다.
+      */}
+      <p className="flex items-center gap-1.5 whitespace-nowrap text-ink">
         <a href={`${SITE_URL}/?mode=policy`} target="_blank" rel="noopener noreferrer">
           이용약관
         </a>
