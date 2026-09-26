@@ -362,8 +362,12 @@ export default function ProfileForm({
   const displayName = form.name.trim() || "나";
   const submitDisabled = mode === "edit" ? !dirty : false;
 
-  // 칸 모양 — 수정 화면만 회색 칸·그림자 없음 (위 flatBox)
-  const flat = mode === "edit";
+  /*
+   * 칸 모양 — 회색 칸·그림자 없음 (위 flatBox). 처음엔 수정 화면만이었는데, 2026-09-27 사용자 요청
+   * ("다른 창들과 일관성 있게, 흰색 배경에 회색 박스")으로 처음 가입 화면도 똑같이 그립니다.
+   * 예전 가입 화면 모양(흰 칸·그림자, fieldClassName)은 이제 쓰지 않지만 기록으로 남겨 둡니다.
+   */
+  const flat = true;
   /*
    * 수정 화면의 한 줄 칸 높이는 원우 정보 창(MemberEditSheet)과 같은 약 44px(위아래 10px) — 2026-09-26 사용자
    * "회색 박스 높이를 원우 정보 창과 똑같게"(그 전엔 위 11px·아래 15px로 약 50px). 처음 가입 화면은 그대로.
