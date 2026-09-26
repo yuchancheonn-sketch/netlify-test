@@ -24,6 +24,7 @@ import {
   FieldLabel,
   PrimaryButton,
   Skeleton,
+  Spinner,
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -392,15 +393,23 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
     window.open(saveUrl(file.url), "_blank", "noopener,noreferrer");
   }
 
+  /**
+   * "삭제"를 누르면 앱 안의 확인 창("진짜 삭제하시겠어요?")을 먼저 띄웁니다 (2026-09-27 사용자 요청).
+   * 예전엔 브라우저 기본 확인 창(window.confirm)이었는데, 아이폰 홈 화면 앱에서는 주소가 찍힌 투박한 창이 뜹니다.
+   */
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   async function handleDelete() {
-    setMenuOpen(false);
     if (deleting) return;
-    if (!window.confirm(`"${file.name}"을 목록에서 지울까요?`)) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await deleteDoc(doc(db, "files", file.id));
+      // 지워지면 이 줄째 목록에서 사라지므로 창을 따로 닫지 않아도 됩니다.
     } catch {
       setDeleting(false);
+      setDeleteError("삭제하지 못했어요. 다시 시도해 주세요.");
     }
   }
 
@@ -498,13 +507,18 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
                   이름 바꾸기
                 </button>
                 <span className="h-px bg-white/15" aria-hidden="true" />
+                {/* "지우기" → "삭제" (2026-09-27 사용자 요청). 누르면 아래 확인 창이 뜹니다. */}
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setDeleteError(null);
+                    setConfirmingDelete(true);
+                  }}
                   disabled={deleting}
                   className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D] disabled:opacity-50"
                 >
-                  지우기
+                  삭제
                 </button>
               </>
             ) : null}
@@ -514,6 +528,57 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
 
       {renaming ? (
         <FileRenameSheet file={file} onClose={() => setRenaming(false)} />
+      ) : null}
+
+      {/*
+        삭제 확인 창 — 화면 가운데 흰 상자. 바깥(어두운 막)을 누르거나 "취소"면 닫힙니다.
+        bg-ink/40 막은 globals.css가 맨 위 시계 줄 색까지 맞춰 줍니다(확인 창 공용 처리).
+      */}
+      {confirmingDelete ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-8"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby={`delete-title-${file.id}`}
+          onClick={() => {
+            if (!deleting) setConfirmingDelete(false);
+          }}
+        >
+          <div
+            className="w-full max-w-[320px] rounded-3xl bg-surface px-5 pt-6 pb-4 text-center shadow-[var(--shadow-float)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p id={`delete-title-${file.id}`} className="text-[17px] font-bold text-ink">
+              진짜 삭제하시겠어요?
+            </p>
+            <p className="mt-2 text-[14px] leading-relaxed break-all text-ink-muted">
+              &lsquo;{file.name}&rsquo;이(가) 자료 목록에서 사라져요.
+            </p>
+            {deleteError ? (
+              <p role="alert" className="mt-2 text-[13px] font-medium text-danger">
+                {deleteError}
+              </p>
+            ) : null}
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="flex-1 rounded-2xl bg-fill py-3 text-[15px]! font-bold text-ink-soft transition active:scale-[0.98] disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex flex-1 items-center justify-center rounded-2xl bg-danger py-3 text-[15px]! font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {deleting ? <Spinner className="h-5 w-5" /> : "삭제"}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </li>
   );
