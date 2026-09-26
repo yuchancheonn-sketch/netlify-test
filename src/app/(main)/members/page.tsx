@@ -2,7 +2,6 @@
 
 import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
@@ -1136,14 +1135,7 @@ function MemberDetailSheet({
             <span className="-translate-y-px">{isMe ? "내 정보 수정하기" : "정보 수정하기"}</span>
           </button>
 
-          {isMe ? (
-            <Link
-              href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-surface py-[10.75px] text-[15px] font-bold text-ink-soft shadow-[var(--shadow-card)]"
-            >
-              사진·자기소개까지 고치기
-            </Link>
-          ) : null}
+          {/* 내 칸의 "사진·자기소개까지 고치기"(내 프로필로 가는 단추)는 2026-09-27 사용자 요청으로 없앴습니다. */}
 
           <button
             type="button"

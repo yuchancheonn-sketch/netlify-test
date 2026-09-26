@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   addDoc,
   collection,
@@ -76,7 +75,6 @@ export default function MemberEditSheet({
   onClose: () => void;
 }) {
   const { profile } = useAuth();
-  const isMine = entry?.member?.uid === profile?.uid && !!entry?.member;
 
   const [name, setName] = useState(entry?.name ?? "");
   // 새로 올릴 때는 추가할 수 있는 기수(10기)만 — 1기~9기 수첩에서는 추가하지 않습니다(lib/cohort.ts).
@@ -451,14 +449,7 @@ export default function MemberEditSheet({
             {entry ? "저장하기" : duplicatePending ? "동명이인으로 추가하기" : "수첩에 추가하기"}
           </PrimaryButton>
 
-          {isMine ? (
-            <Link
-              href="/profile"
-              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-field py-[15.5px] text-[15px] font-bold text-ink-soft"
-            >
-              사진·자기소개까지 고치기
-            </Link>
-          ) : null}
+          {/* 내 칸의 "사진·자기소개까지 고치기"(내 프로필로 가는 단추)는 2026-09-27 사용자 요청으로 없앴습니다. */}
 
           <button
             type="button"
