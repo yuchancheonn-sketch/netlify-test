@@ -72,9 +72,12 @@ export default function LibraryPage() {
     <Suspense
       fallback={
         <>
+          {/* 기다리는 동안도 흰 바탕 — 아래 LibraryTabs와 같게. */}
+          <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
           <PageHeader
+            tone="surface"
             title={<Skeleton className="h-[28px] w-[200px] rounded-lg" />}
-            right={<HeaderActions />}
+            right={<HeaderActions tone="surface" />}
           />
           <div className="px-4 pt-4 pb-24">
             <Skeleton className="aspect-video rounded-2xl" />
@@ -114,7 +117,15 @@ function LibraryTabs() {
           없어지면 안 됩니다. min-w-0은 폭이 모자랄 때 탭 쪽이 먼저 줄어들며
           가로로 밀리게 하려는 것입니다 — 없으면 기수 고르개가 밀려 잘립니다.
       */}
+      {/*
+        바탕 흰색 (2026-09-27 사용자 "자료탭 배경색도 흰색으로") — 채팅 탭과 같은 방법.
+        화면 전체에 붙인 흰 층(-z-10)을 목록 뒤에 깝니다. 상자에 bg-surface를 주면 MainShell의 <main>이
+        높이를 정해 두지 않아 목록이 짧을 때 아래로 회색이 드러납니다(chat/page.tsx 주석).
+        제목 줄도 tone="surface"로 맞춥니다.
+      */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
       <PageHeader
+        tone="surface"
         title={
           // 복습 영상·소식은 모든 기수가 같아 기수 고르개는 파일 칸에서만 답니다(2026-09-22).
           canSwitch && subtab === "files" ? (
@@ -132,7 +143,7 @@ function LibraryTabs() {
             <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
           )
         }
-        right={<HeaderActions />}
+        right={<HeaderActions tone="surface" />}
       />
 
       {/*
