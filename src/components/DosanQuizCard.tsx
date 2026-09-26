@@ -274,8 +274,8 @@ export default function DosanQuizCard() {
             {picked ? (
               <div className="mt-3">
                 <PrimaryButton onClick={submit} size="compact" loading={submitting}>
-                  {/* 글씨만 1px 위로 (2026-09-27 사용자 요청) — PrimaryButton이 flex라 span의 transform이 먹습니다. */}
-                  <span className="-translate-y-px">정답 제출하기</span>
+                  {/* 글씨만 1.5px 위로 (2026-09-27 사용자 요청 — 1px, 이어서 0.5px 더) — PrimaryButton이 flex라 span의 transform이 먹습니다. */}
+                  <span className="-translate-y-[1.5px]">정답 제출하기</span>
                 </PrimaryButton>
               </div>
             ) : null}
