@@ -434,7 +434,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
             if (requireLogin()) return;
             setLinking(true);
           }}
-          className="mt-2 w-full rounded-2xl py-2.5 text-[14px] font-bold text-brand-500 transition active:bg-fill"
+          // mt-1.5 — 위 흰 여백 8px → 6px (2026-09-27 사용자 "2px 줄여줘").
+          className="mt-1.5 w-full rounded-2xl py-2.5 text-[14px] font-bold text-brand-500 transition active:bg-fill"
         >
           내 폰 캘린더에 연결
         </button>
