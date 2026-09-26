@@ -413,7 +413,8 @@ function ChatRoomPageContent({
               }
               aria-label={isFavorite ? "즐겨찾기 빼기" : "즐겨찾기"}
               aria-pressed={isFavorite}
-              className={`${roundButtonClassName} ${isFavorite ? "text-brand-500!" : ""}`}
+              // 켜짐 = 채운 별, 꺼짐 = 빈 별 — 색은 둘 다 먹색(보내 준 그림처럼, 2026-09-27).
+              className={roundButtonClassName}
             >
               <StarIcon className="h-[23px] w-[23px]" filled={isFavorite} />
             </button>

@@ -551,10 +551,25 @@ export function BellIcon({ className, strokeWidth = 1.9 }: IconProps) {
 }
 
 /**
- * 대화방 알림 종 — 속을 채운 모양 (2026-09-27, 대화방 위 동그란 단추). muted면 사선을 그어 "알림 꺼짐".
- * 사선 둘레는 바탕색(단추의 surface)으로 한 번 더 그어, 채운 종과 사선이 떨어져 보이게 합니다.
+ * 대화방 알림 종 (2026-09-27, 대화방 위 동그란 단추).
+ *   알림 켜짐 — 속을 채운 종.
+ *   알림 꺼짐(muted) — 선으로만 그린 종 + 사선 (사용자가 보내 준 그림처럼).
  */
 export function ChatBellIcon({ className, muted }: { className?: string; muted?: boolean }) {
+  if (muted) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+        <path
+          d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 1.8H4.4z"
+          stroke="currentColor"
+          strokeWidth={1.9}
+          strokeLinejoin="round"
+        />
+        <path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" />
+        <path d="M4.5 4 19.5 20" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       <path
@@ -565,12 +580,6 @@ export function ChatBellIcon({ className, muted }: { className?: string; muted?:
         strokeLinejoin="round"
       />
       <path d="M9.8 20.2a2.3 2.3 0 0 0 4.4 0z" fill="currentColor" />
-      {muted ? (
-        <>
-          <path d="M4 3.5 20 21" stroke="var(--color-surface)" strokeWidth={4.2} strokeLinecap="round" />
-          <path d="M4 3.5 20 21" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" />
-        </>
-      ) : null}
     </svg>
   );
 }
