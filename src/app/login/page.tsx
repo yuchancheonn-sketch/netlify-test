@@ -11,7 +11,7 @@ import {
   PhoneIcon,
   XMarkIcon,
 } from "@/components/icons";
-import { PrimaryButton, Spinner } from "@/components/ui";
+import { Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { formatPhoneInput } from "@/lib/format";
 import { isKakaoConfigured, startKakaoLogin } from "@/lib/kakao-login";
@@ -23,7 +23,6 @@ import {
   toE164Korean,
 } from "@/lib/phone-login";
 import {
-  APP_DEFINITION_BODY,
   APP_NAME,
   COURSE_FULL_NAME,
 } from "@/lib/constants";
@@ -37,18 +36,18 @@ export default function LoginPage() {
 }
 
 /**
- * 첫 화면의 아래쪽 단추 자리가 지금 무엇을 보여 주는지 (2026-09-22 사용자 요청).
- *   start  "로그인하기" / "회원가입하기" 두 단추
- *   signup 가입 방법 셋 — 구글 / 카톡 / 휴대폰 번호 ("…으로 시작하기")
- *   login  같은 셋을 "…으로 로그인"으로
+ * 첫 화면의 아래쪽 단추 자리가 지금 무엇을 보여 주는지.
+ *   login  로그인 방법 셋 — 구글 / 카톡 / 휴대폰 번호 ("…으로 로그인")
  *   phone  휴대폰 번호 → 인증번호
+ * (2026-09-22~26엔 start "로그인하기/회원가입하기" 두 단추와 signup "…으로 시작하기" 목록이 더 있었습니다.
+ *  2026-09-27 사용자 "로그인이랑 회원가입이 같은 기능이면 회원가입은 아예 없애고 예전처럼 로그인만"으로 없앴습니다.)
  *
- * ★ 로그인과 가입은 속으로는 같은 일입니다. 어느 쪽으로 들어가든 처음 보는 계정이면 가입(join)으로,
- *   이미 있는 계정이면 홈으로 갑니다(StageGate). 단추 글씨만 다르게 보여 줍니다.
+ * ★ 로그인과 가입은 속으로는 같은 일입니다. 처음 보는 계정이면 로그인해도 가입(join)으로,
+ *   이미 있는 계정이면 홈으로 갑니다(StageGate).
  * ★ 구글·카톡·휴대폰은 처음엔 다른 계정이지만, 처음 온 원우는 첫 프로필에서 인증된 번호가 같은
  *   기존 계정에 합쳐집니다(2026-09-22 사용자 요청, 2026-09-23부터 번호 하나로 판단 — lib/account-link-server.ts).
  */
-type Step = "start" | "signup" | "login" | "phone";
+type Step = "login" | "phone";
 
 /**
  * 주황(PrimaryButton) 옆에 서는 흰 단추 — "회원가입하기", 구글, 휴대폰.
@@ -59,14 +58,11 @@ const secondaryButtonClassName =
 
 function LoginScreen() {
   const { signIn, authError, clearAuthError } = useAuth();
-  const [step, setStep] = useState<Step>("start");
-  /** 휴대폰 단계로 들어오기 전 어느 목록에 있었는지 — 뒤로 갈 곳과 글씨("시작하기"/"로그인")를 정합니다. */
-  const [purpose, setPurpose] = useState<"signup" | "login">("signup");
+  const [step, setStep] = useState<Step>("login");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function goTo(next: Step) {
-    if (next === "signup" || next === "login") setPurpose(next);
     setError(null);
     clearAuthError();
     setStep(next);
@@ -104,11 +100,10 @@ function LoginScreen() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  const verb = purpose === "signup" ? "시작하기" : "로그인";
   const shownError = error ?? authError;
 
   // 휴대폰 번호 단계는 사진 화면 대신 화면 하나를 통째로 씁니다(2026-09-22 사용자 요청 — 아래 PhoneSignIn).
-  if (step === "phone") return <PhoneSignIn onBack={() => goTo(purpose)} />;
+  if (step === "phone") return <PhoneSignIn onBack={() => goTo("login")} />;
 
   return (
     // 배경 사진을 본문과 같은 폭 안에 가두어, 넓은 화면에서 얼굴만 크게
@@ -193,43 +188,18 @@ function LoginScreen() {
         <div className="flex-1" />
 
         {/*
-          애기애타의 뜻. 상자 없이 사진 위에 바로 얹어 화면이 트여 보이게 했습니다.
-          서예 로고와 결을 맞춰 명조체로 씁니다.
-          ★ 첫 화면(start)에만 둡니다 — 로그인·회원가입 방법 고르는 두 화면에서는 뺐습니다
-            (2026-09-26 사용자 "두 화면에서는 문구 빼줘"). 단추는 flex-1 여백 덕에 화면 아래에 그대로 붙어 있습니다.
+          애기애타의 뜻 문구는 로그인·회원가입 첫 화면(start)에만 있었습니다. 2026-09-27에 첫 화면째 없애고
+          로그인 목록으로 바로 들어오며, 목록 화면에서는 문구를 빼 두었던 대로(2026-09-26 사용자 "두 화면에서는 문구 빼줘") 두지 않습니다.
         */}
-        {step === "start" ? (
-          <p className="text-center font-serif text-[19px] leading-relaxed font-semibold text-ink">
-            {APP_DEFINITION_BODY}
-          </p>
-        ) : null}
 
         <div className="mt-5">
-          {step === "start" ? (
-            /*
-              두 단추 높이 56px → 50px (2026-09-22 사용자 요청 "조금씩 줄여줘").
-              로그인하기는 PrimaryButton field(위아래 13px), 회원가입하기는 테두리 1px + 위아래 12px로 같은 50px.
-              가입 방법 목록(구글·카톡·휴대폰) 단추도 2026-09-25부터 같은 50px입니다(아래 주석).
-            */
-            <div className="flex flex-col gap-3">
-              <PrimaryButton onClick={() => goTo("login")} size="field">
-                로그인하기
-              </PrimaryButton>
-              <button
-                type="button"
-                onClick={() => goTo("signup")}
-                className={`${secondaryButtonClassName} py-[12px]!`}
-              >
-                회원가입하기
-              </button>
-            </div>
-          ) : (
-            /*
-              ★ 세 단추 56px → 50px (2026-09-25 사용자 "박스들 위치 확 내려서 도산 선생 얼굴 안 가리도록").
-                위 "로그인하기/회원가입하기"와 같은 높이(흰 단추 테두리 1px + 위아래 12px, 카톡 위아래 13px).
-                아래 "이미 가입했다면…" 안내 두 줄을 뺀 것과 합쳐 목록 전체가 약 66px 내려갑니다(목록은 화면 아래에 붙어 섭니다).
-            */
-            <div className="flex flex-col gap-3">
+          {/*
+            ★ 로그인 방법 세 개를 첫 화면에 바로 (2026-09-27 사용자 "회원가입 기능은 아예 없애고 예전처럼 로그인만").
+              예전엔 "로그인하기 / 회원가입하기" 두 단추를 먼저 누르고, 같은 세 방법을 "…으로 로그인" / "…으로 시작하기"
+              글씨만 달리해 보여 줬습니다(속으로는 같은 일). 처음 보는 계정이면 로그인해도 가입 절차로 이어집니다(StageGate).
+            ★ 세 단추 50px (2026-09-25 사용자 "박스들 위치 확 내려서 도산 선생 얼굴 안 가리도록") — 흰 단추 테두리 1px + 위아래 12px, 카톡 위아래 13px.
+          */}
+          <div className="flex flex-col gap-3">
               {/* 구글 — 흰 단추에 구글 네 색 로고 */}
               <button
                 type="button"
@@ -238,7 +208,7 @@ function LoginScreen() {
                 className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 {submitting ? <Spinner className="h-5 w-5" /> : <GoogleIcon className="h-5 w-5" />}
-                구글 계정으로 {verb}
+                구글 계정으로 로그인
               </button>
               {/* 카카오 — 카카오 안내대로 노란 바탕(#FEE500)에 검정 말풍선·글씨. 다크 모드에서도 그대로. */}
               <button
@@ -248,7 +218,7 @@ function LoginScreen() {
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-5 py-[13px] text-[16px] font-bold text-black/85 transition active:scale-[0.99] disabled:opacity-60"
               >
                 <KakaoIcon className="h-5 w-5" />
-                카톡으로 {verb}
+                카톡으로 로그인
               </button>
               <button
                 type="button"
@@ -257,22 +227,10 @@ function LoginScreen() {
                 className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 <PhoneIcon className="h-5 w-5" />
-                휴대폰 번호로 {verb}
+                휴대폰 번호로 로그인
               </button>
-
-              {/*
-                "처음으로" → 로그인 목록에서는 "회원가입" (2026-09-25 사용자 요청) — 누르면 가입 방법 목록("…으로 시작하기")으로 바뀝니다.
-                가입 목록에서는 거꾸로 "로그인"을 두어 서로 오갑니다. 처음 화면으로 가는 길은 없어졌습니다.
-              */}
-              <button
-                type="button"
-                onClick={() => goTo(step === "login" ? "signup" : "login")}
-                className="mt-1 self-center text-[13px]! font-bold text-ink-muted"
-              >
-                {step === "login" ? "회원가입" : "로그인"}
-              </button>
+              {/* 로그인 ↔ 회원가입을 오가던 작은 글씨 단추는 회원가입 화면과 함께 없앴습니다(2026-09-27). */}
             </div>
-          )}
 
           {shownError ? (
             <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
