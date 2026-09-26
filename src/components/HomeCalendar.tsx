@@ -363,7 +363,8 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                       <span className="mt-1 flex flex-col gap-0.5 text-[12.5px] leading-snug font-medium text-ink-muted">
                         {item.time ? (
                           <span className="flex items-center gap-1">
-                            <ClockIcon className="h-[14.5px] w-[14.5px]" />
+                            {/* translate-y-px — 시계 아이콘만 1px 아래로 (2026-09-27 사용자 요청). */}
+                            <ClockIcon className="h-[14.5px] w-[14.5px] translate-y-px" />
                             {item.time}
                           </span>
                         ) : null}
