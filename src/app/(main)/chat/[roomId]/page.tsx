@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
 import {
   cohortOfRoomId,
+  roomMemberCount,
   cohortRoomTitle,
   deleteChatMessage,
   editChatMessage,
@@ -122,6 +123,8 @@ function ChatRoomPageContent({
   const title = roomCohort
     ? cohortRoomTitle(roomCohort)
     : (otherId && nameByUid.get(otherId)) || "원우";
+  /** 방 이름 옆에 굵게 붙는 인원수 (2026-09-27) — 원우 목록을 받기 전엔 숨깁니다. */
+  const memberCount = members.length > 0 ? roomMemberCount(roomId, members) : null;
 
   /*
    * 아는 방 모양이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
@@ -392,8 +395,12 @@ function ChatRoomPageContent({
             <ChevronLeftIcon className="h-6 w-6" strokeWidth={1.8} />
           </button>
 
-          <p className="pointer-events-none absolute inset-x-[108px] truncate text-center text-[17px] font-bold text-ink">
-            {title}
+          {/* 방 이름 + 굵은 인원수(회색) — 이름이 길면 이름만 잘리고 숫자는 남습니다. */}
+          <p className="pointer-events-none absolute inset-x-[108px] flex justify-center gap-1.5 text-[17px] font-bold text-ink">
+            <span className="truncate">{title}</span>
+            {memberCount ? (
+              <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
+            ) : null}
           </p>
 
           <div className="flex shrink-0 items-center gap-2">

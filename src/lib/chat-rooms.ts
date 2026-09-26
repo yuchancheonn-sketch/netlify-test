@@ -97,6 +97,18 @@ export function roomTitle(
 }
 
 /**
+ * 방에 있는 원우 수 — 방 이름 옆에 굵게 붙입니다(카톡처럼, 2026-09-27 사용자 요청).
+ *   기수 단체방: 그 기수의 승인된 원우 수 (명단을 따로 적지 않는 구조라 users로 셉니다 — 이 파일 맨 위).
+ *   1:1 방: 늘 2명.
+ * members는 화면이 이미 받아 둔 승인 원우 목록(useApprovedMembers)이라 새로 읽는 비용이 없습니다.
+ */
+export function roomMemberCount(roomId: string, members: UserDoc[]): number {
+  const cohort = cohortOfRoomId(roomId);
+  if (!cohort) return 2;
+  return members.filter((member) => cohortOf(member.cohort) === cohort).length;
+}
+
+/**
  * 아직 문서가 없는 기수 단체방의 빈 껍데기.
  *
  * 기수 단체방은 "그 기수 원우는 무조건 있다"가 요구사항이라, 한 마디도 오가지 않아

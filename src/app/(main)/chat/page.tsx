@@ -10,7 +10,7 @@ import { ChatBellIcon, StarIcon, UsersIcon } from "@/components/icons";
 import { useChatPrefs } from "@/lib/chat-prefs";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { otherUidOf, previewText, roomTitle } from "@/lib/chat-rooms";
+import { otherUidOf, previewText, roomMemberCount, roomTitle } from "@/lib/chat-rooms";
 import { formatChatListTime } from "@/lib/format";
 import {
   useApprovedMembers,
@@ -153,6 +153,7 @@ function ChatListPageContent() {
                     title={roomTitle(room, uid ?? "", nameByUid)}
                     other={memberByUid.get(otherUidOf(room.id, uid ?? "") ?? "")}
                     unread={unreadRooms[room.id] ?? false}
+                    memberCount={members.length > 0 ? roomMemberCount(room.id, members) : null}
                     favorite={chatPrefs.favorites.has(room.id)}
                     muted={chatPrefs.muted.has(room.id)}
                   />
@@ -185,6 +186,7 @@ function ChatRoomRow({
   title,
   other,
   unread,
+  memberCount,
   favorite,
   muted,
 }: {
@@ -194,6 +196,8 @@ function ChatRoomRow({
   other?: UserDoc;
   /** 이 방에 안 읽은 새 메시지가 있는지. 몇 개인지는 세지 않습니다. */
   unread: boolean;
+  /** 방 인원수 — 이름 옆에 굵은 회색 숫자 (원우 목록을 받기 전엔 null) */
+  memberCount: number | null;
   /** 즐겨찾기한 방 — 이름 옆에 작은 별 */
   favorite: boolean;
   /** 알림을 끈 방 — 이름 옆에 작은 종(사선) */
@@ -251,6 +255,10 @@ function ChatRoomRow({
         {/* 이름 옆 작은 표시 — 즐겨찾기 별(주황)·알림 끔 종(회색), 카톡의 핀·음소거 자리 (2026-09-27). */}
         <p className="flex min-w-0 items-center gap-1 text-[16px] font-bold text-ink">
           <span className="truncate">{title}</span>
+          {/* 인원수 — 카톡처럼 이름 옆 굵은 회색 숫자 (2026-09-27 사용자 요청). */}
+          {memberCount ? (
+            <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
+          ) : null}
           {favorite ? (
             <StarIcon className="h-3.5 w-3.5 shrink-0 text-brand-500" filled strokeWidth={1.6} />
           ) : null}
