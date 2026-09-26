@@ -180,7 +180,7 @@ export default function PhotoCropSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-black text-white"
+      className="fixed inset-0 z-50 flex flex-col bg-surface text-ink"
       role="dialog"
       aria-modal="true"
       aria-label="프로필 사진 편집"
@@ -194,7 +194,7 @@ export default function PhotoCropSheet({
           type="button"
           onClick={onCancel}
           disabled={working}
-          className="rounded-full px-3 py-2 text-[15px] font-medium text-white/85 active:bg-white/15 disabled:opacity-50"
+          className="rounded-full px-3 py-2 text-[15px] font-medium text-ink-soft active:bg-fill disabled:opacity-50"
         >
           취소
         </button>
@@ -203,15 +203,17 @@ export default function PhotoCropSheet({
           type="button"
           onClick={handleDone}
           disabled={!natural || working}
-          className="flex min-w-[52px] items-center justify-center rounded-full px-3 py-2 text-[15px] font-bold text-brand-400 active:bg-white/15 disabled:opacity-50"
+          className="flex min-w-[52px] items-center justify-center rounded-full px-3 py-2 text-[15px] font-bold text-brand-500 active:bg-fill disabled:opacity-50"
         >
           {working ? <Spinner className="h-5 w-5" /> : "완료"}
         </button>
       </div>
 
       {/*
-        가운데 정사각형 틀. 틀 밖으로 삐져나온 사진도 어둡게 보여 어디가 잘려 나가는지 알 수 있고,
-        동그란 구멍 둘레의 큰 그림자가 그 어두운 막입니다. 바깥 상자의 overflow-hidden이 화면 밖을 자릅니다.
+        가운데 정사각형 틀. 틀 밖으로 삐져나온 사진도 흐리게 보여 어디가 잘려 나가는지 알 수 있고,
+        동그란 구멍 둘레의 큰 그림자가 그 흐린 막입니다. 바깥 상자의 overflow-hidden이 화면 밖을 자릅니다.
+        ★ 색은 앱 테마를 따릅니다 (2026-09-27 사용자 "다크모드 아닐 때는 흰색 테마로") — 바탕 surface,
+          막은 surface 72%. 밝은 화면에선 흰 바탕에 하얗게 흐린 막, 어두운 화면에선 예전처럼 어두운 막이 됩니다.
         touch-none — 손가락 움직임을 화면 스크롤·확대 대신 사진 편집에 씁니다.
       */}
       <div className="relative flex flex-1 touch-none items-center justify-center overflow-hidden px-6">
@@ -245,7 +247,8 @@ export default function PhotoCropSheet({
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-1 ring-white/70"
+            className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-ink/25"
+            style={{ boxShadow: "0 0 0 9999px color-mix(in srgb, var(--color-surface) 72%, transparent)" }}
           />
           {!natural ? (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -261,12 +264,12 @@ export default function PhotoCropSheet({
         style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}
       >
         {error ? (
-          <p role="alert" className="mb-3 text-center text-[13px] font-medium text-red-300">
+          <p role="alert" className="mb-3 text-center text-[13px] font-medium text-danger">
             {error}
           </p>
         ) : null}
         <div className="flex items-center gap-3">
-          <span className="text-[13px] text-white/60" aria-hidden="true">
+          <span className="text-[13px] text-ink-muted" aria-hidden="true">
             작게
           </span>
           <input
@@ -283,11 +286,11 @@ export default function PhotoCropSheet({
             }}
             className="h-1 flex-1 accent-brand-500"
           />
-          <span className="text-[13px] text-white/60" aria-hidden="true">
+          <span className="text-[13px] text-ink-muted" aria-hidden="true">
             크게
           </span>
         </div>
-        <p className="mt-4 text-center text-[13px] text-white/60">
+        <p className="mt-4 text-center text-[13px] text-ink-muted">
           끌어서 위치를, 두 손가락이나 막대로 크기를 맞춰 주세요
         </p>
       </div>
