@@ -123,10 +123,10 @@ function ChatListPageContent() {
       */}
       <div className="pt-2 pb-8">
         {loading ? (
-          /* 아래 진짜 목록과 같은 짜임 — 사진 56px + 위아래 10px씩 = 76px 줄. */
+          /* 아래 진짜 목록과 같은 짜임 — 사진 56px + 위아래 9px씩 = 74px 줄. */
           <ul className="flex flex-col">
             {[0, 1, 2].map((key) => (
-              <li key={key} className="flex items-center gap-3.5 px-4 py-2.5">
+              <li key={key} className="flex items-center gap-3.5 px-4 py-[9px]">
                 <Skeleton className="squircle h-[56px] w-[56px] shrink-0 rounded-none!" />
                 <div className="flex-1">
                   <Skeleton className="h-4 w-28 rounded-md" />
@@ -211,12 +211,12 @@ function ChatRoomRow({
       href={`/chat/${room.id}`}
       /*
         카톡 대화 목록 한 줄 (2026-09-27 사용자 요청 — 흰 바탕에 박스 없이).
-        - 좌우 16px(px-4)·위아래 10px(py-2.5), 사진 56px(2026-09-27 사용자 "더 키워줘", 52px에서). 미리보기가 한 줄이면 76px 줄입니다.
+        - 좌우 16px(px-4)·위아래 9px(2026-09-27 사용자 "목록 사이 아주 조금 더 줄여줘", 10px에서 — 줄 사이 20px → 18px), 사진 56px(같은 날 "더 키워줘", 52px에서). 미리보기가 한 줄이면 74px 줄입니다.
         - 미리보기는 카톡처럼 두 줄까지(line-clamp-2) — 두 줄이면 줄이 그만큼 높아집니다.
         - 누르면 줄 전체가 옅은 회색(fill)으로 — 박스일 때의 살짝 줄어드는 효과 대신.
         예전 흰 박스 값(2026-09-15~26): rounded-3xl bg-surface px-3 py-[10.5px] shadow-card, 사진 58px.
       */
-      className="flex items-center gap-3.5 px-4 py-2.5 transition-colors active:bg-fill"
+      className="flex items-center gap-3.5 px-4 py-[9px] transition-colors active:bg-fill"
     >
       {/*
         동그라미가 아니라 스쿼클(네 변이 부드럽게 부푼 둥근 네모)입니다 — globals.css의 squircle.
