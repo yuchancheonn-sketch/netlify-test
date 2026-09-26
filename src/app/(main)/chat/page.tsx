@@ -4,6 +4,7 @@ import GuestGate from "@/components/GuestGate";
 import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import MidEllipsis from "@/components/MidEllipsis";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import { ChatBellIcon, StarIcon, UsersIcon } from "@/components/icons";
@@ -254,7 +255,7 @@ function ChatRoomRow({
       <div className="min-w-0 flex-1">
         {/* 이름 옆 작은 표시 — 즐겨찾기 별(주황)·알림 끔 종(회색), 카톡의 핀·음소거 자리 (2026-09-27). */}
         <p className="flex min-w-0 items-center gap-1 text-[16px] font-bold text-ink">
-          <span className="truncate">{title}</span>
+          <MidEllipsis text={title} />
           {/* 인원수 — 카톡처럼 이름 옆 굵은 회색 숫자 (2026-09-27 사용자 요청). */}
           {memberCount ? (
             <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>

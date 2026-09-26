@@ -4,6 +4,7 @@ import GuestGate from "@/components/GuestGate";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
+import MidEllipsis from "@/components/MidEllipsis";
 import {
   ArrowUpIcon,
   ChatBellIcon,
@@ -397,7 +398,7 @@ function ChatRoomPageContent({
 
           {/* 방 이름 + 굵은 인원수(회색) — 이름이 길면 이름만 잘리고 숫자는 남습니다. */}
           <p className="pointer-events-none absolute inset-x-[108px] flex justify-center gap-1.5 text-[17px] font-bold text-ink">
-            <span className="truncate">{title}</span>
+            <MidEllipsis text={title} />
             {memberCount ? (
               <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
             ) : null}
