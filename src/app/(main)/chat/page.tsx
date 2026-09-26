@@ -233,7 +233,8 @@ function ChatRoomRow({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[16px] font-bold text-ink">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">
+        {/* mt-px — 방 이름과의 사이 2px → 1px, 미리보기 1px 위로 (2026-09-27 사용자 요청). */}
+        <p className="mt-px line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">
           {preview ||
             (room.cohort
               ? "같은 기수 원우 모두가 있는 방이에요."
