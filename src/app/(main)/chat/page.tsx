@@ -229,6 +229,7 @@ function ChatRoomRow({
         이름 이니셜(Avatar의 기본 갈래)을 쓰면 "10기 단체 대화방"에서 두 글자를 잘라
         "단체" 같은 조각이 나와 무슨 방인지 알아볼 수 없습니다.
         모양(스쿼클·56px)은 1:1 방의 사진과 똑같이 맞춰 두 줄이 나란히 섭니다.
+        translate-y-[2px] — 사진만 2px 아래로 (2026-09-27 사용자 요청). 줄 높이·글씨 자리는 그대로입니다.
 
         ★ 바탕은 주황(brand-500)이었다가 같은 날 옅은 회색(fill)으로 바꿨습니다(사용자 요청).
           바탕이 옅어졌으므로 그림은 흰색이면 안 보입니다 — 한 단 진한 회색(ink-muted)으로 함께 바꿨습니다.
@@ -238,7 +239,7 @@ function ChatRoomRow({
       {room.cohort ? (
         <span
           aria-hidden="true"
-          className="squircle flex h-[56px] w-[56px] shrink-0 items-center justify-center bg-fill text-ink-muted"
+          className="squircle flex h-[56px] w-[56px] shrink-0 translate-y-[2px] items-center justify-center bg-fill text-ink-muted"
         >
           <UsersIcon className="h-7 w-7" strokeWidth={1.9} />
         </span>
@@ -248,7 +249,7 @@ function ChatRoomRow({
           name={title}
           seed={room.id}
           size={56}
-          className="squircle rounded-none!"
+          className="squircle translate-y-[2px] rounded-none!"
         />
       )}
 
