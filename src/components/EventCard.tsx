@@ -153,13 +153,15 @@ export function EventDdayCard({
               <span className="mt-1 flex items-center gap-2 text-[12.5px] leading-snug font-medium text-ink-muted">
                 {timeText ? (
                   <span className="flex shrink-0 items-center gap-1">
-                    <ClockIcon className="h-[14.5px] w-[14.5px]" />
+                    {/* translate-y-[1.5px] — 시계 아이콘만 1.5px 아래로 (2026-09-27 사용자 요청). */}
+                    <ClockIcon className="h-[14.5px] w-[14.5px] translate-y-[1.5px]" />
                     {timeText}
                   </span>
                 ) : null}
                 {event.location ? (
                   // gap-px — 핀과 장소 글씨 사이 1px (같은 날 사용자 "조금 더 붙여줘" 두 번, 4px → 2px → 1px).
-                  <span className="flex min-w-0 items-center gap-px">
+                  // -ml-[1.5px] — 장소(핀+글씨)를 1.5px 왼쪽으로 (2026-09-27 사용자 요청) — 시간과 사이 8px → 6.5px.
+                  <span className="-ml-[1.5px] flex min-w-0 items-center gap-px">
                     {/*
                       핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로.
                       선 굵기 1.5 — 같은 날 "굵기 좀 줄여줘"(기본 1.8에서). -translate-y-[0.25px] — "0.25px 위로".
