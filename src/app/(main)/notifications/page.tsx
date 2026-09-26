@@ -167,8 +167,8 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
       href={notice.url}
       // px-4 — 왼쪽 그림 칸을 걷으면서 글이 카드 끝에 붙지 않게 좌우를 16px로(예전 p-3.5 = 14px).
       // 박스(둥근 모서리 rounded-3xl·테두리 shadow-card)만 뺐습니다 (2026-09-27 사용자 "박스만 없애고 아무것도 건들지마").
-      // pl-[15px] — 날짜는 그대로 두고 알림 내용만 1px 왼쪽으로(2026-09-27 사용자 요청, 16px에서). 오른쪽은 16px 그대로.
-      className={`flex items-center gap-3 py-3.5 pr-4 pl-[15px] transition active:scale-[0.99] ${
+      // pl-[14px] — 날짜는 그대로 두고 알림 내용만 2px 왼쪽으로(2026-09-27 사용자 "1px", 이어서 "1px 더" — 16px에서). 오른쪽은 16px 그대로.
+      className={`flex items-center gap-3 py-3.5 pr-4 pl-[14px] transition active:scale-[0.99] ${
         isNew ? "bg-brand-50" : "bg-surface"
       }`}
     >
