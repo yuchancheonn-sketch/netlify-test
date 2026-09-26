@@ -74,16 +74,16 @@ function ChatListPageContent() {
 
   return (
     /*
-     * 바탕은 다른 탭과 같은 연한 회색입니다.
+     * 바탕은 흰색(surface) — 2026-09-27 사용자 "채팅탭 배경을 흰색으로 바꾸면서 카톡 대화 목록처럼".
+     * 방마다 두르던 흰 박스(2026-09-15)를 걷고, 카톡처럼 흰 바탕에 줄만 세웁니다(줄 사이 선도 없음).
+     * 제목 줄도 tone="surface"로 맞춥니다(안 하면 제목 줄만 회색으로 남음).
      *
-     * 흰색으로도 해봤는데, 화면 맨 윗줄(시계·배터리가 얹히는 자리)만 회색으로
-     * 남아 흰 화면 위에 회색 띠가 그어진 것처럼 보였습니다. 그 자리는 사파리가
-     * 제 나름의 색으로 칠하는 자리라 페이지에서 덮을 수 없습니다.
-     * 다른 탭과 같은 회색으로 두면 띠가 바탕에 묻혀 보이지 않습니다.
-     *
-     * 방마다 흰 박스를 두릅니다(2026-09-15, 원우수첩 목록과 같은 박스 — 한때는 카톡식으로 줄 사이 선만 두었습니다).
+     * 예전엔 흰색으로 했을 때 맨 윗줄(시계 자리)만 회색으로 남아 회색 바탕으로 돌렸었습니다.
+     * 지금은 제목 줄(sticky, 흰색)이 맨 위에 붙어 있어 아이폰이 그 색을 씁니다 — 내 프로필 화면과 같습니다.
+     * ★ MainShell의 <main>이 탭바 자리로 아래 여백 78px+홈 바를 두는데, 그 여백은 body(회색)라 음수 margin으로
+     *   파고들고 padding으로 되채워 흰 바탕이 그 자리까지 덮게 합니다(내 프로필 화면과 같은 값 — MainShell을 바꾸면 같이).
      */
-    <>
+    <div className="-mb-[calc(78px+env(safe-area-inset-bottom))] min-h-full bg-surface pb-[calc(78px+env(safe-area-inset-bottom))]">
       {/*
         제목은 "채팅"입니다 — 기수 단체방이 생겨 1:1만 있는 화면이 아니게 됐습니다
         (2026-09-22. 그 전에는 "1:1 채팅"이었습니다).
@@ -100,7 +100,8 @@ function ChatListPageContent() {
             "채팅"
           )
         }
-        right={<HeaderActions />}
+        right={<HeaderActions tone="surface" />}
+        tone="surface"
       />
 
       {/*
@@ -108,27 +109,32 @@ function ChatListPageContent() {
         pt-4 — 첫 박스와 제목 줄 사이 16px (2026-09-15, 박스로 바꾸며 더함 — 선일 때는 첫 줄이 여백 없이 서도 괜찮았지만
         박스는 제목 줄에 붙어 보입니다). 홈·원우수첩·알림 화면의 첫 칸과 같은 높이에서 시작합니다.
       */}
-      <div className="px-4 pt-4 pb-8">
+      <div className="pt-2 pb-8">
         {loading ? (
-          /* 아래 진짜 목록과 같은 짜임 — 12px씩 띄운 박스, 칸 높이 79px(사진 58px + 안쪽 위아래 10.5px씩). */
-          <ul className="flex flex-col gap-3">
+          /* 아래 진짜 목록과 같은 짜임 — 사진 52px + 위아래 10px씩 = 72px 줄. */
+          <ul className="flex flex-col">
             {[0, 1, 2].map((key) => (
-              <li key={key}>
-                <Skeleton className="h-[79px] rounded-3xl" />
+              <li key={key} className="flex items-center gap-3.5 px-4 py-2.5">
+                <Skeleton className="squircle h-[52px] w-[52px] shrink-0 rounded-none!" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="mt-2 h-3.5 w-44 rounded-md" />
+                </div>
               </li>
             ))}
           </ul>
         ) : error ? (
-          <ErrorState message={error} />
+          <div className="px-4">
+            <ErrorState message={error} />
+          </div>
         ) : (
           /*
-            방마다 흰 박스(ChatRoomRow)를 세우고 12px씩 띄워 나눕니다 — 원우수첩 목록과 같은 짜임.
-            ★ 박스 → 줄 사이 선(2026-09-14) → 다시 박스(2026-09-15 사용자 "원우탭처럼 박스로 구분 짓게 해줘").
-              원우수첩이 같은 날 박스로 돌아간 것에 맞췄습니다. 선으로 되돌리려면 git 기록의
-              border-t와 ChatRoomRow의 py-2(좌우 여백 없음)를 보세요.
+            카톡 대화 목록처럼 흰 바탕에 줄만 — 박스·줄 사이 선 없음 (2026-09-27 사용자 요청).
+            ★ 박스 → 줄 사이 선(2026-09-14) → 다시 박스(2026-09-15) → 박스 없는 카톡식(2026-09-27).
+              줄마다 좌우 px-4를 줄 안에 두어, 누를 때 옅은 회색이 화면 끝에서 끝까지 깔립니다.
           */
           <>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col">
               {rooms.map((room) => (
                 <li key={room.id}>
                   <ChatRoomRow
@@ -148,7 +154,7 @@ function ChatListPageContent() {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -180,20 +186,13 @@ function ChatRoomRow({
     <Link
       href={`/chat/${room.id}`}
       /*
-        칸 높이 = 위아래 여백 + 사진.
-
-        가운데 글 두 줄(17px + 14px)을 합쳐도 50px 남짓이라, 사진이 칸 높이를
-        혼자 정합니다. 글씨나 줄 간격을 건드려도 칸은 꿈쩍하지 않습니다.
-        지금은 10.5 + 58 + 10.5 = 79px입니다 (2026-09-22 사용자 "아주 조금만 더 줄여줘" — 사진 62→58px, 위아래 11.5→10.5px).
-        (2026-09-15 사용자 "박스들 높이 1px 만큼 줄여줘"로 위아래 12px → 11.5px씩. 좌우는 12px(px-3) 그대로.)
-
-        ★ 흰 박스입니다 (2026-09-15 사용자 요청 — 원우수첩 목록처럼).
-          bg-surface · shadow-[var(--shadow-card)](헤어라인 포함) · rounded-3xl · 안쪽 여백 p-3(12px) —
-          원우수첩 MemberRow와 같은 값입니다. 한쪽을 바꾸면 같이 봐 주세요.
-          줄 사이 선으로 지낼 때(2026-09-14)는 py-2만 두고 좌우 여백을 걷어 사진을 바깥 px-4에 맞췄습니다.
-        (위 불러오는 중 자리표시의 높이도 이 값에 맞춰 두었습니다.)
+        카톡 대화 목록 한 줄 (2026-09-27 사용자 요청 — 흰 바탕에 박스 없이).
+        - 좌우 16px(px-4)·위아래 10px(py-2.5), 사진 52px. 미리보기가 한 줄이면 72px 줄입니다.
+        - 미리보기는 카톡처럼 두 줄까지(line-clamp-2) — 두 줄이면 줄이 그만큼 높아집니다.
+        - 누르면 줄 전체가 옅은 회색(fill)으로 — 박스일 때의 살짝 줄어드는 효과 대신.
+        예전 흰 박스 값(2026-09-15~26): rounded-3xl bg-surface px-3 py-[10.5px] shadow-card, 사진 58px.
       */
-      className="flex items-center gap-3.5 rounded-3xl bg-surface px-3 py-[10.5px] shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+      className="flex items-center gap-3.5 px-4 py-2.5 transition-colors active:bg-fill"
     >
       {/*
         동그라미가 아니라 스쿼클(네 변이 부드럽게 부푼 둥근 네모)입니다 — globals.css의 squircle.
@@ -205,7 +204,7 @@ function ChatRoomRow({
         기수 단체방은 사람 사진이 없으므로 옅은 회색 바탕에 사람들 그림을 담습니다 (2026-09-22).
         이름 이니셜(Avatar의 기본 갈래)을 쓰면 "10기 단체 대화방"에서 두 글자를 잘라
         "단체" 같은 조각이 나와 무슨 방인지 알아볼 수 없습니다.
-        모양(스쿼클·58px)과 자리(ml-px)는 1:1 방의 사진과 똑같이 맞춰 두 줄이 나란히 섭니다.
+        모양(스쿼클·52px)은 1:1 방의 사진과 똑같이 맞춰 두 줄이 나란히 섭니다.
 
         ★ 바탕은 주황(brand-500)이었다가 같은 날 옅은 회색(fill)으로 바꿨습니다(사용자 요청).
           바탕이 옅어졌으므로 그림은 흰색이면 안 보입니다 — 한 단 진한 회색(ink-muted)으로 함께 바꿨습니다.
@@ -215,23 +214,23 @@ function ChatRoomRow({
       {room.cohort ? (
         <span
           aria-hidden="true"
-          className="squircle ml-px flex h-[58px] w-[58px] shrink-0 items-center justify-center bg-fill text-ink-muted"
+          className="squircle flex h-[52px] w-[52px] shrink-0 items-center justify-center bg-fill text-ink-muted"
         >
-          <UsersIcon className="h-8 w-8" strokeWidth={1.9} />
+          <UsersIcon className="h-7 w-7" strokeWidth={1.9} />
         </span>
       ) : (
         <Avatar
           src={other?.photoURL ?? null}
           name={title}
           seed={room.id}
-          size={58}
-          className="squircle ml-px rounded-none!"
+          size={52}
+          className="squircle rounded-none!"
         />
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[17px] font-bold text-ink">{title}</p>
-        <p className="mt-1 truncate text-[14px] text-ink-muted">
+        <p className="truncate text-[16px] font-bold text-ink">{title}</p>
+        <p className="mt-0.5 line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">
           {preview ||
             (room.cohort
               ? "같은 기수 원우 모두가 있는 방이에요."
@@ -239,9 +238,9 @@ function ChatRoomRow({
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
+      <div className="flex shrink-0 flex-col items-end gap-1.5 self-start pt-1">
         {room.lastMessageAt ? (
-          <time className="mr-0.5 text-[13px] text-ink-faint">
+          <time className="text-[12px] text-ink-faint">
             {formatChatListTime(room.lastMessageAt.toDate())}
           </time>
         ) : null}
