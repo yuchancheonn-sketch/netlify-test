@@ -735,12 +735,18 @@ function MessageRow({
     <li className="flex flex-col">
       {/* 날짜 구분선 — 당근처럼 배지 없이 가운데 회색 글씨로 둡니다. */}
       {showDateDivider ? (
-        <p className="py-4 text-center text-[12px] font-medium text-ink-faint">
+        /*
+          2026-09-27 사용자 "날짜랑 메세지 사이 간격 줄여줘, 날짜는 더 크고 진하게":
+          12px 보통·흐린 회색(ink-faint) → 13.5px 굵게·한 단 진한 회색(ink-muted).
+          아래 여백 16px → 8px, 그리고 날짜 바로 밑에서는 아래 말 묶음 간격(16px)을 겹쳐 두지 않습니다
+          (예전엔 둘이 더해져 날짜와 첫 말풍선 사이가 32px였음 → 이제 8px).
+        */
+        <p className="pt-4 pb-2 text-center text-[13.5px] font-bold text-ink-muted">
           {formatDateDivider(sentAt)}
         </p>
       ) : null}
 
-      {isBlockStart ? (
+      {isBlockStart && !showDateDivider ? (
         /*
           내 메시지 위와 1:1 대화에는 이름을 적지 않습니다. 그렇다고 이름 줄을
           통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보입니다.
