@@ -27,8 +27,12 @@ function OnboardingScreen() {
         (2026-09-27 "그냥 없애줘").
       */}
       <div className="mx-auto w-full max-w-[520px]">
-        <header className="px-5 pt-12 pb-6">
-          <p className="text-[13px] font-bold text-brand-500">가입 승인 완료 🎉</p>
+        {/*
+          pb-10 — 제목과 프로필 사진 사이를 24px → 40px로 (2026-09-27 사용자 "여백 더 키워줘").
+          "가입 승인 완료 🎉" 13px → 15px — 글씨와 축하 그림이 같은 글줄이라 함께 커집니다(2026-09-27 사용자 요청).
+        */}
+        <header className="px-5 pt-12 pb-10">
+          <p className="text-[15px] font-bold text-brand-500">가입 승인 완료 🎉</p>
           <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-ink">
             원우들에게 보여줄
             <br />
