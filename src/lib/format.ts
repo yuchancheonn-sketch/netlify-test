@@ -122,7 +122,19 @@ export function formatPhone(raw: string): string {
  * (붙임표를 따로 지울 필요가 없습니다.)
  */
 export function formatPhoneInput(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  let digits = raw.replace(/\D/g, "");
+  /*
+   * 국제 번호로 들어온 한국 번호는 앞을 0으로 (2026-09-27 사용자 요청).
+   * 아이폰이 키패드 위에 띄워 주는 내 번호는 "+821098855983"처럼 +82로 오는데,
+   * 그대로 숫자만 남기면 "821-0988-5598"이 됩니다. "+82" → "0"으로 바꿔 "010-9885-5983"으로 넣습니다.
+   * "+82 10-…"·"+82 (0)10…"처럼 띄어쓰기·괄호가 섞여도 됩니다. 손으로 "82…"를 치는 경우와 헷갈리지 않게
+   * 맨 앞에 +가 있을 때만 바꿉니다.
+   */
+  if (/^\s*\+\s*82/.test(raw)) {
+    digits = digits.slice(2);
+    if (!digits.startsWith("0")) digits = `0${digits}`;
+  }
+  digits = digits.slice(0, 11);
   if (digits.length < 4) return digits;
   if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
