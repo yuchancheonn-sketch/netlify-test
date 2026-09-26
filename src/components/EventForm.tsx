@@ -239,8 +239,7 @@ export default function EventForm({
           </button>
           <PrimaryButton type="submit" loading={saving} size="sm">
             {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
-            {/* 글씨만 3px 왼쪽으로 (2026-09-27 사용자 "1.5px", 이어서 "1.5px 더") — 단추 자리·크기는 그대로. */}
-            <span className="-translate-x-[3px] -translate-y-px">
+            <span className="-translate-y-px">
               {editing ? "수정 저장하기" : "일정 등록하기"}
             </span>
           </PrimaryButton>

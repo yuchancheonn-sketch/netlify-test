@@ -305,7 +305,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
         {/*
           일정이 없는 날은 + 단추가 날짜 줄("9월 25일 (금)")과 "일정이 없어요" 두 줄의 한가운데 높이, 오른쪽 끝에 섭니다
           (2026-09-25 사용자 "이 두 부분이랑 같은 높이로 정렬". 그 전엔 "일정이 없어요" 한 줄 가운데에 맞췄습니다).
-          absolute라 줄 높이를 늘리지 않습니다. right-[-6px] — 바깥 칸(px-1)을 넘어 박스 안쪽 오른쪽 끝 + "오른쪽으로 2px".
+          absolute라 줄 높이를 늘리지 않습니다. right-[-4px] — 바깥 칸(px-1)을 넘어 박스 안쪽 오른쪽 끝 + "오른쪽으로 2px"(−6px) → 2026-09-27 "왼쪽으로 2px"(−4px).
           top-[calc(50%-4px)] — 두 줄 덩어리의 가운데. 덩어리 아래에 "일정이 없어요"의 아래 여백 8px(py-2)이 붙어 있어,
           그 절반만큼 올려 글자 두 줄의 가운데에 맞춥니다.
         */}
@@ -316,7 +316,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           {selectedItems.length === 0 ? (
             <>
               <p className="py-2 text-[14px] text-ink-faint">일정이 없어요</p>
-              <span className="absolute top-[calc(50%-4px)] right-[-6px] -translate-y-1/2">{addButton}</span>
+              <span className="absolute top-[calc(50%-4px)] right-[-4px] -translate-y-1/2">{addButton}</span>
             </>
           ) : null}
         </div>
@@ -325,7 +325,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
             일정이 있는 날은 + 단추가 **마지막 일정** 줄의 세로 가운데(막대 가운데), 오른쪽 끝에 섭니다 (2026-09-26 사용자
             "내 폰 캘린더에 연결보다 위, 일정 막대 가운데에" → "여러 개일 때는 마지막 일정의 막대 가운데"). 단추는 마지막 줄(li) 안에 둡니다.
             pr-12 — + 자리(40px)만큼 목록 오른쪽을 비워, 원우에게 보이는 × 삭제 단추와 겹치지 않게 합니다.
-            right-[-54px] — 줄 오른쪽 끝에서 그 비운 48px을 넘어 "일정이 없어요" 줄의 + 와 같은 가로 자리(−6px)까지.
+            right-[-52px] — 줄 오른쪽 끝에서 그 비운 48px을 넘어 "일정이 없어요" 줄의 + 와 같은 가로 자리(−4px)까지 (2026-09-27 둘 다 2px 왼쪽으로).
           */
           <div className="mt-1.5 pr-12">
           <ul className="flex flex-col gap-1">
@@ -392,7 +392,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   */}
                   {isLast ? (
                     <span
-                      className={`absolute right-[-54px] ${
+                      className={`absolute right-[-52px] ${
                         item.kind === "academy" ? "bottom-1.5" : "top-1/2 -translate-y-1/2"
                       }`}
                     >
@@ -415,7 +415,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   {/* 우리 기수 일정만 오른쪽에 옅은 × — 누르면 확인 뒤 지웁니다(2026-09-25). */}
                   {/*
                     × 자리 (2026-09-27 사용자 "일정 지우기 버튼 오른쪽에 붙여줘"):
-                    마지막이 아닌 줄은 박스 오른쪽 끝, + 단추와 같은 세로줄(right-[-54px] 쪽 40px 칸의 가운데)에 붙입니다.
+                    마지막이 아닌 줄은 박스 오른쪽 끝, + 단추와 같은 세로줄(right-[-52px] 쪽 40px 칸의 가운데)에 붙입니다.
                     마지막 줄은 그 자리에 + 가 있어 겹치므로 예전처럼 줄 끝(+ 왼쪽)에 둡니다.
                   */}
                   {item.kind === "cohort" && canDelete ? (
@@ -424,7 +424,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                       onClick={() => void removeEvent(item)}
                       aria-label={`${item.title} 일정 삭제`}
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill ${
-                        isLast ? "-mr-1" : "absolute top-1/2 right-[-52px] -translate-y-1/2"
+                        isLast ? "-mr-1" : "absolute top-1/2 right-[-50px] -translate-y-1/2"
                       }`}
                     >
                       <XMarkIcon className="h-4 w-4" strokeWidth={2.2} />
