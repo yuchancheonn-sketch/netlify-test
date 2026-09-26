@@ -99,6 +99,17 @@ const HINT_TONE = "text-ink-muted";
 /** 칸 이름(이름·전화번호·기수·생일·구분 등) 글씨 크기 — 공용 15px보다 2px 크게 (2026-09-27 사용자 요청). */
 const LABEL_SIZE = "text-[17px]";
 
+/**
+ * 꼭 넣어야 하는 칸(이름·전화번호·기수) 오른쪽 표시 — "선택" 자리에 빨간 * (2026-09-27 사용자 요청).
+ * 스크린 리더에는 "필수"로 읽힙니다.
+ */
+const REQUIRED_MARK = (
+  <span className="text-[14px] font-bold text-danger">
+    <span aria-hidden="true">*</span>
+    <span className="sr-only">필수</span>
+  </span>
+);
+
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
   backgroundImage:
@@ -430,7 +441,7 @@ export default function ProfileForm({
 
       {/* 이름 */}
       <div className="mb-6">
-        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="name">이름</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="name" hint={REQUIRED_MARK}>이름</FieldLabel>
         <input
           id="name"
           value={form.name}
@@ -447,7 +458,7 @@ export default function ProfileForm({
       */}
       <div className="mb-6">
         {/* 칸 이름 "휴대폰" → "전화번호" (2026-09-22 사용자 요청). */}
-        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="phone">전화번호</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="phone" hint={REQUIRED_MARK}>전화번호</FieldLabel>
         <input
           id="phone"
           value={form.phone}
@@ -463,7 +474,7 @@ export default function ProfileForm({
 
       {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}
       <div className="mb-6">
-        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="cohort">기수</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="cohort" hint={REQUIRED_MARK}>기수</FieldLabel>
         <select
           id="cohort"
           value={form.cohort}
