@@ -208,7 +208,8 @@ function LoginScreen() {
                 className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 {submitting ? <Spinner className="h-5 w-5" /> : <GoogleIcon className="h-5 w-5" />}
-                구글 계정으로 로그인
+                {/* 글씨만 1px 위로 (2026-09-27 사용자 요청) — 단추가 flex라 span의 transform이 먹습니다. 아이콘은 제자리. */}
+                <span className="-translate-y-px">구글 계정으로 로그인</span>
               </button>
               {/* 카카오 — 카카오 안내대로 노란 바탕(#FEE500)에 검정 말풍선·글씨. 다크 모드에서도 그대로. */}
               <button
@@ -218,7 +219,7 @@ function LoginScreen() {
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-5 py-[13px] text-[16px] font-bold text-black/85 transition active:scale-[0.99] disabled:opacity-60"
               >
                 <KakaoIcon className="h-5 w-5" />
-                카톡으로 로그인
+                <span className="-translate-y-px">카톡으로 로그인</span>
               </button>
               <button
                 type="button"
@@ -227,7 +228,7 @@ function LoginScreen() {
                 className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 <PhoneIcon className="h-5 w-5" />
-                휴대폰 번호로 로그인
+                <span className="-translate-y-px">휴대폰 번호로 로그인</span>
               </button>
               {/* 로그인 ↔ 회원가입을 오가던 작은 글씨 단추는 회원가입 화면과 함께 없앴습니다(2026-09-27). */}
             </div>
