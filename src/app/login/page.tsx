@@ -226,9 +226,17 @@ function LoginScreen() {
               </button>
               {/*
                 구글·카톡과 휴대폰 번호 사이 회색 선 (2026-09-27 사용자 "회색 선 넣어서 나눠줘") — 계정으로 들어오는 두 갈래와 번호로 들어오는 갈래를 가릅니다.
-                위아래 간격은 목록의 gap(11px) 그대로라 선 위아래가 11px씩입니다.
+                위아래 간격은 목록의 gap(11px) 그대로입니다.
+                ★ 같은 날 "선 더 진하게, 한가운데 '또는'" — 선은 먹색 22%(bg-ink/[0.22], 예전 bg-line보다 한 단 진함),
+                  가운데 "또는"(13px 굵게 회색)을 두고 양옆으로 선이 뻗습니다. 글씨 줄 높이만큼 묶음이 조금 길어집니다.
               */}
-              <span aria-hidden="true" className="h-px bg-line" />
+              <div className="flex items-center gap-3" role="separator" aria-label="또는">
+                <span aria-hidden="true" className="h-px flex-1 bg-ink/[0.22]" />
+                <span aria-hidden="true" className="text-[13px] font-bold text-ink-muted">
+                  또는
+                </span>
+                <span aria-hidden="true" className="h-px flex-1 bg-ink/[0.22]" />
+              </div>
               <button
                 type="button"
                 onClick={() => goTo("phone")}
