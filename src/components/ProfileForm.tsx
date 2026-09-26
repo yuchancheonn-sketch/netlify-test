@@ -443,13 +443,8 @@ export default function ProfileForm({
           placeholder="010-1234-5678"
           className={field}
         />
-        {errors.phone ? (
-          <FieldError>{errors.phone}</FieldError>
-        ) : (
-          <p className="mt-2 text-[12px] text-ink-faint">
-            원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.
-          </p>
-        )}
+        {/* 아래 안내 문구("원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.")는 2026-09-27 사용자 요청으로 지웠습니다. */}
+        {errors.phone ? <FieldError>{errors.phone}</FieldError> : null}
       </div>
 
       {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}
