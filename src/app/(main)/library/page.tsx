@@ -257,12 +257,16 @@ function FileList() {
   }
 
   if (loading) {
-    /* 아래 진짜 목록과 같은 짜임 — 1열, 한 줄짜리 박스. */
+    /* 아래 진짜 목록과 같은 짜임 — 박스 없는 줄: 확장자 칸 44px + 이름·정보 두 줄. */
     return (
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col">
         {[0, 1, 2, 3].map((key) => (
-          <li key={key}>
-            <Skeleton className="h-[72px] rounded-3xl" />
+          <li key={key} className="flex items-center gap-3 py-[9px]">
+            <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-40 rounded-md" />
+              <Skeleton className="mt-2 h-3 w-28 rounded-md" />
+            </div>
           </li>
         ))}
       </ul>
@@ -273,29 +277,26 @@ function FileList() {
 
   return (
     <>
+      {/* 빈 안내도 박스 없이 흰 바탕에 그대로 (2026-09-27, 목록을 박스 없이 바꾸며 맞춤). */}
       {!isCloudinaryConfigured ? (
-        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-          <EmptyState
-            icon={<span className="text-[40px]">📁</span>}
-            title="자료 보관소 설정이 아직 안 되어 있어요"
-            description="운영진이 Cloudinary 설정을 마치면 파일을 올릴 수 있습니다."
-          />
-        </div>
+        <EmptyState
+          icon={<span className="text-[40px]">📁</span>}
+          title="자료 보관소 설정이 아직 안 되어 있어요"
+          description="운영진이 Cloudinary 설정을 마치면 파일을 올릴 수 있습니다."
+        />
       ) : files.length === 0 ? (
-        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-          <EmptyState
-            icon={<span className="text-[40px]">📁</span>}
-            title="아직 올라온 파일이 없어요"
-            description="아래 '파일 올리기'로 강의 자료나 문서를 나눠 보세요."
-          />
-        </div>
+        <EmptyState
+          icon={<span className="text-[40px]">📁</span>}
+          title="아직 올라온 파일이 없어요"
+          description="아래 '파일 올리기'로 강의 자료나 문서를 나눠 보세요."
+        />
       ) : (
         /*
-          1열 목록 — 파일마다 흰 박스 한 줄 (2026-09-22 사용자 요청).
-          예전엔 아이폰 파일 앱처럼 첫 장 썸네일을 2열 격자로 늘어놓았습니다.
-          박스 사이 12px, 알림 목록과 같은 결입니다.
+          1열 목록 — 채팅 목록처럼 박스 없이 흰 바탕에 줄만 (2026-09-27 사용자 요청).
+          -mx-4로 바깥 px-4를 걷고 줄마다 px-4를 두어, 누를 때 옅은 회색이 화면 끝에서 끝까지 깔립니다.
+          지나온 모양: 첫 장 썸네일 2열 격자 → 흰 박스 한 줄(2026-09-22, 박스 사이 12px) → 박스 없는 줄.
         */
-        <ul className="flex flex-col gap-3">
+        <ul className="-mx-4 flex flex-col">
           {files.map((file) => (
             <FileCard
               key={file.id}
@@ -406,14 +407,15 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   return (
     <li className="relative">
       {/*
-        한 줄 박스 (2026-09-22 사용자 요청 — 썸네일 격자 대신 1열 목록).
-        왼쪽 확장자 칸 / 가운데 이름·정보 / 오른쪽 ⋯ 자리(pr-12, 단추는 아래에서 위에 얹습니다).
+        한 줄 — 박스 없이 채팅 목록과 같은 결 (2026-09-27 사용자 요청; 그 전엔 흰 박스 rounded-3xl p-3.5 shadow-card).
+        왼쪽 확장자 칸 / 가운데 이름·정보 / 오른쪽 ⋯ 자리(pr-14, 단추는 아래에서 위에 얹습니다).
+        좌우 16px(화면 끝에서)·위아래 9px — 채팅 목록 줄과 같은 값. 누르면 줄 전체가 옅은 회색.
       */}
       <a
         href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 rounded-3xl bg-surface p-3.5 pr-12 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+        className="flex items-center gap-3 py-[9px] pr-14 pl-4 transition-colors active:bg-fill"
       >
         {/* 확장자 칸 — 알림 목록의 아이콘 칸과 같은 크기·색(연한 회색 바탕, 진한 회색 글씨). */}
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fill text-[11px] font-bold tracking-wide text-ink-soft uppercase">
@@ -446,7 +448,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         type="button"
         onClick={() => setMenuOpen((open) => !open)}
         aria-label={`${file.name} 더보기`}
-        className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[17px]! leading-none font-bold text-ink-muted transition active:bg-fill"
+        className="absolute top-1/2 right-3 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[17px]! leading-none font-bold text-ink-muted transition active:bg-fill"
       >
         ⋯
       </button>
@@ -464,7 +466,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
             앱 안에서 "이 하나에 대해 뭘 할지" 고르는 자리는 늘 이 생김새입니다.
           */}
           {/* 박스 세로 가운데의 ⋯ 바로 아래(50% + 단추 반 높이 18px + 4px)에 펼칩니다. */}
-          <div className="absolute top-[calc(50%+22px)] right-2 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
+          <div className="absolute top-[calc(50%+22px)] right-3 z-40 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
             {/*
               받기 — 안드로이드·컴퓨터는 fl_attachment 주소로 곧바로 파일 저장, 아이폰은 원본 주소를 열어
               공유 단추로 "파일에 저장"(첨부 주소는 아이폰에서 흰 화면). 주소는 누르는 순간 handleSave가 고릅니다.
