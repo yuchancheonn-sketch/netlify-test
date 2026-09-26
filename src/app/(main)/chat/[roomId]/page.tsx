@@ -13,7 +13,7 @@ import {
   StarIcon,
 } from "@/components/icons";
 import { setRoomFavorite, setRoomMuted, useChatPrefs } from "@/lib/chat-prefs";
-import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
+import { ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
 import {
@@ -446,15 +446,18 @@ function ChatRoomPageContent({
           ) : error ? (
             <ErrorState message={error} />
           ) : messages.length === 0 ? (
-            <EmptyState
-              icon={<ChatIcon className="h-10 w-10" />}
-              title="아직 대화가 없어요"
-              description={
-                roomCohort
-                  ? `${roomCohort} 원우 모두가 보는 방이에요. 첫 메시지를 남겨보세요.`
-                  : `${title} 원우에게 첫 메시지를 보내보세요.`
-              }
-            />
+            /*
+              빈 방 안내 — 대화 칸(입력줄 자리 104px을 뺀 곳)의 한가운데 (2026-09-27 사용자 요청).
+              예전의 "10기 원우 모두가 보는 방이에요." 같은 설명은 빼고 "첫 메시지를 남겨보세요."만,
+              흐린 회색(ink-faint)보다 한 단 진한 ink-muted로 둡니다. 모양은 공용 EmptyState와 같습니다.
+            */
+            <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <div className="mb-1 text-brand-300">
+                <ChatIcon className="h-10 w-10" />
+              </div>
+              <p className="text-[15px] font-bold text-ink-soft">아직 대화가 없어요</p>
+              <p className="text-[13px] leading-relaxed text-ink-muted">첫 메시지를 남겨보세요.</p>
+            </div>
           ) : (
             <>
               {hasMore ? (
