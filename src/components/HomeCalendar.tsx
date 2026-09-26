@@ -229,9 +229,9 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
       {/*
         요일 — px-1.5: 요일 줄과 아래 날짜 칸만 양옆 6px씩 더 들입니다(박스 크기는 그대로).
         2026-09-25 사용자 "캘린더가 가로로 퍼져 보여, 아주아주 조금만 좁혀줘". 두 줄이 같은 값이어야 요일과 날짜가 맞습니다.
-        mt-[9.5px] — "2026년 9월" 줄 아래 흰 여백 8px → 9.5px (2026-09-27 사용자 "1.5px 늘려줘").
+        mt-[11px] — "2026년 9월" 줄 아래 흰 여백 8px → 9.5px → 11px (2026-09-27 사용자 "1.5px 늘려줘"를 두 번).
       */}
-      <div className="mt-[9.5px] grid grid-cols-7 px-1.5 text-center text-[12px] font-medium">
+      <div className="mt-[11px] grid grid-cols-7 px-1.5 text-center text-[12px] font-medium">
         {WEEKDAYS.map((name, index) => (
           <span
             key={name}
