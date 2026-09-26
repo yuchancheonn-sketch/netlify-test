@@ -123,11 +123,11 @@ function ChatListPageContent() {
       */}
       <div className="pt-2 pb-8">
         {loading ? (
-          /* 아래 진짜 목록과 같은 짜임 — 사진 52px + 위아래 10px씩 = 72px 줄. */
+          /* 아래 진짜 목록과 같은 짜임 — 사진 56px + 위아래 10px씩 = 76px 줄. */
           <ul className="flex flex-col">
             {[0, 1, 2].map((key) => (
               <li key={key} className="flex items-center gap-3.5 px-4 py-2.5">
-                <Skeleton className="squircle h-[52px] w-[52px] shrink-0 rounded-none!" />
+                <Skeleton className="squircle h-[56px] w-[56px] shrink-0 rounded-none!" />
                 <div className="flex-1">
                   <Skeleton className="h-4 w-28 rounded-md" />
                   <Skeleton className="mt-2 h-3.5 w-44 rounded-md" />
@@ -211,7 +211,7 @@ function ChatRoomRow({
       href={`/chat/${room.id}`}
       /*
         카톡 대화 목록 한 줄 (2026-09-27 사용자 요청 — 흰 바탕에 박스 없이).
-        - 좌우 16px(px-4)·위아래 10px(py-2.5), 사진 52px. 미리보기가 한 줄이면 72px 줄입니다.
+        - 좌우 16px(px-4)·위아래 10px(py-2.5), 사진 56px(2026-09-27 사용자 "더 키워줘", 52px에서). 미리보기가 한 줄이면 76px 줄입니다.
         - 미리보기는 카톡처럼 두 줄까지(line-clamp-2) — 두 줄이면 줄이 그만큼 높아집니다.
         - 누르면 줄 전체가 옅은 회색(fill)으로 — 박스일 때의 살짝 줄어드는 효과 대신.
         예전 흰 박스 값(2026-09-15~26): rounded-3xl bg-surface px-3 py-[10.5px] shadow-card, 사진 58px.
@@ -228,7 +228,7 @@ function ChatRoomRow({
         기수 단체방은 사람 사진이 없으므로 옅은 회색 바탕에 사람들 그림을 담습니다 (2026-09-22).
         이름 이니셜(Avatar의 기본 갈래)을 쓰면 "10기 단체 대화방"에서 두 글자를 잘라
         "단체" 같은 조각이 나와 무슨 방인지 알아볼 수 없습니다.
-        모양(스쿼클·52px)은 1:1 방의 사진과 똑같이 맞춰 두 줄이 나란히 섭니다.
+        모양(스쿼클·56px)은 1:1 방의 사진과 똑같이 맞춰 두 줄이 나란히 섭니다.
 
         ★ 바탕은 주황(brand-500)이었다가 같은 날 옅은 회색(fill)으로 바꿨습니다(사용자 요청).
           바탕이 옅어졌으므로 그림은 흰색이면 안 보입니다 — 한 단 진한 회색(ink-muted)으로 함께 바꿨습니다.
@@ -238,7 +238,7 @@ function ChatRoomRow({
       {room.cohort ? (
         <span
           aria-hidden="true"
-          className="squircle flex h-[52px] w-[52px] shrink-0 items-center justify-center bg-fill text-ink-muted"
+          className="squircle flex h-[56px] w-[56px] shrink-0 items-center justify-center bg-fill text-ink-muted"
         >
           <UsersIcon className="h-7 w-7" strokeWidth={1.9} />
         </span>
@@ -247,7 +247,7 @@ function ChatRoomRow({
           src={other?.photoURL ?? null}
           name={title}
           seed={room.id}
-          size={52}
+          size={56}
           className="squircle rounded-none!"
         />
       )}
