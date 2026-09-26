@@ -87,8 +87,10 @@ function flatBox(className: string): string {
     .replace("bg-surface", "bg-field")
     .replace("shadow-[var(--shadow-card)]", "shadow-none")
     .replace("focus:border-brand-300", "focus:border-transparent")
-    // 둘레 색 — brand-200 60% → brand-200 → "더더 진하게"로 brand-300 (모두 2026-09-27 사용자 요청).
-    .replace("focus:ring-brand-100", "focus:ring-brand-300")
+    // 둘레 색 — brand-200 60% → brand-200 → "더더 진하게"로 brand-300 → "아주 조금 더 연하게"로 brand-300 85%
+    // 두께 4px → 3px — "테두리 얇게" (모두 2026-09-27 사용자 요청).
+    .replace("focus:ring-brand-100", "focus:ring-brand-300/85")
+    .replace("focus:ring-4", "focus:ring-3")
     // 칸 안 글씨 16px → 17px (2026-09-27 사용자 "박스 안 글씨 1px 키워줘").
     .replace("text-[16px]", "text-[17px]");
 }
