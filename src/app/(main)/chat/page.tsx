@@ -80,10 +80,13 @@ function ChatListPageContent() {
      *
      * 예전엔 흰색으로 했을 때 맨 윗줄(시계 자리)만 회색으로 남아 회색 바탕으로 돌렸었습니다.
      * 지금은 제목 줄(sticky, 흰색)이 맨 위에 붙어 있어 아이폰이 그 색을 씁니다 — 내 프로필 화면과 같습니다.
-     * ★ MainShell의 <main>이 탭바 자리로 아래 여백 78px+홈 바를 두는데, 그 여백은 body(회색)라 음수 margin으로
-     *   파고들고 padding으로 되채워 흰 바탕이 그 자리까지 덮게 합니다(내 프로필 화면과 같은 값 — MainShell을 바꾸면 같이).
+     * ★ 흰 바탕은 화면 전체에 붙인 fixed 층(-z-10)으로 깝니다 (2026-09-27 사용자 "배경 전체가 흰색이 되도록").
+     *   처음엔 내 프로필처럼 상자에 bg-surface + min-h-full을 줬는데, MainShell의 <main>이 높이를 정해 두지 않아
+     *   min-h-full이 먹지 않고 목록 아래부터 회색이 드러났습니다. 화면에 붙인 층은 목록 길이·탭바 여백과 상관없이
+     *   화면 전체를 덮고, body 바탕(회색)보다는 위, 목록보다는 아래에 깔립니다.
      */
-    <div className="-mb-[calc(78px+env(safe-area-inset-bottom))] min-h-full bg-surface pb-[calc(78px+env(safe-area-inset-bottom))]">
+    <>
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
       {/*
         제목은 "채팅"입니다 — 기수 단체방이 생겨 1:1만 있는 화면이 아니게 됐습니다
         (2026-09-22. 그 전에는 "1:1 채팅"이었습니다).
@@ -154,7 +157,7 @@ function ChatListPageContent() {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
