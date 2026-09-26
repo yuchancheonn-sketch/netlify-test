@@ -106,9 +106,9 @@ function NotificationsPageContent() {
           /*
             날짜는 줄 오른쪽이 아니라 박스 위에 글씨만 (2026-09-25 사용자 요청). 같은 날 온 알림은 한 묶음으로,
             날짜는 그날 가장 최근 알림(목록이 최근 순이라 묶음의 첫 줄) 위에 한 번만 적습니다.
-            묶음 안 줄 사이 12px → 4px → 3px → 2px → 1px(2026-09-27 사용자 "목록 간격 좀 줄여줘", 이어서 "3px로", "2px로", "1px로" — 박스를 뺀 뒤라 줄 안 위아래 여백 14px로도 충분히 갈림). 묶음 사이는 li의 mt-2를 더해 12px.
+            묶음 안 줄 사이 12px → 4px → 3px → 2px → 1px → 0(2026-09-27 사용자 "목록 간격 좀 줄여줘", 이어서 "3px로", "2px로", "1px로", "1px 줄여줘" — 이제 줄끼리 딱 붙음 — 박스를 뺀 뒤라 줄 안 위아래 여백 14px로도 충분히 갈림). 묶음 사이는 li의 mt-2를 더해 12px.
           */
-          <ul className="flex flex-col gap-px">
+          <ul className="flex flex-col">
             {notices.map((notice, index) => {
               const day = dayKey(notice);
               const firstOfDay = index === 0 || dayKey(notices[index - 1]) !== day;
