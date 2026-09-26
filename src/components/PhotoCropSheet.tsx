@@ -250,6 +250,18 @@ export default function PhotoCropSheet({
             className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-ink/25"
             style={{ boxShadow: "0 0 0 9999px color-mix(in srgb, var(--color-surface) 72%, transparent)" }}
           />
+          {/*
+            기준선 — 정사각형을 가로세로 3등분하는 얇은 흰 선 (2026-09-27 사용자 요청, 사진 앱 자르기 화면처럼).
+            얼굴을 가운데 칸에 맞추기 쉽게 합니다. 사진 위에서 보이도록 흰색 반투명.
+          */}
+          {natural ? (
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-y-0 left-1/3 w-px bg-white/60" />
+              <div className="absolute inset-y-0 left-2/3 w-px bg-white/60" />
+              <div className="absolute inset-x-0 top-1/3 h-px bg-white/60" />
+              <div className="absolute inset-x-0 top-2/3 h-px bg-white/60" />
+            </div>
+          ) : null}
           {!natural ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Spinner className="h-7 w-7" />
