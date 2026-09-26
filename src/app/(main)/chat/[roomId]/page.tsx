@@ -4,10 +4,7 @@ import GuestGate from "@/components/GuestGate";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
-import PhotoViewer from "@/components/PhotoViewer";
-import { ArrowUpIcon, CameraIcon, ChatIcon, ChevronLeftIcon } from "@/components/icons";
-import { uploadImage, viewerUrl } from "@/lib/cloudinary";
-import { resizeImage } from "@/lib/image";
+import { ArrowUpIcon, ChatIcon, ChevronLeftIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
@@ -22,12 +19,7 @@ import {
 import { formatClockTime, formatDateDivider, isSameDay } from "@/lib/format";
 import { useApprovedMembers, useMessages } from "@/lib/hooks";
 import { useSwipeBack } from "@/lib/use-swipe-back";
-import {
-  CHAT_PAGE_SIZE,
-  CHAT_PHOTO_MAX_COUNT,
-  CHAT_PHOTO_MAX_DIMENSION,
-  MARK_READ_GAP,
-} from "@/lib/constants";
+import { CHAT_PAGE_SIZE, MARK_READ_GAP } from "@/lib/constants";
 import type { MessageDoc } from "@/lib/types";
 
 /**
@@ -63,10 +55,6 @@ function ChatRoomPageContent({
    */
   const [editingId, setEditingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  /** 사진 보내기 (2026-09-27) — 고르는 칸, 올리는 중인지, 크게 보고 있는 사진 */
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const [photoSending, setPhotoSending] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState<{ url: string; sender: string } | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageId = messages.at(-1)?.id;
@@ -250,39 +238,6 @@ function ChatRoomPageContent({
       );
     } finally {
       setSending(false);
-    }
-  }
-
-  /**
-   * 사진 보내기 (2026-09-27 사용자 요청).
-   *
-   * 브라우저에서 긴 변 CHAT_PHOTO_MAX_DIMENSION(1280px)로 줄여 JPEG로 만든 뒤(보통 200~400KB)
-   * Cloudinary에 올리고, 메시지 문서에는 주소만 담습니다 — 행사 사진·프로필 사진과 같은 보관소입니다.
-   * 여러 장을 고르면 한 장씩 차례로 보냅니다(한 장 = 메시지 하나, 카톡처럼 묶지는 않음).
-   * 원본을 그대로 올리지 않는 까닭은 저장 공간·전송량(Cloudinary 무료 월 25크레딧) 때문입니다.
-   */
-  async function handlePickPhotos(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = [...(event.target.files ?? [])].slice(0, CHAT_PHOTO_MAX_COUNT);
-    // 같은 사진을 다시 골라도 onChange가 뜨도록 비웁니다.
-    event.target.value = "";
-    if (files.length === 0 || !uid || photoSending) return;
-
-    setPhotoSending(true);
-    setSendError(null);
-    try {
-      for (const file of files) {
-        const blob = await resizeImage(file, CHAT_PHOTO_MAX_DIMENSION);
-        const uploaded = await uploadImage(blob, "chat.jpg");
-        await sendChatMessage({ roomId, sender: { uid, profile }, text: "", imageUrl: uploaded.url });
-      }
-    } catch (caught) {
-      setSendError(
-        caught instanceof Error && caught.message
-          ? caught.message
-          : "사진을 보내지 못했어요. 다시 시도해 주세요.",
-      );
-    } finally {
-      setPhotoSending(false);
     }
   }
 
@@ -483,12 +438,8 @@ function ChatRoomPageContent({
                       message.senderId === uid ? () => setMenuForId(message.id) : null
                     }
                     onCloseMenu={() => setMenuForId(null)}
-                    /* 사진만 보낸 메시지는 고칠 글이 없어 "수정"을 빼고 지우기만 둡니다. */
-                    onEdit={message.text ? () => startEdit(message) : null}
+                    onEdit={() => startEdit(message)}
                     onDelete={() => void handleDelete(message, index)}
-                    onOpenPhoto={(url) =>
-                      setViewingPhoto({ url, sender: resolveSenderName(message, nameByUid) })
-                    }
                   />
                 ))}
               </ol>
@@ -547,31 +498,6 @@ function ChatRoomPageContent({
         ) : null}
 
         <form onSubmit={handleSend} className="mx-auto flex w-full max-w-[560px] items-end gap-2">
-          {/*
-            사진 보내기 단추 (2026-09-27) — 입력칸 왼쪽, 보내기 단추와 같은 44px 동그라미.
-            고치는 중에는 숨깁니다(글을 고치는 자리라 사진을 붙일 수 없음).
-          */}
-          {editingId ? null : (
-            <>
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                disabled={photoSending}
-                aria-label="사진 보내기"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-fill text-ink-soft transition active:scale-95 disabled:opacity-60"
-              >
-                {photoSending ? <Spinner className="h-5 w-5" /> : <CameraIcon className="h-[22px] w-[22px]" />}
-              </button>
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handlePickPhotos}
-                className="hidden"
-              />
-            </>
-          )}
           <input
             ref={inputRef}
             value={draft}
@@ -627,28 +553,6 @@ function ChatRoomPageContent({
           </p>
         ) : null}
       </div>
-
-      {/* 사진 말풍선을 누르면 행사 사진과 같은 전체화면 뷰어로 크게 봅니다(저장 단추 포함). */}
-      {viewingPhoto ? (
-        <PhotoViewer
-          photos={[
-            {
-              id: viewingPhoto.url,
-              imageUrl: viewingPhoto.url,
-              publicId: "",
-              width: 0,
-              height: 0,
-              caption: "",
-              uploadedBy: "",
-              uploadedByNickname: viewingPhoto.sender,
-              uploadedAt: null,
-              likes: [],
-            },
-          ]}
-          startIndex={0}
-          onClose={() => setViewingPhoto(null)}
-        />
-      ) : null}
     </div>
   );
 }
@@ -747,7 +651,6 @@ function MessageRow({
   onCloseMenu,
   onEdit,
   onDelete,
-  onOpenPhoto,
 }: {
   message: MessageDoc;
   previous?: MessageDoc;
@@ -759,11 +662,8 @@ function MessageRow({
   /** 꾸욱 눌렀을 때 할 일. 손댈 수 없는 메시지(남의 말)면 null */
   onOpenMenu: (() => void) | null;
   onCloseMenu: () => void;
-  /** 고칠 글이 없는 사진 메시지면 null — "수정"을 감춥니다 */
-  onEdit: (() => void) | null;
+  onEdit: () => void;
   onDelete: () => void;
-  /** 사진 말풍선을 눌렀을 때 */
-  onOpenPhoto: (url: string) => void;
 }) {
   const longPress = useLongPress(onOpenMenu);
   // 서버 시각이 아직 도착하지 않은 방금 보낸 메시지는 현재 시각으로 보여줍니다.
@@ -865,18 +765,14 @@ function MessageRow({
                 두 단추가 같은 크기로 보이려면 둘 다 이렇게 못 박아야 합니다.
               */}
               <div className="absolute right-0 bottom-full z-40 mb-1.5 flex flex-col overflow-hidden rounded-xl bg-[#33383E] shadow-[var(--shadow-float)]">
-                {onEdit ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={onEdit}
-                      className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
-                    >
-                      수정
-                    </button>
-                    <span className="h-px bg-white/15" aria-hidden="true" />
-                  </>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
+                >
+                  수정
+                </button>
+                <span className="h-px bg-white/15" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={onDelete}
@@ -888,34 +784,6 @@ function MessageRow({
             </>
           ) : null}
 
-          {/*
-            사진 메시지 (2026-09-27) — 말풍선 대신 둥근 모서리 사진. 목록에는 긴 변 480px로 줄인 것을 받아
-            전송량을 아끼고(Cloudinary c_limit·q_auto·f_auto), 누르면 뷰어가 1600px까지 받습니다.
-            내 사진도 꾸욱 누르면 "전체에서 삭제"가 뜹니다(글과 같은 useLongPress).
-          */}
-          {message.imageUrl ? (
-            <button
-              type="button"
-              {...longPress}
-              // 꾸욱 눌러 삭제 박스가 뜬 뒤 손을 뗄 때 뷰어까지 열리지 않게 합니다.
-              onClick={() => {
-                if (!menuOpen) onOpenPhoto(message.imageUrl as string);
-              }}
-              aria-label="사진 크게 보기"
-              className="block overflow-hidden rounded-2xl bg-fill select-none [-webkit-touch-callout:none]"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={viewerUrl(message.imageUrl, 480)}
-                alt=""
-                loading="lazy"
-                draggable={false}
-                className="block max-h-[320px] w-auto max-w-full min-w-[120px] object-cover"
-              />
-            </button>
-          ) : null}
-
-          {message.text ? (
           <p
             {...longPress}
             className={`rounded-3xl px-3.5 py-2 text-[15px] leading-snug whitespace-pre-wrap ${
@@ -942,7 +810,6 @@ function MessageRow({
               </span>
             ) : null}
           </p>
-          ) : null}
         </div>
 
         {!isMine ? (

@@ -75,15 +75,6 @@ export const PUSH_BODY_MAX_LENGTH = 120;
 export const CHAT_PAGE_SIZE = 50;
 
 /**
- * 채팅으로 보내는 사진을 줄이는 긴 변(px) (2026-09-27). 폰 화면에서 크게 봐도 충분하고,
- * JPEG 0.82로 장당 보통 200~400KB라 Cloudinary 무료 한도(월 25크레딧)를 아낍니다.
- */
-export const CHAT_PHOTO_MAX_DIMENSION = 1280;
-
-/** 채팅에서 한 번에 고를 수 있는 사진 수 — 넘치면 앞에서부터 이만큼만 보냅니다. */
-export const CHAT_PHOTO_MAX_COUNT = 10;
-
-/**
  * 대화방을 보고 있을 때 "읽음"을 다시 적기까지 기다리는 시간(밀리초).
  *
  * 메시지가 올 때마다 적으면, 단체방에 원우 마흔 명이 들어와 있을 때 메시지
