@@ -332,10 +332,11 @@ function FileList() {
           }}
           /*
             "+"만 있는 주황 동그라미 56px (2026-09-27 사용자 요청 — "파일 올리기" 글씨를 빼고).
+            right-[22px] — 오른쪽 끝에서 20px → 22px, 2px 왼쪽으로 (같은 날 사용자 요청).
             글씨가 없으니 aria-label로 무엇인지 알립니다. 올리는 동안은 동그라미 안에 진행률(%)만 작게.
           */
           aria-label="파일 올리기"
-          className={`fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] transition active:scale-95 ${uploading ? "opacity-60" : ""}`}
+          className={`fixed right-[22px] bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] transition active:scale-95 ${uploading ? "opacity-60" : ""}`}
         >
           {uploading ? (
             <span className="text-[13px] font-bold tabular-nums">{Math.round(progress * 100)}%</span>
