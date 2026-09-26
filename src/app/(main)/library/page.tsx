@@ -261,8 +261,8 @@ function FileList() {
     return (
       <ul className="flex flex-col">
         {[0, 1, 2, 3].map((key) => (
-          <li key={key} className="flex items-center gap-3 py-[9px]">
-            <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
+          <li key={key} className="flex items-center gap-3.5 py-[9px]">
+            <Skeleton className="h-[52px] w-[52px] shrink-0 rounded-[19px]" />
             <div className="flex-1">
               <Skeleton className="h-4 w-40 rounded-md" />
               <Skeleton className="mt-2 h-3 w-28 rounded-md" />
@@ -410,15 +410,17 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
         한 줄 — 박스 없이 채팅 목록과 같은 결 (2026-09-27 사용자 요청; 그 전엔 흰 박스 rounded-3xl p-3.5 shadow-card).
         왼쪽 확장자 칸 / 가운데 이름·정보 / 오른쪽 ⋯ 자리(pr-14, 단추는 아래에서 위에 얹습니다).
         좌우 16px(화면 끝에서)·위아래 9px — 채팅 목록 줄과 같은 값. 누르면 줄 전체가 옅은 회색.
+        ★ 확장자 칸·글씨를 같은 비율(약 1.18배)로 키움 (2026-09-27 사용자 "같은 비율로 그대로 더 키워줘"):
+          칸 44 → 52px(모서리 16 → 19px), 확장자 11 → 13px, 이름 15 → 17.5px, 아래 줄 12 → 14px, 사이 12 → 14px.
       */}
       <a
         href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 py-[9px] pr-14 pl-4 transition-colors active:bg-fill"
+        className="flex items-center gap-3.5 py-[9px] pr-14 pl-4 transition-colors active:bg-fill"
       >
         {/* 확장자 칸 — 알림 목록의 아이콘 칸과 같은 크기·색(연한 회색 바탕, 진한 회색 글씨). */}
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fill text-[11px] font-bold tracking-wide text-ink-soft uppercase">
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[19px] bg-fill text-[13px] font-bold tracking-wide text-ink-soft uppercase">
           {file.format ? file.format.slice(0, 4) : "파일"}
         </span>
 
@@ -428,10 +430,10 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
           아래 한 줄은 올린 사람 · 크기 · 날짜. 방금 올려 날짜가 아직 없으면 날짜만 뺍니다.
         */}
         <span className="min-w-0 flex-1">
-          <span className="line-clamp-2 text-[15px] leading-snug font-bold break-all text-ink">
+          <span className="line-clamp-2 text-[17.5px] leading-snug font-bold break-all text-ink">
             {file.name}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] text-ink-faint">
+          <span className="mt-0.5 block truncate text-[14px] text-ink-faint">
             {file.uploadedByName} · {formatBytes(file.bytes)}
             {uploadedOn ? ` · ${uploadedOn}` : ""}
           </span>
