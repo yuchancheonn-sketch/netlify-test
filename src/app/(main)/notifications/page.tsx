@@ -87,44 +87,41 @@ function NotificationsPageContent() {
       */}
       <div className="px-4 pt-4 pb-8">
         {loading ? (
-          /* 아래 진짜 목록과 같은 짜임 — 박스 없는 줄(제목·본문 두 줄) 사이 회색 선. */
-          <ul className="flex flex-col divide-y divide-line">
+          <ul className="flex flex-col gap-3">
             {[0, 1, 2].map((key) => (
-              <li key={key} className="py-3.5">
-                <Skeleton className="h-4 w-44 rounded-md" />
-                <Skeleton className="mt-2 h-3 w-60 rounded-md" />
+              <li key={key}>
+                <Skeleton className="h-[76px] rounded-3xl" />
               </li>
             ))}
           </ul>
         ) : error ? (
-          // 오류·빈 안내도 박스 없이 흰 바탕에 그대로 (2026-09-27, 목록을 선으로 바꾸며 맞춤).
-          <ErrorState message={error} />
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+            <ErrorState message={error} />
+          </div>
         ) : notices.length === 0 ? (
-          <EmptyState icon={<BellIcon className="h-10 w-10" />} title="아직 온 알림이 없어요" />
+          <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+            <EmptyState icon={<BellIcon className="h-10 w-10" />} title="아직 온 알림이 없어요" />
+          </div>
         ) : (
           /*
-            날짜는 묶음 위에 글씨만 (2026-09-25 사용자 요청). 같은 날 온 알림은 한 묶음으로,
+            날짜는 줄 오른쪽이 아니라 박스 위에 글씨만 (2026-09-25 사용자 요청). 같은 날 온 알림은 한 묶음으로,
             날짜는 그날 가장 최근 알림(목록이 최근 순이라 묶음의 첫 줄) 위에 한 번만 적습니다.
-            ★ 박스 → 회색 선 (2026-09-27 사용자 요청): 묶음 안 줄 사이에 1px 회색 선(bg-line)을 좌우 16px 들여 긋고,
-              묶음의 마지막 줄 아래엔 긋지 않습니다. 묶음 사이는 20px(mt-5).
-              -mx-4로 바깥 px-4를 걷어 줄이 화면 끝까지 깔리게 합니다.
+            묶음 사이 20px, 묶음 안 줄 사이는 예전과 같은 12px.
           */
-          <ul className="-mx-4 flex flex-col">
+          <ul className="flex flex-col gap-3">
             {notices.map((notice, index) => {
               const day = dayKey(notice);
               const firstOfDay = index === 0 || dayKey(notices[index - 1]) !== day;
-              const lastOfDay = index === notices.length - 1 || dayKey(notices[index + 1]) !== day;
               return (
-                <li key={notice.id} className={firstOfDay && index > 0 ? "mt-5" : ""}>
+                <li key={notice.id} className={firstOfDay && index > 0 ? "mt-2" : ""}>
                   {firstOfDay ? (
-                    // 15px — 같은 날 사용자 "2px 키워줘"(13px에서). 좌우 20px은 예전(바깥 16 + px-1)과 같은 자리.
-                    <p className="mb-1 px-5 text-[15px] font-bold text-ink-muted">{dayLabel(notice)}</p>
+                    // 15px — 같은 날 사용자 "2px 키워줘"(13px에서).
+                    <p className="mb-2 px-1 text-[15px] font-bold text-ink-muted">{dayLabel(notice)}</p>
                   ) : null}
                   <NoticeRow
                     notice={notice}
                     isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline}
                   />
-                  {lastOfDay ? null : <span aria-hidden="true" className="mx-4 block h-px bg-line" />}
                 </li>
               );
             })}
@@ -169,13 +166,8 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
     <Link
       href={notice.url}
       // px-4 — 왼쪽 그림 칸을 걷으면서 글이 카드 끝에 붙지 않게 좌우를 16px로(예전 p-3.5 = 14px).
-      /*
-        박스 없이 한 줄 — 줄 사이는 회색 선(목록 쪽 li) (2026-09-27 사용자 "박스가 아니라 회색 선으로 구분").
-        화면 끝에서 끝까지 깔리는 줄이라, 새 알림의 연한 주황(bg-brand-50)과 누를 때 회색도 끝까지 깔립니다.
-        예전 박스: rounded-3xl shadow-card, 줄 사이 12px.
-      */
-      className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${
-        isNew ? "bg-brand-50 active:bg-brand-100" : "active:bg-fill"
+      className={`flex items-center gap-3 rounded-3xl px-4 py-3.5 shadow-[var(--shadow-card)] transition active:scale-[0.99] ${
+        isNew ? "bg-brand-50" : "bg-surface"
       }`}
     >
       <span className="min-w-0 flex-1">
