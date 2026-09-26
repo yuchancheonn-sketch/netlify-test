@@ -64,12 +64,21 @@ function NotificationsPageContent() {
       안에 떠 있는(fixed) 요소가 없어 화면 전체를 한 상자로 밀어도 됩니다(수업 기록·역대 투표와 같음).
       min-h-full: 알림이 몇 줄 없어도 그 아래 빈 자리에서 민 손짓을 받습니다.
     */
+    /*
+      바탕 흰색 (2026-09-27 사용자 "알림창의 배경색도 흰색으로") — 채팅·자료 탭과 같은 방법.
+      화면 전체에 붙인 흰 층(-z-10)을 깝니다. min-h-full은 MainShell의 <main>이 높이를 안 정해 두어
+      알림이 적으면 아래로 회색이 드러나기 때문입니다(chat/page.tsx 주석).
+      ★ 흰 층은 밀리는 상자 **밖**에 둡니다 — transform이 걸린 상자 안의 fixed는 화면이 아니라 상자를 기준으로 서서
+        밀 때 같이 밀려 나갑니다. 밖에 두면 민 자리로도 흰 바탕이 드러납니다.
+    */
+    <>
+    <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
     <div
-      className="min-h-full bg-canvas"
+      className="min-h-full bg-surface"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >
-      <PageHeader title="알림" back />
+      <PageHeader title="알림" back tone="surface" />
 
       {/*
         pt-4 — 제목 줄과 첫 칸 사이 16px (2026-09-14 사용자 요청, 예전엔 0이라 칸이 제목 줄에 붙어 보였습니다).
@@ -120,6 +129,7 @@ function NotificationsPageContent() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
