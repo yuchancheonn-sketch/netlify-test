@@ -186,16 +186,19 @@ export function FieldLabel({
   htmlFor,
   hint,
   hintClassName = "text-ink-faint",
+  labelClassName = "text-[15px]",
 }: {
   children: ReactNode;
   htmlFor?: string;
   hint?: ReactNode;
   /** 오른쪽 안내("선택" 등) 글씨 색 — 기본은 옅은 회색 */
   hintClassName?: string;
+  /** 칸 이름 글씨 크기 — 기본 15px */
+  labelClassName?: string;
 }) {
   return (
     <div className="mb-2 flex items-baseline justify-between gap-2">
-      <label htmlFor={htmlFor} className="text-[15px] font-bold text-ink">
+      <label htmlFor={htmlFor} className={`${labelClassName} font-bold text-ink`}>
         {children}
       </label>
       {hint ? <span className={`text-[12px] ${hintClassName}`}>{hint}</span> : null}

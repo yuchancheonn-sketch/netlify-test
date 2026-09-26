@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+  deleteField,
+  doc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import { CameraIcon } from "@/components/icons";
 import {
@@ -28,7 +33,11 @@ import {
   PROFILE_IMAGE_SIZE,
 } from "@/lib/constants";
 import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
-import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
+import {
+  isSupportedVideoUrl,
+  parseVideoLink,
+  videoThumbnail,
+} from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
 /* 구분 단추 — 이름만. 위에 얹던 풀 그림(🌿·🌱)은 2026-09-15 사용자 요청으로 없앴습니다. */
@@ -83,16 +92,21 @@ const fieldClassName = inputClassName.replace("py-4", "pt-[11px] pb-[15px]");
 function flatBox(className: string): string {
   // bg-field — fill과 canvas의 중간 회색 (2026-09-26 사용자 "원우 정보 창 칸과 평균 색으로", 그 전엔 bg-fill).
   // 누른 칸의 진한 주황 실선 테두리는 빼고 연한 주황 둘레(ring)만 남깁니다 (2026-09-27 사용자 요청).
-  return className
-    .replace("bg-surface", "bg-field")
-    .replace("shadow-[var(--shadow-card)]", "shadow-none")
-    .replace("focus:border-brand-300", "focus:border-transparent")
-    // 둘레 색을 조금 진하게 — brand-100과 brand-200의 중간쯤(brand-200을 60%로) (2026-09-27 사용자 요청).
-    .replace("focus:ring-brand-100", "focus:ring-brand-200/60");
+  return (
+    className
+      .replace("bg-surface", "bg-field")
+      .replace("shadow-[var(--shadow-card)]", "shadow-none")
+      .replace("focus:border-brand-300", "focus:border-transparent")
+      // 둘레 색을 조금 진하게 — brand-100과 brand-200의 중간쯤(brand-200을 60%로) (2026-09-27 사용자 요청).
+      .replace("focus:ring-brand-100", "focus:ring-brand-200/60")
+  );
 }
 
 /** 칸 이름 오른쪽 "선택" 글씨 색 — 옅은 회색(ink-faint)보다 한 단계 진하게 (2026-09-27 사용자 요청). */
 const HINT_TONE = "text-ink-muted";
+
+/** 칸 이름(이름·전화번호·기수·생일·구분 등) 글씨 크기 — 공용 15px보다 2px 크게 (2026-09-27 사용자 요청). */
+const LABEL_SIZE = "text-[17px]";
 
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
@@ -116,7 +130,9 @@ export default function ProfileForm({
       // 구글 계정 이름이 영문이면 채워 두지 않습니다 — 이름은 한글로만 받습니다.
       name:
         profile?.name ||
-        (user?.displayName && isKoreanName(user.displayName) ? user.displayName : ""),
+        (user?.displayName && isKoreanName(user.displayName)
+          ? user.displayName
+          : ""),
       // 구분처럼 최초 설정에서는 비워 둡니다. 가입 직후 문서에 적힌 값을 그대로 믿지 않습니다.
       cohort: profile?.profileCompleted ? cohortOf(profile.cohort) : "",
       photoURL: profile?.photoURL ?? user?.photoURL ?? null,
@@ -141,7 +157,9 @@ export default function ProfileForm({
    * 입력 중에 다른 곳의 변경이 들어와도 쓰던 내용이 날아가지 않습니다.
    */
   const [form, setForm] = useState<FormState>(initial);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormState, string>>
+  >({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -157,7 +175,10 @@ export default function ProfileForm({
 
   /** 값이 하나라도 바뀌었는지 (저장 버튼 활성화 조건) */
   const dirty = useMemo(
-    () => (Object.keys(initial) as (keyof FormState)[]).some((key) => form[key] !== initial[key]),
+    () =>
+      (Object.keys(initial) as (keyof FormState)[]).some(
+        (key) => form[key] !== initial[key],
+      ),
     [form, initial],
   );
 
@@ -200,8 +221,10 @@ export default function ProfileForm({
     const next: Partial<Record<keyof FormState, string>> = {};
 
     if (!form.name.trim()) next.name = "이름을 입력해 주세요.";
-    else if (form.name.trim().length > 20) next.name = "이름은 20자까지 넣을 수 있어요.";
-    else if (!isKoreanName(form.name)) next.name = "이름은 한글로만 적어 주세요.";
+    else if (form.name.trim().length > 20)
+      next.name = "이름은 20자까지 넣을 수 있어요.";
+    else if (!isKoreanName(form.name))
+      next.name = "이름은 한글로만 적어 주세요.";
 
     /*
      * 휴대폰은 꼭 넣어야 합니다(2026-09-22 사용자 요청 — 선택에서 필수로). 전화를 걸 수 있는 번호여야 합니다.
@@ -237,7 +260,6 @@ export default function ProfileForm({
         next.birthdayYear = `연도는 1930~${thisYear} 사이로 넣어 주세요.`;
       }
     }
-
 
     if (form.company.length > COMPANY_MAX_LENGTH)
       next.company = `회사·소속은 ${COMPANY_MAX_LENGTH}자까지 넣을 수 있어요.`;
@@ -299,7 +321,8 @@ export default function ProfileForm({
     setSaving(true);
     setSaveError(null);
     try {
-      if (!skipLinkCheck && !(await checkExistingAccount(form.name.trim()))) return;
+      if (!skipLinkCheck && !(await checkExistingAccount(form.name.trim())))
+        return;
 
       const name = form.name.trim();
 
@@ -312,7 +335,12 @@ export default function ProfileForm({
       let carried = null;
       try {
         // 동명이인이면 확실할 때만 잇습니다 — 휴대폰 번호도 함께 넘겨 가려 봅니다.
-        carried = await linkRosterEntry(user.uid, name, form.cohort, form.phone);
+        carried = await linkRosterEntry(
+          user.uid,
+          name,
+          form.cohort,
+          form.phone,
+        );
       } catch {
         carried = null;
       }
@@ -331,15 +359,20 @@ export default function ProfileForm({
           birthdayYear: form.birthdayYear ? Number(form.birthdayYear) : null,
           // 구분을 안 골랐으면 일반원우로 두고, 나중에 본인이나 동료가 바꿉니다.
           // 1·2기엔 대학생 원우가 없어 고르개를 숨기고 늘 일반 원우로 적습니다(lib/cohort.ts).
-          memberType: hasYouthMembers(form.cohort) ? form.memberType || "general" : "general",
+          memberType: hasYouthMembers(form.cohort)
+            ? form.memberType || "general"
+            : "general",
           company: form.company.trim() || carried?.company || "",
           position: form.position.trim() || carried?.position || "",
-          phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
+          phone: form.phone.trim()
+            ? formatPhone(form.phone)
+            : (carried?.phone ?? ""),
           councilRole: form.councilRole.trim() || carried?.councilRole || "",
           // 예전 한 줄 소개는 위에서 자기소개로 옮겨 담았으니 지웁니다.
           bio: deleteField(),
           introduction: form.introduction.trim(),
-          introVideoUrl: form.introVideoUrl.trim() || carried?.introVideoUrl || "",
+          introVideoUrl:
+            form.introVideoUrl.trim() || carried?.introVideoUrl || "",
           profileCompleted: true,
           // 다른 원우가 채워준 뒤 본인이 손보면, 수첩의 "○○ 님이 채워주셨어요"가 사라집니다.
           updatedBy: user.uid,
@@ -386,7 +419,9 @@ export default function ProfileForm({
    * ★ 끝에 띄어쓰기를 둡니다 — 아래 선택 상자들이 `${field}appearance-none …`처럼 바로 이어 붙여 씁니다.
    *   띄어쓰기가 없으면 마지막 단어와 붙어 둘 다 깨졌습니다(기수 칸 화살표가 둘로 보이고 높이가 안 맞던 까닭).
    */
-  const field = flat ? `${flatBox(inputClassName)} pt-[9px]! pb-[11px]! ` : `${fieldClassName} `;
+  const field = flat
+    ? `${flatBox(inputClassName)} pt-[9px]! pb-[11px]! `
+    : `${fieldClassName} `;
   const textareaClassName = flat ? flatBox(inputClassName) : inputClassName;
   const cardClassName = flat
     ? flatBox("bg-surface shadow-[var(--shadow-card)]")
@@ -397,7 +432,12 @@ export default function ProfileForm({
       {/* 프로필 사진 */}
       <div className="flex flex-col items-center pt-2 pb-8">
         <div className="relative">
-          <Avatar src={form.photoURL} name={displayName} seed={user?.uid} size={112} />
+          <Avatar
+            src={form.photoURL}
+            name={displayName}
+            seed={user?.uid}
+            size={112}
+          />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -408,7 +448,11 @@ export default function ProfileForm({
               flat ? "ring-surface" : "shadow-[var(--shadow-float)] ring-canvas"
             }`}
           >
-            {uploading ? <Spinner className="h-5 w-5" /> : <CameraIcon className="h-5 w-5" />}
+            {uploading ? (
+              <Spinner className="h-5 w-5" />
+            ) : (
+              <CameraIcon className="h-5 w-5" />
+            )}
           </button>
         </div>
         <input
@@ -425,7 +469,9 @@ export default function ProfileForm({
 
       {/* 이름 */}
       <div className="mb-6">
-        <FieldLabel htmlFor="name">이름</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="name">
+          이름
+        </FieldLabel>
         <input
           id="name"
           value={form.name}
@@ -442,11 +488,15 @@ export default function ProfileForm({
       */}
       <div className="mb-6">
         {/* 칸 이름 "휴대폰" → "전화번호" (2026-09-22 사용자 요청). */}
-        <FieldLabel htmlFor="phone">전화번호</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="phone">
+          전화번호
+        </FieldLabel>
         <input
           id="phone"
           value={form.phone}
-          onChange={(event) => update("phone", formatPhoneInput(event.target.value))}
+          onChange={(event) =>
+            update("phone", formatPhoneInput(event.target.value))
+          }
           inputMode="tel"
           autoComplete="tel"
           placeholder="010-1234-5678"
@@ -458,7 +508,9 @@ export default function ProfileForm({
 
       {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}
       <div className="mb-6">
-        <FieldLabel htmlFor="cohort">기수</FieldLabel>
+        <FieldLabel labelClassName={LABEL_SIZE} htmlFor="cohort">
+          기수
+        </FieldLabel>
         <select
           id="cohort"
           value={form.cohort}
@@ -480,7 +532,13 @@ export default function ProfileForm({
 
       {/* 생일 */}
       <div className="mb-6">
-        <FieldLabel hintClassName={HINT_TONE} hint="선택">생일</FieldLabel>
+        <FieldLabel
+          labelClassName={LABEL_SIZE}
+          hintClassName={HINT_TONE}
+          hint="선택"
+        >
+          생일
+        </FieldLabel>
         {/*
           연도 → 월 → 일, 세 칸을 한 줄에 (2026-09-15 사용자 요청 — 예전엔 월·일 한 줄 + 아래 연도 한 줄).
           태어난 해를 먼저 적고 월·일을 고르는 순서가 말로 생일을 부르는 순서와 같습니다.
@@ -502,7 +560,10 @@ export default function ProfileForm({
             aria-label="태어난 연도 (선택)"
             value={form.birthdayYear}
             onChange={(event) =>
-              update("birthdayYear", event.target.value.replace(/\D/g, "").slice(0, 4))
+              update(
+                "birthdayYear",
+                event.target.value.replace(/\D/g, "").slice(0, 4),
+              )
             }
             inputMode="numeric"
             placeholder="연도"
@@ -537,16 +598,19 @@ export default function ProfileForm({
             style={SELECT_ARROW_STYLE}
           >
             <option value="">일</option>
-            {Array.from({ length: daysInMonth(Number(form.month) || 1) }, (_, i) => i + 1).map(
-              (day) => (
-                <option key={day} value={day}>
-                  {day}일
-                </option>
-              ),
-            )}
+            {Array.from(
+              { length: daysInMonth(Number(form.month) || 1) },
+              (_, i) => i + 1,
+            ).map((day) => (
+              <option key={day} value={day}>
+                {day}일
+              </option>
+            ))}
           </select>
         </div>
-        {errors.birthdayYear ? <FieldError>{errors.birthdayYear}</FieldError> : null}
+        {errors.birthdayYear ? (
+          <FieldError>{errors.birthdayYear}</FieldError>
+        ) : null}
         {errors.month ? <FieldError>{errors.month}</FieldError> : null}
         {/*
           "연도는 비공개로 하기" 체크박스는 2026-09-15 사용자 요청으로 기능째 없앴습니다.
@@ -558,56 +622,69 @@ export default function ProfileForm({
       {/* 구분 */}
       {/* 구분 — 1·2기엔 대학생 원우가 없어 고르개를 보이지 않습니다(lib/cohort.ts의 hasYouthMembers). */}
       {hasYouthMembers(form.cohort) ? (
-      <div className="mb-6">
-        <FieldLabel hintClassName={HINT_TONE} hint="선택">구분</FieldLabel>
-        <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
-          {MEMBER_TYPES.map(({ value, label }) => {
-            const selected = form.memberType === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => update("memberType", value)}
-                /*
+        <div className="mb-6">
+          <FieldLabel
+            labelClassName={LABEL_SIZE}
+            hintClassName={HINT_TONE}
+            hint="선택"
+          >
+            구분
+          </FieldLabel>
+          <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
+            {MEMBER_TYPES.map(({ value, label }) => {
+              const selected = form.memberType === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => update("memberType", value)}
+                  /*
                   py-[13px] — 위아래 13px (2026-09-15 사용자 요청으로 py-4 16px → 12px로 줄였다가 1px씩 되올림).
                   이름은 2px 위로(-translate-y-[2px]) — 단추가 flex라 span이 flex 칸이 되어 transform이 먹습니다.
                   ★ 이름 위의 풀 그림 글자(🌿 일반 원우 · 🌱 대학생 원우)는 2026-09-15 사용자 요청으로 없앴습니다.
                     그래서 칸이 그 줄(약 33px + 사이 6px)만큼 낮아졌고, 이름 한 줄만 가운데 섭니다.
                 */
-                // 수정 화면은 py-[9.5px] — 테두리 2px씩 + 글줄 21px + 위아래 9.5px = 44px, 다른 칸들과 같은 높이
-                // (2026-09-26 사용자 "높이 똑같게" 11.5px → 9.5px).
-                className={`flex flex-1 items-center justify-center rounded-2xl border-2 transition ${
-                  flat ? "py-[9.5px]" : "py-[13px]"
-                } ${
-                  selected
-                    ? "border-brand-500 bg-brand-50"
-                    : `border-transparent ${cardClassName}`
-                }`}
-              >
-                {/*
+                  // 수정 화면은 py-[9.5px] — 테두리 2px씩 + 글줄 21px + 위아래 9.5px = 44px, 다른 칸들과 같은 높이
+                  // (2026-09-26 사용자 "높이 똑같게" 11.5px → 9.5px).
+                  className={`flex flex-1 items-center justify-center rounded-2xl border-2 transition ${
+                    flat ? "py-[9.5px]" : "py-[13px]"
+                  } ${
+                    selected
+                      ? "border-brand-500 bg-brand-50"
+                      : `border-transparent ${cardClassName}`
+                  }`}
+                >
+                  {/*
                   2px 위로 — 같은 날 "1px 위로"(3px)에서 "1px 아래로"로 되돌림(2026-09-26 사용자 요청).
                   → 1.5px 위로 — "0.5px 내려줘"(2026-09-27 사용자 요청).
                 */}
-                <span
-                  className={`-translate-y-[1.5px] text-[14px] font-bold ${
-                    selected ? "text-brand-500" : "text-ink-soft"
-                  }`}
-                >
-                  {label}
-                </span>
-              </button>
-            );
-          })}
+                  <span
+                    className={`-translate-y-[1.5px] text-[14px] font-bold ${
+                      selected ? "text-brand-500" : "text-ink-soft"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {errors.memberType ? (
+            <FieldError>{errors.memberType}</FieldError>
+          ) : null}
         </div>
-        {errors.memberType ? <FieldError>{errors.memberType}</FieldError> : null}
-      </div>
       ) : null}
 
       {/* 회사·직책 — 원우수첩 카드에 이름 아래로 보입니다. */}
       <div className="mb-6">
-        <FieldLabel htmlFor="company" hintClassName={HINT_TONE} hint="선택">
+        <FieldLabel
+          labelClassName={LABEL_SIZE}
+          htmlFor="company"
+          hintClassName={HINT_TONE}
+          hint="선택"
+        >
           회사·소속
         </FieldLabel>
         <input
@@ -623,7 +700,12 @@ export default function ProfileForm({
       </div>
 
       <div className="mb-6">
-        <FieldLabel htmlFor="position" hintClassName={HINT_TONE} hint="선택">
+        <FieldLabel
+          labelClassName={LABEL_SIZE}
+          htmlFor="position"
+          hintClassName={HINT_TONE}
+          hint="선택"
+        >
           직책
         </FieldLabel>
         <input
@@ -643,14 +725,22 @@ export default function ProfileForm({
         기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다.
       */}
       <div className="mb-6">
-        <FieldLabel htmlFor="councilRole" hintClassName={HINT_TONE} hint="선택">
+        <FieldLabel
+          labelClassName={LABEL_SIZE}
+          htmlFor="councilRole"
+          hintClassName={HINT_TONE}
+          hint="선택"
+        >
           원우회 직위
         </FieldLabel>
         <input
           id="councilRole"
           value={form.councilRole}
           onChange={(event) =>
-            update("councilRole", event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
+            update(
+              "councilRole",
+              event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH),
+            )
           }
           placeholder="예) 회장 / 총무 / 문화위원장"
           className={field}
@@ -660,6 +750,7 @@ export default function ProfileForm({
       {/* 자기소개 — 원우 소개 상세에서 전문이 보입니다. */}
       <div className="mb-6">
         <FieldLabel
+          labelClassName={LABEL_SIZE}
           htmlFor="introduction"
           hintClassName={HINT_TONE}
           hint={
@@ -674,18 +765,28 @@ export default function ProfileForm({
           id="introduction"
           value={form.introduction}
           onChange={(event) =>
-            update("introduction", event.target.value.slice(0, INTRODUCTION_MAX_LENGTH))
+            update(
+              "introduction",
+              event.target.value.slice(0, INTRODUCTION_MAX_LENGTH),
+            )
           }
           rows={5}
           placeholder="하는 일, 관심사, 원우들에게 하고 싶은 말을 자유롭게 적어 주세요."
           className={`${textareaClassName} resize-none leading-relaxed`}
         />
-        {errors.introduction ? <FieldError>{errors.introduction}</FieldError> : null}
+        {errors.introduction ? (
+          <FieldError>{errors.introduction}</FieldError>
+        ) : null}
       </div>
 
       {/* 소개 영상 */}
       <div className="mb-8">
-        <FieldLabel htmlFor="introVideoUrl" hintClassName={HINT_TONE} hint="선택">
+        <FieldLabel
+          labelClassName={LABEL_SIZE}
+          htmlFor="introVideoUrl"
+          hintClassName={HINT_TONE}
+          hint="선택"
+        >
           소개 영상 링크
         </FieldLabel>
         <input
@@ -699,10 +800,14 @@ export default function ProfileForm({
           placeholder="https://youtu.be/..."
           className={field}
         />
-        {errors.introVideoUrl ? <FieldError>{errors.introVideoUrl}</FieldError> : null}
+        {errors.introVideoUrl ? (
+          <FieldError>{errors.introVideoUrl}</FieldError>
+        ) : null}
 
         {videoPreview ? (
-          <div className={`mt-3 flex items-center gap-3 rounded-2xl p-3 ${cardClassName}`}>
+          <div
+            className={`mt-3 flex items-center gap-3 rounded-2xl p-3 ${cardClassName}`}
+          >
             {videoPreview.thumbnail ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -734,7 +839,10 @@ export default function ProfileForm({
       </div>
 
       {saveError ? (
-        <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
+        <p
+          role="alert"
+          className="mb-4 text-center text-[13px] font-medium text-danger"
+        >
           {saveError}
         </p>
       ) : null}
@@ -743,8 +851,15 @@ export default function ProfileForm({
         size="field" — 위아래 13px로 입력칸들과 비슷한 높이(약 50px) (2026-09-15, md 16px에서 줄임 — 12px였다가 2px 되올림).
         글씨는 2px 위로 — PrimaryButton이 flex라 span에 건 transform이 먹습니다.
       */}
-      <PrimaryButton type="submit" disabled={submitDisabled} loading={saving} size="field">
-        <span className="-translate-y-[2px]">{mode === "onboarding" ? "시작하기" : "저장하기"}</span>
+      <PrimaryButton
+        type="submit"
+        disabled={submitDisabled}
+        loading={saving}
+        size="field"
+      >
+        <span className="-translate-y-[2px]">
+          {mode === "onboarding" ? "시작하기" : "저장하기"}
+        </span>
       </PrimaryButton>
 
       {mode === "edit" && !dirty ? (
