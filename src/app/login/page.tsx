@@ -138,8 +138,8 @@ function LoginScreen() {
       <div
         aria-hidden="true"
         // 173px — 제목 글씨를 키우며(2026-09-22) 155px에서 18px 내림. 위 주석의 155px 이야기는 그 전 기록입니다.
-        // → 168px — 사진 5px 위로 (2026-09-27 사용자 요청).
-        className="pointer-events-none absolute inset-x-0 top-[168px] h-[72%] bg-cover bg-no-repeat"
+        // → 168px → 158px — 사진 5px, 이어서 10px 더 위로 (2026-09-27 사용자 요청).
+        className="pointer-events-none absolute inset-x-0 top-[158px] h-[72%] bg-cover bg-no-repeat"
         style={{
           backgroundImage: "url(/brand/dosan.jpg)",
           backgroundPosition: "50% 0%",
