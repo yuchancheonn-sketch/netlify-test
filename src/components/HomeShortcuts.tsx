@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   BallotBoxIllustration,
-  LessonIllustration,
   OpinionIllustration,
   PollHistoryIllustration,
 } from "@/components/illustrations";
@@ -21,7 +20,7 @@ const ITEM_CLASS_NAME =
   "flex items-center gap-2.5 rounded-2xl px-3 py-1 text-left transition active:bg-fill";
 
 /**
- * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 수업 기록 · 역대 투표.
+ * 홈의 바로가기 — 투표 만들기 · 의견 모으기 · 역대 투표. (수업 기록은 2026-09-27에 없앰)
  * (원우 지도 칸이 있었지만 2026-09-11에 기능째 없앴습니다.)
  *
  * 은행 앱(신한 SOL)의 "추천 서비스"처럼 흰 상자 하나에 그림 아이콘과 이름을
@@ -29,7 +28,7 @@ const ITEM_CLASS_NAME =
  *
  *  - 투표 만들기 · 의견 모으기: 같은 시트(PollCreateSheet)를 무엇을 만들지(kind)만 달리해 엽니다.
  *    예전엔 투표 카드 아래 "투표 만들기" 단추 하나로 열고 시트 안에서 둘 중 하나를 골랐습니다.
- *  - 수업 기록: /sessions 화면으로 갑니다. 예전엔 홈 아래쪽에 주차별 목록이 통째로 있었습니다.
+ *  - 수업 기록(/sessions)은 2026-09-27 사용자 요청으로 기능째 없앴습니다.
  */
 export default function HomeShortcuts() {
   const [creatingKind, setCreating] = useState<"vote" | "opinion" | null>(null);
@@ -61,14 +60,11 @@ export default function HomeShortcuts() {
         </button>
 
         {/*
-          -translate-y-px: 링크 칸(수업 기록·역대 투표)은 아이콘과 글씨를 1px 위로 올립니다.
+          -translate-y-px: 링크 칸(역대 투표)은 아이콘과 글씨를 1px 위로 올립니다.
           링크(a)는 단추와 줄 높이 계산이 미세하게 달라, 윗줄의 단추 칸들보다 살짝 아래에
           앉아 보였습니다. 칸 크기는 그대로 두고 내용만 옮깁니다.
+          ("수업 기록" 칸은 2026-09-27 사용자 요청으로 기능째 없앴습니다 — app/(main)/sessions/page.tsx.)
         */}
-        <Link href="/sessions" className={ITEM_CLASS_NAME}>
-          <LessonIllustration className="h-7 w-7 shrink-0 -translate-y-px" />
-          <span className="-translate-y-px text-[15px] font-medium text-ink">수업 기록</span>
-        </Link>
 
         {/* 역대 투표 — 열린·닫힌 투표를 모두 모아 보는 /polls 화면 (2026-09-11). */}
         <Link href="/polls" className={ITEM_CLASS_NAME}>

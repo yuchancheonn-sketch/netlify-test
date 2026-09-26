@@ -1,52 +1,15 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import CohortPicker from "@/components/CohortPicker";
-import PageHeader from "@/components/PageHeader";
-import SessionList from "@/components/SessionList";
-import { useSwipeBack } from "@/lib/use-swipe-back";
-import { useViewCohort } from "@/lib/use-view-cohort";
+import { redirect } from "next/navigation";
 
 /**
- * 수업 기록 — 홈 바로가기 "수업 기록"으로 들어오는 화면. 1~10주차가 한 줄씩 있고,
- * 한 줄을 누르면 그 주 화면(/sessions/{주차})으로 갑니다.
+ * 수업 기록 화면은 2026-09-27에 기능째 없앴습니다 (사용자 "이 기능은 그냥 아예 없애줘").
+ * 홈 바로가기의 "수업 기록" 칸도 함께 뺐습니다.
  *
- * 홈과 같은 기수를 봅니다(useViewCohort). 운영진만 제목 옆에서 기수를 바꿀 수 있고,
- * 여기서 바꾸면 홈·자료·모임도 같은 기수로 따라갑니다.
- * 돌아갈 자리는 홈 하나라, 왼쪽 위 <와 오른쪽으로 밀기 모두 홈으로 갑니다(역대 투표와 같음).
+ * 이 주소는 옛 링크·방문 기록으로 들어와도 빈 화면에 닿지 않도록 홈으로 넘겨주는 자리로만 남깁니다
+ * (일정 목록 /events와 같은 방식). 옛 주차 화면 주소(/sessions/3 등)는 sessions/[...rest]/page.tsx가 받아 홈으로 넘깁니다.
+ *
+ * 예전 화면(주차 목록·교시별 영상·느낀점 댓글·주제·강사 채우기)은 git 기록에 있습니다.
+ * Firestore의 sessions·세션 댓글 데이터와 보안 규칙은 지우지 않고 그대로 둡니다(되살릴 때를 위해).
  */
-export default function SessionsPage() {
-  const router = useRouter();
-  const { cohort, canSwitch, setCohort } = useViewCohort();
-  const swipe = useSwipeBack({ onCommit: () => router.push("/home") });
-
-  return (
-    /*
-      안에 떠 있는(fixed) 요소가 없어 화면 전체를 한 상자로 밀어도 됩니다.
-      min-h-full: 내용이 짧아도 그 아래 빈 자리에서 민 손짓을 받습니다.
-    */
-    <div
-      className="min-h-full bg-canvas"
-      {...swipe.handlers}
-      style={{ ...swipe.touchAction, ...swipe.slideStyle }}
-    >
-      <PageHeader
-        title={
-          canSwitch ? (
-            <span className="flex items-center gap-2">
-              수업 기록
-              <CohortPicker value={cohort} onChange={setCohort} />
-            </span>
-          ) : (
-            "수업 기록"
-          )
-        }
-        backHref="/home"
-      />
-
-      <div className="px-4 pb-8">
-        <SessionList />
-      </div>
-    </div>
-  );
+export default function SessionsRedirect() {
+  redirect("/home");
 }
