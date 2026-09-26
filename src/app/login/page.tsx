@@ -208,7 +208,7 @@ function LoginScreen() {
                 className={`${secondaryButtonClassName} py-[12px]!`}
               >
                 {submitting ? <Spinner className="h-5 w-5" /> : <GoogleIcon className="h-5 w-5" />}
-                {/* 글씨만 1px 위로 (2026-09-27 사용자 요청) — 단추가 flex라 span의 transform이 먹습니다. 아이콘은 제자리. */}
+                {/* 글씨만 1.25px 위로 (2026-09-27 사용자 "1px", 이어서 "0.25px 더") — 단추가 flex라 span의 transform이 먹습니다. 아이콘은 제자리. */}
                 <span className="-translate-y-px">구글 계정으로 로그인</span>
               </button>
               {/* 카카오 — 카카오 안내대로 노란 바탕(#FEE500)에 검정 말풍선·글씨. 다크 모드에서도 그대로. */}
