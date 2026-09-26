@@ -586,9 +586,12 @@ export default function ProfileForm({
                     : `border-transparent ${cardClassName}`
                 }`}
               >
-                {/* 수정 화면은 2px 위로 — 같은 날 "1px 위로"(3px)에서 "1px 아래로"로 되돌림(2026-09-26 사용자 요청). */}
+                {/*
+                  2px 위로 — 같은 날 "1px 위로"(3px)에서 "1px 아래로"로 되돌림(2026-09-26 사용자 요청).
+                  → 1.5px 위로 — "0.5px 내려줘"(2026-09-27 사용자 요청).
+                */}
                 <span
-                  className={`-translate-y-[2px] text-[14px] font-bold ${
+                  className={`-translate-y-[1.5px] text-[14px] font-bold ${
                     selected ? "text-brand-500" : "text-ink-soft"
                   }`}
                 >
