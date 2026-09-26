@@ -174,10 +174,8 @@ export default function EventForm({
 
       <div className="mb-6 flex gap-3">
         <div className="flex-1">
-          {/* 오른쪽 빨간 "필수" — 프로필의 필수 칸과 같은 표시 (2026-09-27). */}
-          <FieldLabel htmlFor="event-start" hint={<span className="text-danger">필수</span>}>
-            시작 시간
-          </FieldLabel>
+          {/* 필수 칸이지만 빨간 "필수" 표시는 두지 않습니다 (2026-09-27 사용자 요청 — 비우면 저장할 때 안내만). */}
+          <FieldLabel htmlFor="event-start">시작 시간</FieldLabel>
           <input
             id="event-start"
             type="time"
