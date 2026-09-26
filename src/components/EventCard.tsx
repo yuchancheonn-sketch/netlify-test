@@ -166,8 +166,8 @@ export function EventDdayCard({
                       핀 18px — 같은 날 사용자 "1.5px 키워줘" → "0.5px 더"(16px → 17.5px → 18px). 시계는 16px 그대로.
                       선 굵기 1.5 — 같은 날 "굵기 좀 줄여줘"(기본 1.8에서). -translate-y-[0.25px] — "0.25px 위로".
                     */}
-                    {/* 17px — 2026-09-27 사용자 "장소 아이콘 1px씩 키워줘"(16px에서). */}
-                    <PinIcon strokeWidth={1.5} className="h-[17px] w-[17px] shrink-0 -translate-y-[0.25px]" />
+                    {/* 17px — 2026-09-27 사용자 "장소 아이콘 1px씩 키워줘"(16px에서). 같은 날 "1px씩 내려줘" — 0.25px 위 → 0.75px 아래. */}
+                    <PinIcon strokeWidth={1.5} className="h-[17px] w-[17px] shrink-0 translate-y-[0.75px]" />
                     <span className="truncate">{event.location}</span>
                   </span>
                 ) : null}
