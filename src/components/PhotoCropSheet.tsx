@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CameraIcon, CheckIcon, XMarkIcon } from "@/components/icons";
 import { Spinner } from "@/components/ui";
 import { cropImageSquare } from "@/lib/image";
 
@@ -32,7 +33,7 @@ function clampView(view: View, width: number, height: number): View {
   };
 }
 
-/** 틀 안의 한 점(anchorX, anchorY)을 제자리에 두고 배율을 바꿉니다 — 두 손가락 가운데·막대는 틀 가운데. */
+/** 틀 안의 한 점(anchorX, anchorY)을 제자리에 두고 배율을 바꿉니다 — 두 손가락 가운데·휠을 굴린 자리. */
 function zoomAround(view: View, nextZoom: number, anchorX: number, anchorY: number): View {
   const ratio = nextZoom / view.zoom;
   return {
@@ -46,33 +47,51 @@ function zoomAround(view: View, nextZoom: number, anchorX: number, anchorY: numb
  * 프로필 사진 편집 — 정사각형은 그대로, 어느 부분을 쓸지 원우가 고릅니다 (2026-09-27 사용자 요청).
  * 예전엔 사진 가운데를 자동으로 정사각형으로 잘랐습니다.
  *
- * - 한 손가락(마우스)으로 끌면 사진이 옮겨지고, 두 손가락으로 벌리거나 아래 막대로 크게·작게 합니다.
- *   컴퓨터에서는 마우스 휠로도 됩니다.
- * - 동그란 구멍 안이 프로필에 보이는 부분이고, 올라가는 사진은 그 둘레의 정사각형입니다
- *   (프로필 사진은 앱 어디서나 동그랗게 잘려 보입니다).
- * - "완료"를 누르면 고른 부분을 size×size로 잘라 onDone에 넘깁니다. 올리기는 부르는 쪽(ProfileForm)이 합니다.
+ * 짜임 (2026-09-27 사용자 요청 — 아이폰 사진 고르기 화면처럼 "위에 편집, 밑에 사진들"):
+ * - 위: 정사각형 틀(화면 폭 가득). 한 손가락으로 끌어 옮기고, 두 손가락으로 벌려 크게·작게. 컴퓨터는 휠.
+ *   3등분 기준선이 있고, 동그란 부분이 프로필에 보이는 곳입니다(올라가는 사진은 그 둘레의 정사각형).
+ * - 아래: 고른 사진들 격자. 누르면 바로 그 사진으로 바꿔 편집합니다. 첫 칸(카메라)은 사진을 더 고릅니다.
+ *   ★ 웹앱은 휴대폰 사진첩을 직접 읽을 수 없습니다(브라우저 보안). 그래서 격자에는 원우가 고른 사진만 뜹니다 —
+ *     처음 카메라 단추를 누를 때 여러 장을 고를 수 있게 했습니다(ProfileForm의 input multiple).
+ *   예전의 크기 막대·안내 문구는 같은 날 사용자 요청으로 뺐습니다.
+ * - 오른쪽 위 체크를 누르면 지금 사진의 고른 부분을 size×size로 잘라 onDone에 넘깁니다. 올리기는 ProfileForm이 합니다.
  */
 export default function PhotoCropSheet({
-  src,
+  sources,
   size,
+  onAdd,
   onCancel,
   onDone,
 }: {
-  /** 고른 사진의 objectURL — 만들고 치우는 일은 부르는 쪽이 합니다 */
-  src: string;
+  /** 고른 사진들의 objectURL — 만들고 치우는 일은 부르는 쪽이 합니다 */
+  sources: string[];
   /** 잘라 낸 사진의 한 변(px) */
   size: number;
+  /** 격자의 카메라 칸으로 사진을 더 골랐을 때 */
+  onAdd: (files: File[]) => void;
   onCancel: () => void;
   onDone: (blob: Blob) => void;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const addInputRef = useRef<HTMLInputElement>(null);
   /** 화면에 닿아 있는 손가락들의 지금 자리 (pointerId → 좌표) */
   const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const [selected, setSelected] = useState(0);
   const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
   const [view, setView] = useState<View>({ zoom: 1, x: 0, y: 0 });
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const src = sources[Math.min(selected, sources.length - 1)];
+
+  function select(index: number) {
+    if (index === selected || working) return;
+    // 새 사진이 뜰 때까지 이전 사진의 크기로 그리지 않게 비웁니다(handleLoad가 다시 채움).
+    setSelected(index);
+    setNatural(null);
+    setError(null);
+  }
 
   function handleLoad(event: React.SyntheticEvent<HTMLImageElement>) {
     const { naturalWidth: width, naturalHeight: height } = event.currentTarget;
@@ -158,6 +177,18 @@ export default function PhotoCropSheet({
     );
   }
 
+  function handleAdd(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = "";
+    if (files.length === 0) return;
+    // 새로 고른 첫 사진으로 바로 넘어갑니다(격자 끝에 붙습니다).
+    const firstNew = sources.length;
+    onAdd(files);
+    setSelected(firstNew);
+    setNatural(null);
+    setError(null);
+  }
+
   async function handleDone() {
     const image = imageRef.current;
     if (!image || !natural || working) return;
@@ -185,41 +216,41 @@ export default function PhotoCropSheet({
       aria-modal="true"
       aria-label="프로필 사진 편집"
     >
-      {/* 상단 바 — 사진 크게 보기(PhotoViewer)와 같은 자리·여백 */}
+      {/* 상단 바 — 왼쪽 닫기(동그란 흰 단추), 가운데 제목, 오른쪽 체크(주황 동그라미) */}
       <div
-        className="flex items-center justify-between px-4 py-3"
-        style={{ paddingTop: "calc(12px + env(safe-area-inset-top))" }}
+        className="flex shrink-0 items-center justify-between px-4 pb-3"
+        style={{ paddingTop: "calc(10px + env(safe-area-inset-top))" }}
       >
         <button
           type="button"
           onClick={onCancel}
           disabled={working}
-          className="rounded-full px-3 py-2 text-[15px] font-medium text-ink-soft active:bg-fill disabled:opacity-50"
+          aria-label="닫기"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-[var(--shadow-card)] transition active:scale-95 disabled:opacity-50"
         >
-          취소
+          <XMarkIcon className="h-5 w-5" strokeWidth={2.2} />
         </button>
-        <span className="text-[16px] font-bold">사진 편집</span>
+        <span className="text-[17px] font-bold">사진 편집</span>
         <button
           type="button"
           onClick={handleDone}
           disabled={!natural || working}
-          className="flex min-w-[52px] items-center justify-center rounded-full px-3 py-2 text-[15px] font-bold text-brand-500 active:bg-fill disabled:opacity-50"
+          aria-label="이 사진으로 하기"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 text-white shadow-[var(--shadow-float)] transition active:scale-95 disabled:opacity-50"
         >
-          {working ? <Spinner className="h-5 w-5" /> : "완료"}
+          {working ? <Spinner className="h-5 w-5" /> : <CheckIcon className="h-6 w-6" />}
         </button>
       </div>
 
       {/*
-        가운데 정사각형 틀. 틀 밖으로 삐져나온 사진도 흐리게 보여 어디가 잘려 나가는지 알 수 있고,
-        동그란 구멍 둘레의 큰 그림자가 그 흐린 막입니다. 바깥 상자의 overflow-hidden이 화면 밖을 자릅니다.
-        ★ 색은 앱 테마를 따릅니다 (2026-09-27 사용자 "다크모드 아닐 때는 흰색 테마로") — 바탕 surface,
-          막은 surface 72%. 밝은 화면에선 흰 바탕에 하얗게 흐린 막, 어두운 화면에선 예전처럼 어두운 막이 됩니다.
+        정사각형 틀 — 화면 폭 가득(아이폰 사진 고르기처럼). 동그라미 밖은 흐린 막(surface 72%)으로 덮습니다.
+        색은 앱 테마를 따릅니다(2026-09-27 사용자 "다크모드 아닐 때는 흰색 테마로").
         touch-none — 손가락 움직임을 화면 스크롤·확대 대신 사진 편집에 씁니다.
       */}
-      <div className="relative flex flex-1 touch-none items-center justify-center overflow-hidden px-6">
+      <div className="mx-auto w-full max-w-[520px] shrink-0 touch-none overflow-hidden">
         <div
           ref={frameRef}
-          className="relative aspect-square w-full max-w-[400px] cursor-grab select-none active:cursor-grabbing"
+          className="relative aspect-square w-full cursor-grab overflow-hidden bg-fill select-none active:cursor-grabbing"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -229,6 +260,7 @@ export default function PhotoCropSheet({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={imageRef}
+            key={src}
             src={src}
             alt=""
             draggable={false}
@@ -247,7 +279,7 @@ export default function PhotoCropSheet({
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-ink/25"
+            className="pointer-events-none absolute inset-0 rounded-full"
             style={{ boxShadow: "0 0 0 9999px color-mix(in srgb, var(--color-surface) 72%, transparent)" }}
           />
           {/*
@@ -261,50 +293,69 @@ export default function PhotoCropSheet({
               <div className="absolute inset-x-0 top-1/3 h-px bg-white/60" />
               <div className="absolute inset-x-0 top-2/3 h-px bg-white/60" />
             </div>
-          ) : null}
-          {!natural ? (
+          ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <Spinner className="h-7 w-7" />
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
-      {/* 아래 — 크기 막대와 안내 */}
-      <div
-        className="px-8 pt-4"
-        style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}
-      >
-        {error ? (
-          <p role="alert" className="mb-3 text-center text-[13px] font-medium text-danger">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex items-center gap-3">
-          <span className="text-[13px] text-ink-muted" aria-hidden="true">
-            작게
-          </span>
-          <input
-            type="range"
-            min={1}
-            max={MAX_ZOOM}
-            step={0.01}
-            value={view.zoom}
-            disabled={!natural}
-            aria-label="사진 크기"
-            onChange={(event) => {
-              const nextZoom = Number(event.target.value);
-              update((previous) => zoomAround(previous, nextZoom, 0.5, 0.5));
-            }}
-            className="h-1 flex-1 accent-brand-500"
-          />
-          <span className="text-[13px] text-ink-muted" aria-hidden="true">
-            크게
-          </span>
-        </div>
-        <p className="mt-4 text-center text-[13px] text-ink-muted">
-          끌어서 위치를, 두 손가락이나 막대로 크기를 맞춰 주세요
+      {error ? (
+        <p role="alert" className="shrink-0 px-5 pt-3 text-center text-[13px] font-medium text-danger">
+          {error}
         </p>
+      ) : null}
+
+      {/* 고른 사진들 — 4칸 격자, 남은 높이 안에서 스크롤. 첫 칸은 사진 더 고르기. */}
+      <div className="mx-auto flex min-h-0 w-full max-w-[520px] flex-1 flex-col">
+        <p className="shrink-0 px-4 pt-4 pb-2.5 text-[15px] font-bold">고른 사진</p>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="grid grid-cols-4 gap-0.5">
+            <button
+              type="button"
+              onClick={() => addInputRef.current?.click()}
+              disabled={working}
+              aria-label="사진 더 고르기"
+              className="flex aspect-square items-center justify-center bg-fill text-ink-soft active:opacity-70"
+            >
+              <CameraIcon className="h-8 w-8" />
+            </button>
+            {sources.map((source, index) => {
+              const active = source === src;
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  onClick={() => select(index)}
+                  aria-label={`사진 ${index + 1}`}
+                  aria-pressed={active}
+                  className="relative aspect-square overflow-hidden bg-fill"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={source} alt="" className="h-full w-full object-cover" draggable={false} />
+                  {active ? (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-surface/35 ring-3 ring-brand-500 ring-inset"
+                    />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <input
+          ref={addInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleAdd}
+          className="hidden"
+        />
       </div>
     </div>
   );

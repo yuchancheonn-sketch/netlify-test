@@ -159,8 +159,8 @@ export default function ProfileForm({
   /** 같은 원우 계정이 있어 휴대폰 인증을 묻는 시트(계정 합치기, 2026-09-22) */
   const [mergePrompt, setMergePrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  /** 편집 중인 사진(objectURL) — 있으면 사진 편집 화면을 띄웁니다 (2026-09-27) */
-  const [cropSource, setCropSource] = useState<string | null>(null);
+  /** 편집 화면 아래 격자에 뜨는 고른 사진들(objectURL) — 하나라도 있으면 사진 편집 화면을 띄웁니다 (2026-09-27) */
+  const [cropSources, setCropSources] = useState<string[]>([]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -175,19 +175,22 @@ export default function ProfileForm({
   );
 
   function handlePickPhoto(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const files = [...(event.target.files ?? [])];
     // 같은 파일을 다시 골라도 onChange가 뜨도록 값을 비웁니다.
     event.target.value = "";
-    if (!file || !user) return;
-    // 바로 올리지 않고 편집 화면(PhotoCropSheet)을 먼저 띄웁니다 — 어느 부분을 쓸지 원우가 고릅니다(2026-09-27 사용자 요청).
+    if (files.length === 0 || !user) return;
+    /*
+     * 바로 올리지 않고 편집 화면(PhotoCropSheet)을 먼저 띄웁니다 — 어느 부분을 쓸지 원우가 고릅니다(2026-09-27 사용자 요청).
+     * 여러 장을 고를 수 있고(input multiple), 고른 사진들이 편집 화면 아래 격자에 떠서 바꿔 가며 고릅니다.
+     */
     setSaveError(null);
-    setCropSource(URL.createObjectURL(file));
+    setCropSources(files.map((file) => URL.createObjectURL(file)));
   }
 
-  /** 편집 화면을 닫고 사진 주소(objectURL)를 치웁니다. */
+  /** 편집 화면을 닫고 사진 주소(objectURL)들을 치웁니다. */
   function closeCrop() {
-    if (cropSource) URL.revokeObjectURL(cropSource);
-    setCropSource(null);
+    cropSources.forEach((source) => URL.revokeObjectURL(source));
+    setCropSources([]);
   }
 
   async function uploadCroppedPhoto(blob: Blob) {
@@ -439,6 +442,7 @@ export default function ProfileForm({
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handlePickPhoto}
           className="hidden"
         />
@@ -778,10 +782,15 @@ export default function ProfileForm({
         </p>
       ) : null}
 
-      {cropSource ? (
+      {cropSources.length > 0 ? (
         <PhotoCropSheet
-          src={cropSource}
+          sources={cropSources}
           size={PROFILE_IMAGE_SIZE}
+          onAdd={(files) => {
+            // 주소는 밖에서 만듭니다 — 개발 모드는 setState 함수를 두 번 불러 주소가 새어 나갑니다.
+            const added = files.map((file) => URL.createObjectURL(file));
+            setCropSources((previous) => [...previous, ...added]);
+          }}
           onCancel={closeCrop}
           onDone={(blob) => void uploadCroppedPhoto(blob)}
         />
