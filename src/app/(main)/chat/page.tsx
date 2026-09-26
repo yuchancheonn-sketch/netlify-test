@@ -6,8 +6,8 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatIcon, UsersIcon } from "@/components/icons";
-import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
+import { UsersIcon } from "@/components/icons";
+import { ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { otherUidOf, previewText, roomTitle } from "@/lib/chat-rooms";
 import { formatChatListTime } from "@/lib/format";
@@ -142,19 +142,9 @@ function ChatListPageContent() {
             </ul>
 
             {/*
-              1:1 대화가 하나도 없을 때만, 어디서 말을 걸 수 있는지 알려줍니다.
-              기수 단체방은 늘 위에 서 있으므로 "대화가 하나도 없는 화면"은 이제 없습니다 —
-              그래서 목록을 대신하는 빈 화면이 아니라 목록 **아래에 덧붙이는 안내**입니다.
+              1:1 대화가 없을 때 목록 아래에 붙던 안내 상자("아직 1:1 대화가 없어요")는 2026-09-27 사용자 요청으로 없앴습니다 —
+              기수 단체방이 늘 위에 있어 빈 화면이 되지 않습니다.
             */}
-            {directRooms.length === 0 ? (
-              <div className="mt-3 rounded-3xl bg-surface shadow-[var(--shadow-card)]">
-                <EmptyState
-                  icon={<ChatIcon className="h-10 w-10" />}
-                  title="아직 1:1 대화가 없어요"
-                  description="원우 탭에서 원우를 고른 뒤 '채팅'을 누르면 둘만의 대화가 시작됩니다."
-                />
-              </div>
-            ) : null}
           </>
         )}
       </div>
