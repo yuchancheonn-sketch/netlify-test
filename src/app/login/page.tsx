@@ -224,6 +224,11 @@ function LoginScreen() {
                 <KakaoIcon className="h-5 w-5" />
                 <span className="-translate-y-[1.25px]">카톡으로 로그인</span>
               </button>
+              {/*
+                구글·카톡과 휴대폰 번호 사이 회색 선 (2026-09-27 사용자 "회색 선 넣어서 나눠줘") — 계정으로 들어오는 두 갈래와 번호로 들어오는 갈래를 가릅니다.
+                위아래 간격은 목록의 gap(11px) 그대로라 선 위아래가 11px씩입니다.
+              */}
+              <span aria-hidden="true" className="h-px bg-line" />
               <button
                 type="button"
                 onClick={() => goTo("phone")}
