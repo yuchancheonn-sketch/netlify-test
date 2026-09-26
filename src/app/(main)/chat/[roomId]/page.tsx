@@ -1,7 +1,7 @@
 "use client";
 
 import GuestGate from "@/components/GuestGate";
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import MidEllipsis from "@/components/MidEllipsis";
@@ -70,7 +70,18 @@ function ChatRoomPageContent({
    * "메시지 수정 중" 줄이 붙고, 보내기 단추가 고침을 확정합니다.
    */
   const [editingId, setEditingId] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  /*
+   * 입력칸 높이를 글에 맞춥니다 (2026-09-27, 여러 줄 입력). 한 번 auto로 풀었다가 내용 높이(scrollHeight)로 —
+   * CSS의 max-h(140px)가 상한이라 그 위로는 칸 안에서 스크롤합니다. setState가 아니라 DOM만 고칩니다.
+   */
+  useLayoutEffect(() => {
+    const area = inputRef.current;
+    if (!area) return;
+    area.style.height = "auto";
+    area.style.height = `${area.scrollHeight}px`;
+  }, [draft]);
   /** 이 방 즐겨찾기(별)·알림 끔(종) — chatReads/{uid} (lib/chat-prefs.ts, 2026-09-27) */
   const chatPrefs = useChatPrefs(uid);
   const isFavorite = chatPrefs.favorites.has(roomId);
@@ -554,9 +565,17 @@ function ChatRoomPageContent({
         ) : null}
 
         <form onSubmit={handleSend} className="mx-auto flex w-full max-w-[560px] items-end gap-2">
-          <input
+          {/*
+            ★ 여러 줄 입력 (2026-09-27 사용자 "엔터 치면 무조건 보내져, 엔터로 줄 바꾸고 보내기 단추로만 보내게").
+              한 줄짜리 <input>은 엔터가 곧 폼 제출이라 <textarea>로 바꿨습니다. 엔터는 줄바꿈이고, 보내기는 오른쪽 단추만.
+              칸은 한 줄(44px)에서 시작해 쓰는 만큼 늘어나고, 5줄(약 140px)을 넘으면 칸 안에서 스크롤합니다
+              — 높이는 아래 useLayoutEffect가 글이 바뀔 때마다 맞춥니다(보낸 뒤 비우면 다시 한 줄로).
+              모양이 알약(rounded-full)이면 여러 줄일 때 모서리가 어색해 22px 둥근 모서리로 — 한 줄일 때는 알약과 같아 보입니다.
+          */}
+          <textarea
             ref={inputRef}
             value={draft}
+            rows={1}
             onChange={(event) => setDraft(event.target.value)}
             /* 커서가 들어오면 자판이 올라온 것으로 봅니다 (위 useEffect 설명 참고). */
             onFocus={() => {
@@ -582,7 +601,7 @@ function ChatRoomPageContent({
               (예전에는 canvas를 썼는데, 페이지 배경이 흰색이 되면서
                흰색 위 흰색이 되어 fill로 옮겼습니다.)
             */
-            className="min-w-0 flex-1 rounded-full bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="block max-h-[140px] min-w-0 flex-1 resize-none overflow-y-auto rounded-[22px] bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
           />
           {/*
             동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
