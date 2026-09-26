@@ -385,8 +385,19 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
               );
               return (
                 <li key={item.key} className="relative flex items-center gap-1">
+                  {/*
+                    마지막 줄이 도산아카데미 일정(주황 막대)이면 + 단추의 아래끝을 주황 막대의 아래끝에 맞춥니다
+                    (2026-09-27 사용자 요청). 막대는 줄의 위아래 여백 py-1.5(6px) 안에서 끝나므로 bottom-1.5.
+                    우리 기수 모임(먹색 막대)이 마지막이면 예전처럼 줄의 세로 가운데입니다.
+                  */}
                   {isLast ? (
-                    <span className="absolute top-1/2 right-[-54px] -translate-y-1/2">{addButton}</span>
+                    <span
+                      className={`absolute right-[-54px] ${
+                        item.kind === "academy" ? "bottom-1.5" : "top-1/2 -translate-y-1/2"
+                      }`}
+                    >
+                      {addButton}
+                    </span>
                   ) : null}
                   {item.kind === "academy" ? (
                     <a
