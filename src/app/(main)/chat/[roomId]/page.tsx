@@ -739,9 +739,9 @@ function MessageRow({
           2026-09-27 사용자 "날짜랑 메세지 사이 간격 줄여줘, 날짜는 더 크고 진하게":
           12px 보통·흐린 회색(ink-faint) → 13.5px 굵게·한 단 진한 회색(ink-muted). 굵기는 같은 날 "아주 조금 더 얇게"로 bold(700) → semibold(600).
           아래 여백 16px → 8px, 그리고 날짜 바로 밑에서는 아래 말 묶음 간격(16px)을 겹쳐 두지 않습니다
-          (예전엔 둘이 더해져 날짜와 첫 말풍선 사이가 32px였음 → 이제 8px).
+          (예전엔 둘이 더해져 날짜와 첫 말풍선 사이가 32px였음 → 8px → 같은 날 "간격은 20px로" pb-5).
         */
-        <p className="pt-4 pb-2 text-center text-[13.5px] font-semibold text-ink-muted">
+        <p className="pt-4 pb-5 text-center text-[13.5px] font-semibold text-ink-muted">
           {formatDateDivider(sentAt)}
         </p>
       ) : null}
