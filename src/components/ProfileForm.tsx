@@ -100,15 +100,10 @@ const HINT_TONE = "text-ink-muted";
 const LABEL_SIZE = "text-[17px]";
 
 /**
- * 꼭 넣어야 하는 칸(이름·전화번호·기수) 오른쪽 표시 — "선택" 자리에 빨간 * (2026-09-27 사용자 요청).
- * 스크린 리더에는 "필수"로 읽힙니다.
+ * 꼭 넣어야 하는 칸(이름·전화번호·기수) 오른쪽 표시 — "선택" 자리에 빨간 "필수" (2026-09-27 사용자 요청).
+ * 크기·굵기는 "선택"과 같습니다(FieldLabel의 12px, 보통 굵기) — 색만 빨강. 처음엔 빨간 *였다가 같은 날 바꿈.
  */
-const REQUIRED_MARK = (
-  <span className="text-[14px] font-bold text-danger">
-    <span aria-hidden="true">*</span>
-    <span className="sr-only">필수</span>
-  </span>
-);
+const REQUIRED_MARK = <span className="text-danger">필수</span>;
 
 /** 선택 상자에 쓰는 화살표 배경 (생일·직위에서 함께 씁니다) */
 const SELECT_ARROW_STYLE = {
