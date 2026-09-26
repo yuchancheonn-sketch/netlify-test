@@ -82,7 +82,11 @@ const fieldClassName = inputClassName.replace("py-4", "pt-[11px] pb-[15px]");
  */
 function flatBox(className: string): string {
   // bg-field — fill과 canvas의 중간 회색 (2026-09-26 사용자 "원우 정보 창 칸과 평균 색으로", 그 전엔 bg-fill).
-  return className.replace("bg-surface", "bg-field").replace("shadow-[var(--shadow-card)]", "shadow-none");
+  // 누른 칸의 진한 주황 실선 테두리는 빼고 연한 주황 둘레(ring)만 남깁니다 (2026-09-27 사용자 요청).
+  return className
+    .replace("bg-surface", "bg-field")
+    .replace("shadow-[var(--shadow-card)]", "shadow-none")
+    .replace("focus:border-brand-300", "focus:border-transparent");
 }
 
 /** 칸 이름 오른쪽 "선택" 글씨 색 — 옅은 회색(ink-faint)보다 한 단계 진하게 (2026-09-27 사용자 요청). */
