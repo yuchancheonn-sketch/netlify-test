@@ -52,15 +52,20 @@ function ChatListPageContent() {
    * 카톡의 공지방처럼 자리가 고정돼 있어야 "무조건 있는 방"으로 읽힙니다.
    */
   /*
-   * 즐겨찾기한 1:1 방은 단체방 바로 아래로 (2026-09-27 — 대화방 위 별 단추, lib/chat-prefs.ts).
-   * 즐겨찾기끼리, 나머지끼리는 원래대로 최근 순입니다(directRooms가 이미 최근 순).
+   * 방 순서 (2026-09-27 사용자 요청):
+   *   1) 즐겨찾기(별)한 방 — 최근 순
+   *   2) 나머지 — 최근 순
+   * 기수 단체방도 이제 **즐겨찾기를 해야만** 맨 위에 섭니다(그 전엔 늘 맨 위에 고정).
+   * 목록에서 사라지지는 않습니다 — 한 마디도 없던 단체방은 시각이 없어 맨 아래에 섭니다.
    */
   const chatPrefs = useChatPrefs(uid);
   const rooms = useMemo(() => {
-    const favorite = directRooms.filter((room) => chatPrefs.favorites.has(room.id));
-    const rest = directRooms.filter((room) => !chatPrefs.favorites.has(room.id));
-    const ordered = [...favorite, ...rest];
-    return cohortRoom ? [cohortRoom, ...ordered] : ordered;
+    const all = cohortRoom ? [cohortRoom, ...directRooms] : [...directRooms];
+    const recentFirst = (a: ChatRoomDoc, b: ChatRoomDoc) =>
+      (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0);
+    const favorite = all.filter((room) => chatPrefs.favorites.has(room.id)).sort(recentFirst);
+    const rest = all.filter((room) => !chatPrefs.favorites.has(room.id)).sort(recentFirst);
+    return [...favorite, ...rest];
   }, [cohortRoom, directRooms, chatPrefs.favorites]);
 
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
