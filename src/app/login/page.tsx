@@ -170,7 +170,8 @@ function LoginScreen() {
       */}
       <div
         className="login-screen relative flex min-h-dvh w-full flex-col px-7 pt-14"
-        style={{ paddingBottom: "calc(36px + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "calc(32px + env(safe-area-inset-bottom))" }}
+        // 32px — 단추·둘러보기 묶음을 4px 아래로 (2026-09-27 사용자 요청, 36px에서).
       >
         {/*
           과정 이름 + 앱 이름. 위에 있던 앱 아이콘(愛己愛他 주황 네모)은 2026-09-22 사용자 요청으로 뺐습니다.
@@ -200,7 +201,8 @@ function LoginScreen() {
               글씨만 달리해 보여 줬습니다(속으로는 같은 일). 처음 보는 계정이면 로그인해도 가입 절차로 이어집니다(StageGate).
             ★ 세 단추 50px (2026-09-25 사용자 "박스들 위치 확 내려서 도산 선생 얼굴 안 가리도록") — 흰 단추 테두리 1px + 위아래 12px, 카톡 위아래 13px.
           */}
-          <div className="flex flex-col gap-3">
+          {/* gap-[11px] — 단추 사이 12px → 11px (2026-09-27 사용자 "1px씩 줄여줘"). */}
+          <div className="flex flex-col gap-[11px]">
               {/* 구글 — 흰 단추에 구글 네 색 로고 */}
               <button
                 type="button"
