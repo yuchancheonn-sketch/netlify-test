@@ -1,7 +1,7 @@
 "use client";
 
 import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
@@ -113,6 +113,30 @@ export default function MembersPage() {
    */
   const showTypeFilter = hasYouthMembers(cohort);
   const activeFilter: Filter = showTypeFilter ? filter : "all";
+
+  /*
+   * 목록을 좌우로 밀어 옆 구분(전체 ↔ 일반 원우 ↔ 대학생 원우)으로 넘기기 (2026-09-27 사용자 요청).
+   * 왼쪽으로 밀면 오른쪽 칸, 오른쪽으로 밀면 왼쪽 칸 — 위 고르개(TextTabs) 순서 그대로. 끝 칸에서는 더 가지 않습니다.
+   * 60px 넘게, 그리고 세로보다 가로로 더 많이 움직였을 때만 넘깁니다 — 목록을 위아래로 굴리다 살짝 비껴간 것은 무시.
+   * 대학생 원우가 없는 기수(고르개가 "전체" 한 칸)에서는 넘길 곳이 없어 아무 일도 없습니다.
+   */
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  function handleListTouchStart(event: React.TouchEvent) {
+    const touch = event.touches[0];
+    swipeStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+  }
+  function handleListTouchEnd(event: React.TouchEvent) {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start || !showTypeFilter) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const index = FILTERS.findIndex((item) => item.value === activeFilter);
+    const next = FILTERS[index + (dx < 0 ? 1 : -1)];
+    if (next) setFilter(next.value);
+  }
 
   /**
    * 검색어까지만 거른 목록. 구분(일반/대학생)은 아직 안 걸렀습니다.
@@ -424,7 +448,15 @@ export default function MembersPage() {
           mt-[18px] — 위 구분 고르개와 첫 박스 사이 18px (2026-09-15 사용자 "밑에 여백 아주 조금만 더", 16px에서 2px).
           고르개 아래 검은 바(바 2.5px + 사이 6px)를 걷으면서 줄이 그만큼 낮아져 사이가 좁아 보였습니다.
         */}
-        <div className="mt-[18px] pb-6">
+        {/* 목록을 좌우로 밀면 옆 구분으로 (위 handleListTouchStart/End). */}
+        <div
+          className="mt-[18px] pb-6"
+          onTouchStart={handleListTouchStart}
+          onTouchEnd={handleListTouchEnd}
+          onTouchCancel={() => {
+            swipeStart.current = null;
+          }}
+        >
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.5px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
             // 자리 표시도 선 목록 모양으로(2026-09-26) — 흰 바탕 한 장, 줄마다 사진 자리만 회색.
