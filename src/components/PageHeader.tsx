@@ -290,10 +290,12 @@ function HeaderBellLink({ tone: _tone }: { tone: "canvas" | "surface" }) {
           테두리 없이 빨간색으로만 채운 점 (2026-09-26 사용자 요청). 예전엔 제목 줄 바탕색 2px 테(ring)를 둘러
           종 선과 떼어 보이게 했습니다 — 되살리려면 ring-2 + tone에 따라 ring-surface/ring-canvas.
           자리: 위 7px·오른쪽 8px → 위 8px·오른쪽 8.5px — 1px 아래로, 0.5px 왼쪽으로 (2026-09-27 사용자 요청).
+          → 크기 8 → 7px(가운데는 그대로 두려고 위·오른쪽에 0.5px씩 더함) + 1px 더 아래로 = 위 9.5px·오른쪽 9px
+            (같은 날 사용자 "크기 아주 조금 줄이고, 1px 아래로").
         */
         <span
           aria-hidden="true"
-          className="absolute top-[8px] right-[8.5px] h-2 w-2 rounded-full bg-danger"
+          className="absolute top-[9.5px] right-[9px] h-[7px] w-[7px] rounded-full bg-danger"
         />
       ) : null}
     </HeaderIconLink>
