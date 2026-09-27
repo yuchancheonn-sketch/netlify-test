@@ -176,9 +176,9 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
       // 박스(둥근 모서리 rounded-3xl·테두리 shadow-card)만 뺐습니다 (2026-09-27 사용자 "박스만 없애고 아무것도 건들지마").
       // pl-[12.5px] — 날짜는 그대로 두고 알림 내용만 3.5px 왼쪽으로(2026-09-27 사용자 "1px", "1px 더", "1.5px" — 16px에서). 오른쪽은 16px 그대로.
       // py-[13px] — 줄 안 위아래 여백 14px → 12px → 13px씩 (2026-09-27 사용자 "2px씩 줄여줘", 이어서 "1px씩 늘려줘").
-      className={`flex items-center gap-3 py-[13px] pr-4 pl-[12.5px] transition active:scale-[0.99] ${
-        isNew ? "bg-brand-50" : "bg-surface"
-      }`}
+      // 새 알림의 연한 주황 바탕(bg-brand-50)은 뺐습니다 (2026-09-27 사용자 "반투명 주황색 박스는 다 없애줘") — 모든 줄이 흰 바탕.
+      data-new={isNew || undefined}
+      className="flex items-center gap-3 bg-surface py-[13px] pr-4 pl-[12.5px] transition active:scale-[0.99]"
     >
       <span className="min-w-0 flex-1">
         {/*
