@@ -449,7 +449,8 @@ export default function MembersPage() {
               */
               // pt-[8.5px] pb-[10.5px] — 높이 1px 늘림, 위아래 0.5px씩(글씨 1px 위로 둔 차이는 그대로) — 2026-09-26 사용자 요청.
               // 글씨 16 → 17px, 안내 문구 15 → 16.5px (2026-09-27 사용자 "검색 박스 안 문구·돋보기 더 키워줘"). 돋보기는 22 → 24px → 26px(같은 날 "돋보기 더 키워줘").
-              className="w-full rounded-[14px] bg-canvas pt-[8.5px] pr-14 pb-[10.5px] pl-5 text-[17px] text-ink outline-none placeholder:text-[16.5px] placeholder:text-ink-muted"
+              // 안내 문구 16.5 → 17.5px, 글씨 1px 위로(위 8.5→7.5px·아래 10.5→11.5px, 칸 높이 그대로) — 같은 날 사용자 요청.
+              className="w-full rounded-[14px] bg-canvas pt-[7.5px] pr-14 pb-[11.5px] pl-5 text-[17px] text-ink outline-none placeholder:text-[17.5px] placeholder:text-ink-muted"
             />
           </div>
 
