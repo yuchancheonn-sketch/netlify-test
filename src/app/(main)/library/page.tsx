@@ -1,7 +1,7 @@
 "use client";
 
 import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import NewsList from "@/components/NewsList";
 import {
@@ -105,6 +105,35 @@ function LibraryTabs() {
    */
   const { cohort, canSwitch, setCohort } = useViewCohort();
 
+  /*
+   * 화면을 좌우로 밀어 옆 칸으로 (2026-09-27 사용자 "자료탭에서만 — 복습 영상 ↔ 일정 ↔ 파일").
+   * 왼쪽으로 밀면 오른쪽 칸, 오른쪽으로 밀면 왼쪽 칸 — 제목 자리 고르개 순서 그대로. 끝 칸에서는 더 가지 않습니다.
+   * 60px 넘게, 그리고 세로보다 가로로 확실히 더 움직였을 때만 — 위아래로 굴리다 비껴간 것은 무시(원우탭 목록과 같은 기준).
+   * ★ 재생 중인 유튜브 영상(iframe) 위에서 민 것은 영상이 손짓을 가져가 여기까지 오지 않습니다.
+   */
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const swipeHandlers = {
+    onTouchStart(event: React.TouchEvent) {
+      const touch = event.touches[0];
+      swipeStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+    },
+    onTouchEnd(event: React.TouchEvent) {
+      const start = swipeStart.current;
+      swipeStart.current = null;
+      if (!start) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const index = SUBTABS.findIndex((item) => item.value === subtab);
+      const next = SUBTABS[index + (dx < 0 ? 1 : -1)];
+      if (next) setSubtab(next.value);
+    },
+    onTouchCancel() {
+      swipeStart.current = null;
+    },
+  };
+
   return (
     <>
       {/*
@@ -124,7 +153,8 @@ function LibraryTabs() {
         높이를 정해 두지 않아 목록이 짧을 때 아래로 회색이 드러납니다(chat/page.tsx 주석).
         제목 줄도 tone="surface"로 맞춥니다.
       */}
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      {/* 흰 층에도 좌우 밀기를 겁니다 — 목록이 짧을 때 그 아래 빈 자리에서 민 것도 받으려고. */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" {...swipeHandlers} />
       <PageHeader
         tone="surface"
         title={
@@ -162,7 +192,7 @@ function LibraryTabs() {
         (앨범 화면·모임 탭은 pb-8·pb-6이라 마지막 줄이 알약에 조금 가려 있습니다 —
          거기도 고칠 일이 생기면 같은 셈법을 쓰면 됩니다.)
       */}
-      <div className="px-4 pt-4 pb-24">
+      <div className="px-4 pt-4 pb-24" {...swipeHandlers}>
         {subtab === "videos" ? (
           <VideoList />
         ) : subtab === "news" ? (
