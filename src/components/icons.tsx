@@ -96,6 +96,25 @@ export function UsersIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   );
 }
 
+/**
+ * 사람 한 명 — 위 UsersIcon의 앞사람(머리 반지름 3.3, 어깨 폭 12)을 그대로 떼어 가운데에 세운 것 (2026-09-27).
+ * 채팅 목록의 "탈퇴한 원우" 칸이 옆 단체방 칸(UsersIcon)과 같은 그림체로 보이도록 만들었습니다
+ * (사용자 "단체방 아이콘 속 사람 모양이랑 통일성 있게"). 헤더의 PersonIcon과는 비율이 달라 따로 둡니다.
+ */
+export function SinglePersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth={strokeWidth} />
+      <path
+        d="M6 19.2c0-3 2.7-4.8 6-4.8s6 1.8 6 4.8"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   /*
    * 채울 때는 폴더와 재생 삼각형을 한 path로 합치고 evenodd 규칙을 씁니다.

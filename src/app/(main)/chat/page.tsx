@@ -7,7 +7,7 @@ import Avatar from "@/components/Avatar";
 import MidEllipsis from "@/components/MidEllipsis";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatBellIcon, PersonIcon, StarIcon, UsersIcon } from "@/components/icons";
+import { ChatBellIcon, SinglePersonIcon, StarIcon, UsersIcon } from "@/components/icons";
 import { useChatPrefs } from "@/lib/chat-prefs";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -264,9 +264,10 @@ function ChatRoomRow({
         // 탈퇴한 원우 — 사진·이니셜 대신 옅은 회색 칸에 흐린 사람 그림(단체방 칸과 같은 모양).
         <span
           aria-hidden="true"
-          className="squircle flex h-[56px] w-[56px] shrink-0 translate-y-[2px] items-center justify-center bg-fill text-ink-faint"
+          className="squircle flex h-[56px] w-[56px] shrink-0 translate-y-[2px] items-center justify-center bg-fill text-ink-muted"
         >
-          <PersonIcon className="h-7 w-7" />
+          {/* 단체방 칸의 UsersIcon과 같은 그림체·굵기·색(2026-09-27 사용자 "통일성 있게"). */}
+          <SinglePersonIcon className="h-7 w-7" strokeWidth={1.9} />
         </span>
       ) : (
         <Avatar
