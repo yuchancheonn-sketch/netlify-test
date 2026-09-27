@@ -119,23 +119,88 @@ export default function MembersPage() {
    * 왼쪽으로 밀면 오른쪽 칸, 오른쪽으로 밀면 왼쪽 칸 — 위 고르개(TextTabs) 순서 그대로. 끝 칸에서는 더 가지 않습니다.
    * 60px 넘게, 그리고 세로보다 가로로 더 많이 움직였을 때만 넘깁니다 — 목록을 위아래로 굴리다 살짝 비껴간 것은 무시.
    * 대학생 원우가 없는 기수(고르개가 "전체" 한 칸)에서는 넘길 곳이 없어 아무 일도 없습니다.
+   *
+   * ★ 손가락을 따라 움직이고 미끄러지며 넘어갑니다 (같은 날 사용자 "너무 뚝뚝 끊겨, 조금 더 자연스럽게").
+   *   1) 미는 동안 목록이 손가락을 따라 옆으로 움직입니다. 끝 칸에서 더 밀면 1/3만 따라와 "더 없음"을 느끼게 합니다.
+   *   2) 손을 떼면 — 화면 폭의 1/4 또는 60px을 넘겼거나 빠르게 튕겼으면 목록이 그쪽으로 빠져나가고(220ms),
+   *      반대편에서 새 목록이 미끄러져 들어옵니다(220ms). 모자라면 제자리로 돌아옵니다.
+   *   처음 10px 움직임으로 가로/세로를 정하고, 세로면 이번 손짓은 끝까지 손대지 않습니다(목록 스크롤 그대로).
    */
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; at: number; axis: "x" | "y" | null } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  /** 목록이 옆으로 밀린 거리(px)와 애니메이션 중인지 */
+  const [listShift, setListShift] = useState({ x: 0, animate: false });
+  /** 빠져나가는 애니메이션이 끝나면 바꿀 칸과 들어올 방향 */
+  const pendingSwitch = useRef<{ filter: Filter; from: number } | null>(null);
+
+  function neighborFilter(direction: 1 | -1): Filter | null {
+    if (!showTypeFilter) return null;
+    const index = FILTERS.findIndex((item) => item.value === activeFilter);
+    return FILTERS[index + direction]?.value ?? null;
+  }
+
   function handleListTouchStart(event: React.TouchEvent) {
+    if (pendingSwitch.current) return; // 넘어가는 중에는 새 손짓을 받지 않습니다.
     const touch = event.touches[0];
-    swipeStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+    swipeStart.current =
+      event.touches.length === 1
+        ? { x: touch.clientX, y: touch.clientY, at: Date.now(), axis: null }
+        : null;
+  }
+  function handleListTouchMove(event: React.TouchEvent) {
+    const start = swipeStart.current;
+    if (!start || !showTypeFilter) return;
+    const touch = event.touches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (!start.axis) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      start.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (start.axis !== "x") return;
+    // 넘길 칸이 없는 쪽으로는 1/3만 따라옵니다.
+    const hasNext = neighborFilter(dx < 0 ? 1 : -1) !== null;
+    setListShift({ x: hasNext ? dx : dx / 3, animate: false });
   }
   function handleListTouchEnd(event: React.TouchEvent) {
     const start = swipeStart.current;
     swipeStart.current = null;
-    if (!start || !showTypeFilter) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    const index = FILTERS.findIndex((item) => item.value === activeFilter);
-    const next = FILTERS[index + (dx < 0 ? 1 : -1)];
-    if (next) setFilter(next.value);
+    if (!start || start.axis !== "x") return;
+    const dx = event.changedTouches[0].clientX - start.x;
+    const width = listRef.current?.clientWidth ?? window.innerWidth;
+    const fast = Math.abs(dx) > 30 && Date.now() - start.at < 250;
+    const direction: 1 | -1 = dx < 0 ? 1 : -1;
+    const next = neighborFilter(direction);
+    if (next && (Math.abs(dx) > Math.min(60, width / 4) || fast)) {
+      // 빠져나갑니다 — 끝나면 handleListTransitionEnd가 칸을 바꾸고 반대편에서 들여옵니다.
+      const pending = { filter: next, from: direction * width };
+      pendingSwitch.current = pending;
+      setListShift({ x: -direction * width, animate: true });
+      // 안전장치 — 애니메이션 끝 알림(transitionend)이 오지 않으면(화면 전환 등) 350ms 뒤 그냥 바꿉니다.
+      window.setTimeout(() => {
+        if (pendingSwitch.current !== pending) return;
+        pendingSwitch.current = null;
+        setFilter(pending.filter);
+        setListShift({ x: 0, animate: false });
+      }, 350);
+    } else {
+      setListShift({ x: 0, animate: true });
+    }
+  }
+  function handleListTransitionEnd(event: React.TransitionEvent) {
+    if (event.target !== event.currentTarget || event.propertyName !== "transform") return;
+    const pending = pendingSwitch.current;
+    if (!pending) {
+      setListShift({ x: 0, animate: false });
+      return;
+    }
+    pendingSwitch.current = null;
+    setFilter(pending.filter);
+    // 새 목록을 반대편 화면 밖에 두었다가, 다음 그림에서 제자리로 미끄러뜨립니다.
+    setListShift({ x: pending.from, animate: false });
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => setListShift({ x: 0, animate: true })),
+    );
   }
 
   /**
@@ -448,13 +513,25 @@ export default function MembersPage() {
           mt-[18px] — 위 구분 고르개와 첫 박스 사이 18px (2026-09-15 사용자 "밑에 여백 아주 조금만 더", 16px에서 2px).
           고르개 아래 검은 바(바 2.5px + 사이 6px)를 걷으면서 줄이 그만큼 낮아져 사이가 좁아 보였습니다.
         */}
-        {/* 목록을 좌우로 밀면 옆 구분으로 (위 handleListTouchStart/End). */}
+        {/*
+          목록을 좌우로 밀면 옆 구분으로 (위 handleListTouchStart/Move/End).
+          touch-action: pan-y — 세로 스크롤은 브라우저에, 가로는 우리가 씁니다(없으면 미는 도중 브라우저가 끼어듦).
+        */}
         <div
+          ref={listRef}
           className="mt-[18px] pb-6"
           onTouchStart={handleListTouchStart}
+          onTouchMove={handleListTouchMove}
           onTouchEnd={handleListTouchEnd}
           onTouchCancel={() => {
             swipeStart.current = null;
+            if (!pendingSwitch.current) setListShift({ x: 0, animate: true });
+          }}
+          onTransitionEnd={handleListTransitionEnd}
+          style={{
+            touchAction: "pan-y",
+            transform: listShift.x ? `translateX(${listShift.x}px)` : undefined,
+            transition: listShift.animate ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
           }}
         >
           {busy ? (
