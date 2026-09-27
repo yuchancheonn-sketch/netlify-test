@@ -17,7 +17,9 @@ import { ErrorState, Skeleton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { markChatRead } from "@/lib/chat-read";
 import {
+  WITHDRAWN_PEER_TITLE,
   cohortOfRoomId,
+  isWithdrawnPeer,
   roomMemberCount,
   cohortRoomTitle,
   deleteChatMessage,
@@ -56,7 +58,7 @@ function ChatRoomPageContent({
 
   const [count, setCount] = useState(CHAT_PAGE_SIZE);
   const { messages, loading, error, hasMore } = useMessages(roomId, count);
-  const { data: members } = useApprovedMembers();
+  const { data: members, loading: membersLoading } = useApprovedMembers();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -132,11 +134,18 @@ function ChatRoomPageContent({
   const otherId = uid ? otherUidOf(roomId, uid) : null;
   /** 기수 단체방이면 그 기수("10기"), 1:1 방이면 null (2026-09-22) */
   const roomCohort = cohortOfRoomId(roomId);
+  /**
+   * 상대가 탈퇴한 1:1 방인지 (2026-09-27 사용자 요청, lib/chat-rooms.ts의 isWithdrawnPeer).
+   * 대화 기록은 그대로 보이고, 이름은 "탈퇴한 원우", 입력줄 대신 "메시지를 보낼 수 없어요" 안내가 섭니다.
+   */
+  const withdrawn = isWithdrawnPeer(roomId, uid ?? "", members, !membersLoading);
   const title = roomCohort
     ? cohortRoomTitle(roomCohort)
-    : (otherId && nameByUid.get(otherId)) || "원우";
-  /** 방 이름 옆에 굵게 붙는 인원수 (2026-09-27) — 원우 목록을 받기 전엔 숨깁니다. */
-  const memberCount = members.length > 0 ? roomMemberCount(roomId, members) : null;
+    : withdrawn
+      ? WITHDRAWN_PEER_TITLE
+      : (otherId && nameByUid.get(otherId)) || "원우";
+  /** 방 이름 옆에 굵게 붙는 인원수 (2026-09-27) — 원우 목록을 받기 전엔, 그리고 탈퇴한 원우 방에서는 숨깁니다. */
+  const memberCount = members.length > 0 && !withdrawn ? roomMemberCount(roomId, members) : null;
 
   /*
    * 아는 방 모양이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
@@ -528,6 +537,16 @@ function ChatRoomPageContent({
         style={slide}
       >
         {/*
+          상대가 탈퇴한 방 — 입력줄 대신 안내 한 줄 (2026-09-27 사용자 "탈퇴한 원우한테는 못 보내게").
+          앱에서 막는 것이고, 보안 규칙은 그대로입니다(규칙은 방 id로 자격을 봐서 상대 탈퇴를 알지 못함).
+        */}
+        {withdrawn ? (
+          <p className="mx-auto w-full max-w-[560px] rounded-2xl bg-fill px-4 py-3 text-center text-[14px] font-medium text-ink-muted">
+            탈퇴한 원우예요. 메시지를 보낼 수 없어요.
+          </p>
+        ) : (
+        <>
+        {/*
           입력칸을 눌렀을 때 둘러지던 주황 테두리(focus:ring)는 뺐습니다.
           글자를 치는 칸이라, 깜빡이는 커서와 올라온 자판만으로도
           어디에 쓰고 있는지 알 수 있습니다.
@@ -645,6 +664,8 @@ function ChatRoomPageContent({
             {sendError ?? deleteError}
           </p>
         ) : null}
+        </>
+        )}
       </div>
     </div>
   );

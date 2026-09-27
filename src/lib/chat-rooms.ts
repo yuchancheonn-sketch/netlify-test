@@ -96,6 +96,29 @@ export function roomTitle(
   return (other && nameByUid.get(other)) || "원우";
 }
 
+/** 상대가 탈퇴한 1:1 방에 보이는 이름 (2026-09-27 사용자 요청 — 그 전엔 기본값 "원우"로 떴음). */
+export const WITHDRAWN_PEER_TITLE = "탈퇴한 원우";
+
+/**
+ * 1:1 방의 상대가 탈퇴했는지 (2026-09-27).
+ *
+ * ★ 탈퇴(lib/account-withdraw-server.ts)는 users 문서와 로그인 계정을 지우지만 1:1 방과 메시지는 남깁니다
+ *   — 대화 기록은 남겨 두기로 했습니다(사용자 요청). 그래서 방에는 상대 uid가 있는데 원우 목록에 그 사람이 없습니다.
+ *   그 방은 이름을 "탈퇴한 원우"로 보이고, 메시지를 더 보내지 못하게 막습니다(대화방 입력줄 자리에 안내).
+ * members는 화면이 이미 받아 둔 승인 원우 목록(useApprovedMembers). 다 받기 전(loaded=false)에는 false —
+ * 불러오는 잠깐 동안 멀쩡한 방이 "탈퇴한 원우"로 번쩍이지 않게.
+ */
+export function isWithdrawnPeer(
+  roomId: string,
+  myUid: string,
+  members: UserDoc[],
+  loaded: boolean,
+): boolean {
+  if (!loaded || cohortOfRoomId(roomId)) return false;
+  const other = otherUidOf(roomId, myUid);
+  return Boolean(other) && !members.some((member) => member.uid === other);
+}
+
 /**
  * 방에 있는 원우 수 — 방 이름 옆에 굵게 붙입니다(카톡처럼, 2026-09-27 사용자 요청).
  *   기수 단체방: 그 기수의 승인된 원우 수 (명단을 따로 적지 않는 구조라 users로 셉니다 — 이 파일 맨 위).

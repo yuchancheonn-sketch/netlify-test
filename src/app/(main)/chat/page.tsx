@@ -7,11 +7,18 @@ import Avatar from "@/components/Avatar";
 import MidEllipsis from "@/components/MidEllipsis";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import { ChatBellIcon, StarIcon, UsersIcon } from "@/components/icons";
+import { ChatBellIcon, PersonIcon, StarIcon, UsersIcon } from "@/components/icons";
 import { useChatPrefs } from "@/lib/chat-prefs";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { otherUidOf, previewText, roomMemberCount, roomTitle } from "@/lib/chat-rooms";
+import {
+  WITHDRAWN_PEER_TITLE,
+  isWithdrawnPeer,
+  otherUidOf,
+  previewText,
+  roomMemberCount,
+  roomTitle,
+} from "@/lib/chat-rooms";
 import { formatChatListTime } from "@/lib/format";
 import {
   useApprovedMembers,
@@ -45,7 +52,7 @@ function ChatListPageContent() {
   const { cohort, canSwitch, setCohort } = useViewCohort();
   const { data: directRooms, loading, error } = useMyChatRooms(uid);
   const cohortRoom = useCohortChatRoom(cohort);
-  const { data: members } = useApprovedMembers();
+  const { data: members, loading: membersLoading } = useApprovedMembers();
 
   /*
    * 기수 단체방을 늘 맨 위에 둡니다 — 최근 순 정렬에 섞지 않습니다.
@@ -156,6 +163,7 @@ function ChatListPageContent() {
                 <li key={room.id}>
                   <ChatRoomRow
                     room={room}
+                    withdrawn={isWithdrawnPeer(room.id, uid ?? "", members, !membersLoading)}
                     title={roomTitle(room, uid ?? "", nameByUid)}
                     other={memberByUid.get(otherUidOf(room.id, uid ?? "") ?? "")}
                     unread={unreadRooms[room.id] ?? false}
@@ -189,7 +197,8 @@ function ChatListPageContent() {
  */
 function ChatRoomRow({
   room,
-  title,
+  withdrawn,
+  title: memberTitle,
   other,
   unread,
   memberCount,
@@ -197,6 +206,8 @@ function ChatRoomRow({
   muted,
 }: {
   room: ChatRoomDoc;
+  /** 상대가 탈퇴한 1:1 방 — 이름은 "탈퇴한 원우", 사진 대신 회색 사람 그림, 인원수 없음 (2026-09-27, lib/chat-rooms.ts의 isWithdrawnPeer) */
+  withdrawn: boolean;
   title: string;
   /** 상대 원우. 탈퇴 등으로 못 찾으면 없습니다. */
   other?: UserDoc;
@@ -210,6 +221,7 @@ function ChatRoomRow({
   muted: boolean;
 }) {
   const preview = previewText(room);
+  const title = withdrawn ? WITHDRAWN_PEER_TITLE : memberTitle;
 
   return (
     <Link
@@ -248,6 +260,14 @@ function ChatRoomRow({
         >
           <UsersIcon className="h-7 w-7" strokeWidth={1.9} />
         </span>
+      ) : withdrawn ? (
+        // 탈퇴한 원우 — 사진·이니셜 대신 옅은 회색 칸에 흐린 사람 그림(단체방 칸과 같은 모양).
+        <span
+          aria-hidden="true"
+          className="squircle flex h-[56px] w-[56px] shrink-0 translate-y-[2px] items-center justify-center bg-fill text-ink-faint"
+        >
+          <PersonIcon className="h-7 w-7" />
+        </span>
       ) : (
         <Avatar
           src={other?.photoURL ?? null}
@@ -263,7 +283,7 @@ function ChatRoomRow({
         <p className="flex min-w-0 items-center gap-1 text-[16px] font-bold text-ink">
           <MidEllipsis text={title} />
           {/* 인원수 — 카톡처럼 이름 옆 굵은 회색 숫자 (2026-09-27 사용자 요청). */}
-          {memberCount ? (
+          {memberCount && !withdrawn ? (
             <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
           ) : null}
           {favorite ? (
