@@ -116,7 +116,8 @@ function NotificationsPageContent() {
                 <li key={notice.id} className={firstOfDay && index > 0 ? "mt-2" : ""}>
                   {firstOfDay ? (
                     // 15px — 같은 날 사용자 "2px 키워줘"(13px에서).
-                    <p className="mb-2 px-1 text-[15px] font-bold text-ink-muted">{dayLabel(notice)}</p>
+                    // 주황(brand-500) — 2026-09-27 사용자 "오늘·어제·날짜 주황색으로"(회색 ink-muted에서).
+                    <p className="mb-2 px-1 text-[15px] font-bold text-brand-500">{dayLabel(notice)}</p>
                   ) : null}
                   <NoticeRow
                     notice={notice}
