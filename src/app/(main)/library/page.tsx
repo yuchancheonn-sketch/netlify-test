@@ -1,7 +1,7 @@
 "use client";
 
 import { LoginRequired, useIsGuest, useRequireLogin } from "@/components/LoginRequired";
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import NewsList from "@/components/NewsList";
 import {
@@ -110,29 +110,44 @@ function LibraryTabs() {
    * 왼쪽으로 밀면 오른쪽 칸, 오른쪽으로 밀면 왼쪽 칸 — 제목 자리 고르개 순서 그대로. 끝 칸에서는 더 가지 않습니다.
    * 60px 넘게, 그리고 세로보다 가로로 확실히 더 움직였을 때만 — 위아래로 굴리다 비껴간 것은 무시(원우탭 목록과 같은 기준).
    * ★ 재생 중인 유튜브 영상(iframe) 위에서 민 것은 영상이 손짓을 가져가 여기까지 오지 않습니다.
+   * ★ 화면 어디서 밀든 받도록 문서(document) 전체에 겁니다 (같은 날 사용자 "파일창 흰 여백을 끌어도 넘어가게").
+   *   처음엔 본문 상자와 뒤의 흰 층에 걸었는데, 파일이 한두 개면 본문 상자가 짧고 흰 층은 화면 틀 뒤라 손가락이 닿지 않았습니다.
+   *   제목 줄·탭 알약 위에서 민 것도 넘어갑니다. 시트(파일 이름 바꾸기·삭제 확인)가 떠 있을 때는 넘기지 않습니다
+   *   — 시트 막(fixed inset-0 z-40 이상) 안에서 시작한 손짓은 거릅니다.
    */
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
-  const swipeHandlers = {
-    onTouchStart(event: React.TouchEvent) {
+  useEffect(() => {
+    let start: { x: number; y: number } | null = null;
+    function onStart(event: TouchEvent) {
+      const target = event.target as Element | null;
+      const inDialog = target?.closest('[role="dialog"], [role="alertdialog"]');
       const touch = event.touches[0];
-      swipeStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
-    },
-    onTouchEnd(event: React.TouchEvent) {
-      const start = swipeStart.current;
-      swipeStart.current = null;
-      if (!start) return;
+      start = event.touches.length === 1 && !inDialog ? { x: touch.clientX, y: touch.clientY } : null;
+    }
+    function onEnd(event: TouchEvent) {
+      const from = start;
+      start = null;
+      if (!from) return;
       const touch = event.changedTouches[0];
-      const dx = touch.clientX - start.x;
-      const dy = touch.clientY - start.y;
+      const dx = touch.clientX - from.x;
+      const dy = touch.clientY - from.y;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-      const index = SUBTABS.findIndex((item) => item.value === subtab);
-      const next = SUBTABS[index + (dx < 0 ? 1 : -1)];
-      if (next) setSubtab(next.value);
-    },
-    onTouchCancel() {
-      swipeStart.current = null;
-    },
-  };
+      setSubtab((current) => {
+        const index = SUBTABS.findIndex((item) => item.value === current);
+        return SUBTABS[index + (dx < 0 ? 1 : -1)]?.value ?? current;
+      });
+    }
+    function onCancel() {
+      start = null;
+    }
+    document.addEventListener("touchstart", onStart, { passive: true });
+    document.addEventListener("touchend", onEnd, { passive: true });
+    document.addEventListener("touchcancel", onCancel, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onStart);
+      document.removeEventListener("touchend", onEnd);
+      document.removeEventListener("touchcancel", onCancel);
+    };
+  }, []);
 
   return (
     <>
@@ -153,8 +168,7 @@ function LibraryTabs() {
         높이를 정해 두지 않아 목록이 짧을 때 아래로 회색이 드러납니다(chat/page.tsx 주석).
         제목 줄도 tone="surface"로 맞춥니다.
       */}
-      {/* 흰 층에도 좌우 밀기를 겁니다 — 목록이 짧을 때 그 아래 빈 자리에서 민 것도 받으려고. */}
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" {...swipeHandlers} />
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
       <PageHeader
         tone="surface"
         title={
@@ -192,7 +206,7 @@ function LibraryTabs() {
         (앨범 화면·모임 탭은 pb-8·pb-6이라 마지막 줄이 알약에 조금 가려 있습니다 —
          거기도 고칠 일이 생기면 같은 셈법을 쓰면 됩니다.)
       */}
-      <div className="px-4 pt-4 pb-24" {...swipeHandlers}>
+      <div className="px-4 pt-4 pb-24">
         {subtab === "videos" ? (
           <VideoList />
         ) : subtab === "news" ? (

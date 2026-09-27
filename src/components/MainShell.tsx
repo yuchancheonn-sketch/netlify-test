@@ -15,6 +15,16 @@ function isInsideChatRoom(pathname: string): boolean {
   return /^\/chat\/[^/]+$/.test(pathname);
 }
 
+/**
+ * <main>의 아래 여백(떠 있는 탭 알약 자리) — 아래 <main> 클래스의 pb 값과 같은 식입니다. 한쪽을 바꾸면 같이.
+ *
+ * ★ 화면 높이를 꽉 채워야 하는 상자에 씁니다 (2026-09-27): <main>이 높이를 정해 두지 않아(flex-1뿐)
+ *   안쪽 상자의 min-h-full(부모의 100%)은 먹지 않습니다. 그래서 "화면 높이 − 이 여백"을 직접 줍니다.
+ *   예) 오른쪽으로 밀어 뒤로 가는 화면(설정·알림)이 짧아도 빈 자리까지 손짓을 받게.
+ */
+export const MAIN_FILL_MIN_HEIGHT =
+  "calc(100dvh - max(12px, calc(-4px + env(safe-area-inset-bottom))) - 82px)";
+
 /** 화면 좌우 끝에서 이 폭 안쪽으로 시작한 손짓을 막습니다(아이폰 사파리의 뒤로·앞으로 밀기 자리). */
 const EDGE_PX = 20;
 
