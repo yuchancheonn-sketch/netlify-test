@@ -72,7 +72,16 @@ function NotificationsPageContent() {
         밀 때 같이 밀려 나갑니다. 밖에 두면 민 자리로도 흰 바탕이 드러납니다.
     */
     <>
-    <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+    {/*
+      이 흰 층에도 같은 밀기 손짓을 겁니다 (2026-09-27 사용자 "설정창처럼 빈 여백을 끌어도 전 화면으로") —
+      알림이 적으면 목록 상자가 짧아, 그 아래 빈 자리는 이 층이 받습니다. 내용 뒤라 알림 누르기를 가로채지 않습니다.
+    */}
+    <div
+      aria-hidden="true"
+      className="fixed inset-0 -z-10 bg-surface"
+      {...swipe.handlers}
+      style={swipe.touchAction}
+    />
     <div
       className="min-h-full bg-surface"
       {...swipe.handlers}
