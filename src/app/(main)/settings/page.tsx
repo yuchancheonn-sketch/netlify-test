@@ -60,6 +60,20 @@ export default function SettingsPage() {
       또 못 박으면 그 둘이 더해져 내용이 짧아도 화면이 괜히 스크롤됩니다.
       부모의 안쪽 높이에 맞추면 그 여백을 빼고 딱 맞습니다.
     */
+    /*
+      ★ 그런데 min-h-full은 실제로 먹지 않았습니다 — MainShell의 <main>이 높이를 정해 두지 않아(flex-1뿐)
+        "부모 높이의 100%"를 셀 수 없습니다. 그래서 "탈퇴하기" 아래 빈 자리에서는 밀기가 안 됐습니다
+        (2026-09-27 사용자 "화면 전체를 오른쪽으로 드래그했을 때 전 화면이 나오도록").
+        화면 전체에 붙인 투명한 층(fixed, -z-10)을 뒤에 깔고 같은 손짓을 걸어, 빈 자리에서 시작한 손짓도 받습니다.
+        층은 내용 뒤라 단추 누르기를 가로채지 않고, 밀려 움직이는 것은 앞의 상자뿐입니다.
+    */
+    <>
+    <div
+      aria-hidden="true"
+      className="fixed inset-0 -z-10"
+      {...swipe.handlers}
+      style={swipe.touchAction}
+    />
     <div
       className="min-h-full bg-canvas"
       {...swipe.handlers}
@@ -205,6 +219,7 @@ export default function SettingsPage() {
         />
       ) : null}
     </div>
+    </>
   );
 }
 
