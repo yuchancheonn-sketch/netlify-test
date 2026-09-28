@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home prayer sharing</title>
+    <style>
+      :root {
+        --bg: #efefee;
+        --panel: #f5f5f5;
+        --chip: #e6e8ee;
+        --pill: #e7ebf0;
+        --blue: #4b7ef6;
+        --blue-soft: rgba(75,126,246,0.12);
+        --text: #1d1f23;
+        --muted: #707989;
+        --line: rgba(0,0,0,0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #dfe2e6;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .phone {
+        width: 390px;
+        min-height: 844px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 18px 10px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .signal {
+        display: inline-flex; align-items: end; gap: 3px;
+      }
+      .signal span {
+        display: block; width: 4px; border-radius: 2px; background: #1d1f23;
+      }
+      .signal span:nth-child(1) { height: 6px; opacity: 0.35; }
+      .signal span:nth-child(2) { height: 8px; opacity: 0.55; }
+      .signal span:nth-child(3) { height: 10px; opacity: 0.7; }
+      .signal span:nth-child(4) { height: 12px; }
+      .battery {
+        width: 26px; height: 14px; border: 2px solid #1d1f23; border-radius: 4px; position: relative; display: inline-block;
+      }
+      .battery::before {
+        content: ""; position: absolute; right: -5px; top: 3px; width: 3px; height: 6px; background: #1d1f23; border-radius: 2px;
+      }
+      .battery::after {
+        content: ""; position: absolute; inset: 2px; border-radius: 2px; background: #1d1f23;
+      }
+      .top-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0 18px 12px;
+      }
+      .nav-title {
+        font-size: 26px; font-weight: 800; letter-spacing: -0.06em;
+      }
+      .nav-icons {
+        display: flex; align-items: center; gap: 18px; font-size: 22px;
+      }
+      .tab-shell {
+        display: flex; align-items: center;
+        margin: 0 18px; padding: 4px;
+        background: var(--pill);
+        border-radius: 999px;
+      }
+      .tab-item {
+        flex: 1;
+        min-height: 42px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 999px;
+        font-size: 17px; font-weight: 700;
+        color: #2d3036;
+      }
+      .tab-item.active {
+        background: rgba(255,255,255,0.42);
+      }
+      .content {
+        padding: 18px 18px 0;
+      }
+      .card {
+        background: rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 16px 14px 14px;
+        border: 1px solid var(--line);
+        margin-bottom: 18px;
+      }
+      .section-head {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px;
+      }
+      .section-head .label {
+        font-size: 18px; font-weight: 700; letter-spacing: -0.04em;
+      }
+      .section-head .chev {
+        font-size: 18px; color: var(--muted);
+      }
+      .count-row {
+        display: flex; align-items: flex-end; gap: 8px;
+        margin: 8px 0 12px;
+      }
+      .count-row .strong {
+        font-size: 32px; font-weight: 800; line-height: 1; color: var(--blue);
+        letter-spacing: -0.06em;
+      }
+      .count-row .small {
+        font-size: 18px; font-weight: 700; color: var(--muted);
+        padding-bottom: 4px;
+      }
+      .progress {
+        width: 100%; height: 8px; border-radius: 999px; background: #dfe2e8; overflow: hidden;
+      }
+      .progress .bar {
+        display: block; width: 50%; height: 100%; background: var(--blue); border-radius: inherit;
+      }
+      .copy-btn {
+        width: 100%; min-height: 42px; border: none; border-radius: 14px;
+        background: var(--blue); color: white; font-size: 16px; font-weight: 800;
+        cursor: pointer; margin-top: 14px;
+      }
+      .preview {
+        margin-top: 14px; border-radius: 16px; background: rgba(255,255,255,0.12); border: 1px solid rgba(0,0,0,0.04); padding: 12px;
+      }
+      .preview-title {
+        display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin-bottom: 8px;
+      }
+      .preview-body {
+        min-height: 72px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.18); font-size: 14px; line-height: 1.7; color: #2a2d34;
+      }
+      .section-label {
+        font-size: 17px; font-weight: 700; margin: 6px 0 10px;
+      }
+      .chips {
+        display: flex; flex-wrap: wrap; gap: 10px;
+      }
+      .chip {
+        min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--chip); border-radius: 12px; font-size: 14px; font-weight: 700;
+      }
+      .empty {
+        background: rgba(255,255,255,0.12); border: 1px dashed rgba(0,0,0,0.1); border-radius: 16px; padding: 18px 14px; text-align: center; color: var(--muted);
+      }
+      .empty-title {
+        margin-bottom: 12px; font-size: 17px; font-weight: 700; color: var(--text);
+      }
+      .empty-actions {
+        display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap;
+      }
+      .empty-btn {
+        min-height: 34px; padding: 0 14px; border-radius: 999px; background: var(--blue); color: white; border: none; font-weight: 700; font-size: 13px;
+      }
+      .calendar-box {
+        margin-top: 10px; background: rgba(255,255,255,0.08); border-radius: 16px; border: 1px solid var(--line); padding: 12px;
+      }
+      .calendar-head {
+        font-size: 14px; font-weight: 700; margin-bottom: 8px;
+      }
+      .calendar-days {
+        display: flex; gap: 8px; flex-wrap: wrap;
+      }
+      .day {
+        width: 32px; height: 32px; border-radius: 10px; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+      }
+      .day.active {
+        background: var(--blue); color: white;
+      }
+      .bottom-nav {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 18px 18px; padding-top: 12px; border-top: 1px solid var(--line);
+      }
+      .nav-btn {
+        min-height: 58px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #2d3036;
+      }
+      .nav-btn.active {
+        background: rgba(75,126,246,0.14); color: var(--blue);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <div class="statusbar">
+        <div>10:51</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="signal"><span></span><span></span><span></span><span></span></div>
+          <div class="battery"></div>
+        </div>
+      </div>
+
+      <div class="top-row">
+        <div class="nav-title">나눔</div>
+        <div class="nav-icons">
+          <span>◔</span>
+          <span>◌</span>
+          <span>⚙</span>
+        </div>
+      </div>
+
+      <div class="tab-shell">
+        <div class="tab-item active">씀노트</div>
+        <div class="tab-item">기도제목</div>
+        <div class="tab-item">삶나눔</div>
+      </div>
+
+      <main class="content">
+        <div class="card">
+          <div class="section-head">
+            <div class="label">9/27(주일) 주간</div>
+            <div class="chev">∨</div>
+          </div>
+
+          <div class="count-row">
+            <div class="strong">1명</div>
+            <div class="small">/ 2명</div>
+          </div>
+
+          <div class="progress"><span class="bar"></span></div>
+
+          <button class="copy-btn">카톡용 복사</button>
+
+          <div class="preview">
+            <div class="preview-title">◌ 복사될 내용 미리보기</div>
+            <div class="preview-body" id="previewBody"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-label">사랑방 공유 캘린더</div>
+          <div class="calendar-box">
+            <div class="calendar-head">같은 사랑방의 일정이 모두 공유됩니다.</div>
+            <div class="calendar-days" id="calendarDays"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-label">나의 기도제목과 신앙루틴</div>
+          <div id="entries"></div>
+        </div>
+      </main>
+
+      <div class="bottom-nav">
+        <div class="nav-btn">⌂</div>
+        <div class="nav-btn active">♥</div>
+        <div class="nav-btn">◫</div>
+        <div class="nav-btn">◍</div>
+        <div class="nav-btn">▶</div>
+      </div>
+    </div>
+
+    <script>
+      const roomId = 'room-7';
+      const currentUserId = 'user-1';
+      const loggedIn = false;
+
+      const roomEntries = [
+        { roomId: 'room-7', userId: 'user-1', prayer: '이번 학기 잘 마칠 수 있도록', routine: '성경 1장 읽기', date: '2026-09-27' },
+        { roomId: 'room-7', userId: 'user-2', prayer: '하나님이 주신 평안을 붙들기', routine: '기도 10분', date: '2026-09-28' },
+        { roomId: 'room-7', userId: 'user-1', prayer: '감사와 인내를 더해 주시길', routine: '큐티', date: '2026-09-29' },
+        { roomId: 'room-7', userId: 'user-3', prayer: '마음이 편안해지길', routine: '말씀 암송', date: '2026-09-30' }
+      ];
+
+      const entriesEl = document.getElementById('entries');
+      const previewBody = document.getElementById('previewBody');
+      const calendarDaysEl = document.getElementById('calendarDays');
+
+      const myEntries = roomEntries.filter((item) => item.roomId === roomId && item.userId === currentUserId);
+      const sharedDates = [...new Set(roomEntries.filter((item) => item.roomId === roomId).map((item) => item.date))];
+
+      calendarDaysEl.innerHTML = sharedDates.map((d, index) => {
+        const active = index === 0 ? 'active' : '';
+        return `<div class="day ${active}">${d.slice(-2)}</div>`;
+      }).join('');
+
+      if (!loggedIn) {
+        entriesEl.innerHTML = `
+          <div class="empty">
+            <div class="empty-title">아직 기록된 기도제목과 신앙루틴이 없어요.</div>
+            <div class="muted">같은 사랑방의 공유 캘린더는 보이지만, 본인 기록은 로그인 후에만 표시됩니다.</div>
+            <div class="empty-actions">
+              <button class="empty-btn">기도제목 올리기</button>
+              <button class="empty-btn">신앙루틴 올리기</button>
+            </div>
+          </div>
+        `;
+        previewBody.textContent = '로그인 후 본인만의 기도제목과 신앙루틴을 확인할 수 있습니다.';
+      } else {
+        if (myEntries.length === 0) {
+          entriesEl.innerHTML = `
+            <div class="empty">
+              <div class="empty-title">아직 본인의 기도제목이 없어요.</div>
+              <div class="empty-actions">
+                <button class="empty-btn">기도제목 올리기</button>
+                <button class="empty-btn">신앙루틴 올리기</button>
+              </div>
+            </div>
+          `;
+        } else {
+          entriesEl.innerHTML = myEntries.map((item) => `
+            <div class="card" style="margin-top: 8px; margin-bottom: 0; padding: 12px 12px 10px;">
+              <div class="section-label" style="margin: 0 0 8px;">기도제목</div>
+              <div class="chip" style="justify-content:flex-start; min-height: 44px; width: 100%; padding: 0 14px; margin-bottom: 10px;">${item.prayer}</div>
+              <div class="section-label" style="margin: 0 0 8px;">신앙루틴</div>
+              <div class="chip" style="justify-content:flex-start; min-height: 44px; width: 100%; padding: 0 14px;">${item.routine}</div>
+            </div>
+          `).join('');
+        }
+
+        previewBody.textContent = myEntries.length > 0
+          ? `${myEntries[0].prayer}\n${myEntries[0].routine}`
+          : '로그인 후 본인의 기도제목과 신앙루틴을 입력해 주세요.';
+      }
+    </script>
+  </body>
+</html>
