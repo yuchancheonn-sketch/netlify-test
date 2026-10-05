@@ -3,11 +3,12 @@
 import { useRequireLogin } from "@/components/LoginRequired";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { FieldError, FieldLabel, PrimaryButton, flatInputClassName } from "@/components/ui";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useCommitteeInfo } from "@/lib/hooks";
+import type { CommitteeInfoDoc } from "@/lib/types";
 
 /**
  * 위원회별 인원 구성 — 소식 탭 "위원회" 칸의 카드들 (2026-09-23 사용자 요청).
@@ -154,7 +155,16 @@ function CommitteeCard({ committee }: { committee: Committee }) {
 }
 
 /**
- * 카드 뒷면 — 이 위원회가 하는 일과 준비 중인 일 (2026-09-23 사용자 요청
+ * 위원회 목표 글 — 새 칸(goal)이 있으면 그것, 없으면 옛 두 칸(하는 일·준비 중인 일)에 적힌 것을 이어서 보여 줍니다.
+ * 2026-10-05 사용자 요청으로 두 칸을 "목표" 한 칸으로 합쳤는데, 이미 적어 둔 글이 사라지지 않게 읽을 때 합칩니다.
+ */
+function committeeGoal(info: CommitteeInfoDoc | undefined): string {
+  if (info?.goal !== undefined) return info.goal.trim();
+  return [info?.about?.trim(), info?.projects?.trim()].filter(Boolean).join("\n\n");
+}
+
+/**
+ * 카드 뒷면 — 이 위원회의 목표 (2026-09-23 사용자 요청 "무슨 일을 하는지·어떤 프로젝트를 준비 중인지", 2026-10-05 "목표" 한 칸으로
  * "터치하면 뒤집히고, 뒷면에 무슨 일을 하는지·어떤 프로젝트를 준비 중인지 쓰고 수정할 수 있게").
  *
  * 글은 Firestore committeeInfo/{위원회 이름}에 있습니다. **원우 누구나 읽고 고칩니다**
@@ -170,10 +180,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
   const [editing, setEditing] = useState(false);
   const requireLogin = useRequireLogin();
 
-  const sections = [
-    { label: "하는 일", value: info?.about?.trim() ?? "" },
-    { label: "준비 중인 일", value: info?.projects?.trim() ?? "" },
-  ];
+  const sections = [{ label: "목표", value: committeeGoal(info) }];
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
@@ -223,7 +230,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
       {editing ? (
         <CommitteeEditSheet
           committee={committee}
-          initial={{ about: info?.about ?? "", projects: info?.projects ?? "" }}
+          initial={committeeGoal(info)}
           onClose={() => setEditing(false)}
         />
       ) : null}
@@ -242,11 +249,10 @@ function CommitteeEditSheet({
   onClose,
 }: {
   committee: Committee;
-  initial: { about: string; projects: string };
+  initial: string;
   onClose: () => void;
 }) {
-  const [about, setAbout] = useState(initial.about);
-  const [projects, setProjects] = useState(initial.projects);
+  const [goal, setGoal] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -259,7 +265,8 @@ function CommitteeEditSheet({
       await commitWrite(
         setDoc(
           doc(db, "committeeInfo", committee.name),
-          { about: about.trim(), projects: projects.trim(), updatedAt: serverTimestamp() },
+          // 옛 두 칸은 지웁니다 — 남겨 두면 목표를 비웠을 때 옛 글이 되살아나 보입니다.
+          { goal: goal.trim(), about: deleteField(), projects: deleteField(), updatedAt: serverTimestamp() },
           { merge: true },
         ),
       );
@@ -284,26 +291,14 @@ function CommitteeEditSheet({
       >
         <h2 className="mb-6 text-[20px] font-bold text-ink">{committee.name} 소개</h2>
 
-        <div className="mb-5">
-          <FieldLabel htmlFor="committee-about">하는 일</FieldLabel>
-          <textarea
-            id="committee-about"
-            value={about}
-            onChange={(event) => setAbout(event.target.value.slice(0, INFO_MAX_LENGTH))}
-            rows={4}
-            placeholder="이 위원회가 맡아서 하는 일을 적어 주세요."
-            className={`${flatInputClassName} resize-none leading-relaxed`}
-          />
-        </div>
-
         <div className="mb-6">
-          <FieldLabel htmlFor="committee-projects">준비 중인 일</FieldLabel>
+          <FieldLabel htmlFor="committee-goal">목표</FieldLabel>
           <textarea
-            id="committee-projects"
-            value={projects}
-            onChange={(event) => setProjects(event.target.value.slice(0, INFO_MAX_LENGTH))}
-            rows={4}
-            placeholder="지금 준비하고 있는 행사·프로젝트를 적어 주세요."
+            id="committee-goal"
+            value={goal}
+            onChange={(event) => setGoal(event.target.value.slice(0, INFO_MAX_LENGTH))}
+            rows={8}
+            placeholder="이 위원회의 목표를 적어 주세요."
             className={`${flatInputClassName} resize-none leading-relaxed`}
           />
         </div>
@@ -329,8 +324,8 @@ function CommitteeEditSheet({
   );
 }
 
-/** 소개 글 한 칸의 최대 글자 수 */
-const INFO_MAX_LENGTH = 1000;
+/** 목표 글의 최대 글자 수 (옛 두 칸을 합친 글도 담기게 2000) */
+const INFO_MAX_LENGTH = 2000;
 
 /**
  * 위원회 7개 카드 — 소식 탭 위원회 칸에서 조직도 카드 뒤로 한 장씩 넘겨 봅니다(2026-09-23 사용자 요청).

@@ -349,7 +349,7 @@ export function warmHomeData() {
 
 /**
  * 위원회 소개 글 (2026-09-23) — 소식 탭 위원회 카드의 뒷면.
- * committeeInfo/{위원회 이름} = { about: 하는 일, projects: 준비 중인 일 }. 운영진만 고칩니다(firestore.rules).
+ * committeeInfo/{위원회 이름} = { goal: 목표 } (2026-10-05 이전에는 about: 하는 일, projects: 준비 중인 일 두 칸). 원우 누구나 고칩니다(firestore.rules).
  * 아직 안 적은 위원회는 문서가 없습니다 — 그때는 빈 값으로 봅니다.
  */
 export function useCommitteeInfo(): { data: Map<string, CommitteeInfoDoc>; loading: boolean } {

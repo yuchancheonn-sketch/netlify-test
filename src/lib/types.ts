@@ -151,9 +151,11 @@ export interface AcademyEventDoc {
  */
 export interface CommitteeInfoDoc {
   id: string;
-  /** 무슨 일을 하는 위원회인지 */
+  /** 위원회 목표 (2026-10-05 사용자 요청으로 "하는 일·준비 중인 일" 두 칸을 이 한 칸으로 합침) */
+  goal?: string;
+  /** 옛 칸 — 하는 일. goal이 없을 때만 읽어 보여 주고, 다음에 저장하면 지워집니다. */
   about?: string;
-  /** 준비 중인 일·프로젝트 */
+  /** 옛 칸 — 준비 중인 일·프로젝트. 위와 같음 */
   projects?: string;
   updatedAt?: Timestamp | null;
 }
