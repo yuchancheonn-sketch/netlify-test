@@ -70,6 +70,8 @@ const COMMITTEES: Committee[] = [
     name: "문화·홍보위원회",
     chair: { name: "이민우", title: "KBS 일요진단 앵커" },
     viceChairs: [
+      // 2026-10-06 사용자 요청: 고덕현 부위원장 추가(원본 소책자 순서대로 맨 앞). 인원 수 알약은 자동으로 5명이 됩니다.
+      { name: "고덕현", title: "아이스크림미디어 전무" },
       { name: "구본이", title: "offbeat creative Creative Director" },
       { name: "신유민", title: "올드스테어즈 이사" },
       { name: "안세빈", title: "이연컴퍼니 대표" },
