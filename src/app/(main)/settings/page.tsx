@@ -183,16 +183,22 @@ export default function SettingsPage() {
             탈퇴하기 — 로그아웃 아래 작은 회색 글씨 단추 (2026-09-25 사용자 요청. 그 전엔 "운영진에게 알려주세요" 안내만).
             누르면 바로 지우지 않고 경고가 담긴 확인 시트(WithdrawSheet)를 띄웁니다.
           */}
-          <button
-            type="button"
-            onClick={() => setConfirmingWithdraw(true)}
-            // 모양은 로그인 안내 상자의 "되돌아가기"와 같게 (2026-09-25 사용자가 그 캡처를 보내며 요청):
-            // 굵은 ink-soft 15px 글씨 + 옅은 ink-faint 밑줄(1.25px, 글씨에서 4.25px 아래). 누르는 자리는 위아래 py-3.
-            // mt-[5px] — 로그아웃 단추와의 사이 (2026-09-25 사용자 "1.5px 만큼 위로" 두 번, 8px → 6.5px → 5px).
-            className="mt-[5px] w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
-          >
-            탈퇴하기
-          </button>
+          {/*
+            2026-10-06 사용자 요청(뉴웨이브앱과 같게): 행 전체가 아니라 "탈퇴하기" 글씨만 눌려야 "정말 탈퇴할까요?" 창이 뜹니다.
+            위아래 여백(py-3)은 단추가 아니라 바깥 상자가 맡습니다 — 상자 자리는 예전 단추와 같아 글씨 자리는 그대로입니다.
+          */}
+          <div className="mt-[5px] flex w-full justify-center py-3">
+            <button
+              type="button"
+              onClick={() => setConfirmingWithdraw(true)}
+              // 모양은 로그인 안내 상자의 "되돌아가기"와 같게 (2026-09-25 사용자가 그 캡처를 보내며 요청):
+              // 굵은 ink-soft 15px 글씨 + 옅은 ink-faint 밑줄(1.25px, 글씨에서 4.25px 아래).
+              // mt-[5px] — 로그아웃 단추와의 사이 (2026-09-25 사용자 "1.5px 만큼 위로" 두 번, 8px → 6.5px → 5px).
+              className="text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
+            >
+              탈퇴하기
+            </button>
+          </div>
         </section>
         )}
       </div>
