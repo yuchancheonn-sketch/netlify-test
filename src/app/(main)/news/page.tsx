@@ -24,13 +24,13 @@ import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
  * 데이터는 한 곳(photoAlbums)에 있고 category 칸으로 갈립니다 — 칸이 없는 예전 소식은 원우 소식입니다.
  */
 /*
- * 2026-10-06 사용자 요청: 뉴웨이브앱 나눔 탭처럼 제목 아래에 창 목록(글자 탭 줄)을 두고, 칸을 위원회·원우소식·동아리 셋으로.
- * (예전엔 제목 자리에 "위원회 | 원우 소식" 고르개.) 동아리 칸은 위원회 칸처럼 올라온 소식 카드만 보이고 "올리기" 단추는 없습니다.
+ * 2026-10-06 사용자 요청: 뉴웨이브앱 나눔 탭처럼 제목 아래에 창 목록(글자 탭 줄)을 두고, 칸을 위원회·원우소식·동호회 셋으로.
+ * (예전엔 제목 자리에 "위원회 | 원우 소식" 고르개.) 동호회 칸은 위원회 칸처럼 올라온 소식 카드만 보이고 "올리기" 단추는 없습니다.
  */
 const SUBTABS = [
   { value: "committee", label: "위원회" },
   { value: "member", label: "원우소식" },
-  { value: "club", label: "동아리" },
+  { value: "club", label: "동호회" },
 ] as const;
 
 export default function NewsPage() {

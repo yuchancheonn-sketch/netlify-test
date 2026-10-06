@@ -43,7 +43,7 @@ import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
 /** 소식 본문 최대 글자 수 (2026-09-22). 카드에는 넉 줄까지만 보입니다. */
 const ALBUM_BODY_MAX_LENGTH = 1000;
 
-/** 소식 탭의 칸 (2026-09-23) — 원우 소식 / 위원회 / 동아리(2026-10-06 사용자 요청으로 추가) */
+/** 소식 탭의 칸 (2026-09-23) — 원우 소식 / 위원회 / 동호회(2026-10-06 사용자 요청으로 추가) */
 export type AlbumCategory = "member" | "committee" | "club";
 
 /** 소식이 속한 주(화~월). weekId가 없는 옛 소식은 올린 시각(createdAt)으로 다시 계산합니다 (2026-09-24). */
@@ -209,7 +209,7 @@ export default function AlbumList({
    * 원우 소식 칸과 넘기는 방식이 똑같습니다(사용자 요청). 앞의 여덟 장은 앱에 적어 둔 카드입니다.
    */
   const albumSlides = currentAlbums.map((album) => ({ id: album.id, title: album.title, album }));
-  // 앞의 조직도·위원회 카드는 위원회 칸에만 섭니다. 동아리 칸(2026-10-06)은 올라온 소식 카드만 보입니다.
+  // 앞의 조직도·위원회 카드는 위원회 칸에만 섭니다. 동호회 칸(2026-10-06)은 올라온 소식 카드만 보입니다.
   const slides = category !== "committee"
     ? albumSlides
     : [
@@ -229,7 +229,7 @@ export default function AlbumList({
               canAdd
                 ? "아래 + 단추로 이번 주 첫 소식을 올려 보세요."
                 : category === "club"
-                  ? "동아리 소식이 올라오면 여기에 보여요."
+                  ? "동호회 소식이 올라오면 여기에 보여요."
                   : "아래 + 단추로 첫 소식을 올려 보세요."
             }
           />
