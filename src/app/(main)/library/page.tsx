@@ -579,11 +579,11 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
 
       {/*
         삭제 확인 창 — 화면 가운데 흰 상자. 바깥(어두운 막)을 누르거나 "취소"면 닫힙니다.
-        bg-ink/40 막은 globals.css가 맨 위 시계 줄 색까지 맞춰 줍니다(확인 창 공용 처리).
+        modal-scrim 막은 globals.css가 맨 위 시계 줄 색까지 맞춰 줍니다(확인 창 공용 처리).
       */}
       {confirmingDelete ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-8"
+          className="fixed inset-0 z-50 flex items-center justify-center modal-scrim px-8"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby={`delete-title-${file.id}`}
@@ -669,7 +669,7 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="파일 이름 바꾸기"
@@ -678,7 +678,7 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
       <form
         onSubmit={handleSubmit}
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[16px] bg-canvas px-6 pt-7 pb-[calc(28px+env(safe-area-inset-bottom))] sm:rounded-[16px] sm:pb-7"
+        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-canvas px-6 pt-7 pb-[28px] sm:pb-7"
       >
         <h2 className="mb-6 text-[20px] font-bold text-ink">파일 이름 바꾸기</h2>
 

@@ -1032,7 +1032,7 @@ function MemberDetailSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label={`${entry.name} 상세 정보`}
@@ -1040,7 +1040,7 @@ function MemberDetailSheet({
     >
       {/* 손잡이는 스크롤 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
       <div
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
         onClick={(event) => event.stopPropagation()}
         style={sheetStyle}
       >
@@ -1057,7 +1057,7 @@ function MemberDetailSheet({
           <div className="h-[5px] w-12 rounded-full bg-line" />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7">
           <div className="flex flex-col items-center text-center">
             <button
               type="button"

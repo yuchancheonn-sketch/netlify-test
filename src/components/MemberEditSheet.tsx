@@ -218,7 +218,7 @@ export default function MemberEditSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-0 sm:items-center sm:px-5"
+      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label={entry ? `${entry.name} 정보 수정` : "원우 추가하기"}
@@ -234,7 +234,7 @@ export default function MemberEditSheet({
       <div
         onClick={(event) => event.stopPropagation()}
         // 흰 바탕(2026-09-26, bg-canvas에서) — 칸은 위 fieldClassName의 회색.
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
         style={sheetStyle}
       >
         {/* 손잡이 바 — 위아래로 넉넉한 손끝 자리를 두어 작은 바보다 누르기 쉽습니다. */}
@@ -252,7 +252,7 @@ export default function MemberEditSheet({
         */}
         <form
           onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7"
         >
           {/*
             제목 아래 작은 안내문은 두지 않습니다 (2026-09-14에 걷어냈습니다).

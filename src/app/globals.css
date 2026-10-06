@@ -412,21 +412,31 @@ html {
 }
 
 /*
- * 확인 창·아래 시트가 뜰 때 맨 위 시계 줄이 주황 띠가 되던 것 (2026-09-26 사용자 "앱 최상단에 주황색 없애줘,
- * 차라리 흰색이면 괜찮을 것 같아" — 홈 화면 앱을 다시 설치해도 그대로였음).
- * 아이폰은 시계 줄 색을 화면 맨 위에 붙은 요소의 바탕색에서 따오는데, 반투명 막(bg-ink/40)은 색으로 쓰지 못하고
- * 앱을 열 때 화면을 덮었던 주황 로딩 화면 색을 그대로 들고 있는 것으로 보입니다(테마 색은 이미 회색).
- * 그래서 막 맨 위에 불투명한 줄을 깔아 그 색을 쓰게 합니다. 색은 막이 회색 바탕을 덮은 색과 같아 눈에는 이어져 보입니다.
- * 높이: 시계 줄 아래까지(safe-area) — 시계 줄 밑으로 화면이 들어가지 않는 경우에도 맨 위 2px은 깝니다.
+ * 창 뒤 막(modal-scrim) — 시트·확인 창이 뜰 때 뒤 화면을 가리는 층 (2026-10-06 사용자 요청: 뉴웨이브앱 창들처럼 그라데이션 막).
+ * 맨 위는 바탕색(--color-canvas, 어두운 화면에서는 어두운 바탕)의 70%로 시작해서 아래로 내려올수록 앱 주황(brand-500)의 50%로 물듭니다.
+ * 뉴웨이브앱은 파랑(#0046ff)이라 그 자리만 애기애타 주황으로 바꿨고, 값은 토큰에서 받아 밝은·어두운 화면에 따로 적지 않습니다.
+ * 예전에는 글씨 색 40%의 회색 반투명 막(bg-ink/40)이었습니다.
  */
-.fixed.inset-0.bg-ink\/40::before {
+@utility modal-scrim {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-canvas) 70%, transparent) 0%,
+    color-mix(in srgb, var(--color-brand-500) 50%, transparent) 100%
+  );
+}
+
+/*
+ * 막이 뜰 때 아이폰 시계 줄이 엉뚱한 색(2026-09-26: 주황 띠)이 되지 않게, 막 맨 위에 막의 시작 색과 같은 줄을 깝니다
+ * (아이폰은 시계 줄 색을 화면 맨 위에 붙은 요소의 바탕색에서 따옵니다). 높이: 시계 줄 아래까지(safe-area), 없어도 맨 위 2px.
+ */
+.fixed.inset-0.modal-scrim::before {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: max(env(safe-area-inset-top), 2px);
-  background-color: color-mix(in srgb, var(--color-canvas) 60%, var(--color-ink));
+  background-color: color-mix(in srgb, var(--color-canvas) 70%, transparent);
   pointer-events: none;
 }
 

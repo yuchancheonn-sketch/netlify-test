@@ -1413,7 +1413,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
   return (
     <>
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label={heading}
@@ -1431,7 +1431,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
       */}
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
         style={sheetStyle}
       >
         <div
@@ -1443,7 +1443,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
         </div>
         <form
           onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-[28px] sm:pb-7"
         >
         <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
 
@@ -1632,7 +1632,7 @@ function AlbumManageSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="소식 수정·지우기"
@@ -1640,7 +1640,7 @@ function AlbumManageSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
       >
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
         <p className="mt-5 truncate text-[15px] font-bold text-ink-muted">{album.title}</p>
@@ -1722,7 +1722,7 @@ function AlbumHistorySheet({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+        className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
         role="dialog"
         aria-modal="true"
         aria-label="소식 기록"
@@ -1730,7 +1730,7 @@ function AlbumHistorySheet({
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+          className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
         >
           <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
           <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">소식 기록</h2>
@@ -1789,7 +1789,7 @@ function AlbumHistorySheet({
 
       {opened ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+          className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
           role="dialog"
           aria-modal="true"
           aria-label={opened.title}
@@ -1805,7 +1805,7 @@ function AlbumHistorySheet({
               touchStart.current = null;
               if (start) swipe(event.changedTouches[0].clientX - start.x, event.changedTouches[0].clientY - start.y);
             }}
-            className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+            className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
           >
             <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
             <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">{weekRangeLabel(weekOfAlbum(opened))}</h2>

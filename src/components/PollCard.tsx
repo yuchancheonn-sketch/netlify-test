@@ -673,7 +673,7 @@ export function PollCreateSheet({
       (아이폰 대비, lib/use-lock-body-scroll.ts 설명). 시트 안 스크롤 상자는 따로 스크롤됩니다.
     */
     <div
-      className="fixed inset-0 z-40 flex touch-none items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex touch-none items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -690,7 +690,7 @@ export function PollCreateSheet({
           흰 바탕(bg-surface)에 옅은 회색 칸 — 일정 등록 시트와 같은 모양 (2026-09-25 사용자 "다른 창들처럼").
           그 전엔 회색 바탕(bg-canvas)에 흰 칸 + 그림자였습니다. 칸 모양은 아래 grayField.
         */
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
         style={sheetStyle}
       >
         {/* 손잡이 바 — 끌어내려 닫을 수 있습니다. */}
@@ -704,7 +704,7 @@ export function PollCreateSheet({
 
         <form
           onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7"
         >
           {/* 무엇을 만들지는 홈 바로가기에서 이미 골랐으므로 제목이 곧 그 이름입니다. */}
           <h2 className="mb-5 text-[19px] font-bold text-ink">{title}</h2>

@@ -27,7 +27,7 @@ export default function EventSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex touch-none items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-40 flex touch-none items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="일정 등록"
@@ -38,7 +38,7 @@ export default function EventSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[16px] bg-surface sm:rounded-[16px]"
+        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
         style={sheetStyle}
       >
         {/* 손잡이 바 — 끌어내려 닫을 수 있습니다. */}
@@ -51,7 +51,7 @@ export default function EventSheet({
           <EventForm
             initialDate={initialDate}
             onDone={onClose}
-            className="px-6 pb-[calc(28px+env(safe-area-inset-bottom))] sm:pb-7"
+            className="px-6 pb-[28px] sm:pb-7"
           />
         </div>
       </div>

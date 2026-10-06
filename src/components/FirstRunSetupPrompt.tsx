@@ -128,7 +128,7 @@ export default function FirstRunSetupPrompt() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-6"
+      className="fixed inset-0 z-50 flex items-center justify-center modal-scrim px-6"
       role="dialog"
       aria-modal="true"
       aria-label="처음 설정"

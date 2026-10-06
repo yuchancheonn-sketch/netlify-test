@@ -266,7 +266,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="탈퇴 확인"
@@ -277,7 +277,7 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(2px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[2px] sm:pb-6"
       >
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
 
@@ -344,7 +344,7 @@ function LogoutSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="로그아웃 확인"
@@ -359,7 +359,7 @@ function LogoutSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(2px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[2px] sm:pb-6"
       >
         {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
         <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
