@@ -233,7 +233,7 @@ export default function AlbumList({
   return (
     <>
       {slides.length === 0 ? (
-        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+        <div>
           <EmptyState
             icon={<span className="text-[40px]">📸</span>}
             title={canAdd ? "아직 이번 주 소식이 없어요" : "아직 올라온 소식이 없어요"}
