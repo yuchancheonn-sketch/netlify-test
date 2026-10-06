@@ -7,11 +7,13 @@ import Avatar from "@/components/Avatar";
 import PageHeader from "@/components/PageHeader";
 import { CheckIcon, UsersIcon } from "@/components/icons";
 import { EmptyState, ErrorState, SectionTitle, Skeleton, Spinner } from "@/components/ui";
+import { ConfirmDialog } from "@/components/Sheet";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite } from "@/lib/firestore-commit";
 import { useAllUsers, useRoster, useWeeklyDrafts } from "@/lib/hooks";
+import { resolveReport, useOpenReports, type ReportDoc } from "@/lib/moderation";
 import type { MemberType, RosterDoc, UserDoc, WeeklyDraftDoc } from "@/lib/types";
 
 const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
@@ -19,7 +21,7 @@ const MEMBER_TYPE_LABEL: Record<MemberType, string> = {
   youth: "대학생 원우",
 };
 
-type Tab = "pending" | "roster" | "members" | "newsDraft";
+type Tab = "reports" | "pending" | "roster" | "members" | "newsDraft";
 
 function AdminPageContent() {
   const { isAdmin } = useAuth();
@@ -35,16 +37,20 @@ function AdminPageContent() {
   );
   const users = useAllUsers();
   const roster = useRoster();
+  /** 사용자 요청 2026-10-06(구글 플레이 출시 준비): 아직 처리하지 않은 신고. 운영진만 읽을 수 있어 운영진일 때만 구독합니다. */
+  const reports = useOpenReports(isAdmin);
 
   const pending = users.data.filter((user) => user.status === "pending");
   const approved = users.data.filter((user) => user.status === "approved");
-  const activeTab: Tab = tab ?? (pending.length > 0 ? "pending" : "roster");
+  const activeTab: Tab = tab ?? (reports.data.length > 0 ? "reports" : pending.length > 0 ? "pending" : "roster");
 
   /*
    * 로그인하면 기다림 없이 바로 입장하므로 보통 이 탭은 비어 있습니다.
    * 운영진이 누군가를 차단했을 때만 나타납니다.
    */
   const tabs: { value: Tab; label: string }[] = [
+    // 신고가 들어와 있을 때만 맨 앞에 나타납니다(처리하면 사라짐). 새 신고는 운영진에게 폰 알림도 갑니다.
+    ...(reports.data.length > 0 ? [{ value: "reports" as Tab, label: `신고 ${reports.data.length}` }] : []),
     ...(pending.length > 0
       ? [{ value: "pending" as Tab, label: `확인 대기 ${pending.length}` }]
       : []),
@@ -94,6 +100,8 @@ function AdminPageContent() {
         <div className="mt-5">
           {activeTab === "newsDraft" ? (
             <NewsDraftSection />
+          ) : activeTab === "reports" ? (
+            <ReportsSection reports={reports.data} />
           ) : users.error ? (
             <ErrorState message={users.error} />
           ) : users.loading ? (
@@ -112,6 +120,96 @@ function AdminPageContent() {
         </div>
       </div>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 신고 (사용자 요청 2026-10-06, 구글 플레이 출시 준비)                      */
+/* ------------------------------------------------------------------ */
+
+const REPORT_TYPE_LABEL: Record<string, string> = {
+  message: "채팅 메시지",
+  album: "원우소식",
+  file: "자료 파일",
+  opinion: "익명 의견",
+  poll: "투표·의견 모으기",
+  comment: "수업 느낀점",
+  video: "소개 영상",
+  user: "원우",
+};
+
+/**
+ * 들어온 신고 목록 — "글 삭제"는 신고된 글(문서)을 서버가 지우고(소개 영상은 주소만 비움), "처리 완료"는 글은 두고 신고만 닫습니다.
+ * 원우 자체를 신고한 건(user)은 지울 글이 없어 "처리 완료"만 있습니다. 서버: /api/report/resolve.
+ */
+function ReportsSection({ reports }: { reports: ReportDoc[] }) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<ReportDoc | null>(null);
+
+  async function resolve(report: ReportDoc, action: "delete" | "dismiss") {
+    setBusyId(report.id);
+    setError(null);
+    const ok = await resolveReport(report.id, action).catch(() => false);
+    if (!ok) setError("처리하지 못했어요. 이미 지워진 글이거나 연결 문제일 수 있어요. 다시 시도해 주세요.");
+    setBusyId(null);
+  }
+
+  if (reports.length === 0) {
+    return <EmptyState title="처리할 신고가 없어요" description="새 신고가 들어오면 알림이 가요." />;
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {error ? (
+        <p role="alert" className="text-[13px] font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
+      {reports.map((report) => {
+        const busy = busyId === report.id;
+        return (
+          <div key={report.id} className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
+            <p className="text-[12px] font-bold text-brand-500">
+              {REPORT_TYPE_LABEL[report.targetType] ?? report.targetType} · {report.reason}
+            </p>
+            <p className="mt-1 text-[15px] font-bold text-ink">{report.targetName ? `${report.targetName}님` : "작성자 모름(익명)"}</p>
+            {report.preview ? <p className="mt-1 line-clamp-3 text-[14px] break-words whitespace-pre-wrap text-ink-soft">{report.preview}</p> : null}
+            {report.detail ? <p className="mt-2 text-[13px] break-words whitespace-pre-wrap text-ink-muted">신고 내용: {report.detail}</p> : null}
+            <p className="mt-2 text-[12px] text-ink-faint">신고한 사람: {report.reporterName || "원우"}</p>
+            <div className="mt-3 flex gap-2">
+              {report.targetType !== "user" ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setDeleting(report)}
+                  className="flex-1 rounded-full bg-red-500 py-2 text-[14px]! font-bold text-white disabled:opacity-50"
+                >
+                  글 삭제
+                </button>
+              ) : null}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void resolve(report, "dismiss")}
+                className="flex-1 rounded-full bg-fill py-2 text-[14px]! font-bold text-ink-soft disabled:opacity-50"
+              >
+                처리 완료
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      {deleting ? (
+        <ConfirmDialog
+          title="신고된 글을 지울까요?"
+          description="글이 지워지고 신고는 처리됨으로 바뀌어요. 사진·파일 실물은 Cloudinary에 남지만 앱에서는 사라져요."
+          confirmLabel="글 삭제"
+          onConfirm={() => resolve(deleting, "delete")}
+          onClose={() => setDeleting(null)}
+        />
+      ) : null}
+    </div>
   );
 }
 

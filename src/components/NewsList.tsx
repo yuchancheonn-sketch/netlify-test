@@ -5,6 +5,7 @@ import { MegaphoneIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
 import type { NewsItem } from "@/lib/rss";
+import { apiUrl } from "@/lib/api";
 
 const SITE_URL = "https://dosan21.kr";
 
@@ -39,7 +40,7 @@ export default function NewsList() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/dosan");
+        const response = await fetch(apiUrl("/api/dosan"));
         const data = (await response.json()) as { items?: NewsItem[]; error?: string };
         if (!alive) return;
         if (!response.ok || data.error) {

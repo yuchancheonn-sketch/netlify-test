@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import StageGate, { SplashScreen } from "@/components/StageGate";
 import { PrimaryButton } from "@/components/ui";
@@ -32,16 +33,22 @@ export default function JoinPage() {
 function SignUpScreen() {
   const { user, logOut } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  // 화면이 다시 그려져도 계정 문서를 두 번 만들지 않도록 표시해 둡니다.
+  /*
+   * 사용자 요청 2026-10-06(구글 플레이 출시 준비): 계정을 만들기 전에 이용약관·개인정보 처리방침 동의를 꼭 받습니다.
+   * 이미 다른 계정에 이어진 로그인(아래 switchToLinkedAccount)이면 새 계정을 만들지 않으니 묻지 않고,
+   * 정말 처음인 사람에게만 동의 화면을 보여 줍니다. "checking" → "consent" → "creating".
+   */
+  const [phase, setPhase] = useState<"checking" | "consent" | "creating">("checking");
+  const [agreed, setAgreed] = useState(false);
+  // 화면이 다시 그려져도 합치기 확인을 두 번 하지 않도록 표시해 둡니다.
   const attempted = useRef(false);
 
   useEffect(() => {
     if (!user || attempted.current) return;
     attempted.current = true;
-    void createAccount();
+    void checkLinked();
 
-    async function createAccount() {
-      if (!user) return;
+    async function checkLinked() {
       /*
        * 먼저 이 로그인이 다른 계정에 이어져 있는지 봅니다(2026-09-22 계정 합치기).
        * 예: 구글 계정에 합쳐 둔 휴대폰 번호로 로그인하면, 새 문서를 만들지 않고 본계정으로 바꿔 탑니다.
@@ -52,49 +59,97 @@ function SignUpScreen() {
       } catch {
         // 서버가 잠깐 안 되면 평소처럼 새 계정으로.
       }
-      try {
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          email: user.email ?? "",
-          name: user.displayName ?? "",
-          photoURL: user.photoURL ?? null,
-          birthdayMonthDay: "",
-          birthdayYear: null,
-          memberType: "general",
-          company: "",
-          position: "",
-          // 휴대폰 번호로 가입했으면 인증한 번호를 미리 채워 둡니다(구글·카카오는 빈칸).
-          phone: fromE164Korean(user.phoneNumber),
-          councilRole: "",
-          introduction: "",
-          introVideoUrl: "",
-          role: "member",
-          status: "approved",
-          // 기수는 비워 둡니다. 바로 다음 최초 프로필 설정에서 원우가 꼭 고릅니다.
-          cohort: "",
-          // 초대 코드는 쓰지 않지만, 나중에 되살릴 때를 위해 칸은 남겨둡니다.
-          inviteCode: "",
-          profileCompleted: false,
-          createdAt: serverTimestamp(),
-        });
-        // 성공하면 프로필 문서 구독이 바뀌면서 StageGate가 다음 화면으로 보냅니다.
-      } catch (caught) {
-        /*
-         * 실패한 진짜 이유를 화면에 함께 남깁니다.
-         * 특히 permission-denied는 "보안 규칙을 아직 올리지 않았다"는 뜻이라,
-         * 원우가 이 화면을 찍어 보내주면 운영진이 바로 알아볼 수 있습니다.
-         */
-        const code = (caught as { code?: string })?.code ?? "";
-        setError(
-          code === "permission-denied"
-            ? "앱 설정이 아직 안 끝났어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)"
-            : `계정을 만들지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`,
-        );
-      }
+      setPhase("consent");
     }
   }, [user]);
 
-  if (!error) return <SplashScreen />;
+  async function createAccount() {
+    if (!user || !agreed) return;
+    setPhase("creating");
+    try {
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email ?? "",
+        name: user.displayName ?? "",
+        photoURL: user.photoURL ?? null,
+        birthdayMonthDay: "",
+        birthdayYear: null,
+        memberType: "general",
+        company: "",
+        position: "",
+        // 휴대폰 번호로 가입했으면 인증한 번호를 미리 채워 둡니다(구글·카카오는 빈칸).
+        phone: fromE164Korean(user.phoneNumber),
+        councilRole: "",
+        introduction: "",
+        introVideoUrl: "",
+        role: "member",
+        status: "approved",
+        // 기수는 비워 둡니다. 바로 다음 최초 프로필 설정에서 원우가 꼭 고릅니다.
+        cohort: "",
+        // 초대 코드는 쓰지 않지만, 나중에 되살릴 때를 위해 칸은 남겨둡니다.
+        inviteCode: "",
+        profileCompleted: false,
+        createdAt: serverTimestamp(),
+      });
+      // 성공하면 프로필 문서 구독이 바뀌면서 StageGate가 다음 화면으로 보냅니다.
+    } catch (caught) {
+      /*
+       * 실패한 진짜 이유를 화면에 함께 남깁니다.
+       * 특히 permission-denied는 "보안 규칙을 아직 올리지 않았다"는 뜻이라,
+       * 원우가 이 화면을 찍어 보내주면 운영진이 바로 알아볼 수 있습니다.
+       */
+      const code = (caught as { code?: string })?.code ?? "";
+      setError(
+        code === "permission-denied"
+          ? "앱 설정이 아직 안 끝났어요. 운영진에게 알려주세요. (Firestore 보안 규칙 게시 필요 · permission-denied)"
+          : `계정을 만들지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`,
+      );
+    }
+  }
+
+  if (!error && phase !== "consent") return <SplashScreen />;
+
+  if (!error) {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center px-7 text-center">
+        <h1 className="text-[22px] font-bold text-ink">시작하기 전에</h1>
+        <p className="mt-3 text-[15px] leading-relaxed break-keep text-ink-muted">
+          애기애타를 쓰려면 이용약관과 개인정보 처리방침에 동의해야 해요.
+        </p>
+        <div className="mt-6 flex w-full flex-col gap-2 text-left">
+          <Link href="/terms" className="rounded-2xl bg-surface px-5 py-3.5 text-[15px] font-bold text-ink shadow-[var(--shadow-card)] active:bg-fill">
+            이용약관 보기
+          </Link>
+          <Link href="/privacy" className="rounded-2xl bg-surface px-5 py-3.5 text-[15px] font-bold text-ink shadow-[var(--shadow-card)] active:bg-fill">
+            개인정보 처리방침 보기
+          </Link>
+        </div>
+        <label className="mt-6 flex w-full cursor-pointer items-start gap-3 text-left">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(event) => setAgreed(event.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-brand-500"
+          />
+          <span className="text-[15px] leading-snug break-keep text-ink">
+            <span className="font-bold">(필수)</span> 이용약관과 개인정보 처리방침을 읽었고 동의해요.
+          </span>
+        </label>
+        <div className="mt-6 w-full">
+          <PrimaryButton disabled={!agreed} onClick={() => void createAccount()}>
+            동의하고 시작하기
+          </PrimaryButton>
+        </div>
+        <button
+          type="button"
+          onClick={() => void logOut()}
+          className="mt-6 text-[13px] font-bold text-ink-muted underline underline-offset-4"
+        >
+          다른 계정으로 로그인하기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center px-7 text-center">
@@ -107,8 +162,9 @@ function SignUpScreen() {
       <div className="mt-8 w-full">
         <PrimaryButton
           onClick={() => {
-            attempted.current = false;
+            // 동의는 이미 받았으니 다시 묻지 않고 곧바로 다시 만듭니다.
             setError(null);
+            void createAccount();
           }}
         >
           다시 시도

@@ -1,4 +1,5 @@
 import { auth } from "@/lib/firebase";
+import { apiUrl } from "@/lib/api";
 
 /**
  * 홈 캘린더가 서버에 묻는 두 가지 (2026-09-23) — 브라우저 쪽.
@@ -10,7 +11,7 @@ import { auth } from "@/lib/firebase";
 async function post<T>(path: string): Promise<T> {
   const user = auth.currentUser;
   if (!user) throw new Error("not-signed-in");
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     method: "POST",
     headers: { Authorization: `Bearer ${await user.getIdToken()}` },
   });

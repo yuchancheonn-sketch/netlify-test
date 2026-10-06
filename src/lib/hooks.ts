@@ -24,6 +24,7 @@ import {
 } from "@/lib/chat-rooms";
 import { todayString } from "@/lib/format";
 import { useLiveList, warmLiveList } from "@/lib/live-list";
+import { apiUrl } from "@/lib/api";
 import type {
   AcademyEventDoc,
   ChatReadDoc,
@@ -64,7 +65,7 @@ function useViewer(): "loading" | "guest" | "member" {
 
 /** 둘러보는 사람용 원우 명단 — 번호·이메일 뺀 것(app/api/public/directory). */
 async function fetchPublicDirectory(cohort: string): Promise<{ members: UserDoc[]; roster: RosterDoc[] }> {
-  const response = await fetch(`/api/public/directory?cohort=${encodeURIComponent(cohort)}`);
+  const response = await fetch(apiUrl(`/api/public/directory?cohort=${encodeURIComponent(cohort)}`));
   if (!response.ok) throw new Error(String(response.status));
   return response.json();
 }

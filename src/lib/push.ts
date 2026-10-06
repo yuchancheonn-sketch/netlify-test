@@ -15,6 +15,61 @@
 import { doc, deleteDoc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getToken, deleteToken } from "firebase/messaging";
 import { auth, db, getMessagingIfSupported } from "@/lib/firebase";
+import { apiUrl } from "@/lib/api";
+import { isNativeApp } from "@/lib/native";
+import { Capacitor } from "@capacitor/core";
+
+/*
+ * 구글 플레이 앱 (2026-10-06 사용자 요청 (구글 플레이 출시 준비), 뉴웨이브앱 lib/push.ts를 옮김):
+ * 앱 안에는 서비스워커·웹 알림 권한이 없어서 Capacitor 푸시 플러그인(안드로이드 FCM)을 씁니다.
+ * 토큰은 같은 pushTokens에 platform 표시와 함께 적고, 서버(lib/push-send.ts)가 platform을 보고 보내는 모양을 가릅니다.
+ * 권한 상태는 비동기로만 알 수 있어, 이 기기에 마지막으로 확인한 값을 localStorage에 두고 getPushPermission이 읽습니다.
+ */
+const NATIVE_PERM_KEY = "agikaeta:push-native-perm";
+const NATIVE_TOKEN_KEY = "agikaeta:push-native-token";
+
+function readNativePermission(): PushPermission {
+  try {
+    const saved = localStorage.getItem(NATIVE_PERM_KEY);
+    return saved === "granted" || saved === "denied" ? saved : "default";
+  } catch {
+    return "default";
+  }
+}
+
+function rememberNativePermission(permission: PushPermission): void {
+  try {
+    localStorage.setItem(NATIVE_PERM_KEY, permission);
+  } catch {
+    // 저장할 수 없는 곳 — 다음에 열 때 다시 확인합니다.
+  }
+}
+
+/** 앱 안에서 FCM 토큰 하나를 받습니다. 알림 채널("default")도 이때 만들어 둡니다(안드로이드 8+는 채널이 있어야 알림이 뜹니다). */
+async function nativePushToken(): Promise<string> {
+  const { PushNotifications } = await import("@capacitor/push-notifications");
+  await PushNotifications.createChannel({ id: "default", name: "애기애타 알림", importance: 4 }).catch(() => undefined);
+  const handles: Promise<{ remove: () => Promise<void> }>[] = [];
+  const cleanup = () => handles.forEach((handle) => void handle.then((h) => h.remove()));
+  try {
+    return await new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("알림 토큰을 받지 못했어요.")), 15000);
+      handles.push(
+        PushNotifications.addListener("registration", (event) => {
+          clearTimeout(timer);
+          resolve(event.value);
+        }),
+        PushNotifications.addListener("registrationError", (event) => {
+          clearTimeout(timer);
+          reject(new Error(event.error));
+        }),
+      );
+      void PushNotifications.register();
+    });
+  } finally {
+    cleanup();
+  }
+}
 
 const SW_URL = "/firebase-messaging-sw.js";
 const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
@@ -47,13 +102,13 @@ const ASKED_KEY = "agikaeta:push-asked";
  * 원우에게 오류를 띄울 만한 일이 아닙니다.
  */
 export async function requestPush(
-  path: "chat" | "event" | "poll" | "like",
+  path: "chat" | "event" | "poll" | "like" | "report",
   payload: Record<string, string>,
 ): Promise<void> {
   try {
     const idToken = await auth.currentUser?.getIdToken();
     if (!idToken) return;
-    await fetch(`/api/push/${path}`, {
+    await fetch(apiUrl(`/api/push/${path}`), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -71,10 +126,11 @@ export async function requestPush(
 /** 이 기기에서 알림을 켤 수 있는지 (브라우저가 필요한 기능을 갖췄는지) */
 export function isPushSupported(): boolean {
   return (
-    typeof window !== "undefined" &&
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window
+    isNativeApp() ||
+    (typeof window !== "undefined" &&
+      "Notification" in window &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window)
   );
 }
 
@@ -83,12 +139,13 @@ export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 /** 지금 이 기기의 알림 권한 상태 */
 export function getPushPermission(): PushPermission {
   if (!isPushSupported()) return "unsupported";
+  if (isNativeApp()) return readNativePermission();
   return Notification.permission as PushPermission;
 }
 
 /** 설정이 덜 됐을 때(운영진이 VAPID 키를 안 넣음) */
 export function isPushConfigured(): boolean {
-  return Boolean(VAPID_KEY);
+  return isNativeApp() || Boolean(VAPID_KEY);
 }
 
 function rememberChoice(on: boolean): void {
@@ -160,34 +217,49 @@ async function registerServiceWorker(): Promise<ServiceWorkerRegistration> {
  * 권한이 이미 "granted"일 때만 부릅니다 — 여기서 권한을 묻지는 않습니다.
  */
 async function upsertToken(uid: string): Promise<string> {
-  const messaging = await getMessagingIfSupported();
-  if (!messaging) throw new Error("이 브라우저에서는 알림을 쓸 수 없어요.");
-  if (!VAPID_KEY) {
-    throw new Error(
-      "알림 설정이 아직 안 되어 있어요. 운영진에게 알려주세요. (VAPID 키 미설정)",
-    );
-  }
+  let token: string;
+  if (isNativeApp()) {
+    token = await nativePushToken();
+  } else {
+    const messaging = await getMessagingIfSupported();
+    if (!messaging) throw new Error("이 브라우저에서는 알림을 쓸 수 없어요.");
+    if (!VAPID_KEY) {
+      throw new Error(
+        "알림 설정이 아직 안 되어 있어요. 운영진에게 알려주세요. (VAPID 키 미설정)",
+      );
+    }
 
-  const registration = await registerServiceWorker();
-  const token = await getToken(messaging, {
-    vapidKey: VAPID_KEY,
-    serviceWorkerRegistration: registration,
-  });
+    const registration = await registerServiceWorker();
+    token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+  }
   if (!token) throw new Error("알림 토큰을 받지 못했어요.");
 
   const ref = doc(db, "pushTokens", token);
   // createdAt은 처음 한 번만 남기고, 이후로는 refreshedAt만 갱신합니다.
   const snap = await getDoc(ref).catch(() => null);
   const userAgent = navigator.userAgent.slice(0, 300);
+  // platform: 앱이면 "android"/"ios", 웹이면 비워 둡니다(서버가 없는 값은 웹으로 봅니다).
+  const platform = isNativeApp() ? Capacitor.getPlatform() : null;
   if (snap?.exists()) {
-    await setDoc(ref, { uid, userAgent, refreshedAt: serverTimestamp() }, { merge: true });
+    await setDoc(ref, { uid, userAgent, ...(platform ? { platform } : {}), refreshedAt: serverTimestamp() }, { merge: true });
   } else {
     await setDoc(ref, {
       uid,
       userAgent,
+      ...(platform ? { platform } : {}),
       createdAt: serverTimestamp(),
       refreshedAt: serverTimestamp(),
     });
+  }
+  if (isNativeApp()) {
+    try {
+      localStorage.setItem(NATIVE_TOKEN_KEY, token);
+    } catch {
+      // 저장할 수 없는 곳 — 알림을 끌 때 이 기기 토큰을 못 지울 수 있습니다.
+    }
   }
   return token;
 }
@@ -199,6 +271,17 @@ async function upsertToken(uid: string): Promise<string> {
  */
 export async function enablePush(uid: string): Promise<PushPermission> {
   if (!isPushSupported()) return "unsupported";
+
+  if (isNativeApp()) {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    const { receive } = await PushNotifications.requestPermissions();
+    const result: PushPermission = receive === "granted" ? "granted" : receive === "denied" ? "denied" : "default";
+    rememberNativePermission(result);
+    if (result !== "granted") return result;
+    await upsertToken(uid);
+    rememberChoice(true);
+    return "granted";
+  }
 
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return permission as PushPermission;
@@ -212,6 +295,17 @@ export async function enablePush(uid: string): Promise<PushPermission> {
 export async function disablePush(): Promise<void> {
   // 끔 표시부터 남깁니다. 아래에서 실패하더라도 다시 켜지지는 않아야 합니다.
   rememberChoice(false);
+
+  if (isNativeApp()) {
+    try {
+      const token = localStorage.getItem(NATIVE_TOKEN_KEY);
+      if (token) await deleteDoc(doc(db, "pushTokens", token)).catch(() => {});
+      localStorage.removeItem(NATIVE_TOKEN_KEY);
+    } catch {
+      // 이미 꺼져 있거나 저장소를 못 쓰는 경우 — 그냥 넘어갑니다.
+    }
+    return;
+  }
 
   const messaging = await getMessagingIfSupported();
   if (!messaging || !VAPID_KEY) return;
@@ -240,7 +334,17 @@ export async function disablePush(): Promise<void> {
  * 권한을 묻지 않고, 실패해도 조용합니다.
  */
 export async function syncPushToken(uid: string): Promise<void> {
-  if (!isPushOn() || !VAPID_KEY) return;
+  try {
+    if (isNativeApp()) {
+      // 폰 설정에서 알림을 바꿨을 수 있어 열 때마다 실제 권한을 다시 읽어 둡니다.
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      const { receive } = await PushNotifications.checkPermissions();
+      rememberNativePermission(receive === "granted" ? "granted" : receive === "denied" ? "denied" : "default");
+    }
+  } catch {
+    // 권한을 못 읽으면 마지막으로 알던 값을 그대로 씁니다.
+  }
+  if (!isPushOn() || !isPushConfigured()) return;
   try {
     await upsertToken(uid);
   } catch {

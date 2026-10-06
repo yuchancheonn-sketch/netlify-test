@@ -12,6 +12,7 @@ import TextTabs from "@/components/TextTabs";
 import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { useModeration } from "@/components/ModerationDialogs";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
 import { ALL_COHORTS, canAddMembers, cohortOf, hasYouthMembers } from "@/lib/cohort";
 import {
@@ -26,6 +27,7 @@ import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
 import { useCohortMembers, useCohortRoster } from "@/lib/hooks";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
+import { chatHref } from "@/lib/routes";
 
 type Filter = "all" | MemberType;
 
@@ -986,7 +988,7 @@ function StartChatButton({ otherUid, name }: { otherUid: string; name: string })
   function handleClick() {
     if (requireLogin()) return;
     if (!user) return;
-    router.push(`/chat/${ensureDirectRoom(user.uid, otherUid)}`);
+    router.push(chatHref(ensureDirectRoom(user.uid, otherUid)));
   }
 
   return (
@@ -1028,12 +1030,17 @@ function MemberDetailSheet({
 
   // 둘러보는 사람에게는 번호가 내려오지 않습니다 — 전화·문자 자리에 로그인 안내 (2026-09-24 사용자 "번호만 로그인 뒤에").
   const isGuest = useIsGuest();
+  /** 사용자 요청 2026-10-06(구글 플레이 출시 준비): 남의 정보 창 맨 아래 "신고하기·차단하기"와 소개 영상 신고. */
+  const { openReport, askBlock, dialogs: moderationDialogs } = useModeration();
+  const reportTargetPath = member ? `users/${member.uid}` : entry.roster ? `roster/${entry.roster.id}` : "";
+  const canModerate = !isMe && !isGuest && !!reportTargetPath;
 
   /*
    * 2026-10-06 사용자 요청: 겉틀(손잡이·막·모서리·아래 단추 줄)을 뉴웨이브앱과 같은 공용 Sheet로 바꿨습니다.
    * 예전 아래쪽 "정보 수정하기"(연한 주황)·"닫기"(회색) 두 단추는 뉴웨이브처럼 아래 붙박이 줄의 "취소 / 정보 수정하기"로 합쳤습니다(취소 = 닫기).
    */
   return (
+    <>
     <Sheet
       onClose={onClose}
       footer={<SheetActions onCancel={onClose} confirmLabel={isMe ? "내 정보 수정하기" : "정보 수정하기"} onConfirm={onEdit} />}
@@ -1175,7 +1182,7 @@ function MemberDetailSheet({
                   <dd className="text-[15px] font-bold text-ink">{formatPhone(entry.phone)}</dd>
                 </div>
               ) : null}
-              {member ? (
+              {member && !isGuest ? (
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-[14px] text-ink-faint">생일</dt>
                   <dd className="text-[15px] font-bold text-ink">
@@ -1205,8 +1212,59 @@ function MemberDetailSheet({
               {entry.updatedByName} 님이 채워주셨어요
             </p>
           ) : null}
+
+          {/* 신고·차단 — 남의 정보 창에만. 소개 영상이 있으면 영상만 따로 신고할 수도 있습니다. */}
+          {canModerate ? (
+            <div className="mt-5 flex items-center justify-center gap-4 text-[13px]">
+              <button
+                type="button"
+                onClick={() =>
+                  openReport({
+                    type: "user",
+                    path: reportTargetPath,
+                    uid: member?.uid ?? "",
+                    name: entry.name,
+                    preview: [entry.company, entry.position, entry.introduction].filter(Boolean).join(" · "),
+                    cohort: entry.cohort,
+                  })
+                }
+                className="text-[13px]! font-bold text-ink-muted underline underline-offset-4"
+              >
+                신고하기
+              </button>
+              {videoLink?.id ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openReport({
+                      type: "video",
+                      path: reportTargetPath,
+                      uid: member?.uid ?? "",
+                      name: entry.name,
+                      preview: videoLink.url,
+                      cohort: entry.cohort,
+                    })
+                  }
+                  className="text-[13px]! font-bold text-ink-muted underline underline-offset-4"
+                >
+                  소개 영상 신고
+                </button>
+              ) : null}
+              {member ? (
+                <button
+                  type="button"
+                  onClick={() => askBlock(member.uid, entry.name)}
+                  className="text-[13px]! font-bold text-danger underline underline-offset-4"
+                >
+                  차단하기
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
     </Sheet>
+    {moderationDialogs}
+    </>
   );
 }
 

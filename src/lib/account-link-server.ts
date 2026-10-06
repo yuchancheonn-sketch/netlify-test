@@ -32,7 +32,26 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
  *   휴대폰 로그인은 이미 인증돼 있고, 카카오는 합칠 때 한 번 문자 인증을 거칩니다.
  */
 
+/*
+ * ── 2026-10-06 사용자 요청 (보안 점검 후 수정): 전화번호 "증명"을 서버가 따로 기록합니다 ──
+ *
+ * 문제: 예전에는 상대 계정의 `users.phone`(원우 누구나 고칠 수 있던 칸)이 인증 번호와 같으면 그 계정에 합쳐
+ *   줬습니다. 공격자가 피해자(운영진 포함)의 users.phone을 자기 번호로 바꿔 놓고 자기 번호를 문자 인증하면
+ *   피해자 계정의 로그인 표를 받아 갈 수 있었습니다.
+ * 해결: users.phone은 이제 **후보를 찾는 힌트일 뿐 증명이 아닙니다.** 후보 계정이 그 번호를 서버 쪽에서
+ *   증명했을 때만 합칩니다(아래 provedPhone). 증명 = 다음 중 하나
+ *     ① `verifiedPhones/{번호 숫자}` = { uid, at } — 서버(Admin SDK)가 문자로 인증된 로그인 토큰(phone_number)을
+ *        볼 때 적어 둔 기록. 규칙에 적지 않아 앱에서는 읽지도 쓰지도 못합니다. uid는 **본계정** uid입니다.
+ *     ② 후보 계정의 Firebase Auth 기록에 그 번호가 있음(휴대폰 로그인 계정이거나 번호를 이어 붙인 계정 —
+ *        Firebase가 문자 인증을 거쳐야만 넣는 값이라 클라이언트가 바꿀 수 없음). 찾으면 ①에 되적어 둡니다.
+ *     ③ 후보 계정에 합쳐진 별칭(accountLinks) 중 하나의 Auth 기록에 그 번호가 있음. 찾으면 ①에 되적어 둡니다.
+ *   ②·③이 "옛 계정 이월(backfill)"입니다 — 휴대폰으로 가입한 기존 원우는 따로 할 일 없이 계속 합쳐집니다.
+ * ★ 이월의 한계: 구글·카카오로 가입하고 번호를 **손으로 적기만 했던** 계정은 증명이 없어서, 같은 번호로 나중에 들어온
+ *   다른 로그인과 자동으로 합쳐지지 않습니다(새 계정이 따로 생김). 그 원우가 한 번 휴대폰 인증을 하거나(번호를 계정에
+ *   이어 붙임) 운영진이 합쳐 줘야 합니다. 운영진(role=admin) 계정은 같은 기준이라 번호 증명이 없으면 절대 조용히 합쳐지지 않습니다.
+ */
 export const ACCOUNT_LINKS = "accountLinks";
+export const VERIFIED_PHONES = "verifiedPhones";
 
 const digits = (value: unknown) => (typeof value === "string" ? value.replace(/\D/g, "") : "");
 
@@ -67,30 +86,89 @@ export async function authorizeAccountRequest(request: Request): Promise<Authed>
 }
 
 /**
+ * 문자 인증된 로그인 토큰을 봤으면 "이 번호는 이 본계정이 증명했다"고 서버에만 적어 둡니다.
+ * owner는 호출한 쪽이 정합니다(합친 뒤라면 본계정). 실패해도 로그인 흐름은 막지 않습니다.
+ */
+export async function recordVerifiedPhone(db: Firestore, token: DecodedIdToken, ownerUid: string) {
+  const number = localDigits(token.phone_number);
+  if (!/^01\d{8,9}$/.test(number)) return;
+  try {
+    await db.collection(VERIFIED_PHONES).doc(number).set({ uid: ownerUid, at: FieldValue.serverTimestamp() });
+  } catch (caught) {
+    console.error("[account-link] 번호 증명 기록 실패", caught);
+  }
+}
+
+/** 후보 계정(본계정)이 이 번호를 서버 쪽에서 증명했는가 — 위 설명의 ①②③. */
+async function provedPhone(db: Firestore, auth: Auth, candidateUid: string, phoneDigits: string) {
+  const record = await db.collection(VERIFIED_PHONES).doc(phoneDigits).get();
+  if (record.exists && record.get("uid") === candidateUid) return true;
+
+  let proven = false;
+  try {
+    const own = await auth.getUser(candidateUid);
+    proven = localDigits(own.phoneNumber) === phoneDigits;
+    if (!proven) {
+      const aliases = await db
+        .collection(ACCOUNT_LINKS)
+        .where("primaryUid", "==", candidateUid)
+        .limit(10)
+        .get();
+      for (const alias of aliases.docs) {
+        const user = await auth.getUser(alias.id).catch(() => null);
+        if (user && localDigits(user.phoneNumber) === phoneDigits) {
+          proven = true;
+          break;
+        }
+      }
+    }
+  } catch {
+    proven = false;
+  }
+  if (proven && !record.exists) {
+    // 이월 — 다음부터는 Auth를 다시 뒤지지 않게 적어 둡니다(이미 다른 계정 기록이 있으면 덮지 않음).
+    await db
+      .collection(VERIFIED_PHONES)
+      .doc(phoneDigits)
+      .create({ uid: candidateUid, at: FieldValue.serverTimestamp(), backfilled: true })
+      .catch(() => {});
+  }
+  return proven;
+}
+
+/**
  * 이 번호로 된 완성된 원우 계정들(나 자신·별칭은 빼고), 먼저 만든 계정부터.
  * users.phone은 formatPhone 모양("010-1234-5678")으로 저장되지만, 숫자만 적힌 옛 문서도 함께 찾습니다.
+ *
+ * ★ users.phone(클라이언트가 고칠 수 있는 칸)은 **후보를 찾는 데만** 씁니다. 실제로 후보가 되려면
+ *   그 번호를 서버 쪽에서 증명한 계정이어야 합니다(provedPhone, 맨 위 2026-10-06 설명).
  */
-async function samePhoneMembers(db: Firestore, uid: string, phoneDigits: string) {
+async function samePhoneMembers(db: Firestore, auth: Auth, uid: string, phoneDigits: string) {
   if (!/^01\d{8,9}$/.test(phoneDigits)) return [];
   const snapshot = await db
     .collection("users")
     .where("phone", "in", [...new Set([formatPhone(phoneDigits), phoneDigits])])
     .limit(20)
     .get();
-  const links = await Promise.all(
-    snapshot.docs.map((doc) => db.collection(ACCOUNT_LINKS).doc(doc.id).get()),
-  );
-  const createdMs = (doc: (typeof snapshot.docs)[number]) =>
+  const docs = [...snapshot.docs];
+  // 번호를 증명한 계정은 users.phone이 달라도(예: 별칭으로 증명) 후보에 넣습니다.
+  const proofOwner = (await db.collection(VERIFIED_PHONES).doc(phoneDigits).get()).get("uid");
+  if (typeof proofOwner === "string" && !docs.some((doc) => doc.id === proofOwner)) {
+    const extra = await db.collection("users").doc(proofOwner).get();
+    if (extra.exists) docs.push(extra as unknown as (typeof docs)[number]);
+  }
+  const links = await Promise.all(docs.map((doc) => db.collection(ACCOUNT_LINKS).doc(doc.id).get()));
+  const createdMs = (doc: (typeof docs)[number]) =>
     (doc.get("createdAt") as { toMillis?: () => number } | undefined)?.toMillis?.() ?? Infinity;
-  return snapshot.docs
-    .filter(
-      (doc, index) =>
-        doc.id !== uid &&
-        !links[index].exists &&
-        doc.get("status") === "approved" &&
-        doc.get("profileCompleted") === true,
-    )
-    .sort((a, b) => createdMs(a) - createdMs(b));
+  const basic = docs.filter(
+    (doc, index) =>
+      doc.id !== uid &&
+      !links[index].exists &&
+      doc.get("status") === "approved" &&
+      doc.get("profileCompleted") === true,
+  );
+  const proofs = await Promise.all(basic.map((doc) => provedPhone(db, auth, doc.id, phoneDigits)));
+  return basic.filter((_, index) => proofs[index]).sort((a, b) => createdMs(a) - createdMs(b));
 }
 
 export type LinkOutcome =
@@ -119,20 +197,25 @@ export async function linkIfSameMember(
 
   // 이미 프로필을 다 만든 계정은 합치지 않습니다(그쪽 기록이 사라질 수 있음).
   const mine = await db.collection("users").doc(uid).get();
-  if (mine.exists && mine.get("profileCompleted") === true) return { match: "none" };
+  if (mine.exists && mine.get("profileCompleted") === true) {
+    await recordVerifiedPhone(db, token, await primaryUidOf(db, uid));
+    return { match: "none" };
+  }
 
   const verified = localDigits(token.phone_number);
   if (!verified) {
     // 적은 번호로만 가늠합니다 — 합치는 것은 문자 인증 뒤에만(맨 위 "인증된 번호" 설명).
-    const typed = await samePhoneMembers(db, uid, digits(typedPhone));
+    const typed = await samePhoneMembers(db, auth, uid, digits(typedPhone));
     return { match: typed.length > 0 ? "needs-phone" : "none" };
   }
 
-  const same = await samePhoneMembers(db, uid, verified);
+  // ★ 증명 기록은 "합칠 계정을 찾은 뒤"에 적습니다 — 먼저 적으면 내 uid가 그 번호의 주인으로 덮여 후보 확인이 흔들립니다.
+  const same = await samePhoneMembers(db, auth, uid, verified);
   if (same.length === 0) {
     // 휴대폰 로그인이라 처음부터 인증돼 있던 경우엔 그냥 새 계정입니다.
     // 합치기 시트에서 방금 인증했는데 계정이 없으면, 적은 번호와 다른 번호를 인증한 것입니다.
-    const typed = await samePhoneMembers(db, uid, digits(typedPhone));
+    const typed = await samePhoneMembers(db, auth, uid, digits(typedPhone));
+    await recordVerifiedPhone(db, token, uid);
     return { match: typed.length > 0 ? "phone-mismatch" : "none" };
   }
 
@@ -147,6 +230,7 @@ export async function linkIfSameMember(
     linkedAt: FieldValue.serverTimestamp(),
   });
   if (mine.exists) await mine.ref.delete();
+  await recordVerifiedPhone(db, token, primaryUid);
   return { match: "merged", token: await auth.createCustomToken(primaryUid, { linkedFrom: uid }) };
 }
 
@@ -174,6 +258,8 @@ export async function adoptIntoPhoneAccount(
     return { merged: false, token: null };
   }
   const primaryUid = await primaryUidOf(db, phoneToken.uid);
+  // 문자 인증을 거친 번호 계정이라 증명 기록을 남깁니다(후보를 찾는 함수가 아니므로 먼저 적어도 안전).
+  await recordVerifiedPhone(db, phoneToken, primaryUid);
   if (alias.uid === phoneToken.uid || alias.uid === primaryUid) {
     return { merged: false, token: null };
   }

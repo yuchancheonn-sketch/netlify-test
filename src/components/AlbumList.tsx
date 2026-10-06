@@ -40,6 +40,8 @@ import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, parseDateString, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
 import { requestPush } from "@/lib/push";
+import { useModeration } from "@/components/ModerationDialogs";
+import { useBlockedUids } from "@/lib/moderation";
 import { currentWeekId, weekIdForMillis, weekRangeLabel } from "@/lib/week";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
 
@@ -66,6 +68,8 @@ export function WeekAlbumBook({ weekId }: { weekId: string }) {
   const { cohort } = useViewCohort();
   const members = useCohortMembers(cohort);
   const authors = new Map(members.data.map((member) => [member.uid, member]));
+  /** 사용자 요청 2026-10-06(구글 플레이 출시 준비): 내가 차단한 사람의 소식은 감춥니다. */
+  const blocked = useBlockedUids();
 
   if (loading) {
     return (
@@ -81,6 +85,7 @@ export function WeekAlbumBook({ weekId }: { weekId: string }) {
       (album) =>
         inCohort(album, cohort) &&
         (album.category ?? "member") === "member" &&
+        !blocked.has(album.createdBy) &&
         weekOfAlbum(album) === weekId,
     )
     .map((album) => ({ id: album.id, title: album.title, album }));
@@ -153,8 +158,9 @@ export default function AlbumList({
    * category 칸이 없는 예전 소식은 모두 원우 소식으로 봅니다.
    * 위원회 칸에는 "소식 올리기" 단추를 두지 않습니다(사용자 "추가하기 기능은 없어도 돼").
    */
+  const blocked = useBlockedUids(); // 사용자 요청 2026-10-06(구글 플레이 출시 준비): 차단한 사람의 소식은 내 화면에서 감춥니다.
   const albums = allAlbums.filter(
-    (album) => inCohort(album, cohort) && (album.category ?? "member") === category,
+    (album) => inCohort(album, cohort) && (album.category ?? "member") === category && !blocked.has(album.createdBy),
   );
   const canAdd = category === "member";
   const isGuest = useIsGuest();
@@ -452,6 +458,8 @@ function AlbumBook({
 }) {
   const { user, isAdmin } = useAuth();
   const requireLogin = useRequireLogin();
+  /** 사용자 요청 2026-10-06(구글 플레이 출시 준비): 남의 소식 ⋯ 메뉴의 신고하기·차단하기 창. */
+  const { openReport, askBlock, dialogs: moderationDialogs } = useModeration();
   /**
    * ❤️ 공감 — 누르면 켜고 다시 누르면 취소(2026-10-06 사용자 요청: 기도(🙏)가 아니라 그냥 공감 — 하트).
    * 새로 켠 때만 글쓴이에게 폰 알림을 부탁합니다(/api/push/like — 서버가 글쓴이·중복을 가려 처음 한 번만 보냄, 같은 날 사용자 요청).
@@ -859,6 +867,29 @@ function AlbumBook({
                           onPray={() => togglePray(album)}
                           onEdit={canManage(album) ? () => setEditing(album) : undefined}
                           onRemove={canManage(album) ? () => setRemoving(album) : undefined}
+                          onReport={
+                            readOnly || album.createdBy === user?.uid
+                              ? undefined
+                              : () => {
+                                  if (requireLogin()) return;
+                                  openReport({
+                                    type: "album",
+                                    path: `photoAlbums/${album.id}`,
+                                    uid: album.createdBy,
+                                    name: authors.get(album.createdBy)?.name || album.createdByName || "원우",
+                                    preview: [album.title, album.body].filter(Boolean).join(" — "),
+                                    cohort: album.cohort ?? "",
+                                  });
+                                }
+                          }
+                          onBlock={
+                            readOnly || album.createdBy === user?.uid
+                              ? undefined
+                              : () => {
+                                  if (requireLogin()) return;
+                                  askBlock(album.createdBy, authors.get(album.createdBy)?.name || album.createdByName || "원우");
+                                }
+                          }
                         />
                       ) : album ? (
                         <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
@@ -949,6 +980,7 @@ function AlbumBook({
           onClose={() => setRemoving(null)}
         />
       ) : null}
+      {moderationDialogs}
     </>
   );
 
@@ -1198,6 +1230,8 @@ function ShareBack({
   onPray,
   onEdit,
   onRemove,
+  onReport,
+  onBlock,
 }: {
   album: PhotoAlbumDoc;
   author: UserDoc | undefined;
@@ -1206,6 +1240,9 @@ function ShareBack({
   /** 올린 원우·운영진에게만 — 없으면 ⋯ 를 그리지 않습니다. 누르면 작은 메뉴(수정 / 지우기, 뉴웨이브앱과 같음). */
   onEdit?: () => void;
   onRemove?: () => void;
+  /** 남의 소식에만 — ⋯ 메뉴에 "신고하기"·"차단하기"가 뜹니다 (사용자 요청 2026-10-06, 구글 플레이 출시 준비). */
+  onReport?: () => void;
+  onBlock?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
@@ -1254,7 +1291,7 @@ function ShareBack({
               {likedBy.length > 0 ? <span className="text-[13px] font-semibold tabular-nums">{likedBy.length}</span> : null}
             </button>
           )}
-          {onEdit && onRemove ? (
+          {(onEdit && onRemove) || (onReport && onBlock) ? (
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -1268,8 +1305,19 @@ function ShareBack({
                 <ActionMenu
                   onClose={() => setMenuOpen(false)}
                   items={[
-                    { label: "수정", onSelect: onEdit },
-                    { label: "지우기", danger: true, onSelect: onRemove },
+                    ...(onEdit && onRemove
+                      ? [
+                          { label: "수정", onSelect: onEdit },
+                          { label: "지우기", danger: true, onSelect: onRemove },
+                        ]
+                      : []),
+                    // 운영진이 남의 소식을 지울 때도 신고·차단은 함께 있습니다(내 소식에는 없음).
+                    ...(onReport && onBlock
+                      ? [
+                          { label: "신고하기", onSelect: onReport },
+                          { label: "차단하기", danger: true, onSelect: onBlock },
+                        ]
+                      : []),
                   ]}
                 />
               ) : null}

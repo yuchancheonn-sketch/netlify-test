@@ -75,6 +75,16 @@ export default function MemberEditSheet({
 }) {
   const { profile } = useAuth();
 
+  /*
+   * 2026-10-06 사용자 요청 (보안 점검 후 수정): 이미 가입한 **다른 원우**의 이름·기수·휴대폰은 본인(또는 운영진)만 고칩니다.
+   * 휴대폰 번호는 계정 합치기의 단서가 될 수 있고 기수는 단체 채팅방 자격을 가르므로, 보안 규칙(users update)이
+   * 남이 고치는 것을 막습니다. 그래서 이 경우 그 칸들을 잠그고 저장할 때 보내지도 않습니다.
+   * (가입 전 명단(roster) 칸과 내 정보는 예전처럼 모두 고칠 수 있습니다.)
+   */
+  const lockIdentity = Boolean(
+    entry?.member && entry.member.uid !== profile?.uid && profile?.role !== "admin",
+  );
+
   const [name, setName] = useState(entry?.name ?? "");
   // 새로 올릴 때는 추가할 수 있는 기수(10기)만 — 1기~9기 수첩에서는 추가하지 않습니다(lib/cohort.ts).
   const [cohort, setCohort] = useState(
@@ -110,13 +120,13 @@ export default function MemberEditSheet({
   async function handleSubmit() {
     if (saving || !profile) return;
 
-    if (!name.trim()) {
+    if (!lockIdentity && !name.trim()) {
       showNameError("이름을 입력해 주세요.");
       return;
     }
 
     // 이유는 lib/format.ts의 isKoreanName에.
-    if (!isKoreanName(name)) {
+    if (!lockIdentity && !isKoreanName(name)) {
       showNameError("이름은 한글로만 적어 주세요.");
       return;
     }
@@ -151,7 +161,7 @@ export default function MemberEditSheet({
     }
 
     const digits = phone.replace(/\D/g, "");
-    if (phone.trim() && (digits.length < 9 || digits.length > 11)) {
+    if (!lockIdentity && phone.trim() && (digits.length < 9 || digits.length > 11)) {
       setError("휴대폰 번호를 다시 확인해 주세요.");
       return;
     }
@@ -172,13 +182,12 @@ export default function MemberEditSheet({
       updatedAt: serverTimestamp(),
     };
     const fields = {
-      name: name.trim(),
-      cohort,
+      // 잠긴 칸(남의 가입 계정의 이름·기수·휴대폰)은 보내지 않습니다 — 위 lockIdentity 설명.
+      ...(lockIdentity ? {} : { name: name.trim(), cohort, phone: phone.trim() ? formatPhone(phone) : "" }),
       // 1·2기엔 대학생 원우가 없어 늘 일반 원우로 적습니다(lib/cohort.ts).
       memberType: hasYouthMembers(cohort) ? memberType : "general",
       company: company.trim(),
       position: position.trim(),
-      phone: phone.trim() ? formatPhone(phone) : "",
       councilRole: councilRole.trim(),
       introVideoUrl: introVideoUrl.trim(),
     };
@@ -233,11 +242,18 @@ export default function MemberEditSheet({
         </p>
       ) : null}
 
+    {lockIdentity ? (
+      <p className="mb-5 text-[12px] leading-relaxed text-ink-faint">
+        이름·기수·휴대폰은 본인만 고칠 수 있어요. (회사·직책·직위·영상은 함께 채워 주세요)
+      </p>
+    ) : null}
+
     <div className="mb-5">
       <FieldLabel htmlFor="edit-name">이름</FieldLabel>
       <input
         id="edit-name"
         value={name}
+        disabled={lockIdentity}
         onChange={(event) => {
           setName(event.target.value.slice(0, 20));
           setNameError(null);
@@ -254,6 +270,7 @@ export default function MemberEditSheet({
       <select
         id="edit-cohort"
         value={cohort}
+        disabled={lockIdentity}
         onChange={(event) => {
           setCohort(event.target.value);
           setNameError(null);
@@ -333,6 +350,7 @@ export default function MemberEditSheet({
       <input
         id="edit-phone"
         value={phone}
+        disabled={lockIdentity}
         onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
         inputMode="tel"
         placeholder="010-1234-5678"

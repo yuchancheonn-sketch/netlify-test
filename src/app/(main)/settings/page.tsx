@@ -11,6 +11,8 @@ import { Spinner } from "@/components/ui";
 import { ConfirmDialog, Sheet, SheetActions } from "@/components/Sheet";
 import { withdrawMyAccount } from "@/lib/account-link";
 import { useAuth } from "@/lib/auth-context";
+import { useApprovedMembers } from "@/lib/hooks";
+import { unblockUser, useBlockedUids } from "@/lib/moderation";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
 import { refreshPushState, usePushState } from "@/lib/use-push";
 import { useDisplaySettings } from "@/lib/use-display-settings";
@@ -40,6 +42,8 @@ export default function SettingsPage() {
   const [confirmingLogout, setConfirmingLogout] = useState(false);
   /** "정말 탈퇴할까요?" 시트가 떠 있는지 */
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
+  /** "차단한 사용자" 시트가 떠 있는지 (사용자 요청 2026-10-06, 구글 플레이 출시 준비) */
+  const [showBlocked, setShowBlocked] = useState(false);
 
   /*
    * 오른쪽으로 밀어서 앞 화면으로 — 내 프로필 화면과 같은 손짓입니다.
@@ -112,6 +116,30 @@ export default function SettingsPage() {
             checked={resolved === "dark"}
             onChange={(on) => setTheme(on ? "dark" : "light")}
           />
+        </section>
+
+        {/*
+          이용 안내 (사용자 요청 2026-10-06, 구글 플레이 출시 준비) — 이용약관·개인정보 처리방침(로그인 없이 열리는 /terms·/privacy)과,
+          로그인한 사람에게는 "차단한 사용자"(차단 풀기). 모양은 위 "관리자 화면" 줄과 같은 알약 링크입니다.
+        */}
+        <section>
+          <SectionTitle>이용 안내</SectionTitle>
+          <div className="flex flex-col gap-2">
+            <Link href="/terms" className={guideRowClassName}>
+              <span className="-translate-y-[2px] text-[17px] font-bold text-ink">이용약관</span>
+              <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+            </Link>
+            <Link href="/privacy" className={guideRowClassName}>
+              <span className="-translate-y-[2px] text-[17px] font-bold text-ink">개인정보 처리방침</span>
+              <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+            </Link>
+            {isGuest ? null : (
+              <button type="button" onClick={() => setShowBlocked(true)} className={`${guideRowClassName} w-full text-left`}>
+                <span className="-translate-y-[2px] text-[17px] font-bold text-ink">차단한 사용자</span>
+                <ChevronRightIcon className="h-5 w-5 text-ink-faint" />
+              </button>
+            )}
+          </div>
         </section>
 
         {/*
@@ -213,6 +241,8 @@ export default function SettingsPage() {
         />
       ) : null}
 
+      {showBlocked ? <BlockedSheet onClose={() => setShowBlocked(false)} /> : null}
+
       {confirmingWithdraw ? (
         <WithdrawSheet
           onClose={() => setConfirmingWithdraw(false)}
@@ -221,6 +251,50 @@ export default function SettingsPage() {
       ) : null}
     </div>
     </>
+  );
+}
+
+/** "이용 안내" 칸의 알약 줄 — 관리자 화면 줄과 같은 모양(높이 52px). */
+const guideRowClassName =
+  "flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]";
+
+/**
+ * 내가 차단한 사람 목록 — 여기서 차단을 풉니다 (사용자 요청 2026-10-06, 구글 플레이 출시 준비).
+ * 이름은 원우 명단에서 찾고, 명단에 없으면(탈퇴 등) "알 수 없는 원우".
+ * 포털이어도 React 이벤트는 설정 화면까지 올라가 "밀어서 뒤로"가 움직이므로, 시트에서 시작한 손짓은 막습니다(로그아웃 확인 창과 같음).
+ */
+function BlockedSheet({ onClose }: { onClose: () => void }) {
+  const { user } = useAuth();
+  const blocked = useBlockedUids();
+  const members = useApprovedMembers();
+  const rows = [...blocked].map((uid) => ({ uid, name: members.data.find((member) => member.uid === uid)?.name ?? "알 수 없는 원우" }));
+  return (
+    <div
+      onTouchStart={(event) => event.stopPropagation()}
+      onTouchMove={(event) => event.stopPropagation()}
+      onTouchEnd={(event) => event.stopPropagation()}
+    >
+      <Sheet title="차단한 사용자" onClose={onClose}>
+        {rows.length ? (
+          <ul className="mb-4 flex flex-col">
+            {rows.map((row) => (
+              <li key={row.uid} className="flex items-center justify-between gap-3 py-3">
+                <span className="min-w-0 truncate text-[16px] font-medium text-ink">{row.name}</span>
+                <button
+                  type="button"
+                  onClick={() => user && void unblockUser(user.uid, row.uid).catch(() => undefined)}
+                  className="shrink-0 text-[14px]! font-bold text-brand-500"
+                >
+                  차단 해제
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mb-6 py-6 text-center text-[14px] text-ink-muted">차단한 사용자가 없어요</p>
+        )}
+      </Sheet>
+    </div>
   );
 }
 

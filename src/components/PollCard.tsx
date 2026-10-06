@@ -6,6 +6,8 @@ import { Badge, FieldError, FieldLabel, inputClassName } from "@/components/ui";
 import { Sheet, SheetActions } from "@/components/Sheet";
 import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
+import { useModeration } from "@/components/ModerationDialogs";
+import { useBlockedUids } from "@/lib/moderation";
 import { useHasVoted, usePollOpinions, usePolls, usePollTally } from "@/lib/hooks";
 import {
   addOpinion,
@@ -95,11 +97,47 @@ function PollTags({ poll }: { poll: PollDoc }) {
  * 홈(열린 것만)과 역대 투표 화면(닫힌 것까지)이 함께 씁니다 — 닫힌 것은 결과만 보입니다.
  */
 export function PollBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
+  /*
+   * 신고·차단 (사용자 요청 2026-10-06, 구글 플레이 출시 준비): 내가 차단한 사람이 만든 투표·의견 모으기는 감추고,
+   * 남이 만든 것 아래에는 작은 "신고 · 차단"을 둡니다(로그인한 원우에게만). 신고된 투표는 운영진이 지울 수 있습니다.
+   */
+  const blocked = useBlockedUids();
+  const { openReport, askBlock, dialogs } = useModeration();
+  if (poll.createdBy && blocked.has(poll.createdBy)) return null;
+  const others = !!myUid && !!poll.createdBy && poll.createdBy !== myUid;
   // kind가 없는 옛 문서는 투표입니다 (투표가 먼저 있었습니다).
-  return poll.kind === "opinion" ? (
-    <OpinionBoard poll={poll} myUid={myUid} />
-  ) : (
-    <VoteBoard poll={poll} myUid={myUid} />
+  return (
+    <div>
+      {poll.kind === "opinion" ? <OpinionBoard poll={poll} myUid={myUid} /> : <VoteBoard poll={poll} myUid={myUid} />}
+      {others ? (
+        <div className="mt-1.5 flex justify-end gap-3 px-2">
+          <button
+            type="button"
+            onClick={() =>
+              openReport({
+                type: "poll",
+                path: `polls/${poll.id}`,
+                uid: poll.createdBy,
+                name: poll.createdByName || "원우",
+                preview: poll.question,
+                cohort: poll.cohort ?? "",
+              })
+            }
+            className="text-[12px]! font-bold text-ink-faint underline underline-offset-2"
+          >
+            신고
+          </button>
+          <button
+            type="button"
+            onClick={() => askBlock(poll.createdBy, poll.createdByName || "원우")}
+            className="text-[12px]! font-bold text-ink-faint underline underline-offset-2"
+          >
+            차단
+          </button>
+        </div>
+      ) : null}
+      {dialogs}
+    </div>
   );
 }
 
@@ -330,6 +368,8 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   const { isAdmin } = useAuth();
   const requireLogin = useRequireLogin();
   const { data: opinions } = usePollOpinions(poll.id);
+  /** 익명 의견은 쓴 사람이 기록되지 않으므로 신고만 됩니다(차단 불가) — 사용자 요청 2026-10-06, 구글 플레이 출시 준비. */
+  const { openReport, dialogs: moderationDialogs } = useModeration();
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -465,11 +505,30 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
                 >
                   지우기
                 </button>
+              ) : myUid ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openReport({
+                      type: "opinion",
+                      path: `polls/${poll.id}/opinions/${opinion.id}`,
+                      uid: "",
+                      name: "",
+                      preview: opinion.text,
+                      cohort: poll.cohort ?? "",
+                    })
+                  }
+                  aria-label="이 의견 신고하기"
+                  className="shrink-0 text-[12px]! font-bold text-ink-faint underline underline-offset-2"
+                >
+                  신고
+                </button>
               ) : null}
             </li>
           ))}
         </ul>
       ) : null}
+      {moderationDialogs}
 
       {error ? (
         <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">

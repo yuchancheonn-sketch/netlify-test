@@ -1,4 +1,4 @@
-import { authorizeAccountRequest, primaryUidOf } from "@/lib/account-link-server";
+import { authorizeAccountRequest, primaryUidOf, recordVerifiedPhone } from "@/lib/account-link-server";
 
 /**
  * "이 로그인은 다른 계정에 이어져 있나" 묻는 창구 (2026-09-22).
@@ -14,6 +14,9 @@ export async function POST(request: Request) {
 
   const uid = authed.token.uid;
   const primary = await primaryUidOf(authed.db, uid);
+  // 2026-10-06 사용자 요청 (보안 점검 후 수정): 문자로 인증된 번호면 서버에만 "이 본계정이 증명함"을 적어 둡니다
+  // (옛 계정 이월 포함 — lib/account-link-server.ts 맨 위 설명).
+  await recordVerifiedPhone(authed.db, authed.token, primary);
   const token = primary === uid ? null : await authed.auth.createCustomToken(primary, { linkedFrom: uid });
   return Response.json({ ok: true, token }, { headers: { "Cache-Control": "no-store" } });
 }

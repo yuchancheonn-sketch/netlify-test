@@ -44,3 +44,21 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# 앱(Capacitor)용 — 2026-10-06 사용자 요청 (구글 플레이 출시 준비)
+# npm run build:app 이 만드는 정적 화면 파일
+/app-dist/
+# 안드로이드 빌드 결과·내 컴퓨터 설정
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+/android/captures/
+/android/app/src/main/assets/public/
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/assets/capacitor.plugins.json
+/android/app/src/main/res/xml/config.xml
+# 서명 키·비밀번호 — 절대 커밋 금지(분실하면 플레이 콘솔에서 업로드 키 재설정을 요청해야 함)
+/android/keystore.properties
+*.jks
+*.keystore

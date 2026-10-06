@@ -10,7 +10,7 @@ import { cohortOf } from "@/lib/cohort";
  *
  * ★ 지우는 것
  *   - 로그인 계정(Firebase Auth) — 본계정과, 거기 합쳐진 별칭 계정(구글·카카오·휴대폰) 모두
- *   - 계정 합치기 기록(accountLinks), 이 원우의 알림 받는 기기(pushTokens)
+ *   - 계정 합치기 기록(accountLinks), 이 원우의 알림 받는 기기(pushTokens), 차단 목록(userBlocks)·올린 신고(reports)
  *   - users 문서 — 프로필 사진, 생일, 권한 같은 계정 정보가 함께 사라집니다.
  * ★ 남기는 것
  *   - 원우수첩 칸 — ★ 어떤 경우에도 수첩에서 빠지지 않습니다(아래 withdrawAccount 주석): users 문서의 이름·기수·회사·직책·연락처·직위·소개·영상을 **명단(roster)** 으로 옮겨,
@@ -40,6 +40,12 @@ export async function withdrawAccount(db: Firestore, auth: Auth, uid: string): P
 
   const aliases = await db.collection(ACCOUNT_LINKS).where("primaryUid", "==", uid).get();
   const devices = await db.collection("pushTokens").where("uid", "==", uid).get();
+  // 사용자 요청 2026-10-06(구글 플레이 출시 준비): 내가 차단한 목록과 내가 올린 신고도 함께 지웁니다. (남이 나를 신고한 기록은 운영 기록이라 둠)
+  const myReports = await db.collection("reports").where("reporterUid", "==", uid).get();
+  await Promise.all([
+    ...myReports.docs.map((doc) => doc.ref.delete()),
+    db.collection("userBlocks").doc(uid).delete(),
+  ]);
   await Promise.all([
     ...aliases.docs.map((doc) => doc.ref.delete()),
     ...devices.docs.map((doc) => doc.ref.delete()),

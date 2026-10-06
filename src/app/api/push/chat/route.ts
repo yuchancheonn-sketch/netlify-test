@@ -1,3 +1,4 @@
+import { FieldValue } from "firebase-admin/firestore";
 import { cohortOfRoomId, cohortRoomTitle } from "@/lib/chat-room-id";
 import { cohortOf } from "@/lib/cohort";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
@@ -20,6 +21,14 @@ import { sendPushToUsers } from "@/lib/push-server";
  *
  * 보낸 사람 이름은 클라이언트 말을 믿지 않고 users 문서에서 직접 읽습니다.
  * 알림은 있으면 좋은 것이라, 설정이 없거나 실패해도 200으로 조용히 넘어갑니다.
+ *
+ * ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): 이 창구는 "누구나 아무 문구로 원우들 폰에 알림을 뿌리는" 길이었습니다.
+ *   이제 ① 보낸 사람이 승인된(status approved) 원우여야 하고, ② 클라이언트가 보낸 문구(text)는 믿지 않고
+ *   **messageId로 방의 실제 메시지를 읽어** 보낸 사람(senderId)이 호출자와 같을 때만, 그 메시지 글로 알림을 만들며,
+ *   ③ 같은 메시지는 한 번만(pushLog `chat:방:메시지`), ④ 보낸 사람당 1분에 20건까지만(pushLog `chatrate:uid:분`) 보냅니다.
+ *   1:1 방은 방 id에 두 uid가 모두 있고 방 문서가 있으면 memberUids도 그 둘이어야 하며, 단체방은 호출자의
+ *   서버 쪽 기수(users.cohort)와 방 기수가 같아야 합니다(운영진 예외).
+ *   예전 앱(messageId를 안 보내는 버전)의 알림은 거절됩니다 — 웹을 먼저 배포하면 옛 화면이 열려 있던 사람의 알림만 한동안 안 갑니다.
  *
  * 앱 전체에 하나였던 옛 단체방("main")은 2026-09-10에 없앴습니다. 아는 두 모양이 아닌 id는 거절합니다.
  */
@@ -45,16 +54,51 @@ export async function POST(request: Request) {
 
   const payload = (await request.json().catch(() => null)) as {
     roomId?: unknown;
-    text?: unknown;
+    messageId?: unknown;
   } | null;
   const roomId = typeof payload?.roomId === "string" ? payload.roomId : "";
-  const text = typeof payload?.text === "string" ? payload.text.trim() : "";
-  if (!roomId || !text) {
+  const messageId = typeof payload?.messageId === "string" ? payload.messageId : "";
+  // Firestore 문서 id 모양만(경로를 비집고 들어오는 값 차단).
+  if (!roomId || !messageId || !/^[A-Za-z0-9_:.-]{1,200}$/.test(roomId) || !/^[A-Za-z0-9]{1,64}$/.test(messageId)) {
     return Response.json({ ok: false, reason: "bad-request" }, { status: 400 });
   }
 
-  // 보낸 사람 이름·기수는 서버가 직접 확인합니다.
+  // 보낸 사람 이름·기수는 서버가 직접 확인합니다. 승인된 원우만(차단당한 계정은 알림도 못 보냄).
   const senderSnap = await db.collection("users").doc(senderUid).get();
+  if (senderSnap.get("status") !== "approved") {
+    return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+  }
+
+  // 알림 글은 클라이언트 말이 아니라 방에 실제로 저장된 메시지에서 읽습니다.
+  const messageSnap = await db.collection("chatRooms").doc(roomId).collection("messages").doc(messageId).get();
+  if (!messageSnap.exists || messageSnap.get("senderId") !== senderUid) {
+    return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+  }
+  const sentAtMs = (messageSnap.get("createdAt") as { toMillis?: () => number } | undefined)?.toMillis?.() ?? 0;
+  if (Date.now() - sentAtMs > 2 * 60 * 1000) {
+    // 오래된 메시지로 알림을 다시 만드는 것을 막습니다.
+    return Response.json({ ok: false, reason: "stale" }, { status: 400 });
+  }
+  const rawText = messageSnap.get("text");
+  const text = (typeof rawText === "string" && rawText.trim() ? rawText.trim() : "사진을 보냈어요").slice(0, 300);
+
+  // 같은 메시지는 한 번만 + 보낸 사람당 분당 상한. 둘 다 서버만 쓰는 pushLog에 남깁니다.
+  try {
+    await db.collection("pushLog").doc(`chat:${roomId}:${messageId}`).create({ by: senderUid, at: new Date() });
+  } catch {
+    return Response.json({ ok: true, sent: 0, reason: "duplicate" });
+  }
+  const bucket = db.collection("pushLog").doc(`chatrate:${senderUid}:${Math.floor(Date.now() / 60000)}`);
+  const count = await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(bucket);
+    const next = ((snap.get("count") as number | undefined) ?? 0) + 1;
+    transaction.set(bucket, { count: next, at: FieldValue.serverTimestamp() });
+    return next;
+  });
+  if (count > 20) {
+    return Response.json({ ok: false, reason: "rate-limited" }, { status: 429 });
+  }
+
   const senderName = (senderSnap.get("name") as string | undefined) || "원우";
 
   const roomCohort = cohortOfRoomId(roomId);
@@ -86,8 +130,16 @@ export async function POST(request: Request) {
   } else {
     // ── 1:1 방: 방 id에 들어 있는 상대 ──
     const parts = roomId.split("__");
-    if (parts.length !== 2 || !parts.includes(senderUid)) {
+    if (parts.length !== 2 || parts[0] === parts[1] || !parts.includes(senderUid)) {
       return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+    }
+    // 방 문서가 이미 있으면 참여자 목록(memberUids)도 이 두 사람이어야 합니다.
+    const roomSnap = await db.collection("chatRooms").doc(roomId).get();
+    if (roomSnap.exists) {
+      const members = (roomSnap.get("memberUids") as string[] | undefined) ?? [];
+      if (members.length !== 2 || !parts.every((uid) => members.includes(uid))) {
+        return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+      }
     }
     recipientUids = parts.filter((uid) => uid !== senderUid);
     title = senderName;

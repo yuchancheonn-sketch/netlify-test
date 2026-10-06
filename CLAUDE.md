@@ -53,3 +53,28 @@ Claude Code와 이 저장소만 있으면 어느 컴퓨터에서든 바로 이�
 - effect 안에서 `setState` 하지 마세요. `react-hooks/set-state-in-effect` 린트가
   켜져 있어 **빌드가 멈춥니다.** 브라우저 상태는 `useSyncExternalStore`로
   끌어옵니다 (`lib/use-push.ts`, `lib/use-display-settings.ts`가 본보기).
+
+## 보안 점검 후 수정 (2026-10-06)
+
+보안 점검에서 나온 것을 고쳤습니다(사용자 요청). **규칙·서버 코드가 함께 나가야 동작**하고, 규칙 문법은 에뮬레이터로 아직 못 돌려 봤습니다
+(`scripts/rules-test/rules.test.mjs`는 작성만 함 — 실행법은 그 파일 맨 위. `npm i -D @firebase/rules-unit-testing` + Java 필요).
+
+- **계정 탈취 차단**: 예전엔 원우 누구나 남의 `users.phone`을 고칠 수 있었고, `/api/account/link`가 그 phone을 믿어 남(운영진 포함) 계정의
+  로그인 표를 내줬습니다. ① `firestore.rules` users update: 남의 문서는 수첩 칸(회사·직책·직위·소개 영상·구분 + updatedBy*)만, 본인은 uid·createdAt·verifiedPhone* 불가,
+  create는 가입 화면이 적는 칸만. ② `lib/account-link-server.ts`: users.phone은 후보 힌트일 뿐, 후보가 번호를 **서버에서 증명**해야 합침 —
+  `verifiedPhones/{번호}`={uid(본계정),at}(서버만, 규칙에 안 적음; link·resolve·adopt에서 문자 인증 토큰을 볼 때 기록) 또는 후보(·별칭)의 Firebase Auth
+  phoneNumber(옛 휴대폰 가입 계정은 첫 합치기 때 자동으로 `verifiedPhones`에 이월). ★ 이월 한계: 구글·카카오로 가입하고 번호를 **손으로만 적은** 계정은
+  증명이 없어 나중 로그인과 자동으로 합쳐지지 않음(그 원우가 한 번 번호 인증하거나 운영진이 합쳐 줌). 운영진 계정도 같은 기준.
+  `MemberEditSheet`는 남의 가입 계정의 이름·기수·휴대폰 칸을 잠급니다(명단 roster 칸·내 정보는 그대로).
+- **`/api/public/directory`**: 둘러보는 사람에겐 이름·기수·사진·구분만(uid·명단 id는 해시). 생일·회사·소개·영상·직위·역할 제거.
+- **컬렉션 좁힘**: roster(지우기 운영진만, linkedUid는 내 uid로 처음 잇기만), photoAlbums(createdBy 본인·올린 사람/운영진만 고침·지움, 공감은 likedBy의 내 uid만,
+  사진 더하기 협업용 photoCount ±범위·대표 사진), photos(uploadedBy 본인, 지우기는 올린 사람·앨범 주인·운영진), files(Cloudinary https 주소만),
+  committeeInfo(칸·2000자 제한, 누구나 고침 유지), sessions(운영진만 — 앱에서 쓰는 곳 없음), chatRooms(칸 제한·1:1 memberUids=id의 두 uid·방 지우기 금지, 방 id는 uid 두 개).
+  ★ Cloudinary 클라우드 이름(qz4f4bh5)이 규칙 `isCloudinaryUrl`에 박혀 있음 — 바꾸면 같이 고칠 것.
+- **`/api/push/chat`**: 승인된 원우만, 문구는 `messageId`로 방의 실제 메시지에서 읽음(보낸 사람 일치·2분 이내), 같은 메시지 1회(pushLog `chat:방:메시지`),
+  보낸 사람당 분당 20건(pushLog `chatrate:uid:분`), 1:1 방 memberUids 확인. 클라이언트(`lib/chat-rooms.ts`)는 `{roomId, messageId}`를 보냄 — 옛 화면은 알림이 안 감.
+- **카카오 로그인**: `redirectUri`는 서버 허용 목록(`https://aegiaeta.web.app/auth/kakao`, 개발 중 localhost:3000, `KAKAO_EXTRA_ALLOWED_ORIGINS` 환경변수/`EXTRA_ALLOWED_ORIGINS`)과 글자 그대로 같을 때만.
+  `state` 확인은 이미 클라이언트(`consumeKakaoState`)에 있었음. 사설 IP 폰 테스트 주소는 환경변수에 적어야 함.
+- **배포 순서**: 웹(App Hosting) **먼저**, 규칙 **나중**(`npm run deploy`가 이 순서가 아닐 수 있으니 확인). 새 규칙에서 옛 웹은 남의 가입 계정 이름·기수·휴대폰 저장이 막힘.
+- **열어 둔 권고(미구현)**: ① 가입을 pending+운영진 승인으로(지금은 approved — 사용자 결정, 누구나 원우 연락처를 읽음) ② Cloudinary 서명 업로드(지금 unsigned preset)
+  ③ 보안 헤더(next.config.ts 담당 작업) ④ 다른 푸시 창구·퀴즈 등의 속도 제한 ⑤ users 문서 전체를 가입자 누구나 읽음(번호 분리 문서 필요).

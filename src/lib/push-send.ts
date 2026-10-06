@@ -31,15 +31,27 @@ export interface PushPayload {
 /** FCM이 한 번에 받는 토큰 수 상한. 넘기면 그 발송이 통째로 거절됩니다. */
 const FCM_MULTICAST_LIMIT = 500;
 
-/** 그 사람들의 모든 기기 토큰. Firestore "in" 질의는 한 번에 최대 30개까지라 나눠서 훑습니다. */
-export async function tokensForUids(db: Firestore, uids: string[]): Promise<string[]> {
-  const tokens: string[] = [];
+/**
+ * 기기 토큰 묶음 (2026-10-06 사용자 요청 (구글 플레이 출시 준비), 뉴웨이브앱과 같음) — 웹(서비스워커가 알림을 띄움)과
+ * 앱(안드로이드 등, FCM이 알림을 띄움)은 보내는 모양이 달라 나눕니다.
+ */
+export interface PushTargets {
+  web: string[];
+  native: string[];
+}
+
+/** 그 사람들의 모든 기기 토큰. Firestore "in" 질의는 한 번에 최대 30개까지라 나눠서 훑습니다. platform이 없는 옛 문서는 웹입니다. */
+export async function tokensForUids(db: Firestore, uids: string[]): Promise<PushTargets> {
+  const tokens: PushTargets = { web: [], native: [] };
   for (let i = 0; i < uids.length; i += 30) {
     const snap = await db
       .collection("pushTokens")
       .where("uid", "in", uids.slice(i, i + 30))
       .get();
-    snap.forEach((doc) => tokens.push(doc.id));
+    snap.forEach((doc) => {
+      const platform = doc.get("platform");
+      (platform === "android" || platform === "ios" ? tokens.native : tokens.web).push(doc.id);
+    });
   }
   return tokens;
 }
@@ -51,8 +63,20 @@ export async function tokensForUids(db: Firestore, uids: string[]): Promise<stri
 export async function sendPushToTokens(
   db: Firestore,
   messaging: Messaging,
+  targets: PushTargets,
+  payload: PushPayload,
+): Promise<{ sent: number; failed: number }> {
+  const first = await sendToGroup(db, messaging, targets.web, payload, false);
+  const second = await sendToGroup(db, messaging, targets.native, payload, true);
+  return { sent: first.sent + second.sent, failed: first.failed + second.failed };
+}
+
+async function sendToGroup(
+  db: Firestore,
+  messaging: Messaging,
   tokens: string[],
   payload: PushPayload,
+  native: boolean,
 ): Promise<{ sent: number; failed: number }> {
   const unique = [...new Set(tokens)].filter(Boolean);
   if (unique.length === 0) return { sent: 0, failed: 0 };
@@ -77,12 +101,23 @@ export async function sendPushToTokens(
      * 온전한 주소이기를 요구해서 "/chat/…" 같은 앱 안 주소를 넣으면 발송
      * 자체가 거절당합니다. 누르면 어디로 갈지는 서비스워커의 notificationclick 이 data.url 로 정합니다.
      */
+    /*
+     * 앱(안드로이드)은 서비스워커가 없어서 data만 보내면 앱이 꺼져 있을 때 알림이 뜨지 않습니다 — notification을 함께 보냅니다
+     * (2026-10-06 사용자 요청 (구글 플레이 출시 준비)). 알림을 누르면 앱이 열리고 data.url을 앱이 읽어 그 화면으로 갑니다(components/NativeAppSync.tsx).
+     */
     const response = await messaging.sendEachForMulticast({
       tokens: chunk,
       data: { title: payload.title, body, url: payload.url, tag: payload.tag },
-      webpush: {
-        headers: { Urgency: "high", TTL: String(payload.ttlSeconds ?? 1800) },
-      },
+      ...(native
+        ? {
+            notification: { title: payload.title, body },
+            android: {
+              priority: "high" as const,
+              ttl: (payload.ttlSeconds ?? 1800) * 1000,
+              notification: { tag: payload.tag, channelId: "default" },
+            },
+          }
+        : { webpush: { headers: { Urgency: "high", TTL: String(payload.ttlSeconds ?? 1800) } } }),
     });
     sent += response.successCount;
     failed += response.failureCount;

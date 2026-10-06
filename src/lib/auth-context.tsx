@@ -11,7 +11,9 @@ import {
 } from "react";
 import {
   getRedirectResult,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithPopup,
   signInWithRedirect,
   signOut,
@@ -19,6 +21,7 @@ import {
 } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db, googleProvider, isFirebaseConfigured } from "@/lib/firebase";
+import { isNativeApp } from "@/lib/native";
 import type { UserDoc } from "@/lib/types";
 
 /**
@@ -144,9 +147,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async () => {
     setAuthError(null);
     try {
+      if (isNativeApp()) {
+        // 2026-10-06 사용자 요청 (구글 플레이 출시 준비): 앱 안(https://localhost)에서는 구글 팝업이 안 떠서
+        // 폰의 구글 로그인 창을 쓰고, 받은 표로 웹 SDK에 로그인합니다(capacitor.config.ts의 skipNativeAuth).
+        const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+        const { credential } = await FirebaseAuthentication.signInWithGoogle();
+        if (!credential?.idToken) throw new Error("no-id-token");
+        await signInWithCredential(auth, GoogleAuthProvider.credential(credential.idToken));
+        return;
+      }
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       const code = (error as { code?: string })?.code ?? "";
+      // 앱에서 사용자가 구글 창을 닫은 경우는 오류로 취급하지 않습니다.
+      if (isNativeApp() && /cancel/i.test(`${code} ${(error as Error)?.message ?? ""}`)) return;
       // 사용자가 팝업을 직접 닫은 경우는 오류로 취급하지 않습니다.
       if (code === "auth/cancelled-popup-request" || code === "auth/popup-closed-by-user") {
         return;

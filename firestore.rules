@@ -75,7 +75,19 @@ service cloud.firestore {
      * 아무도 열지도 쓰지도 못합니다.
      */
     function isRoomMember(roomId) {
-      return request.auth.uid in roomId.split('__');
+      // 2026-10-06 (보안 점검 후 수정): 방 id는 반드시 uid 두 개(a__b). 내 uid 하나만이거나 셋 이상인 모양은 받지 않습니다.
+      return roomId.split('__').size() == 2 && request.auth.uid in roomId.split('__');
+    }
+
+    /*
+     * 대화방 문서의 모양 확인 (2026-10-06 보안 점검 후 수정) — 1:1 방은 memberUids가 방 id의 두 uid와 같아야 하고,
+     * 단체방은 memberUids 없이 cohort가 방 id의 기수여야 합니다. 칸이 없으면(기본값) 통과 — 낡은 방 문서 배려.
+     */
+    function chatRoomShapeOk(roomId) {
+      return isCohortRoom(roomId)
+             ? (!request.resource.data.keys().hasAny(['memberUids'])
+                && request.resource.data.get('cohort', roomId.split('-')[1] + '기') == roomId.split('-')[1] + '기')
+             : request.resource.data.get('memberUids', roomId.split('__')).toSet() == roomId.split('__').toSet();
     }
 
     /*
@@ -175,22 +187,56 @@ service cloud.firestore {
        * (차단당한 사람이 문서를 지우고 다시 만드는 길은 없습니다 — 문서가
        *  이미 있으면 create가 아니라 update로 취급되고, delete는 아무도 못 합니다.)
        */
+      /*
+       * ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): 만들 때 들어갈 수 있는 칸을 가입 화면(app/join/page.tsx)이
+       *   적는 칸으로만 묶었습니다. 서버가 쓰는 칸(verifiedPhone 등)이나 엉뚱한 칸을 처음부터 심는 길을 막습니다.
+       *   status 'approved'는 사용자 결정이라 그대로입니다(승인제 권장 — CLAUDE.md "보안 점검 후 수정").
+       *   join 화면에 칸을 더하면 여기 목록에도 더해야 합니다(안 더하면 가입이 permission-denied).
+       */
       allow create: if isSignedIn()
                     && request.auth.uid == uid
                     && request.resource.data.status == 'approved'
-                    && request.resource.data.role == 'member';
+                    && request.resource.data.role == 'member'
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'email', 'name', 'photoURL', 'birthdayMonthDay', 'birthdayYear',
+                         'memberType', 'company', 'position', 'phone', 'councilRole',
+                         'introduction', 'introVideoUrl', 'role', 'status', 'cohort',
+                         'inviteCode', 'profileCompleted', 'createdAt'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.get('profileCompleted', false) == false
+                    && request.resource.data.get('createdAt', request.time) == request.time;
 
       /*
        * 수첩은 원우 누구나 서로 채워줍니다 — 그건 그대로 둡니다.
        * 다만 권한(role)과 승인 상태(status)만은 운영진만 건드릴 수 있습니다.
        * 이 두 줄이 없으면 원우 아무나 자기를 운영진으로 올릴 수 있습니다.
+       *
+       * ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): "남의 문서는 아무 칸이나"를 **허용 칸 목록**으로 좁혔습니다.
+       *   예전에는 남의 users 문서의 phone까지 고칠 수 있었고, 계정 합치기(/api/account/link)가 그 phone을 믿어
+       *   남의(운영진 포함) 계정의 로그인 표를 가져갈 수 있었습니다. 지금은
+       *   - 운영진: 전부(예전과 같음).
+       *   - 본인: role·status 말고도 uid·createdAt·서버가 적는 칸(verifiedPhone, verifiedPhoneAt)은 못 바꿈.
+       *     (phone·email·cohort·photoURL은 본인 것이라 그대로 고칠 수 있음.)
+       *   - 다른 원우: 수첩 칸(회사·직책·원우회 직위·소개 영상·구분)만 + 고친 사람 표시(updatedBy는 반드시 내 uid).
+       *     이름·기수·휴대폰·이메일·사진·자기소개·생일은 본인이나 운영진만 고칩니다.
+       *     (기수는 단체 채팅방 자격을 가르는 값이라 남이 옮기면 안 됩니다.)
+       *   MemberEditSheet가 남의 가입 계정을 고칠 때 이름·기수·휴대폰 칸을 잠그고 보내지 않는 것도 이 규칙 때문입니다.
        */
       allow update: if isAdmin()
                     || (isMember()
+                        && request.auth.uid == uid
                         && request.resource.data.get('role', 'member')
                              == resource.data.get('role', 'member')
                         && request.resource.data.get('status', 'pending')
-                             == resource.data.get('status', 'pending'));
+                             == resource.data.get('status', 'pending')
+                        && !request.resource.data.diff(resource.data).affectedKeys()
+                             .hasAny(['uid', 'createdAt', 'verifiedPhone', 'verifiedPhoneAt', 'inviteCode']))
+                    || (isMember()
+                        && request.auth.uid != uid
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['memberType', 'company', 'position', 'councilRole',
+                                       'introVideoUrl', 'updatedBy', 'updatedByName', 'updatedAt'])
+                        && request.resource.data.get('updatedBy', '') == request.auth.uid);
 
       /*
        * 계정 삭제는 아무도 못 합니다. 지워도 다음 로그인에 다시 만들어질 뿐이고,
@@ -207,10 +253,48 @@ service cloud.firestore {
      *   로그인 안 한 사람의 원우수첩은 서버가 번호·이메일을 뺀 명단을 내려줍니다(/api/public/directory).
      */
     // ── 원우끼리 함께 쓰는 것들 ──
-    // 서로 수첩을 채워주고 명단을 정리하는 앱이라 이 안에서는 권한을 나누지 않았습니다.
+    // 서로 수첩을 채워주고 명단을 정리하는 앱이라 이 안에서는 권한을 크게 나누지 않았습니다.
+    // (2026-10-06 보안 점검 후: 아래 컬렉션마다 "누가 무엇을 고칠 수 있나"를 한 단계 좁혔습니다 — 각 자리 주석 참고.)
 
+    /*
+     * 사진·파일 주소는 이 앱의 Cloudinary 보관소(클라우드 이름 qz4f4bh5, apphosting.yaml의
+     * NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME)의 https 주소만 받습니다 — 남의 서버 주소(추적 픽셀·피싱 이미지)를
+     * 앨범·자료실에 걸어 두는 것을 막습니다. 클라우드 이름을 바꾸면 여기도 같이 고쳐야 합니다.
+     * (2026-10-06 사용자 요청 (보안 점검 후 수정))
+     */
+    function isCloudinaryUrl(value) {
+      return value is string && value.matches('^https://res[.]cloudinary[.]com/qz4f4bh5/.*');
+    }
+
+    /*
+     * roster — 아직 가입하지 않은 원우의 수첩 칸 (2026-10-06 보안 점검 후 좁힘).
+     *   읽기: 원우. 만들기: 원우 누구나(MemberEditSheet "원우 추가하기", 연결 안 된 칸 + 내가 만든 칸으로만).
+     *   고치기: ① 수첩 내용 칸만(고친 사람 updatedBy는 내 uid) ② linkedUid는 **내 uid로 처음 이을 때만**
+     *   (가입하면서 내 이름의 명단 칸에 잇는 lib/roster-link.ts). 남의 uid로 잇거나 이은 것을 바꾸는 일은 운영진만.
+     *   지우기: 운영진만(예전엔 원우 누구나 명단을 지울 수 있었음 — 앱에는 지우는 화면이 운영진 화면뿐).
+     */
     match /roster/{rosterId} {
-      allow read, write: if isMember();
+      allow read: if isMember();
+      allow create: if isAdmin()
+                    || (isMember()
+                        && request.resource.data.createdBy == request.auth.uid
+                        && request.resource.data.get('linkedUid', null) == null
+                        && request.resource.data.keys().hasOnly([
+                             'name', 'cohort', 'memberType', 'linkedUid', 'note', 'createdBy', 'createdAt',
+                             'company', 'position', 'phone', 'councilRole', 'bio', 'introVideoUrl',
+                             'updatedBy', 'updatedByName', 'updatedAt']));
+      allow update: if isAdmin()
+                    || (isMember()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['linkedUid'])
+                        && resource.data.get('linkedUid', null) == null
+                        && request.resource.data.get('linkedUid', null) == request.auth.uid)
+                    || (isMember()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['name', 'cohort', 'memberType', 'company', 'position', 'phone',
+                                       'councilRole', 'bio', 'introVideoUrl',
+                                       'updatedBy', 'updatedByName', 'updatedAt'])
+                        && request.resource.data.get('updatedBy', '') == request.auth.uid);
+      allow delete: if isAdmin();
     }
 
     /*
@@ -258,18 +342,93 @@ service cloud.firestore {
      * 위원회 일은 그 위원회 원우들이 직접 적는 것이 맞다는 판단입니다. 하루 전에는 운영진만 고칠 수 있었습니다.
      * (총괄 임원진 조직도는 앱 코드에 적혀 있어 아무도 앱에서 고칠 수 없습니다 — components/CommitteeOrgChart.tsx.)
      */
+    /*
+     * ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): "누구나 고침"(사용자 결정)은 그대로 두고, 칸과 길이만 묶었습니다.
+     *   고칠 수 있는 칸은 CommitteeRoster가 적는 goal·about·projects·updatedAt뿐, goal은 2000자까지.
+     *   (엉뚱한 칸·아주 긴 글로 문서를 부풀리는 것을 막음.) 지우기는 운영진만(앱에는 지우는 곳이 없음).
+     */
     match /committeeInfo/{committeeId} {
       allow read: if true;
-      allow write: if isMember();
+      allow create, update: if isMember()
+                            && request.resource.data.keys().hasOnly(['goal', 'about', 'projects', 'updatedAt'])
+                            && request.resource.data.get('goal', '') is string
+                            && request.resource.data.get('goal', '').size() <= 2000
+                            && request.resource.data.get('about', '') is string
+                            && request.resource.data.get('about', '').size() <= 2000
+                            && request.resource.data.get('projects', '') is string
+                            && request.resource.data.get('projects', '').size() <= 2000;
+      allow delete: if isAdmin();
     }
 
+    /*
+     * 행사 사진 앨범(원우 소식 카드). ★ 2026-10-06 사용자 요청 (보안 점검 후 수정)으로 좁혔습니다.
+     *   만들기: 원우, createdBy는 내 uid(남의 이름으로 올리기 불가), 사진 주소는 우리 Cloudinary 것.
+     *   고치기·지우기: 올린 사람과 운영진. 단, 원우 누구나 할 수 있는 것이 둘 있습니다.
+     *     ① ❤️ 공감 — likedBy에서 **내 uid만** 넣고 빼기(AlbumList togglePray).
+     *     ② 앨범 화면에서 아무 원우나 사진을 더하고/자기 사진을 지우는 협업(album.tsx) 때문에 photoCount를
+     *        한 번에 -1~+50 범위로, coverImageUrl은 아직 대표 사진이 없을 때 우리 Cloudinary 주소로만.
+     *   ★ 남긴 한계: photoCount는 원우끼리 ±범위 안에서 어긋나게 만들 수 있습니다(표시용 숫자라 감수).
+     */
     match /photoAlbums/{albumId} {
       allow read: if true;
-      allow write: if isMember();
 
+      allow create: if isMember()
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.keys().hasOnly([
+                         'title', 'eventDate', 'body', 'coverImageUrl', 'photoCount', 'cohort', 'weekId',
+                         'createdBy', 'createdByName', 'createdAt', 'category', 'likedBy'])
+                    && isCloudinaryUrl(request.resource.data.get('coverImageUrl', null));
+
+      allow update: if isAdmin()
+                    || (isMember()
+                        && resource.data.get('createdBy', '') == request.auth.uid
+                        && request.resource.data.get('createdBy', '') == resource.data.get('createdBy', '')
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['title', 'eventDate', 'body', 'coverImageUrl', 'photoCount', 'likedBy']))
+                    || (isMember()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
+                        && request.resource.data.likedBy is list
+                        && request.resource.data.likedBy.size() <= resource.data.get('likedBy', []).size() + 1
+                        && request.resource.data.likedBy.toSet().difference(resource.data.get('likedBy', []).toSet())
+                             .hasOnly([request.auth.uid])
+                        && resource.data.get('likedBy', []).toSet().difference(request.resource.data.likedBy.toSet())
+                             .hasOnly([request.auth.uid]))
+                    || (isMember()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['photoCount', 'coverImageUrl'])
+                        && request.resource.data.photoCount is int
+                        && request.resource.data.photoCount >= 0
+                        && request.resource.data.photoCount - resource.data.get('photoCount', 0) <= 50
+                        && request.resource.data.photoCount - resource.data.get('photoCount', 0) >= -50
+                        && (!('coverImageUrl' in request.resource.data.diff(resource.data).affectedKeys())
+                            || (resource.data.get('coverImageUrl', null) == null
+                                && isCloudinaryUrl(request.resource.data.coverImageUrl))));
+
+      allow delete: if isAdmin()
+                    || (isMember() && resource.data.get('createdBy', '') == request.auth.uid);
+
+      /*
+       * 앨범 안의 사진 한 장 한 장. 올리는 것은 원우 누구나(앨범 화면 "사진 더하기"가 열려 있는 협업 기능이라 그대로),
+       * 단 uploadedBy는 내 uid이고 주소는 우리 Cloudinary 것. 지우기는 올린 사람·앨범 올린 사람·운영진.
+       * 고치기는 캡션만(올린 사람·운영진).
+       */
       match /photos/{photoId} {
         allow read: if true;
-        allow write: if isMember();
+        allow create: if isMember()
+                      && request.resource.data.uploadedBy == request.auth.uid
+                      && request.resource.data.keys().hasOnly([
+                           'imageUrl', 'publicId', 'width', 'height', 'caption', 'uploadedBy',
+                           'uploadedByNickname', 'uploadedAt', 'likes'])
+                      && isCloudinaryUrl(request.resource.data.imageUrl);
+        allow update: if isAdmin()
+                      || (isMember()
+                          && resource.data.get('uploadedBy', '') == request.auth.uid
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption']));
+        allow delete: if isAdmin()
+                      || (isMember()
+                          && (resource.data.get('uploadedBy', '') == request.auth.uid
+                              || get(/databases/$(database)/documents/photoAlbums/$(albumId))
+                                   .data.get('createdBy', '') == request.auth.uid));
       }
     }
 
@@ -409,8 +568,13 @@ service cloud.firestore {
     match /files/{fileId} {
       // 보는 것도 원우만 (2026-09-25 사용자 "파일창도 로그인해야만") — 2026-09-24 둘러보기 때 true로 열었던 것을 되돌림.
       allow read: if isMember();
+      // ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): 칸을 library/page.tsx가 적는 것으로 묶고, 주소는 우리 Cloudinary https 주소만.
       allow create: if isMember()
-                    && request.resource.data.uploadedBy == request.auth.uid;
+                    && request.resource.data.uploadedBy == request.auth.uid
+                    && request.resource.data.keys().hasOnly([
+                         'name', 'url', 'publicId', 'format', 'bytes', 'cohort',
+                         'uploadedBy', 'uploadedByName', 'uploadedAt'])
+                    && isCloudinaryUrl(request.resource.data.get('url', null));
       allow delete: if isMember()
                     && (resource.data.uploadedBy == request.auth.uid || isAdmin());
 
@@ -438,7 +602,9 @@ service cloud.firestore {
     // 주차별 수업의 주제·강사·영상. 원우수첩처럼 누구나 채웁니다.
     match /sessions/{week} {
       allow read: if true;
-      allow write: if isMember();
+      // ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): 앱 어디에도 이 문서를 쓰는 화면이 없습니다(읽기만, lib/hooks.ts).
+      //   주제·강사·영상은 운영진이 콘솔·스크립트로 채우므로, 쓰기는 운영진으로 좁혔습니다(원우가 수업 정보를 바꾸지 못하게).
+      allow write: if isAdmin();
 
       /*
        * 그 주 수업에 남기는 느낀점 댓글. 모든 원우가 서로 읽습니다.
@@ -494,7 +660,24 @@ service cloud.firestore {
        * 만들어두는 장난이 가능해집니다. 방 id는 두 사람의 uid로 이미
        * 정해져 있으므로 선점 자체가 불가능합니다.
        */
-      allow write: if isMember() && canUseRoom(roomId);
+      /*
+       * ★ 2026-10-06 사용자 요청 (보안 점검 후 수정): 방 문서에 쓸 수 있는 칸·모양을 묶었습니다.
+       *   - 칸: kind·title·cohort·memberUids·lastMessageText·lastMessageSenderId·lastMessageAt뿐(lib/chat-rooms.ts가 적는 것).
+       *   - 1:1 방(uid__uid): memberUids가 있다면 **방 id의 두 uid와 정확히 같아야** 합니다(남을 끼워 넣거나 빼는 장난 불가).
+       *   - 기수 단체방: memberUids를 두지 않고, cohort는 방 id의 기수와 같아야 합니다.
+       *   - 방 지우기는 없앴습니다(앱에 지우는 곳이 없음 — 예전엔 방 안 사람 누구나 문서를 지울 수 있었음).
+       *   바뀐 칸만 보는(affectedKeys) 이유: 옛 방 문서에 남은 낡은 칸 때문에 메시지를 못 보내는 일이 없게.
+       */
+      allow create: if isMember()
+                    && canUseRoom(roomId)
+                    && request.resource.data.keys().hasOnly(['kind', 'title', 'cohort', 'memberUids',
+                         'lastMessageText', 'lastMessageSenderId', 'lastMessageAt'])
+                    && chatRoomShapeOk(roomId);
+      allow update: if isMember()
+                    && canUseRoom(roomId)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kind', 'title', 'cohort',
+                         'memberUids', 'lastMessageText', 'lastMessageSenderId', 'lastMessageAt'])
+                    && chatRoomShapeOk(roomId);
 
       match /messages/{messageId} {
         allow read: if isMember() && canUseRoom(roomId);
@@ -596,6 +779,38 @@ service cloud.firestore {
                     && resource.data.uid == request.auth.uid
                     && request.resource.data.uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    /*
+     * 내가 차단한 사람 목록 (사용자 요청 2026-10-06, 구글 플레이 출시 준비) — 본인만 읽고 씁니다.
+     * 차단은 내 화면에서만 상대 글을 감춥니다. 문서 모양: { blocked: { 상대uid: true } }
+     */
+    match /userBlocks/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    /*
+     * 신고 (사용자 요청 2026-10-06, 구글 플레이 출시 준비) — 원우는 올리기만(자기 이름으로, 정해진 칸만, 열림 상태로),
+     * 읽고 고치는 것은 운영진만. 지우기는 아무도 못 합니다(처리는 서버 /api/report/resolve가 상태만 바꿈, 탈퇴 정리는 Admin SDK).
+     */
+    match /reports/{reportId} {
+      allow create: if isMember()
+                    && request.resource.data.keys().hasOnly(['reporterUid', 'reporterName', 'targetType', 'targetPath', 'targetUid',
+                                                             'targetName', 'preview', 'cohort', 'reason', 'detail', 'status', 'createdAt'])
+                    && request.resource.data.keys().hasAll(['reporterUid', 'targetType', 'targetPath', 'targetUid', 'targetName',
+                                                            'preview', 'cohort', 'reason', 'status', 'createdAt'])
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.status == 'open'
+                    && request.resource.data.targetType in ['message', 'album', 'file', 'opinion', 'poll', 'comment', 'video', 'user']
+                    && request.resource.data.targetPath is string && request.resource.data.targetPath.size() <= 200
+                    && request.resource.data.targetUid is string && request.resource.data.targetUid.size() <= 128
+                    && request.resource.data.targetName is string && request.resource.data.targetName.size() <= 100
+                    && request.resource.data.preview is string && request.resource.data.preview.size() <= 140
+                    && request.resource.data.cohort is string && request.resource.data.cohort.size() <= 20
+                    && request.resource.data.reason is string && request.resource.data.reason.size() <= 40
+                    && request.resource.data.get('detail', '') is string && request.resource.data.get('detail', '').size() <= 300;
+      allow read, update: if isAdmin();
     }
 
     /*

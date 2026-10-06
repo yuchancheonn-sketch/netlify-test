@@ -163,3 +163,9 @@ export const BRAND_COLOR = "#FD5702"; // 2026-09-22 #FF7210 → #FD5702 (디지�
 export const BRAND_BACKGROUND = "#ECECEB"; // 2026-09-25 #EEEEED → #ECECEB (사용자 "아주 조금만 더 진한 회색")
 /** 어두운 화면의 앱 바탕 — globals.css의 --dark-canvas와 같은 값. 테마 색(app/layout.tsx)에 씁니다(2026-09-26). */
 export const BRAND_BACKGROUND_DARK = "#121315";
+
+/**
+ * 이용약관·개인정보 처리방침에 적는 문의 이메일 (사용자 요청 2026-10-06, 구글 플레이 출시 준비). 비워 두면 "앱 안에서 운영진에게 연락"이라고만 안내합니다.
+ * TODO: 스토어에 올리기 전에 운영진이 받을 수 있는 이메일을 넣어 주세요(구글 플레이는 개인정보 처리방침의 문의처를 요구합니다).
+ */
+export const CONTACT_EMAIL = "";

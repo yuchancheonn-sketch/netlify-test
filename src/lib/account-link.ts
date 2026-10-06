@@ -6,6 +6,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { apiUrl } from "@/lib/api";
 
 /**
  * 계정 합치기 — 브라우저 쪽 (2026-09-22). 규칙과 이유는 lib/account-link-server.ts 맨 위.
@@ -18,7 +19,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   if (!user) throw new Error("not-signed-in");
   // 휴대폰을 방금 이어 붙였으면 토큰에 번호가 들어가도록 새로 받습니다(true).
   const idToken = await user.getIdToken(true);
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
     body: JSON.stringify(body ?? {}),
@@ -78,7 +79,7 @@ export async function withdrawMyAccount(): Promise<void> {
   if (!user) throw new Error("not-signed-in");
   const idToken = await user.getIdToken(true);
   await signOut(auth);
-  const response = await fetch("/api/account/withdraw", {
+  const response = await fetch(apiUrl("/api/account/withdraw"), {
     method: "POST",
     headers: { Authorization: `Bearer ${idToken}` },
   });

@@ -29,6 +29,7 @@ import {
 } from "@/lib/hooks";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import type { ChatRoomDoc, UserDoc } from "@/lib/types";
+import { chatHref } from "@/lib/routes";
 
 /**
  * 채팅 탭 — 맨 위에 기수 단체방 하나, 그 아래 1:1 대화 목록(최근 순).
@@ -225,7 +226,7 @@ function ChatRoomRow({
 
   return (
     <Link
-      href={`/chat/${room.id}`}
+      href={chatHref(room.id)}
       /*
         카톡 대화 목록 한 줄 (2026-09-27 사용자 요청 — 흰 바탕에 박스 없이).
         - 좌우 16px(px-4)·위아래 9px(2026-09-27 사용자 "목록 사이 아주 조금 더 줄여줘", 10px에서 — 줄 사이 20px → 18px), 사진 56px(같은 날 "더 키워줘", 52px에서). 미리보기가 한 줄이면 74px 줄입니다.

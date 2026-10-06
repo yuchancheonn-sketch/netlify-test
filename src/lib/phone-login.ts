@@ -1,10 +1,14 @@
 import {
+  linkWithCredential,
   linkWithPhoneNumber,
+  PhoneAuthProvider,
   RecaptchaVerifier,
+  signInWithCredential,
   signInWithPhoneNumber,
   type ConfirmationResult,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { isNativeApp } from "@/lib/native";
 
 /**
  * 휴대폰 번호 로그인 (2026-09-22).
@@ -56,8 +60,44 @@ export function fromE164Korean(e164: string | null | undefined): string {
   return digits;
 }
 
+/**
+ * 앱 안에서는 reCAPTCHA(웹 로봇 확인)가 안 돼서 폰의 인증(Play Integrity)으로 문자를 보내고,
+ * 받은 verificationId와 입력한 6자리로 웹 SDK에 로그인합니다 (2026-10-06 사용자 요청 (구글 플레이 출시 준비), 뉴웨이브앱과 같음).
+ * 호출하는 화면은 ConfirmationResult의 confirm만 쓰므로 같은 모양의 객체를 돌려줍니다.
+ */
+async function sendNativeCode(e164: string, link: boolean): Promise<ConfirmationResult> {
+  const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+  const verificationId = await new Promise<string>((resolve, reject) => {
+    const handles: Promise<{ remove: () => Promise<void> }>[] = [];
+    const done = () => handles.forEach((handle) => void handle.then((h) => h.remove()));
+    handles.push(
+      FirebaseAuthentication.addListener("phoneCodeSent", (event) => {
+        done();
+        resolve(event.verificationId);
+      }),
+      FirebaseAuthentication.addListener("phoneVerificationFailed", (event) => {
+        done();
+        reject(new Error(event.message));
+      }),
+    );
+    FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: e164 }).catch((caught) => {
+      done();
+      reject(caught);
+    });
+  });
+  return {
+    verificationId,
+    confirm: (code: string) => {
+      const credential = PhoneAuthProvider.credential(verificationId, code);
+      const user = auth.currentUser;
+      return link && user ? linkWithCredential(user, credential) : signInWithCredential(auth, credential);
+    },
+  } as ConfirmationResult;
+}
+
 /** 인증번호 문자를 보냅니다. 돌려받은 값의 confirm(code)로 로그인을 마칩니다. */
 export async function sendPhoneCode(e164: string): Promise<ConfirmationResult> {
+  if (isNativeApp()) return sendNativeCode(e164, false);
   try {
     return await signInWithPhoneNumber(auth, e164, getVerifier());
   } catch (caught) {
@@ -74,6 +114,7 @@ export async function sendPhoneCode(e164: string): Promise<ConfirmationResult> {
 export async function sendLinkPhoneCode(e164: string): Promise<ConfirmationResult> {
   const user = auth.currentUser;
   if (!user) throw Object.assign(new Error("not-signed-in"), { code: "auth/no-current-user" });
+  if (isNativeApp()) return sendNativeCode(e164, true);
   try {
     return await linkWithPhoneNumber(user, e164, getVerifier());
   } catch (caught) {
@@ -85,6 +126,7 @@ export async function sendLinkPhoneCode(e164: string): Promise<ConfirmationResul
 /** 휴대폰 로그인에서 난 오류를 원우가 읽을 문장으로. */
 export function phoneErrorMessage(caught: unknown): string {
   const code = (caught as { code?: string })?.code ?? "";
+  const message = (caught as { message?: string })?.message ?? "";
   switch (code) {
     case "auth/invalid-phone-number":
       return "휴대폰 번호를 다시 확인해 주세요.";
@@ -105,6 +147,7 @@ export function phoneErrorMessage(caught: unknown): string {
     case "auth/provider-already-linked":
       return "이 계정에는 이미 휴대폰 번호가 이어져 있어요.";
     default:
-      return `인증하지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : ""}`;
+      // 앱(네이티브) 오류는 code 없이 message만 올 수 있어, 원인을 알 수 있게 짧게 덧붙입니다.
+      return `인증하지 못했어요. 잠시 후 다시 시도해 주세요.${code ? ` (${code})` : message ? ` (${message.slice(0, 160)})` : ""}`;
   }
 }

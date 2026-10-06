@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import ThemeSync from "@/components/ThemeSync";
+import NativeAppSync from "@/components/NativeAppSync";
 import { AuthProvider } from "@/lib/auth-context";
 import {
   APP_NAME,
@@ -11,6 +12,7 @@ import {
   BRAND_BACKGROUND_DARK,
 } from "@/lib/constants";
 import { DISPLAY_SETTINGS_SCRIPT } from "@/lib/display-settings";
+import { IS_NATIVE_BUILD } from "@/lib/routes";
 
 /**
  * 한글 가독성이 좋은 Noto Sans KR을 씁니다.
@@ -86,7 +88,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   // 홈 화면에 추가했을 때 노치·홈 인디케이터 영역까지 화면을 씁니다.
-  viewportFit: "cover",
+  /*
+   * 구글 플레이 앱(2026-10-06 사용자 요청 (구글 플레이 출시 준비), 뉴웨이브앱과 같음): "cover"면 앱 화면이 안드로이드 아래 내비게이션 바와
+   * 상태 막대 뒤까지 그려져 탭 알약이 버튼과 겹칩니다. 앱 빌드에서만 "auto"로 두어 Capacitor가 화면을 시스템 막대 안쪽에 앉히게 합니다.
+   * 웹·홈 화면 앱은 그대로 "cover"입니다.
+   */
+  viewportFit: IS_NATIVE_BUILD ? "auto" : "cover",
   // 키보드가 올라올 때 화면 자체를 줄여서, 채팅 입력창이 키보드에 가리지 않게 합니다.
   interactiveWidget: "resizes-content",
 };
@@ -129,6 +136,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: DISPLAY_SETTINGS_SCRIPT }} />
         {/* 앱을 켜 둔 채로 폰의 다크 모드가 바뀌면 그때도 따라가게 합니다. */}
         <ThemeSync />
+        {/* 구글 플레이 앱 안에서만 하는 일(카카오 로그인 복귀·뒤로 가기·알림 누르기). 웹에서는 아무것도 안 합니다. 2026-10-06 사용자 요청 (구글 플레이 출시 준비) */}
+        <NativeAppSync />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

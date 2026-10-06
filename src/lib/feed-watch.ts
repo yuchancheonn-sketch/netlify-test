@@ -1,7 +1,7 @@
 import type { Firestore } from "firebase-admin/firestore";
 import type { Messaging } from "firebase-admin/messaging";
 import { addNotice } from "./notices";
-import { sendPushToTokens } from "./push-send";
+import { sendPushToTokens, type PushTargets } from "./push-send";
 import { parseRss } from "./rss";
 import { DOSAN_CHANNEL_ID, parseChannelFeed } from "./youtube";
 
@@ -86,16 +86,21 @@ function recentCutoff(now: number = Date.now()): string {
 }
 
 /** 막히지 않은 원우 전원의 기기 토큰. 새 글이 있을 때만 한 번 읽습니다. */
-async function allMemberTokens(db: Firestore): Promise<string[]> {
+// 2026-10-06 사용자 요청 (구글 플레이 출시 준비): 웹/앱 토큰을 나눠 돌려줍니다(보내는 모양이 달라서).
+async function allMemberTokens(db: Firestore): Promise<PushTargets> {
   const [members, tokens] = await Promise.all([
     // select()에 칸을 안 주면 문서 id만 옵니다 — 프로필 사진까지 받지 않습니다.
     db.collection("users").where("status", "==", "approved").select().get(),
     db.collection("pushTokens").get(),
   ]);
   const approved = new Set(members.docs.map((doc) => doc.id));
-  return tokens.docs
-    .filter((doc) => approved.has(String(doc.get("uid") ?? "")))
-    .map((doc) => doc.id);
+  const targets: PushTargets = { web: [], native: [] };
+  for (const doc of tokens.docs) {
+    if (!approved.has(String(doc.get("uid") ?? ""))) continue;
+    const platform = doc.get("platform");
+    (platform === "android" || platform === "ios" ? targets.native : targets.web).push(doc.id);
+  }
+  return targets;
 }
 
 export async function checkFeedsAndNotify({
@@ -126,7 +131,7 @@ export async function checkFeedsAndNotify({
   ];
 
   const results: FeedCheckResult[] = [];
-  let tokens: string[] | null = null;
+  let tokens: PushTargets | null = null;
   const cutoff = recentCutoff();
 
   for (const source of sources) {

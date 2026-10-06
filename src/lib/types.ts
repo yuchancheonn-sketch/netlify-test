@@ -447,6 +447,8 @@ export interface PushTokenDoc {
   uid: string;
   /** 어느 기기·브라우저인지 (navigator.userAgent). 목록에서 사람이 알아보라고 남깁니다. */
   userAgent: string;
+  /** 구글 플레이 앱에서 등록한 기기면 "android"/"ios". 웹이면 없습니다(서버는 없는 값을 웹으로 봅니다). 2026-10-06 사용자 요청 (구글 플레이 출시 준비) */
+  platform?: "android" | "ios";
   createdAt: Timestamp | null;
   /** 앱을 열 때마다 갱신합니다. 오래된 토큰을 골라내는 기준이 됩니다. */
   refreshedAt: Timestamp | null;

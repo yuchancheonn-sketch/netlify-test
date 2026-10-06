@@ -10,6 +10,7 @@ import { kstDateString, quizForDay, type OxAnswer } from "@/lib/dosan-quiz";
 import type { QuizStats, QuizTodayResult } from "@/lib/quiz-types";
 import { useKstDay } from "@/lib/use-kst-day";
 import { QuizRequestError, sendQuizAnswer, useQuizStatus } from "@/lib/use-quiz";
+import { apiUrl } from "@/lib/api";
 
 /** "채점 중이에요" 화면을 보여주는 가장 짧은 시간(ms). 서버가 빨리 답해도 이만큼은 보여줍니다. */
 const GRADING_MS = 1600;
@@ -88,7 +89,7 @@ export default function DosanQuizCard() {
     const startedAt = Date.now();
     try {
       if (isGuest) {
-        const response = await fetch("/api/quiz/check", {
+        const response = await fetch(apiUrl("/api/quiz/check"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quizId: quiz.id, answer: picked }),

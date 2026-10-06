@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithCustomToken } from "firebase/auth";
 import { SplashScreen } from "@/components/StageGate";
 import { auth } from "@/lib/firebase";
-import { consumeKakaoState, fetchKakaoFirebaseToken } from "@/lib/kakao-login";
+import { consumeKakaoState, fetchKakaoFirebaseToken, isAppKakaoState, KAKAO_APP_SCHEME } from "@/lib/kakao-login";
 
 /**
  * 카카오 동의 화면에서 돌아오는 자리 (/auth/kakao?code=…&state=…, 2026-09-22).
@@ -28,6 +28,7 @@ function KakaoCallback() {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [appLink, setAppLink] = useState<string | null>(null);
   // 개발 모드에서 effect가 두 번 돌아도 code는 한 번만 씁니다(카카오 code는 일회용).
   const started = useRef(false);
 
@@ -36,7 +37,27 @@ function KakaoCallback() {
     started.current = true;
 
     const code = params.get("code");
-    const stateOk = consumeKakaoState(params.get("state"));
+    const state = params.get("state");
+    /*
+     * 2026-10-06 사용자 요청 (구글 플레이 출시 준비): 구글 플레이 앱에서 시작한 로그인.
+     * 이 웹 페이지는 시스템 브라우저에서 열린 것이라, 로그인 표를 앱 주소(app.web.aegiaeta://kakao)로 넘겨 앱을 다시 엽니다.
+     * 앱 쪽(NativeAppSync)이 state를 확인한 뒤 표로 로그인합니다.
+     */
+    if (isAppKakaoState(state)) {
+      if (!code) {
+        window.location.replace(`${KAKAO_APP_SCHEME}://kakao`);
+        return;
+      }
+      void fetchKakaoFirebaseToken(code)
+        .then((token) => {
+          const link = `${KAKAO_APP_SCHEME}://kakao?token=${encodeURIComponent(token)}&state=${encodeURIComponent(state ?? "")}`;
+          setAppLink(link);
+          window.location.replace(link);
+        })
+        .catch((caught) => setError(caught instanceof Error ? caught.message : "카카오 로그인을 마치지 못했어요."));
+      return;
+    }
+    const stateOk = consumeKakaoState(state);
     if (!code) {
       router.replace("/login");
       return;
@@ -54,6 +75,20 @@ function KakaoCallback() {
     })();
   }, [params, router]);
 
+  if (!error && appLink) {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center px-7 text-center">
+        <h1 className="text-[20px] font-bold text-ink">앱으로 돌아가는 중이에요</h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">자동으로 돌아가지 않으면 아래 단추를 눌러 주세요.</p>
+        <a
+          href={appLink}
+          className="mt-8 flex w-full items-center justify-center rounded-2xl bg-brand-500 px-5 py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
+        >
+          애기애타 앱 열기
+        </a>
+      </div>
+    );
+  }
   if (!error) return <SplashScreen />;
 
   return (

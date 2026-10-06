@@ -26,6 +26,8 @@ import {
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { useModeration } from "@/components/ModerationDialogs";
+import { useBlockedUids } from "@/lib/moderation";
 import { inCohort } from "@/lib/cohort";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import { db } from "@/lib/firebase";
@@ -245,7 +247,8 @@ function FileList() {
   const { data: allFiles, loading, error } = useFiles();
   /** 보고 있는 기수의 파일만. 올릴 때도 이 기수로 적습니다. */
   const { cohort } = useViewCohort();
-  const files = allFiles.filter((file) => inCohort(file, cohort));
+  const blocked = useBlockedUids(); // 사용자 요청 2026-10-06(구글 플레이 출시 준비): 차단한 사람이 올린 파일은 감춥니다.
+  const files = allFiles.filter((file) => inCohort(file, cohort) && !blocked.has(file.uploadedBy));
   const [uploading, setUploading] = useState(false);
   /** 0~1. 여러 개를 올릴 때는 지금 올리는 한 개의 진행률입니다. */
   const [progress, setProgress] = useState(0);
@@ -412,6 +415,11 @@ function FileList() {
  */
 function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  /** 사용자 요청 2026-10-06(구글 플레이 출시 준비): 남이 올린 파일의 ⋯ 메뉴에 신고하기·차단하기가 붙습니다. */
+  const { user } = useAuth();
+  const requireLogin = useRequireLogin();
+  const { openReport, askBlock, dialogs: moderationDialogs } = useModeration();
+  const others = !!file.uploadedBy && file.uploadedBy !== user?.uid;
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   /*
@@ -539,6 +547,42 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
               받기
             </a>
 
+            {others ? (
+              <>
+                <span className="h-px bg-white/15" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (requireLogin()) return;
+                    openReport({
+                      type: "file",
+                      path: `files/${file.id}`,
+                      uid: file.uploadedBy,
+                      name: file.uploadedByName || "원우",
+                      preview: file.name,
+                      cohort: file.cohort ?? "",
+                    });
+                  }}
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-white transition active:bg-[#40464D]"
+                >
+                  신고하기
+                </button>
+                <span className="h-px bg-white/15" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (requireLogin()) return;
+                    askBlock(file.uploadedBy, file.uploadedByName || "원우");
+                  }}
+                  className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D]"
+                >
+                  차단하기
+                </button>
+              </>
+            ) : null}
+
             {canManage ? (
               <>
                 <span className="h-px bg-white/15" aria-hidden="true" />
@@ -575,6 +619,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
       {renaming ? (
         <FileRenameSheet file={file} onClose={() => setRenaming(false)} />
       ) : null}
+      {moderationDialogs}
 
       {/*
         삭제 확인 창 — 2026-10-06 사용자 요청으로 뉴웨이브앱과 같은 공용 ConfirmDialog로(가운데 상자 안 짜임은 Sheet.tsx가 정함).

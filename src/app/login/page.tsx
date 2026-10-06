@@ -268,6 +268,20 @@ function LoginScreen() {
             로그인 없이 둘러보기
           </Link>
 
+          {/*
+            이용약관·개인정보 처리방침 링크 (사용자 요청 2026-10-06, 구글 플레이 출시 준비 — 로그인 화면에서 바로 읽을 수 있어야 합니다).
+            로그인 없이 열리는 주소(/terms, /privacy)입니다. 가입 직전 화면(/join)에서 동의 체크를 따로 받습니다.
+          */}
+          <p className="mt-4 text-center text-[12px] text-ink-muted">
+            <Link href="/terms" className="underline underline-offset-2">
+              이용약관
+            </Link>
+            {" · "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              개인정보 처리방침
+            </Link>
+          </p>
+
           {/* 맨 아래 "🔒 10기 원우들을 위한 공간이에요" 줄은 2026-09-22 사용자 요청으로 지웠습니다. */}
         </div>
       </div>

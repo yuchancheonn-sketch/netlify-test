@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
+import { apiUrl } from "@/lib/api";
 import { embedUrl, videoThumbnailUrl, watchUrl, type VideoItem } from "@/lib/youtube";
 
 const CHANNEL_URL = "https://www.youtube.com/@dosanacademy";
@@ -31,7 +32,7 @@ export default function VideoList() {
 
     async function load() {
       try {
-        const response = await fetch("/api/videos");
+        const response = await fetch(apiUrl("/api/videos"));
         const data = (await response.json()) as {
           items?: VideoItem[];
           error?: string;

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import type { OxAnswer } from "@/lib/dosan-quiz";
 import type { QuizHistoryItem, QuizStatus } from "@/lib/quiz-types";
+import { apiUrl } from "@/lib/api";
 
 /**
  * 오늘의 OX 퀴즈 — 앱 쪽에서 서버(/api/quiz, /api/quiz/history)를 부르는 곳 (2026-09-15).
@@ -24,7 +25,7 @@ export class QuizRequestError extends Error {
 async function quizFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const idToken = await auth.currentUser?.getIdToken();
   if (!idToken) throw new QuizRequestError("unauthorized");
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     ...init,
     cache: "no-store",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },

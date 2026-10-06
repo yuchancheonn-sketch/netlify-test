@@ -208,7 +208,7 @@ export async function sendChatMessage({
    * 메시지 하나가 15KB가 되어, 저장 용량과 전송량을 수십 배로 씁니다.
    * 사진은 화면에서 users 문서를 보고 붙입니다. 이름과 같은 방식입니다.
    */
-  await addDoc(collection(db, "chatRooms", roomId, "messages"), {
+  const sentMessage = await addDoc(collection(db, "chatRooms", roomId, "messages"), {
     senderId: sender.uid,
     // 채팅에는 본명으로 나옵니다. (별칭 기능은 2026-09-15에 없앴습니다)
     senderName,
@@ -249,7 +249,8 @@ export async function sendChatMessage({
   );
 
   // 상대 원우 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
-  void requestPush("chat", { roomId, text });
+  // 2026-10-06 사용자 요청 (보안 점검 후 수정): 서버가 문구를 클라이언트 말이 아니라 저장된 메시지(messageId)에서 읽습니다.
+  void requestPush("chat", { roomId, messageId: sentMessage.id });
 }
 
 /**

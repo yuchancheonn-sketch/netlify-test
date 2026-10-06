@@ -28,18 +28,30 @@ function fail(reason: string, status: number) {
   return Response.json({ ok: false, reason }, { status, headers: NO_STORE });
 }
 
-/**
- * 돌아올 주소는 브라우저가 알려 주지만 아무 값이나 받지 않습니다 — 경로가 /auth/kakao인 주소만.
- * 어차피 카카오가 앱 설정에 등록된 주소와 글자 하나까지 같은지 다시 확인합니다.
+/*
+ * 2026-10-06 사용자 요청 (보안 점검 후 수정): 돌아올 주소는 브라우저가 알려 주지만, 예전에는
+ * "경로가 /auth/kakao인 https 주소 아무거나"를 받았습니다. 이제 **서버가 가진 허용 목록과 글자 그대로**
+ * 같을 때만 받습니다(아무 호스트나 넣어 code를 엉뚱한 곳 기준으로 교환하는 길을 막음).
+ * 카카오 개발자 콘솔의 Redirect URI에도 같은 주소가 등록돼 있어야 합니다.
+ *
+ * ★ 확장 지점(다른 작업이 채움): 앱(Capacitor) 쪽 origin은 EXTRA_ALLOWED_ORIGINS 자리나
+ *   환경변수 KAKAO_EXTRA_ALLOWED_ORIGINS(쉼표로 구분한 origin 목록, 예: https://example.com)로 더합니다.
+ *   폰 테스트용 사설 IP(예: http://172.30.1.8:3000)도 예전에는 통과했지만 이제는 위 환경변수에 적어야 합니다.
  */
-function isAllowedRedirect(raw: string): boolean {
-  try {
-    const url = new URL(raw);
-    const local = url.hostname === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(url.hostname);
-    return url.pathname === "/auth/kakao" && (url.protocol === "https:" || local);
-  } catch {
-    return false;
+const SITE_ORIGIN = "https://aegiaeta.web.app";
+const EXTRA_ALLOWED_ORIGINS: string[] = []; // ← 앱 origin을 여기에 더하세요(다른 작업 담당)
+
+function allowedRedirectUris(): Set<string> {
+  const origins = [SITE_ORIGIN, ...EXTRA_ALLOWED_ORIGINS];
+  if (process.env.NODE_ENV !== "production") origins.push("http://localhost:3000");
+  for (const extra of (process.env.KAKAO_EXTRA_ALLOWED_ORIGINS ?? "").split(",")) {
+    if (extra.trim()) origins.push(extra.trim().replace(/\/$/, ""));
   }
+  return new Set(origins.map((origin) => `${origin}/auth/kakao`));
+}
+
+function isAllowedRedirect(raw: string): boolean {
+  return allowedRedirectUris().has(raw);
 }
 
 export async function POST(request: Request) {
