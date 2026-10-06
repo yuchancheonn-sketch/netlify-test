@@ -174,7 +174,7 @@ function committeeGoal(info: CommitteeInfoDoc | undefined): string {
  * ★ 총괄 임원진 조직도 카드(components/CommitteeOrgChart.tsx)에는 뒷면도 수정도 없습니다 —
  *   앱 코드에 적혀 있어 앱에서는 아무도 못 고칩니다(2026-09-24 사용자 "계급도 카드는 아무도 수정 못 하게").
  */
-function CommitteeCardBack({ committee }: { committee: Committee }) {
+function CommitteeCardBack({ committee, kind = "committee" }: { committee: { name: string }; kind?: "committee" | "club" }) {
   const { data } = useCommitteeInfo();
   const info = data.get(committee.name);
   const [editing, setEditing] = useState(false);
@@ -230,6 +230,7 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
       {editing ? (
         <CommitteeEditSheet
           committee={committee}
+          kind={kind}
           initial={committeeGoal(info)}
           onClose={() => setEditing(false)}
         />
@@ -245,10 +246,12 @@ function CommitteeCardBack({ committee }: { committee: Committee }) {
  */
 function CommitteeEditSheet({
   committee,
+  kind = "committee",
   initial,
   onClose,
 }: {
-  committee: Committee;
+  committee: { name: string };
+  kind?: "committee" | "club";
   initial: string;
   onClose: () => void;
 }) {
@@ -298,7 +301,7 @@ function CommitteeEditSheet({
             value={goal}
             onChange={(event) => setGoal(event.target.value.slice(0, INFO_MAX_LENGTH))}
             rows={8}
-            placeholder="이 위원회의 목표를 적어 주세요."
+            placeholder={`이 ${kind === "club" ? "동호회" : "위원회"}의 목표를 적어 주세요.`}
             className={`${flatInputClassName} resize-none leading-relaxed`}
           />
         </div>
@@ -342,5 +345,70 @@ export function committeeSlides(): {
     title: committee.name,
     node: <CommitteeCard committee={committee} />,
     back: <CommitteeCardBack committee={committee} />,
+  }));
+}
+
+/**
+ * 동호회 카드 — 소식 탭 "동호회" 칸 (2026-10-06 사용자 요청: 목록 7개 그대로).
+ * 위원회 카드와 같은 모양(앞면 + 눌러서 뒤집는 뒷면의 목표 글)인데, 사람은 담당 한 명뿐이라 칸이 하나입니다.
+ * 직함(부회장·위원장)은 사용자가 준 목록에 적힌 경우만 달고, 정해지지 않은 자리는 "미정"으로 둡니다.
+ * 뒷면 글은 위원회와 같은 committeeInfo/{동호회 이름}에 저장됩니다(원우 누구나 고침 — 규칙이 문서 이름을 가리지 않음).
+ *
+ * ★ 담당이 정해지거나 바뀌면 아래 CLUBS만 고치면 됩니다.
+ */
+interface Club {
+  name: string;
+  /** 담당 이름 — 정해지지 않았으면 null */
+  leader: string | null;
+  /** 직함 (예: 부회장, 위원장) — 목록에 없으면 생략 */
+  role?: string;
+}
+
+const CLUBS: Club[] = [
+  { name: "등산동호회", leader: "김정헌", role: "부회장" },
+  { name: "골프동호회", leader: "채승수", role: "위원장" },
+  { name: "예술/와인동호회", leader: "손은우" },
+  { name: "풋살동호회", leader: "류종범", role: "위원장" },
+  { name: "인문학동호회", leader: null },
+  { name: "미식동호회", leader: "박준영" },
+  { name: "투자동호회", leader: null },
+];
+
+function ClubCard({ club }: { club: Club }) {
+  return (
+    <article className="rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+      <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{club.name}</h3>
+
+      {/* 담당 — 위원회 카드의 위원장 칸과 같은 옅은 주황 바탕. */}
+      <div className="mt-3 rounded-2xl bg-brand-50 px-3.5 py-3">
+        <p className="mb-2 text-[13px] font-bold text-brand-500">담당</p>
+        {club.leader ? (
+          <p className="flex items-baseline gap-1.5 text-[17px] leading-tight font-bold text-ink">
+            {club.leader}
+            {club.role ? <span className="text-[14px] font-medium text-ink-muted">{club.role}</span> : null}
+          </p>
+        ) : (
+          <p className="text-[17px] leading-tight font-bold text-ink-faint">미정</p>
+        )}
+      </div>
+
+      {/* 앞면 안내 — 위원회 카드와 같은 모양·자리(12px ÷ --fit-scale). */}
+      <p className="mt-2 text-center text-[calc(12px/var(--fit-scale,1))] text-ink-faint">눌러서 뒷면 보기</p>
+    </article>
+  );
+}
+
+/** 동호회 7개 카드 — 소식 탭 동호회 칸에서 올라온 소식 카드 앞에 한 장씩 넘겨 봅니다(committeeSlides와 같은 모양). */
+export function clubSlides(): {
+  id: string;
+  title: string;
+  node: React.ReactNode;
+  back: React.ReactNode;
+}[] {
+  return CLUBS.map((club) => ({
+    id: `club-${club.name}`,
+    title: club.name,
+    node: <ClubCard club={club} />,
+    back: <CommitteeCardBack committee={club} kind="club" />,
   }));
 }

@@ -14,7 +14,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import CommitteeOrgChart from "@/components/CommitteeOrgChart";
-import { committeeSlides } from "@/components/CommitteeRoster";
+import { clubSlides, committeeSlides } from "@/components/CommitteeRoster";
 import Avatar from "@/components/Avatar";
 import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import PhotoCropSheet from "@/components/PhotoCropSheet";
@@ -212,14 +212,17 @@ export default function AlbumList({
    * 원우 소식 칸과 넘기는 방식이 똑같습니다(사용자 요청). 앞의 여덟 장은 앱에 적어 둔 카드입니다.
    */
   const albumSlides = currentAlbums.map((album) => ({ id: album.id, title: album.title, album }));
-  // 앞의 조직도·위원회 카드는 위원회 칸에만 섭니다. 동호회 칸(2026-10-06)은 올라온 소식 카드만 보입니다.
-  const slides = category !== "committee"
-    ? albumSlides
-    : [
-        { id: "committee-org-chart", title: "총괄 임원진 조직도", node: <CommitteeOrgChart /> },
-        ...committeeSlides(),
-        ...albumSlides,
-      ];
+  // 앞의 조직도·위원회 카드는 위원회 칸에만, 동호회 7개 카드는 동호회 칸(2026-10-06)에만 섭니다. 원우소식 칸은 올라온 소식 카드뿐.
+  const slides =
+    category === "committee"
+      ? [
+          { id: "committee-org-chart", title: "총괄 임원진 조직도", node: <CommitteeOrgChart /> },
+          ...committeeSlides(),
+          ...albumSlides,
+        ]
+      : category === "club"
+        ? [...clubSlides(), ...albumSlides]
+        : albumSlides;
 
   return (
     <>
