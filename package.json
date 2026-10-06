@@ -14,7 +14,8 @@
     "deploy": "node scripts/deploy.mjs",
     "sync": "node scripts/sync.mjs",
     "setup:env": "node scripts/setup-env.mjs",
-    "merge:members": "node scripts/merge-members.mjs"
+    "merge:members": "node scripts/merge-members.mjs",
+    "make-admin": "node scripts/make-admin.mjs"
   },
   "dependencies": {
     "firebase": "^12.18.0",
