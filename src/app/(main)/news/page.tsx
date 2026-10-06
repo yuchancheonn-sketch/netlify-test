@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import AlbumList, { type AlbumCategory } from "@/components/AlbumList";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
-import TextTabs from "@/components/TextTabs";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 
@@ -24,9 +23,14 @@ import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
  * 둘 다 같은 카드 짜임(AlbumList)이고, 위원회 칸에는 "소식 올리기" 단추가 없습니다.
  * 데이터는 한 곳(photoAlbums)에 있고 category 칸으로 갈립니다 — 칸이 없는 예전 소식은 원우 소식입니다.
  */
+/*
+ * 2026-10-06 사용자 요청: 뉴웨이브앱 나눔 탭처럼 제목 아래에 창 목록(글자 탭 줄)을 두고, 칸을 위원회·원우소식·동아리 셋으로.
+ * (예전엔 제목 자리에 "위원회 | 원우 소식" 고르개.) 동아리 칸은 위원회 칸처럼 올라온 소식 카드만 보이고 "올리기" 단추는 없습니다.
+ */
 const SUBTABS = [
   { value: "committee", label: "위원회" },
-  { value: "member", label: "원우 소식" },
+  { value: "member", label: "원우소식" },
+  { value: "club", label: "동아리" },
 ] as const;
 
 export default function NewsPage() {
@@ -85,29 +89,53 @@ export default function NewsPage() {
   return (
     <>
       {/*
-        제목 자리에 칸 고르개 "위원회 | 원우 소식" (2026-09-23 사용자 요청 — 예전엔 제목 "원우 소식" 하나).
-        자료 탭과 같은 공용 TextTabs variant="header"라 글씨가 다른 화면 제목과 같은 크기·자리에 섭니다.
-        기수 고르개(운영진만)는 그대로 옆에 답니다 — min-w-0은 폭이 모자랄 때 고르개가 아니라 탭 쪽이 줄게 합니다.
+        제목은 "위원회"로 두고, 칸 고르개는 아래 글자 탭 줄로 옮김 (2026-10-06, 뉴웨이브앱 나눔 탭 모양).
+        기수 고르개(운영진만)는 예전처럼 제목 옆에 그대로 답니다.
       */}
       <PageHeader
         title={
           canSwitch ? (
             <span className="flex min-w-0 items-center gap-2">
-              <TextTabs
-                variant="header"
-                items={SUBTABS}
-                value={subtab}
-                onChange={setSubtab}
-                className="min-w-0"
-              />
+              <span>위원회</span>
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            <TextTabs variant="header" items={SUBTABS} value={subtab} onChange={setSubtab} />
+            "위원회"
           )
         }
         right={<HeaderActions />}
       />
+
+      {/*
+        왼쪽 정렬 글자 탭 + 고른 탭 아래 먹색 밑줄 — 뉴웨이브앱 app/(main)/prayer/page.tsx의 탭 줄을 그대로 옮김.
+        옅은 밑금(border-b) 위에 고른 탭의 밑줄이 -mb-px로 같은 자리에서 겹쳐 섭니다.
+        ★ 글씨 크기는 <button>이 아니라 안쪽 <span>에 겁니다(globals.css의 button 16px 규칙).
+      */}
+      <div className="px-4 pt-px">
+        <div className="border-b border-line">
+          <div className="no-scrollbar -mb-px flex items-center gap-6 overflow-x-auto">
+            {SUBTABS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setSubtab(value)}
+                aria-pressed={subtab === value}
+                className="relative shrink-0 pt-2 pb-[13px] whitespace-nowrap"
+              >
+                <span className={`text-[17px] ${subtab === value ? "font-semibold text-ink" : "font-normal text-ink-muted"}`}>
+                  {label}
+                </span>
+                {subtab === value ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 bottom-0 h-[2.2px] rounded-full bg-[color-mix(in_srgb,var(--color-ink)_60%,var(--color-canvas))]"
+                  />
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/*
         pt-4 — 카드 틀과 제목 줄 사이 16px. 제목 줄의 pb(6px)에 더해 22px입니다.

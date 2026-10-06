@@ -178,7 +178,7 @@ export interface PhotoAlbumDoc {
    * 소식 탭의 어느 칸에 서는지 (2026-09-23) — "member": 원우 소식, "committee": 위원회.
    * 이 칸이 없는 예전 소식은 모두 원우 소식입니다.
    */
-  category?: "member" | "committee";
+  category?: "member" | "committee" | "club";
   /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
   /**
