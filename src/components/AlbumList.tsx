@@ -443,18 +443,18 @@ function AlbumBook({
   readOnly?: boolean;
   /**
    * true면 원우소식 칸의 새 모양 (2026-10-06 사용자 요청 — 뉴웨이브앱 삶나눔 카드와 똑같이, 섞기만 뺌):
-   * 앞면은 흰 테두리 두른 4:5 사진 한 장뿐, 뒷면에 올린 사람·날짜·🙏 공감·⋯·제목·본문. 양옆 화살표는 없고 밀어서만 넘깁니다.
+   * 앞면은 흰 테두리 두른 4:5 사진 한 장뿐, 뒷면에 올린 사람·날짜·❤️ 공감·⋯·제목·본문. 양옆 화살표는 없고 밀어서만 넘깁니다.
    */
   share?: boolean;
 }) {
   const { user, isAdmin } = useAuth();
   const requireLogin = useRequireLogin();
-  /** 🙏 공감 — 누르면 켜고 다시 누르면 취소(뉴웨이브앱 삶나눔·기도제목과 같음). 알림은 안 보냅니다. */
+  /** ❤️ 공감 — 누르면 켜고 다시 누르면 취소(2026-10-06 사용자 요청: 기도(🙏)가 아니라 그냥 공감 — 하트). 알림은 안 보냅니다. */
   function togglePray(album: PhotoAlbumDoc) {
     if (requireLogin() || !user) return;
-    const on = !(album.prayedBy ?? []).includes(user.uid);
+    const on = !(album.likedBy ?? []).includes(user.uid);
     void commitWrite(
-      updateDoc(doc(db, "photoAlbums", album.id), { prayedBy: on ? arrayUnion(user.uid) : arrayRemove(user.uid) }),
+      updateDoc(doc(db, "photoAlbums", album.id), { likedBy: on ? arrayUnion(user.uid) : arrayRemove(user.uid) }),
     ).catch(() => undefined);
   }
   const [index, setIndex] = useState(0);
@@ -1166,9 +1166,9 @@ function ShareFront({ album }: { album: PhotoAlbumDoc }) {
 }
 
 /**
- * 원우소식 카드 뒷면 — 올린 사람·날짜·🙏 공감·⋯, 제목·본문 (2026-10-06 사용자 요청, 뉴웨이브앱 삶나눔 뒷면을 옮김).
+ * 원우소식 카드 뒷면 — 올린 사람·날짜·❤️ 공감·⋯, 제목·본문 (2026-10-06 사용자 요청, 뉴웨이브앱 삶나눔 뒷면을 옮김).
  * 앞면(ShareFront)과 같은 크기라 본문이 길면 이 안에서 굴려 읽습니다. 색은 애기애타앱 토큰(주황 brand-*)을 씁니다.
- * ★ 🙏와 ⋯ 칸은 포인터를 멈춥니다 — 카드 틀이 누르는 순간 포인터를 붙잡아(setPointerCapture) 단추의 click이 안 일어나고,
+ * ★ ❤️와 ⋯ 칸은 포인터를 멈춥니다 — 카드 틀이 누르는 순간 포인터를 붙잡아(setPointerCapture) 단추의 click이 안 일어나고,
  *   카드가 뒤집히거나 넘어가 버리기 때문입니다.
  * ★ 단추(button) 글씨는 globals.css가 16px로 못 박아, 알약 속 숫자는 안쪽 span에 크기를 줍니다.
  */
@@ -1189,8 +1189,8 @@ function ShareBack({
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
   const body = album.body?.trim();
   const authorName = author?.name || album.createdByName || "원우";
-  const prayedBy = album.prayedBy ?? [];
-  const prayed = viewerUid ? prayedBy.includes(viewerUid) : false;
+  const likedBy = album.likedBy ?? [];
+  const liked = viewerUid ? likedBy.includes(viewerUid) : false;
   const mine = !!viewerUid && album.createdBy === viewerUid;
 
   return (
@@ -1209,26 +1209,27 @@ function ShareBack({
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
         >
-          {/* 🙏 공감 — 내 소식에는 단추 없이 공감해 준 사람 수만(0이면 숨김), 남의 소식은 알약 단추(눌러서 켜고 다시 눌러 취소). */}
+          {/* ❤️ 공감 — 내 소식에는 단추 없이 공감해 준 사람 수만(0이면 숨김), 남의 소식은 알약 단추(눌러서 켜고 다시 눌러 취소). */}
           {mine ? (
-            prayedBy.length > 0 ? (
+            likedBy.length > 0 ? (
               <span className="relative flex items-center gap-1 text-[13px] font-medium text-ink-faint tabular-nums" style={{ top: -1 }}>
-                <span aria-hidden="true" className="text-[14px] leading-none">🙏</span>
-                {prayedBy.length}
+                <span aria-hidden="true" className="text-[14px] leading-none">❤️</span>
+                {likedBy.length}
               </span>
             ) : null
           ) : (
             <button
               type="button"
-              aria-label="기도했어요"
-              aria-pressed={prayed}
+              aria-label="공감해요"
+              aria-pressed={liked}
               onClick={onPray}
               className={`flex h-[26px] shrink-0 items-center gap-[3px] rounded-full border px-[7px] text-[13px] font-bold transition active:scale-95 ${
-                prayed ? "border-brand-200 bg-brand-50 text-brand-500" : "border-line bg-surface text-ink-muted"
+                liked ? "border-brand-200 bg-brand-50 text-brand-500" : "border-line bg-surface text-ink-muted"
               }`}
             >
-              <span aria-hidden="true" className="text-[13px] leading-none">🙏</span>
-              {prayedBy.length > 0 ? <span className="text-[13px] font-semibold tabular-nums">{prayedBy.length}</span> : null}
+              {/* 안 눌렀을 땐 회색빛(이모지라 색을 못 바꿔 grayscale), 누르면 제 색 */}
+              <span aria-hidden="true" className={`text-[13px] leading-none ${liked ? "" : "opacity-70 grayscale"}`}>❤️</span>
+              {likedBy.length > 0 ? <span className="text-[13px] font-semibold tabular-nums">{likedBy.length}</span> : null}
             </button>
           )}
           {onMore ? (
