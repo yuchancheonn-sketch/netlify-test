@@ -39,6 +39,7 @@ import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, parseDateString, todayString } from "@/lib/format";
 import { useAlbums, useCohortMembers } from "@/lib/hooks";
+import { requestPush } from "@/lib/push";
 import { currentWeekId, weekIdForMillis, weekRangeLabel } from "@/lib/week";
 import type { PhotoAlbumDoc, UserDoc } from "@/lib/types";
 
@@ -451,13 +452,18 @@ function AlbumBook({
 }) {
   const { user, isAdmin } = useAuth();
   const requireLogin = useRequireLogin();
-  /** ❤️ 공감 — 누르면 켜고 다시 누르면 취소(2026-10-06 사용자 요청: 기도(🙏)가 아니라 그냥 공감 — 하트). 알림은 안 보냅니다. */
+  /**
+   * ❤️ 공감 — 누르면 켜고 다시 누르면 취소(2026-10-06 사용자 요청: 기도(🙏)가 아니라 그냥 공감 — 하트).
+   * 새로 켠 때만 글쓴이에게 폰 알림을 부탁합니다(/api/push/like — 서버가 글쓴이·중복을 가려 처음 한 번만 보냄, 같은 날 사용자 요청).
+   */
   function togglePray(album: PhotoAlbumDoc) {
     if (requireLogin() || !user) return;
     const on = !(album.likedBy ?? []).includes(user.uid);
     void commitWrite(
       updateDoc(doc(db, "photoAlbums", album.id), { likedBy: on ? arrayUnion(user.uid) : arrayRemove(user.uid) }),
-    ).catch(() => undefined);
+    )
+      .then(() => (on ? requestPush("like", { albumId: album.id }) : undefined))
+      .catch(() => undefined);
   }
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
