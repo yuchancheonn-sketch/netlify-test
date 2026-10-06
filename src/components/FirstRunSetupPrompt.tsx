@@ -143,7 +143,7 @@ export default function FirstRunSetupPrompt() {
       aria-label="처음 설정"
     >
       <ScrollLock />
-      <div className="animate-sheet-up w-full max-w-[380px] rounded-[16px] bg-surface px-6 pt-7 pb-6">
+      <div className="animate-sheet-up w-full max-w-[380px] rounded-[16px] glass-panel px-6 pt-7 pb-6">
         <h2 className="text-[19px] leading-snug font-bold text-ink">
           {/* 한 줄만 설 때(이미 알림을 물어본 기존 원우 등)는 그 한 가지로 묻습니다. */}
           {showPush && showCalendar

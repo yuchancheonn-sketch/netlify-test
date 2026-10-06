@@ -406,7 +406,7 @@ export default function BottomTabBar() {
           두 상수를 고치면 이 값도 같이 고쳐야 합니다.
           그림자(글로우) 대신 회색 1px 테두리만 둡니다 (2026-09-23 사용자 "모든 글로우 없애고 회색 테두리로").
         */
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[var(--shadow-card-flat)]"
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[0_6px_14px_rgba(0,0,0,0.1),0_-3px_10px_rgba(0,0,0,0.05),var(--tabbar-edge)]"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
@@ -518,7 +518,8 @@ export default function BottomTabBar() {
                 }}
                 className={`flex h-full flex-col items-center justify-center rounded-full pt-1.5 pb-2.5 transition ${itemClassName}`}
               >
-                <span className="relative flex items-center justify-center">
+                {/* 아이콘 칸을 0.75px 위로 (2026-10-06, 뉴웨이브앱 탭 알약과 같게) */}
+                <span className="relative flex -translate-y-[0.75px] items-center justify-center">
                   {/*
                     선 굵기는 모든 탭이 1.9입니다. 그림(당근 하단 바)의 안 고른 아이콘이 가는 선이
                     아니라 굵은 검은 선이라 예전 1.7(안 고른 탭)에서 2로 올렸고,
@@ -533,7 +534,7 @@ export default function BottomTabBar() {
                   */}
                   <Icon
                     className="h-[27px] w-[27px]"
-                    strokeWidth={1.9}
+                    strokeWidth={1.5}
                     filled={covered}
                   />
 
@@ -547,7 +548,7 @@ export default function BottomTabBar() {
                   {showDot ? (
                     <span
                       aria-hidden="true"
-                      className="absolute top-px left-[calc(50%+6px)] h-[7px] w-[7px] rounded-full bg-red-500"
+                      className="absolute top-[-3px] left-[calc(50%+10px)] h-[8px] w-[8px] rounded-full bg-red-500"
                     />
                   ) : null}
                 </span>
@@ -563,7 +564,7 @@ export default function BottomTabBar() {
                   600은 layout.tsx가 받지 않아 700으로 그려지므로 500이 한 단 아래입니다.
                   이 글씨는 <button>이 아니라 <Link> 안 <span>이라 크기가 그대로 먹습니다.
                 */}
-                <span className="text-[12.5px] leading-none font-medium">
+                <span className="translate-y-[1px] text-[11px] leading-none font-medium">
                   {label}
                   {/* 빨간 점은 눈으로만 보이므로, 화면 낭독기에는 말로 알려줍니다. */}
                   {showDot ? <span className="sr-only">, 새 메시지 있음</span> : null}

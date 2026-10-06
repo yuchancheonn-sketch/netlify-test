@@ -114,7 +114,7 @@ export default function AccountMergeSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[88dvh] w-full max-w-[480px] touch-auto overflow-y-auto overscroll-contain rounded-[32px] bg-canvas px-6 pt-7 pb-7"
+        className="animate-sheet-up max-h-[88dvh] w-full max-w-[480px] touch-auto overflow-y-auto overscroll-contain rounded-[32px] glass-panel px-6 pt-7 pb-7"
       >
         <h2 className="text-[20px] font-bold text-ink">이미 가입된 계정이 있어요</h2>
         {/* 문장마다 줄을 바꿉니다 (2026-09-23 사용자 요청) */}

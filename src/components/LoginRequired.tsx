@@ -124,7 +124,7 @@ function LoginPromptSheet({ prompt, onClose, onLogin }: { prompt: Prompt; onClos
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-6"
+        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] glass-panel px-6 pt-3 pb-6"
       >
         <div aria-hidden="true" className="mx-auto h-1.5 w-10 rounded-full bg-line" />
         <p className="mt-6 text-center text-[16px] leading-relaxed font-bold break-keep text-ink">{prompt.message}</p>

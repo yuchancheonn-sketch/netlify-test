@@ -41,7 +41,7 @@ export function Sheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[88dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
+        className="animate-sheet-up flex max-h-[88dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] glass-panel"
         style={sheetStyle}
       >
         <div {...handleTouchHandlers} aria-hidden="true" className="flex shrink-0 touch-none justify-center pt-3 pb-2">
@@ -140,7 +140,7 @@ export function ConfirmDialog({
       aria-label={title}
       onClick={onClose}
     >
-      <div onClick={(event) => event.stopPropagation()} className="animate-sheet-up w-full max-w-[320px] rounded-3xl bg-surface p-5">
+      <div onClick={(event) => event.stopPropagation()} className="animate-sheet-up w-full max-w-[320px] rounded-3xl glass-panel p-5">
         <p className="text-[17px] font-bold text-ink">{title}</p>
         {description ? <p className="mt-2 text-[14px] leading-relaxed break-keep text-ink-muted">{description}</p> : null}
         <div className="mt-5 flex gap-2">
