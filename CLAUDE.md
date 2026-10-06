@@ -78,3 +78,28 @@ Claude Code와 이 저장소만 있으면 어느 컴퓨터에서든 바로 이�
 - **배포 순서**: 웹(App Hosting) **먼저**, 규칙 **나중**(`npm run deploy`가 이 순서가 아닐 수 있으니 확인). 새 규칙에서 옛 웹은 남의 가입 계정 이름·기수·휴대폰 저장이 막힘.
 - **열어 둔 권고(미구현)**: ① 가입을 pending+운영진 승인으로(지금은 approved — 사용자 결정, 누구나 원우 연락처를 읽음) ② Cloudinary 서명 업로드(지금 unsigned preset)
   ③ 보안 헤더(next.config.ts 담당 작업) ④ 다른 푸시 창구·퀴즈 등의 속도 제한 ⑤ users 문서 전체를 가입자 누구나 읽음(번호 분리 문서 필요).
+
+## 구글 플레이 출시 준비 (2026-10-06)
+
+사용자 요청으로 뉴웨이브앱(`/newave`, 같은 길을 먼저 끝냄)을 거울삼아 안드로이드 앱(Capacitor)을 준비했습니다. 패키지 **`app.web.aegiaeta`**(첫 업로드 후 변경 불가), 이름 애기애타.
+★ 이 컴퓨터(리눅스)에서는 Gradle 빌드·폰 실행·푸시 도착을 **확인하지 못했습니다**(web 빌드·`build:app`·`cap sync`·lint·tsc만 통과).
+
+- **B 방식**: 화면 파일을 앱 안에 담습니다(`npm run build:app` → `app-dist/` 정적 내보내기, `scripts/build-app.mjs`). 서버 창구(`src/app/api`)는 앱에 담지 않고
+  `https://aegiaeta.web.app`을 부릅니다(`src/lib/api.ts`의 `apiUrl`, `next.config.ts`의 CORS). **새 `/api/…` 호출은 반드시 `fetch(apiUrl("/api/…"))`.**
+- **명령**: `npm run app:sync`(= build:app + `cap sync android`, 웹 화면을 고칠 때마다 다시) · `npm run icons:android`(아이콘·시작 화면·스토어 그림, `public/icon-maskable-512.png`에서 愛己愛他 글자를 뽑아 씀 — 기러기 무늬는 안 들어감) ·
+  `cd android && gradlew.bat assembleDebug|bundleRelease`(JDK 21 필요). `android/app/build.gradle`의 versionCode는 업로드마다 +1(지금 1).
+- **주소 매핑**(정적 내보내기는 동적 경로를 못 만듦, `src/lib/routes.ts`): 앱은 `/chat/room?id=` · `/albums/view?id=` · `/news/week/view?id=` · `/events/edit?id=` 쿼리 화면, 웹은 기존 `/chat/<id>` 등.
+  서버가 보낸 알림 주소는 `localizeAppPath()`로 바꿉니다. 링크는 `chatHref`/`albumHref`/`weekNewsHref`/`eventEditHref`.
+- **앱 로그인**: 구글 = `@capacitor-firebase/authentication` `signInWithGoogle` → idToken → `signInWithCredential`(`lib/auth-context.tsx`, `skipNativeAuth`). 휴대폰 = 플러그인으로 문자 → `verificationId`+6자리로 웹 SDK 로그인/연결(`lib/phone-login.ts` `sendNativeCode`).
+  카카오 = `@capacitor/browser`로 시스템 브라우저 → 리디렉트 `https://aegiaeta.web.app/auth/kakao`(state가 `app-`로 시작) → 그 웹 페이지가 서버에서 표를 받아 `app.web.aegiaeta://kakao?token&state`로 앱 재오픈
+  (AndroidManifest intent-filter) → `components/NativeAppSync.tsx`가 state(localStorage) 확인 후 `signInWithCustomToken`. NativeAppSync는 알림 누르기(`data.url`)·안드로이드 뒤로 가기도 맡고 `app/layout.tsx`에 붙어 있음.
+  ★ 서버(`/api/auth/kakao`)의 redirectUri 허용 목록에 `https://aegiaeta.web.app/auth/kakao`가 있어야 함(앱도 같은 주소를 보냄 — 웹 로그인과 같아서 이미 포함돼야 함).
+- **앱 푸시**: `lib/push.ts` 앱 분기(`@capacitor/push-notifications`, 채널 "default", 권한은 localStorage 캐시 `agikaeta:push-native-perm`), pushTokens에 `platform`("android"/"ios") 저장(웹은 없음 = 웹으로 봄).
+  서버 `lib/push-send.ts`: `tokensForUids`/`feed-watch`가 `{web, native}`를 돌려주고 웹=data만, 앱=notification+data(+android 채널). 규칙(`pushTokens`)은 칸을 제한하지 않아 platform 칸이 그대로 통과함.
+  ★ 앱에서는 VAPID 키가 필요 없지만 웹은 여전히 필요. 앱 푸시는 `google-services.json`이 있어야 동작.
+- **공개 페이지**: `/privacy`·`/terms`(다른 작업)와 `/account-deletion`(구글 플레이가 요구하는 삭제 안내, `LegalPage` 사용)은 `(main)` 바깥이라 로그인 없이 열림. 내용은 실제 탈퇴 동작(`lib/account-withdraw-server.ts`)과 같아야 함.
+- **스토어 자료**: `store-assets/`(listing-ko.md, play-console-answers.md, production-access-notes.md, 아이콘·대표 그림), `docs/play-store-checklist.md`(Windows에서 사용자가 할 일 전체). 심사용 계정: `node scripts/play-review-account.mjs create|delete`.
+- **사용자가 아직 해야 할 일**: 웹 배포(+`CONTACT_EMAIL` 입력) → JDK 21·Android Studio → Firebase에 안드로이드 앱 등록(디버그 SHA-1/256, `google-services.json`을 `android/app/`에) → `npm run app:sync` → 폰 시험 → 업로드 키 생성(저장소 밖) +
+  `android/keystore.properties` → `bundleRelease` → Play Console 입력·비공개 테스트 12명 14일 → **첫 업로드 뒤 앱 서명 SHA-1/256을 Firebase에 추가**(안 하면 스토어 앱에서 구글 로그인·휴대폰 인증 실패).
+- **보안 주의**: ① 카카오 앱 복귀는 커스텀 스킴이라 다른 앱이 가로챌 수 있음 → 나중에 App Links(assetlinks.json)로. ② **심사용 시험 계정은 심사가 끝나면 반드시 `delete`** (번호+코드를 아는 누구나 로그인 가능, 이 앱은 가입자 누구나 원우수첩을 읽어 원우 정보가 노출됨).
+  ③ 키스토어·비밀번호·서비스 계정은 저장소에 넣지 않음(`android/.gitignore`·루트 `.gitignore`가 `keystore.properties`·`*.jks` 차단). `allowBackup=false`. ④ 규칙·서버 배포는 웹 먼저, 규칙 나중(위 "보안 점검 후 수정").
