@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import CohortPicker from "@/components/CohortPicker";
 import MemberEditSheet from "@/components/MemberEditSheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
+import { Sheet, SheetActions } from "@/components/Sheet";
 import TextTabs from "@/components/TextTabs";
 import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
@@ -23,7 +24,6 @@ import {
 import { thumbnailUrl } from "@/lib/cloudinary";
 import { formatBirthday, formatPhone, phoneHref } from "@/lib/format";
 import { useCohortMembers, useCohortRoster } from "@/lib/hooks";
-import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { parseVideoLink, videoEmbedUrl, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 
@@ -1026,38 +1026,19 @@ function MemberDetailSheet({
   const affiliation = affiliationLine(entry);
   const member = entry.member;
 
-  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
   // 둘러보는 사람에게는 번호가 내려오지 않습니다 — 전화·문자 자리에 로그인 안내 (2026-09-24 사용자 "번호만 로그인 뒤에").
   const isGuest = useIsGuest();
 
+  /*
+   * 2026-10-06 사용자 요청: 겉틀(손잡이·막·모서리·아래 단추 줄)을 뉴웨이브앱과 같은 공용 Sheet로 바꿨습니다.
+   * 예전 아래쪽 "정보 수정하기"(연한 주황)·"닫기"(회색) 두 단추는 뉴웨이브처럼 아래 붙박이 줄의 "취소 / 정보 수정하기"로 합쳤습니다(취소 = 닫기).
+   */
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${entry.name} 상세 정보`}
-      onClick={onClose}
+    <Sheet
+      onClose={onClose}
+      footer={<SheetActions onCancel={onClose} confirmLabel={isMe ? "내 정보 수정하기" : "정보 수정하기"} onConfirm={onEdit} />}
     >
-      {/* 손잡이는 스크롤 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명을 참고하세요. */}
-      <div
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
-        onClick={(event) => event.stopPropagation()}
-        style={sheetStyle}
-      >
-        {/*
-          손잡이 바 — 가로 48px(w-12) · 세로 5px, 사진과의 사이 20px(pb-5) (2026-09-15 사용자 요청:
-          가로 좀 늘리고 높이는 아주 조금 줄이고 사진과 사이를 더). 예전엔 40px × 6px, 사이 8px(pb-2) → 12px → 20px.
-          원우 상세 시트에만 해당합니다 — 수정 시트(MemberEditSheet)의 손잡이는 그대로입니다.
-        */}
-        <div
-          {...handleTouchHandlers}
-          aria-hidden="true"
-          className="flex shrink-0 touch-none justify-center pt-3 pb-5"
-        >
-          <div className="h-[5px] w-12 rounded-full bg-line" />
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7">
+      <div className="pb-4">
           <div className="flex flex-col items-center text-center">
             <button
               type="button"
@@ -1224,41 +1205,8 @@ function MemberDetailSheet({
               {entry.updatedByName} 님이 채워주셨어요
             </p>
           ) : null}
-
-          <button
-            type="button"
-            onClick={onEdit}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-50 py-[10.75px] text-[15px] font-bold text-brand-500"
-          >
-            {/* 남의 칸도 "정보 수정하기" (2026-09-15 사용자 요청 — 예전엔 "정보 채워주기") */}
-            {/*
-              앞 아이콘은 연필 선 아이콘(PencilIcon — 원우 목록 줄 오른쪽 연필과 같은 그림), 22px (2026-09-26 사용자
-              "아이콘을 이 그림으로 바꾸고 크기는 2배"; 그 전엔 글자 "✎"로 약 11px). 색은 글씨와 같은 주황.
-              22px은 글줄(22.5px)을 넘지 않아 단추 높이가 그대로입니다.
-              → 20.5px로 1.5px 줄임 (같은 날 사용자 "아이콘 크기 1.5px 만큼 줄여줘") → 20px ("0.5px 만큼 더 줄여줘") → 19.5px (한 번 더 0.5px).
-            */}
-            <PencilIcon className="h-[19.5px] w-[19.5px] shrink-0" />
-            {/*
-              ★ 이 창의 단추들(1:1 채팅·전화·문자·정보 수정하기·닫기 등)은 위아래 10.75px — 15px 글씨(글줄 22.5px)와 합쳐
-                약 44px로 입력칸 높이와 같습니다 (2026-09-26 사용자 "박스들 높이 좀 줄여줘", 13.5px·15.5px에서).
-            */}
-            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청), 연필은 제자리. */}
-            <span className="-translate-y-px">{isMe ? "내 정보 수정하기" : "정보 수정하기"}</span>
-          </button>
-
-          {/* 내 칸의 "사진·자기소개까지 고치기"(내 프로필로 가는 단추)는 2026-09-27 사용자 요청으로 없앴습니다. */}
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-3 w-full rounded-2xl bg-fill py-[10.75px] text-[15px] font-bold text-ink-soft"
-          >
-            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). flex가 아닌 단추라 inline-block이어야 transform이 먹습니다. */}
-            <span className="inline-block -translate-y-px">닫기</span>
-          </button>
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }
 

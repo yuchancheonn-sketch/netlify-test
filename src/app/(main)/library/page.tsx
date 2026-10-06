@@ -13,6 +13,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import CohortPicker from "@/components/CohortPicker";
+import { ConfirmDialog, Sheet, SheetActions } from "@/components/Sheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import TextTabs from "@/components/TextTabs";
 import VideoList from "@/components/VideoList";
@@ -20,11 +21,8 @@ import { PlusIcon } from "@/components/icons";
 import {
   EmptyState,
   ErrorState,
-  FieldError,
   FieldLabel,
-  PrimaryButton,
   Skeleton,
-  Spinner,
   inputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -457,6 +455,7 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
     } catch {
       setDeleting(false);
       setDeleteError("삭제하지 못했어요. 다시 시도해 주세요.");
+      throw new Error("delete-failed"); // ConfirmDialog가 창을 닫지 않게(오류 문구를 보여 주려고)
     }
   }
 
@@ -578,54 +577,17 @@ function FileCard({ file, canManage }: { file: FileDoc; canManage: boolean }) {
       ) : null}
 
       {/*
-        삭제 확인 창 — 화면 가운데 흰 상자. 바깥(어두운 막)을 누르거나 "취소"면 닫힙니다.
-        modal-scrim 막은 globals.css가 맨 위 시계 줄 색까지 맞춰 줍니다(확인 창 공용 처리).
+        삭제 확인 창 — 2026-10-06 사용자 요청으로 뉴웨이브앱과 같은 공용 ConfirmDialog로(가운데 상자 안 짜임은 Sheet.tsx가 정함).
+        실패하면 오류 문구를 설명 아래에 붙이고, 창이 저절로 닫히지 않게 handleDelete가 다시 던집니다.
       */}
       {confirmingDelete ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center modal-scrim px-8"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby={`delete-title-${file.id}`}
-          onClick={() => {
-            if (!deleting) setConfirmingDelete(false);
-          }}
-        >
-          <div
-            className="w-full max-w-[320px] rounded-3xl bg-surface px-5 pt-6 pb-4 text-center shadow-[var(--shadow-float)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p id={`delete-title-${file.id}`} className="text-[17px] font-bold text-ink">
-              진짜 삭제하시겠어요?
-            </p>
-            <p className="mt-2 text-[14px] leading-relaxed break-all text-ink-muted">
-              &lsquo;{file.name}&rsquo;이(가) 자료 목록에서 사라져요.
-            </p>
-            {deleteError ? (
-              <p role="alert" className="mt-2 text-[13px] font-medium text-danger">
-                {deleteError}
-              </p>
-            ) : null}
-            <div className="mt-5 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                disabled={deleting}
-                className="flex-1 rounded-2xl bg-fill py-3 text-[15px]! font-bold text-ink-soft transition active:scale-[0.98] disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex flex-1 items-center justify-center rounded-2xl bg-danger py-3 text-[15px]! font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
-              >
-                {deleting ? <Spinner className="h-5 w-5" /> : "삭제"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="진짜 삭제하시겠어요?"
+          description={`\u2018${file.name}\u2019이(가) 자료 목록에서 사라져요.${deleteError ? ` ${deleteError}` : ""}`}
+          confirmLabel="삭제"
+          onConfirm={handleDelete}
+          onClose={() => setConfirmingDelete(false)}
+        />
       ) : null}
     </li>
   );
@@ -643,8 +605,8 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault();
     if (saving) return;
     const trimmed = name.trim();
     if (!trimmed) {
@@ -668,21 +630,18 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label="파일 이름 바꾸기"
-      onClick={onClose}
+    <Sheet
+      title="파일 이름 바꾸기"
+      onClose={onClose}
+      footer={<SheetActions onCancel={onClose} confirmLabel="저장" confirmType="submit" onConfirm={() => handleSubmit()} loading={saving} />}
     >
-      <form
-        onSubmit={handleSubmit}
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-canvas px-6 pt-7 pb-[28px] sm:pb-7"
-      >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">파일 이름 바꾸기</h2>
-
-        <div className="mb-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-4">
+        {error ? (
+          <p role="alert" className="text-[13px] font-medium text-danger">
+            {error}
+          </p>
+        ) : null}
+        <div>
           <FieldLabel htmlFor="file-name">이름</FieldLabel>
           <input
             id="file-name"
@@ -695,28 +654,7 @@ function FileRenameSheet({ file, onClose }: { file: FileDoc; onClose: () => void
             className={inputClassName}
           />
         </div>
-
-        {error ? <FieldError>{error}</FieldError> : null}
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            /*
-              shrink-0과 whitespace-nowrap이 꼭 필요합니다.
-              옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
-              0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
-            */
-            className="shrink-0 rounded-2xl bg-fill px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted"
-          >
-            취소
-          </button>
-          {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
-          <PrimaryButton type="submit" loading={saving} size="sm">
-            저장
-          </PrimaryButton>
-        </div>
       </form>
-    </div>
+    </Sheet>
   );
 }

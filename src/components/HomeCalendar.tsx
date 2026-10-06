@@ -12,7 +12,8 @@ import {
 } from "@/components/icons";
 import EventSheet from "@/components/EventSheet";
 import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
-import { Spinner } from "@/components/ui";
+import { SecondaryButton, Spinner } from "@/components/ui";
+import { ConfirmDialog, Sheet } from "@/components/Sheet";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf, inCohort } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
@@ -117,8 +118,10 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     </button>
   );
 
+  /** 삭제 확인 창에 띄울 일정 — 브라우저 기본 confirm() 대신 공용 ConfirmDialog (2026-10-06 사용자 요청, 뉴웨이브앱처럼) */
+  const [pendingDelete, setPendingDelete] = useState<DayItem | null>(null);
+
   async function removeEvent(item: DayItem) {
-    if (!window.confirm(`"${item.title}" 일정을 삭제할까요? 되돌릴 수 없어요.`)) return;
     setDeleteError(null);
     try {
       // 지우면 useEvents 구독이 알아서 이 줄과 날짜 밑 점을 내립니다.
@@ -421,7 +424,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
                   {item.kind === "cohort" && canDelete ? (
                     <button
                       type="button"
-                      onClick={() => void removeEvent(item)}
+                      onClick={() => setPendingDelete(item)}
                       aria-label={`${item.title} 일정 삭제`}
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-faint transition active:bg-fill ${
                         isLast ? "-mr-1" : "absolute top-1/2 right-[-50px] -translate-y-1/2"
@@ -463,6 +466,17 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
 
 
       {linking ? <PhoneCalendarSheet onClose={() => setLinking(false)} /> : null}
+      {pendingDelete ? (
+        // 포털이어도 React 이벤트는 위로 올라가 캘린더의 onClick에 닿으므로 여기서 멈춥니다.
+        <div onClick={(clicked) => clicked.stopPropagation()}>
+          <ConfirmDialog
+            title={`"${pendingDelete.title}" 일정을 삭제할까요?`}
+            description="되돌릴 수 없어요."
+            onConfirm={() => removeEvent(pendingDelete)}
+            onClose={() => setPendingDelete(null)}
+          />
+        </div>
+      ) : null}
       {adding ? <EventSheet initialDate={selected} onClose={() => setAdding(false)} /> : null}
     </section>
   );
@@ -503,26 +517,20 @@ function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label="내 폰 캘린더에 연결"
-      onClick={onClose}
-    >
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
+    /* 공용 Sheet — 손잡이 → 제목 → 안내·선택지 → 아래 "닫기" (2026-10-06 사용자 요청, 뉴웨이브앱 시트와 같은 짜임) */
+    <div onClick={(clicked) => clicked.stopPropagation()}>
+      <Sheet
+        title="내 폰 캘린더에 연결"
+        onClose={onClose}
+        footer={<SecondaryButton onClick={onClose}>닫기</SecondaryButton>}
       >
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-        <h2 className="mt-5 text-[18px] font-bold text-ink">내 폰 캘린더에 연결</h2>
-        <p className="mt-1.5 text-[14px] leading-relaxed break-keep text-ink-muted">
+        <p className="-mt-2 mb-5 text-[14px] leading-relaxed break-keep text-ink-muted">
           한 번 연결하면 우리 기수 모임과 도산아카데미 일정이 폰 캘린더에 저절로 들어와요.
           <br />
           일정이 바뀌면 폰에서도 따라 바뀌어요(몇 시간 걸릴 수 있어요).
         </p>
 
-        <div className="mt-5 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pb-4">
           <button
             type="button"
             onClick={() => void open("webcal")}
@@ -541,22 +549,13 @@ function PhoneCalendarSheet({ onClose }: { onClose: () => void }) {
             구글 캘린더 (안드로이드)
           </button>
           {/* "구독 주소 복사하기"는 뺐습니다 (2026-09-23 사용자 요청). */}
+          {error ? (
+            <p role="alert" className="mt-1 text-center text-[13px] font-medium text-danger">
+              {error}
+            </p>
+          ) : null}
         </div>
-
-        {error ? (
-          <p role="alert" className="mt-2 text-center text-[13px] font-medium text-danger">
-            {error}
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-1 w-full py-3 text-[15px]! font-bold text-ink-soft"
-        >
-          닫기
-        </button>
-      </div>
+      </Sheet>
     </div>
   );
 }

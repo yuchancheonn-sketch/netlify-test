@@ -2,9 +2,9 @@
 
 import { useRequireLogin } from "@/components/LoginRequired";
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { deleteField, doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { FieldError, FieldLabel, PrimaryButton, flatInputClassName } from "@/components/ui";
+import { FieldError, FieldLabel, flatInputClassName } from "@/components/ui";
+import { Sheet, SheetActions } from "@/components/Sheet";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { useCommitteeInfo } from "@/lib/hooks";
@@ -241,7 +241,7 @@ function CommitteeCardBack({ committee, kind = "committee" }: { committee: { nam
 
 /**
  * 위원회 소개 글 고치기 창 (운영진만).
- * ★ document.body에 붙입니다(createPortal) — 카드가 뒤집히려고 3D 변형을 쓰고 있어서,
+ * ★ 공용 Sheet가 document.body에 붙입니다(createPortal) — 카드가 뒤집히려고 3D 변형을 쓰고 있어서,
  *   그 안에 두면 이 창이 카드와 함께 돌아가고 자리도 카드 기준으로 잡힙니다.
  */
 function CommitteeEditSheet({
@@ -280,50 +280,27 @@ function CommitteeEditSheet({
     }
   }
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${committee.name} 소개 수정`}
-      onClick={saving ? undefined : onClose}
+  // 2026-10-06 사용자 요청: 뜨는 창 안쪽을 뉴웨이브앱과 똑같이 — 공용 Sheet(제목·굴러가는 칸·붙박이 취소/저장 줄)로 바꿈.
+  return (
+    <Sheet
+      title={`${committee.name} 소개`}
+      onClose={onClose}
+      footer={<SheetActions onCancel={onClose} confirmLabel="저장" onConfirm={() => void save()} disabled={saving} loading={saving} />}
     >
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-surface px-6 pt-7 pb-[28px] sm:pb-7"
-      >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">{committee.name} 소개</h2>
-
-        <div className="mb-6">
-          <FieldLabel htmlFor="committee-goal">목표</FieldLabel>
-          <textarea
-            id="committee-goal"
-            value={goal}
-            onChange={(event) => setGoal(event.target.value.slice(0, INFO_MAX_LENGTH))}
-            rows={8}
-            placeholder={`이 ${kind === "club" ? "동호회" : "위원회"}의 목표를 적어 주세요.`}
-            className={`${flatInputClassName} resize-none leading-relaxed`}
-          />
-        </div>
-
-        {error ? <FieldError>{error}</FieldError> : null}
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)] disabled:opacity-50"
-          >
-            취소
-          </button>
-          <PrimaryButton onClick={save} loading={saving} size="sm">
-            저장
-          </PrimaryButton>
-        </div>
+      <div className="mb-6">
+        <FieldLabel htmlFor="committee-goal">목표</FieldLabel>
+        <textarea
+          id="committee-goal"
+          value={goal}
+          onChange={(event) => setGoal(event.target.value.slice(0, INFO_MAX_LENGTH))}
+          rows={8}
+          placeholder={`이 ${kind === "club" ? "동호회" : "위원회"}의 목표를 적어 주세요.`}
+          className={`${flatInputClassName} resize-none leading-relaxed`}
+        />
       </div>
-    </div>,
-    document.body,
+
+      {error ? <FieldError>{error}</FieldError> : null}
+    </Sheet>
   );
 }
 

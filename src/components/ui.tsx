@@ -97,6 +97,7 @@ export function PrimaryButton({
   loading,
   size = "md",
   className = "",
+  raiseText = false,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -121,10 +122,15 @@ export function PrimaryButton({
    */
   size?: "md" | "field" | "compact" | "sm";
   className?: string;
+  /**
+   * 글씨만 1px 올립니다 — 한글 글꼴은 글자가 줄 높이 안에서 약간 아래에 앉아 가운데 정렬이 1px쯤 아래로 보입니다
+   * (뉴웨이브앱 단추와 같게, 2026-10-06 사용자 요청. 뜨는 창의 단추(SheetActions·ConfirmDialog)에만 켭니다).
+   */
+  raiseText?: boolean;
 }) {
   const sizeClassName =
     size === "sm"
-      ? "px-5 py-2.5 text-[15px]"
+      ? "px-5 py-2.5 text-[15px]!"
       : size === "compact"
         ? "px-5 py-2 text-[16px]"
         : size === "field"
@@ -139,7 +145,35 @@ export function PrimaryButton({
       className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 font-bold text-white transition active:scale-[0.99] disabled:bg-brand-200 disabled:text-white ${sizeClassName} ${className}`}
     >
       {loading ? <Spinner className="h-5 w-5" /> : null}
-      {children}
+      {raiseText ? <span className="relative -top-px">{children}</span> : children}
+    </button>
+  );
+}
+
+/**
+ * 흰 보조 버튼 — 흰 바탕 + 1px 테두리 (2026-10-06, 뉴웨이브앱 SecondaryButton을 옮김). 테두리만큼 위아래 여백을 1px 줄여
+ * 주 버튼과 높이를 맞춥니다. 뜨는 창 아래 줄의 "취소"가 씁니다.
+ */
+export function SecondaryButton({
+  children,
+  onClick,
+  size = "field",
+  className = "",
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  size?: "field" | "sm";
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface font-bold text-ink transition active:scale-[0.99] active:bg-fill ${
+        size === "sm" ? "px-5 py-[9px] text-[15px]!" : "px-5 py-[12px]"
+      } ${className}`}
+    >
+      <span className="relative -top-px">{children}</span>
     </button>
   );
 }

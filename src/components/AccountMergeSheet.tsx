@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ConfirmationResult } from "firebase/auth";
 import { PrimaryButton, inputClassName } from "@/components/ui";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { adoptIntoPhoneAccount, linkToExistingMember } from "@/lib/account-link";
 import { formatPhoneInput } from "@/lib/format";
 import {
@@ -22,6 +23,8 @@ import {
  * 휴대폰 번호를 문자로 인증하면(이 계정에 번호가 이어짐) 서버가 그 번호로 된 계정을 찾아 합칩니다.
  * 그 번호가 이미 휴대폰 로그인 계정이면 이어 붙이기가 막히는데, 그때는 그 계정으로 합칩니다(adoptIntoPhoneAccount).
  * 왜 문자 인증까지 하는지는 lib/account-link-server.ts 맨 위.
+ *
+ * 2026-10-06 사용자 요청: 안쪽 짜임을 뉴웨이브앱 AccountMergeSheet와 똑같이(높이 88dvh·아래 여백 28px·단추 field 크기·터치 스크롤 잠금).
  *
  * ★ 폼 안에서 쓰이지만 document.body에 붙입니다(createPortal) — 여기서 Enter를 눌러도
  *   바깥 프로필 폼("시작하기")이 제출되지 않게.
@@ -46,6 +49,8 @@ export default function AccountMergeSheet({
   const [error, setError] = useState<string | null>(null);
   /** 인증은 됐는데 기존 계정의 번호와 달랐을 때 */
   const [mismatch, setMismatch] = useState(false);
+
+  useLockBodyScroll();
 
   // 시트를 닫으면 로봇 확인을 버립니다(lib/phone-login.ts의 resetVerifier).
   useEffect(() => () => resetVerifier(), []);
@@ -101,7 +106,7 @@ export default function AccountMergeSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
+      className="fixed inset-0 z-50 flex touch-none items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
       role="dialog"
       aria-modal="true"
       aria-label="기존 계정과 합치기"
@@ -109,7 +114,7 @@ export default function AccountMergeSheet({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-canvas px-6 pt-7 pb-[28px] sm:pb-7"
+        className="animate-sheet-up max-h-[88dvh] w-full max-w-[480px] touch-auto overflow-y-auto overscroll-contain rounded-[32px] bg-canvas px-6 pt-7 pb-7"
       >
         <h2 className="text-[20px] font-bold text-ink">이미 가입된 계정이 있어요</h2>
         {/* 문장마다 줄을 바꿉니다 (2026-09-23 사용자 요청) */}
@@ -128,13 +133,13 @@ export default function AccountMergeSheet({
               인증한 번호가 그 계정의 번호와 달라요. 새 계정으로 시작할까요?
             </p>
             <div className="mt-4">
-              <PrimaryButton onClick={onSkip}>새 계정으로 시작</PrimaryButton>
+              <PrimaryButton size="field" onClick={onSkip}>새 계정으로 시작</PrimaryButton>
             </div>
           </div>
         ) : confirmation ? (
           <div className="mt-6 flex flex-col gap-3">
             <CodeBoxes value={code} onChange={setCode} onEnter={() => void confirmCode()} />
-            <PrimaryButton onClick={confirmCode} loading={busy}>
+            <PrimaryButton size="field" onClick={confirmCode} loading={busy}>
               확인하고 합치기
             </PrimaryButton>
           </div>
@@ -150,7 +155,7 @@ export default function AccountMergeSheet({
               aria-label="휴대폰 번호"
               className={`${inputClassName} text-center`}
             />
-            <PrimaryButton onClick={sendCode} loading={busy}>
+            <PrimaryButton size="field" onClick={sendCode} loading={busy}>
               인증번호 받기
             </PrimaryButton>
           </div>

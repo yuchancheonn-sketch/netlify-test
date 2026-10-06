@@ -5,9 +5,12 @@ import { PrimaryButton, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { calendarSubscribeLinks, markCalendarLinked } from "@/lib/calendar-client";
 import { enablePush, rememberPushAsked } from "@/lib/push";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { refreshPushState, useShouldAskPush } from "@/lib/use-push";
 
 /**
+ * (2026-10-06 사용자 요청: 안쪽 짜임을 뉴웨이브앱 FirstRunSetupPrompt와 똑같이 — 상자 380px·모서리 16px·위 28px/아래 24px, 제목 19px 굵게, 단추 field 크기.
+ *  애기애타앱은 폰 캘린더 줄이 더 있어 그 줄은 그대로 둠.)
  * 처음 설정 창 — 앱에 처음 들어온 기기에 한 번, 알림 받기와 폰 캘린더 연결을 한자리에서 (2026-09-23 사용자 요청
  * "처음 앱을 깔았을 때 알람 설정이나 캘린더 연동이나 모두 수락할 수 있도록"). 예전 PushPermissionPrompt(알림만)를 넓혔습니다.
  *
@@ -52,6 +55,12 @@ function isApplePhone(): boolean {
 }
 
 type Links = { webcal: string; google: string };
+
+/** 창이 떠 있는 동안만 뒤 화면 스크롤을 잠급니다 (뉴웨이브앱 ScrollLock과 같음, 2026-10-06 사용자 요청). */
+function ScrollLock() {
+  useLockBodyScroll();
+  return null;
+}
 
 export default function FirstRunSetupPrompt() {
   const { user } = useAuth();
@@ -128,11 +137,12 @@ export default function FirstRunSetupPrompt() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center modal-scrim px-6"
+      className="fixed inset-0 z-50 flex touch-none items-center justify-center modal-scrim px-6"
       role="dialog"
       aria-modal="true"
       aria-label="처음 설정"
     >
+      <ScrollLock />
       <div className="animate-sheet-up w-full max-w-[380px] rounded-[16px] bg-surface px-6 pt-7 pb-6">
         <h2 className="text-[19px] leading-snug font-bold text-ink">
           {/* 한 줄만 설 때(이미 알림을 물어본 기존 원우 등)는 그 한 가지로 묻습니다. */}
@@ -160,7 +170,7 @@ export default function FirstRunSetupPrompt() {
                   알림을 켜지 못했어요. 나중에 설정 화면에서 다시 켤 수 있어요.
                 </p>
               ) : (
-                <PrimaryButton size="sm" loading={pushState === "working"} onClick={turnOnPush}>
+                <PrimaryButton size="field" loading={pushState === "working"} onClick={turnOnPush}>
                   알림 켜기
                 </PrimaryButton>
               )}

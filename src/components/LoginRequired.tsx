@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PrimaryButton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { rememberReturnPath } from "@/lib/login-return";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 /**
  * 로그인 없이 둘러보기 (2026-09-24 사용자 요청 "보는 것만큼 로그인 없이, 수정이나 올리기는 그때서야 로그인").
@@ -110,6 +111,42 @@ export function LoginRequired({
 type Prompt = { message: string; returnPath?: string };
 const PromptContext = createContext<((prompt: Prompt) => void) | null>(null);
 
+/** 행동을 막았을 때 띄우는 아래 창 (2026-10-06 사용자 요청: 안쪽 짜임을 뉴웨이브앱과 똑같이). (main) 레이아웃이 한 번 깔아 둡니다. */
+function LoginPromptSheet({ prompt, onClose, onLogin }: { prompt: Prompt; onClose: () => void; onLogin: () => void }) {
+  useLockBodyScroll();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex touch-none items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
+      role="dialog"
+      aria-modal="true"
+      aria-label="로그인 안내"
+      onClick={onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-6"
+      >
+        <div aria-hidden="true" className="mx-auto h-1.5 w-10 rounded-full bg-line" />
+        <p className="mt-6 text-center text-[16px] leading-relaxed font-bold break-keep text-ink">{prompt.message}</p>
+        <div className="mt-6 flex flex-col gap-2">
+          <PrimaryButton size="field" onClick={onLogin}>
+            {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). */}
+            <span className="-translate-y-px">로그인</span>
+          </PrimaryButton>
+          <button
+            type="button"
+            onClick={onClose}
+            // 옅은 회색 밑줄 — 로그인 안내 상자의 "되돌아가기"와 같은 모양 (2026-09-26 사용자 요청).
+            className="w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
+          >
+            둘러보기 계속
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** 행동을 막았을 때 띄우는 아래 창. (main) 레이아웃이 한 번 깔아 둡니다. */
 export function LoginPromptProvider({ children }: { children: ReactNode }) {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
@@ -119,43 +156,15 @@ export function LoginPromptProvider({ children }: { children: ReactNode }) {
     <PromptContext.Provider value={setPrompt}>
       {children}
       {prompt ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-          role="dialog"
-          aria-modal="true"
-          aria-label="로그인 안내"
-          onClick={() => setPrompt(null)}
-        >
-          <div
-            onClick={(event) => event.stopPropagation()}
-            className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
-          >
-            <div aria-hidden="true" className="mx-auto h-1.5 w-10 rounded-full bg-line" />
-            <p className="mt-6 text-center text-[16px] leading-relaxed font-bold break-keep text-ink">
-              {prompt.message}
-            </p>
-            <div className="mt-6 flex flex-col gap-2">
-              <PrimaryButton
-                onClick={() => {
-                  const returnPath = prompt.returnPath;
-                  setPrompt(null);
-                  goToLogin(returnPath);
-                }}
-              >
-                {/* 글씨만 1px 위로 (2026-09-25 사용자 요청). */}
-                <span className="-translate-y-px">로그인</span>
-              </PrimaryButton>
-              <button
-                type="button"
-                onClick={() => setPrompt(null)}
-                // 옅은 회색 밑줄 — 로그인 안내 상자의 "되돌아가기"와 같은 모양 (2026-09-26 사용자 요청).
-                className="w-full py-3 text-[15px]! font-bold text-ink-soft underline decoration-ink-faint decoration-[1.25px] underline-offset-[4.25px]"
-              >
-                둘러보기 계속
-              </button>
-            </div>
-          </div>
-        </div>
+        <LoginPromptSheet
+          prompt={prompt}
+          onClose={() => setPrompt(null)}
+          onLogin={() => {
+            const returnPath = prompt.returnPath;
+            setPrompt(null);
+            goToLogin(returnPath);
+          }}
+        />
       ) : null}
     </PromptContext.Provider>
   );

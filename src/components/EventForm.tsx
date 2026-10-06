@@ -9,6 +9,7 @@ import {
   PrimaryButton,
   inputClassName,
 } from "@/components/ui";
+import { Sheet, SheetActions } from "@/components/Sheet";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
@@ -73,8 +74,8 @@ export default function EventForm({
     return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(formEvent: React.FormEvent) {
-    formEvent.preventDefault();
+  async function handleSubmit(formEvent?: React.FormEvent) {
+    formEvent?.preventDefault();
     if (!user || saving || !validate()) return;
 
     setSaving(true);
@@ -146,9 +147,21 @@ export default function EventForm({
    */
   const fieldClassName = `${inputClassName} bg-canvas! py-2.5! shadow-none!`;
 
-  return (
-    <form onSubmit={handleSubmit} className={className}>
-      <div className="mb-6">
+  /** 칸 사이 간격 — 화면에서는 mb-6, 시트에서는 뉴웨이브처럼 flex gap-5(아래 formNode의 className) */
+  const gapClass = onDone ? "" : "mb-6";
+
+  const formNode = (
+    <form
+      onSubmit={handleSubmit}
+      className={onDone ? "flex flex-col gap-5 pb-4" : className}
+    >
+      {onDone && saveError ? (
+        <p role="alert" className="text-[13px] font-medium text-danger">
+          {saveError}
+        </p>
+      ) : null}
+      {onDone ? <button type="submit" hidden aria-hidden="true" tabIndex={-1} /> : null}
+      <div className={gapClass}>
         <FieldLabel htmlFor="event-title">제목</FieldLabel>
         <input
           id="event-title"
@@ -160,7 +173,7 @@ export default function EventForm({
         {errors.title ? <FieldError>{errors.title}</FieldError> : null}
       </div>
 
-      <div className="mb-6">
+      <div className={gapClass}>
         <FieldLabel htmlFor="event-date">날짜</FieldLabel>
         <input
           id="event-date"
@@ -172,7 +185,7 @@ export default function EventForm({
         {errors.date ? <FieldError>{errors.date}</FieldError> : null}
       </div>
 
-      <div className="mb-6 flex gap-3">
+      <div className={`${gapClass} flex gap-3`}>
         <div className="flex-1">
           {/* 필수 칸이지만 빨간 "필수" 표시는 두지 않습니다 (2026-09-27 사용자 요청 — 비우면 저장할 때 안내만). */}
           <FieldLabel htmlFor="event-start">시작 시간</FieldLabel>
@@ -200,7 +213,7 @@ export default function EventForm({
       {errors.startTime ? <FieldError>{errors.startTime}</FieldError> : null}
       {errors.endTime ? <FieldError>{errors.endTime}</FieldError> : null}
 
-      <div className="mb-6">
+      <div className={gapClass}>
         <FieldLabel htmlFor="event-location" hint="선택">
           장소
         </FieldLabel>
@@ -219,36 +232,43 @@ export default function EventForm({
       */}
       <div className="mb-2" />
 
-      {saveError ? (
+      {saveError && !onDone ? (
         <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
           {saveError}
         </p>
       ) : null}
 
-      {onDone ? (
-        /* 시트에서는 투표 만들기 시트처럼 "취소 | 등록하기" 한 줄 (PollCard.tsx의 같은 자리 주석 참고). */
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onDone}
-            // 흰 바탕 + 옅은 회색 테두리 — 원우 소식 올리기 창의 "취소"와 같은 모양 (2026-09-26 사용자 요청, bg-fill 회색에서).
-            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)]"
-          >
-            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). flex가 아닌 단추라 inline-block이어야 transform이 먹습니다. */}
-            <span className="inline-block -translate-y-px">취소</span>
-          </button>
-          <PrimaryButton type="submit" loading={saving} size="sm">
-            {/* 글씨만 1px 위로 (2026-09-26 사용자 요청). PrimaryButton이 flex라 span에 transform이 먹습니다. */}
-            <span className="-translate-y-px">
-              {editing ? "수정 저장하기" : "일정 등록하기"}
-            </span>
-          </PrimaryButton>
-        </div>
-      ) : (
+      {onDone ? null : (
         <PrimaryButton type="submit" loading={saving}>
           {editing ? "수정 저장하기" : "일정 등록하기"}
         </PrimaryButton>
       )}
     </form>
+  );
+
+  if (!onDone) return formNode;
+
+  /*
+   * 시트 안에서는 뉴웨이브앱 시트와 같은 짜임 (2026-10-06 사용자 요청): 공용 Sheet(손잡이 → 제목 → 칸들 → 아래 취소|등록하기 줄).
+   * 오류 문구는 맨 위, 저장 단추는 폼 밖 footer라 숨은 제출 단추로 Enter 제출을 살립니다.
+   * ★ 포털이어도 React 이벤트는 부모(홈 캘린더의 누르면 굴러오는 onClick)까지 올라가므로 여기서 멈춥니다.
+   */
+  return (
+    <div onClick={(clicked) => clicked.stopPropagation()}>
+      <Sheet
+        title={editing ? "일정 수정" : "일정 등록"}
+        onClose={onDone}
+        footer={
+          <SheetActions
+            onCancel={onDone}
+            confirmLabel={editing ? "수정 저장하기" : "일정 등록하기"}
+            onConfirm={() => void handleSubmit()}
+            loading={saving}
+          />
+        }
+      >
+        {formNode}
+      </Sheet>
+    </div>
   );
 }

@@ -18,14 +18,14 @@ import { clubSlides, committeeSlides } from "@/components/CommitteeRoster";
 import Avatar from "@/components/Avatar";
 import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, PlusIcon, XMarkIcon } from "@/components/icons";
 import PhotoCropSheet from "@/components/PhotoCropSheet";
+import { ActionMenu, ConfirmDialog, Sheet, SheetActions } from "@/components/Sheet";
 import {
   EmptyState,
   ErrorState,
   FieldError,
   FieldLabel,
-  PrimaryButton,
+  SecondaryButton,
   Skeleton,
-  Spinner,
   flatInputClassName,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -35,7 +35,6 @@ import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
 import { isCloudinaryConfigured, uploadImage, viewerUrl } from "@/lib/cloudinary";
 import { resizeImage } from "@/lib/image";
-import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import { useIsGuest, useRequireLogin } from "@/components/LoginRequired";
 import { PHOTO_MAX_DIMENSION } from "@/lib/constants";
 import { dotDate, parseDateString, todayString } from "@/lib/format";
@@ -465,6 +464,8 @@ function AlbumBook({
   /** ⋯ 를 눌러 고르기 시트를 연 소식 / 수정 창을 연 소식 */
   const [managing, setManaging] = useState<PhotoAlbumDoc | null>(null);
   const [editing, setEditing] = useState<PhotoAlbumDoc | null>(null);
+  /** 지우려고 확인 창을 연 소식 (원우소식 카드 뒷면의 ⋯ 메뉴 → 삭제, 2026-10-06) */
+  const [removing, setRemoving] = useState<PhotoAlbumDoc | null>(null);
   /** 올린 원우와 운영진만 ⋯ (수정·지우기)가 보입니다. */
   const canManage = (album: PhotoAlbumDoc) =>
     !readOnly && (album.createdBy === user?.uid || isAdmin);
@@ -850,7 +851,8 @@ function AlbumBook({
                           author={authors.get(album.createdBy)}
                           viewerUid={user?.uid}
                           onPray={() => togglePray(album)}
-                          onMore={canManage(album) ? () => setManaging(album) : undefined}
+                          onEdit={canManage(album) ? () => setEditing(album) : undefined}
+                          onRemove={canManage(album) ? () => setRemoving(album) : undefined}
                         />
                       ) : album ? (
                         <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
@@ -933,6 +935,14 @@ function AlbumBook({
         />
       ) : null}
       {editing ? <AlbumSheet album={editing} onClose={() => setEditing(null)} /> : null}
+      {removing ? (
+        <ConfirmDialog
+          title="이 소식을 지울까요?"
+          description="사진도 함께 사라지고 되돌릴 수 없어요."
+          onConfirm={() => deleteAlbum(removing)}
+          onClose={() => setRemoving(null)}
+        />
+      ) : null}
     </>
   );
 
@@ -1180,15 +1190,18 @@ function ShareBack({
   author,
   viewerUid,
   onPray,
-  onMore,
+  onEdit,
+  onRemove,
 }: {
   album: PhotoAlbumDoc;
   author: UserDoc | undefined;
   viewerUid?: string;
   onPray: () => void;
-  /** 올린 원우·운영진에게만 — 없으면 ⋯ 를 그리지 않습니다. */
-  onMore?: () => void;
+  /** 올린 원우·운영진에게만 — 없으면 ⋯ 를 그리지 않습니다. 누르면 작은 메뉴(수정 / 지우기, 뉴웨이브앱과 같음). */
+  onEdit?: () => void;
+  onRemove?: () => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
   const body = album.body?.trim();
   const authorName = author?.name || album.createdByName || "원우";
@@ -1235,15 +1248,26 @@ function ShareBack({
               {likedBy.length > 0 ? <span className="text-[13px] font-semibold tabular-nums">{likedBy.length}</span> : null}
             </button>
           )}
-          {onMore ? (
-            <button
-              type="button"
-              aria-label={`${album.title} 수정·지우기`}
-              onClick={onMore}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted active:bg-fill"
-            >
-              <span className="relative -top-[2.5px] left-[1.5px] text-[20px] leading-none">⋯</span>
-            </button>
+          {onEdit && onRemove ? (
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                aria-label={`${album.title} 수정·지우기`}
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted active:bg-fill"
+              >
+                <span className="relative -top-[2.5px] left-[1.5px] text-[20px] leading-none">⋯</span>
+              </button>
+              {menuOpen ? (
+                <ActionMenu
+                  onClose={() => setMenuOpen(false)}
+                  items={[
+                    { label: "수정", onSelect: onEdit },
+                    { label: "지우기", danger: true, onSelect: onRemove },
+                  ]}
+                />
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
@@ -1288,11 +1312,6 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
   const [saving, setSaving] = useState(false);
   /** 사진 올리는 중이면 몇 장째인지 */
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  // 위쪽 회색 손잡이를 끌어내려 닫기 (2026-09-24 사용자 요청) — 다른 시트(SessionEditSheet 등)와 같은 손짓. 올리는 중엔 안 닫힘.
-  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(() => {
-    if (!saving) onClose();
-  });
-
   // 창이 닫힐 때 미리보기 주소를 돌려줍니다(브라우저 메모리). 상태는 건드리지 않습니다.
   const previews = useRef<string[]>([]);
   useEffect(() => {
@@ -1325,8 +1344,9 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
     setPhotos((previous) => previous.filter((photo) => photo.preview !== preview));
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  // 아래 단추 줄(SheetActions)이 창의 굴러가는 칸 밖에 있어 폼 제출 대신 이 함수를 직접 부릅니다(2026-10-06).
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault();
     if (!user || saving) return;
     if (!editing && photos.length === 0) {
       setError("사진을 골라 주세요.");
@@ -1412,48 +1432,36 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
 
   return (
     <>
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label={heading}
-      onClick={saving ? undefined : onClose}
-    >
       {/*
-        흰 바탕(bg-surface) + 옅은 회색 칸(flatInputClassName, 사진 고르기 칸 bg-fill) + "취소"는 흰색에 회색 테두리
-        (2026-09-23 사용자 요청 — 예전엔 회색 바탕에 흰 칸, 취소는 회색 칸).
+        2026-10-06 사용자 요청: 뜨는 창 안쪽도 뉴웨이브앱과 같게 — 공통 Sheet(손잡이·제목 19px·아래 고정 단추 줄)로 옮김.
+        아래 줄은 "취소"(1) + 주 버튼(3). 올리는 중에는 막·손잡이로 닫히지 않습니다.
       */}
-      {/*
-        회색 손잡이 (2026-09-24 사용자 요청 "이 창 상단에도 회색 조절 바"). 끌어내리면 닫힙니다.
-        손잡이는 굴러가는 칸 밖에 따로 둡니다 — 이유는 MemberEditSheet의 같은 자리 설명. 그래서 바깥 상자가
-        시트 모양을 맡고 form이 안에서 굴러갑니다. form의 pt-7(28px)은 손잡이 칸(12 + 6 + 8 = 26px)이 생겨
-        pt-1로 줄였습니다 — 제목까지의 거리는 거의 같습니다.
-      */}
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
-        style={sheetStyle}
+      <Sheet
+        title={heading}
+        onClose={saving ? () => undefined : onClose}
+        footer={
+          <SheetActions
+            onCancel={saving ? () => undefined : onClose}
+            confirmLabel={
+              progress && progress.done < progress.total
+                ? `사진 올리는 중 ${progress.done + 1}/${progress.total}`
+                : editing
+                  ? "저장"
+                  : "올리기"
+            }
+            onConfirm={() => void handleSubmit()}
+            loading={saving}
+          />
+        }
       >
-        <div
-          {...handleTouchHandlers}
-          aria-hidden="true"
-          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
-        >
-          <div className="h-1.5 w-10 rounded-full bg-line" />
-        </div>
-        <form
-          onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-[28px] sm:pb-7"
-        >
-        <h2 className="mb-6 text-[20px] font-bold text-ink">{heading}</h2>
-
+        <div className="flex flex-col gap-5 pb-4">
         {/*
           사진 — 새로 올릴 때만, **한 장만** (2026-09-22 사용자 요청 "카드에는 대표사진 한 장만").
           고른 사진이 미리 보이고, 오른쪽 위 ×로 빼거나 옆 칸으로 다른 사진을 골라 바꿔 끼웁니다.
           (같은 날 처음엔 여러 장을 고르게 했다가 바꿨습니다.)
         */}
         {editing ? null : (
-          <div className="mb-5">
+          <div>
             <FieldLabel>사진</FieldLabel>
             {!isCloudinaryConfigured ? (
               <p className="rounded-2xl bg-brand-50 px-4 py-3 text-[13px] leading-relaxed text-brand-500">
@@ -1502,7 +1510,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
           </div>
         )}
 
-        <div className="mb-5">
+        <div>
           <FieldLabel htmlFor="album-title">제목</FieldLabel>
           <input
             id="album-title"
@@ -1516,7 +1524,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
           />
         </div>
 
-        <div className="mb-5">
+        <div>
           <FieldLabel htmlFor="album-date">날짜</FieldLabel>
           <input
             id="album-date"
@@ -1527,7 +1535,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
           />
         </div>
 
-        <div className="mb-6">
+        <div>
           <FieldLabel
             htmlFor="album-body"
             hint={
@@ -1551,45 +1559,20 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
           />
         </div>
 
-        {error ? <FieldError>{error}</FieldError> : null}
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            /*
-              shrink-0과 whitespace-nowrap이 꼭 필요합니다.
-              옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
-              0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
-            */
-            className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)] disabled:opacity-50"
-          >
-            취소
-          </button>
-          {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
-          <PrimaryButton type="submit" loading={saving} size="sm">
-            {progress && progress.done < progress.total
-              ? `사진 올리는 중 ${progress.done + 1}/${progress.total}`
-              : editing
-                ? "저장"
-                : "올리기"}
-          </PrimaryButton>
+          {error ? <FieldError>{error}</FieldError> : null}
         </div>
-        </form>
-      </div>
-    </div>
-    {cropSrc ? (
-      <PhotoCropSheet
-        src={cropSrc}
-        size={1080}
-        aspect={4 / 5}
-        shape="rect"
-        title="사진 편집"
-        onCancel={() => setCropSrc(null)}
-        onDone={finishCrop}
-      />
-    ) : null}
+      </Sheet>
+      {cropSrc ? (
+        <PhotoCropSheet
+          src={cropSrc}
+          size={1080}
+          aspect={4 / 5}
+          shape="rect"
+          title="사진 편집"
+          onCancel={() => setCropSrc(null)}
+          onDone={finishCrop}
+        />
+      ) : null}
     </>
   );
 }
@@ -1601,6 +1584,20 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
  * 지우기는 사진 목록(photos 하위 문서)을 먼저 지우고 소식을 지웁니다 — 앨범 화면의 "앨범 지우기"와 같은 순서.
  * Cloudinary의 사진 실물은 남습니다(서명 없는 업로드라 앱에서 못 지움 — 자료 탭 파일과 같음).
  */
+/** 소식 한 개와 그 사진 목록(photos 하위 문서)을 지웁니다 — 사진 목록을 먼저 지우고 소식을 지우는 순서(앨범 화면의 "앨범 지우기"와 같음). */
+async function deleteAlbum(album: PhotoAlbumDoc) {
+  const photos = await getDocs(collection(db, "photoAlbums", album.id, "photos"));
+  await commitWrite([
+    ...photos.docs.map((photo) => deleteDoc(photo.ref)),
+    deleteDoc(doc(db, "photoAlbums", album.id)),
+  ]);
+}
+
+/**
+ * 옛 카드(위원회·동호회·주별 소식)의 ⋯ 를 누르면 뜨는 고르기 창 — 수정 / 지우기 (2026-09-22 사용자 요청).
+ * 2026-10-06 사용자 요청으로 창 안쪽을 뉴웨이브앱 창과 같게(공통 Sheet) 하고, 지우기는 확인 창(ConfirmDialog)을 거칩니다
+ * (예전엔 브라우저 기본 confirm()). 원우소식 카드는 뒷면 ⋯ 의 작은 메뉴를 씁니다(ShareBack).
+ */
 function AlbumManageSheet({
   album,
   onEdit,
@@ -1610,78 +1607,37 @@ function AlbumManageSheet({
   onEdit: () => void;
   onClose: () => void;
 }) {
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleDelete() {
-    if (!window.confirm(`"${album.title}" 소식을 지울까요?\n사진도 함께 사라지고 되돌릴 수 없어요.`)) return;
-    setDeleting(true);
-    setError(null);
-    try {
-      const photos = await getDocs(collection(db, "photoAlbums", album.id, "photos"));
-      await commitWrite([
-        ...photos.docs.map((photo) => deleteDoc(photo.ref)),
-        deleteDoc(doc(db, "photoAlbums", album.id)),
-      ]);
-      onClose();
-    } catch (caught) {
-      setError(saveErrorMessage(caught, "소식을 지우지 못했어요."));
-      setDeleting(false);
-    }
-  }
+  const [removing, setRemoving] = useState(false);
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label="소식 수정·지우기"
-      onClick={deleting ? undefined : onClose}
-    >
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
-      >
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-        <p className="mt-5 truncate text-[15px] font-bold text-ink-muted">{album.title}</p>
-
-        <div className="mt-4 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            disabled={deleting}
-            className="w-full rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-ink disabled:opacity-50"
-          >
-            {/* "고치기" → "수정" (2026-09-22 사용자 요청). 이어 뜨는 창 제목도 "소식 수정"으로 맞췄습니다. */}
+    <>
+      <Sheet title="소식 수정·지우기" onClose={onClose} footer={<SecondaryButton onClick={onClose}>취소</SecondaryButton>}>
+        <p className="-mt-3 mb-4 truncate text-[15px] font-bold text-ink-muted">{album.title}</p>
+        <div className="flex flex-col gap-2 pb-4">
+          <button type="button" onClick={onEdit} className="w-full rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-ink">
             수정
           </button>
           <button
             type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-danger disabled:opacity-50"
+            onClick={() => setRemoving(true)}
+            className="w-full rounded-2xl bg-fill py-[13px] text-[16px] font-bold text-danger"
           >
-            {deleting ? <Spinner className="h-5 w-5" /> : null}
             지우기
           </button>
         </div>
-
-        {error ? (
-          <p role="alert" className="mt-3 text-center text-[13px] font-medium text-danger">
-            {error}
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={deleting}
-          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
-        >
-          취소
-        </button>
-      </div>
-    </div>
+      </Sheet>
+      {removing ? (
+        <ConfirmDialog
+          title="이 소식을 지울까요?"
+          description="사진도 함께 사라지고 되돌릴 수 없어요."
+          onConfirm={() => deleteAlbum(album)}
+          onClose={() => {
+            setRemoving(false);
+            onClose();
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -1721,82 +1677,58 @@ function AlbumHistorySheet({
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-40 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-        role="dialog"
-        aria-modal="true"
-        aria-label="소식 기록"
-        onClick={onClose}
-      >
-        <div
-          onClick={(event) => event.stopPropagation()}
-          className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
-        >
-          <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-          <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">소식 기록</h2>
-
-          {weekIds.length ? (
-            <div className="flex flex-col gap-7 pb-2">
-              {weekIds.map((weekId) => {
-                const items = albumsByWeek.get(weekId) ?? [];
-                return (
-                  <section key={weekId}>
-                    <h3 className="mb-2.5 flex items-baseline gap-2 text-[16px] font-bold text-ink">
-                      {weekRangeLabel(weekId)}
-                      {weekId === thisWeek ? <span className="text-[14.5px] font-bold text-brand-500">이번 주</span> : null}
-                      <span className="text-[13px] font-medium text-ink-muted">{items.length}장</span>
-                    </h3>
-                    <ul className="grid grid-cols-3 gap-1.5">
-                      {items.map((album) => (
-                        <li key={album.id}>
-                          <button
-                            type="button"
-                            onClick={() => setOpened(album)}
-                            aria-label={`${album.title} 크게 보기`}
-                            className="block w-full overflow-hidden rounded-xl active:opacity-80"
-                          >
-                            {album.coverImageUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={viewerUrl(album.coverImageUrl, 400)}
-                                alt={`${album.title} 대표 사진`}
-                                loading="lazy"
-                                draggable={false}
-                                className="aspect-[4/5] w-full object-cover"
-                              />
-                            ) : (
-                              <span className="flex aspect-[4/5] w-full items-center justify-center bg-fill text-[28px]" aria-hidden="true">
-                                📷
-                              </span>
-                            )}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="px-1 py-10 text-center text-[15px] text-ink-muted">아직 올라온 소식이 없어요</p>
-          )}
-
-          <button type="button" onClick={onClose} className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft">
-            닫기
-          </button>
-        </div>
-      </div>
+      <Sheet title="소식 기록" onClose={onClose}>
+        {weekIds.length ? (
+          <div className="flex flex-col gap-7 pb-6">
+            {weekIds.map((weekId) => {
+              const items = albumsByWeek.get(weekId) ?? [];
+              return (
+                <section key={weekId}>
+                  <h3 className="mb-2.5 flex items-baseline gap-2 text-[16px] font-bold text-ink">
+                    {weekRangeLabel(weekId)}
+                    {weekId === thisWeek ? <span className="text-[14.5px] font-bold text-brand-500">이번 주</span> : null}
+                    <span className="text-[13px] font-medium text-ink-muted">{items.length}장</span>
+                  </h3>
+                  <ul className="grid grid-cols-3 gap-1.5">
+                    {items.map((album) => (
+                      <li key={album.id}>
+                        <button
+                          type="button"
+                          onClick={() => setOpened(album)}
+                          aria-label={`${album.title} 크게 보기`}
+                          className="block w-full overflow-hidden rounded-xl active:opacity-80"
+                        >
+                          {album.coverImageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={viewerUrl(album.coverImageUrl, 400)}
+                              alt={`${album.title} 대표 사진`}
+                              loading="lazy"
+                              draggable={false}
+                              className="aspect-[4/5] w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex aspect-[4/5] w-full items-center justify-center bg-fill text-[28px]" aria-hidden="true">
+                              📷
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="px-1 py-10 text-center text-[15px] text-ink-muted">아직 올라온 소식이 없어요</p>
+        )}
+      </Sheet>
 
       {opened ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-          role="dialog"
-          aria-modal="true"
-          aria-label={opened.title}
-          onClick={() => setOpened(null)}
-        >
+        <Sheet title={weekRangeLabel(weekOfAlbum(opened))} onClose={() => setOpened(null)}>
           <div
-            onClick={(event) => event.stopPropagation()}
+            className="flex flex-col gap-3 pb-6"
             onTouchStart={(event) => {
               touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
             }}
@@ -1805,39 +1737,31 @@ function AlbumHistorySheet({
               touchStart.current = null;
               if (start) swipe(event.changedTouches[0].clientX - start.x, event.changedTouches[0].clientY - start.y);
             }}
-            className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[32px] bg-surface px-6 pt-3 pb-[20px] sm:pb-6"
           >
-            <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-            <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">{weekRangeLabel(weekOfAlbum(opened))}</h2>
-            <div className="flex flex-col gap-3">
-              {opened.coverImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={viewerUrl(opened.coverImageUrl, 1200)}
-                  alt={`${opened.title} 대표 사진`}
-                  draggable={false}
-                  className="mx-auto max-h-[60dvh] w-auto rounded-2xl"
-                />
-              ) : null}
-              <div className="flex items-center gap-2.5">
-                <Avatar src={openedAuthor?.photoURL ?? undefined} name={openedName} size={32} />
-                <div className="min-w-0">
-                  <p className="truncate text-[15px] font-bold text-ink">{openedName}</p>
-                  {opened.eventDate ? (
-                    <p className="text-[12px] text-ink-faint">{dotDate(new Date(`${opened.eventDate}T00:00:00`))}</p>
-                  ) : null}
-                </div>
+            {opened.coverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={viewerUrl(opened.coverImageUrl, 1200)}
+                alt={`${opened.title} 대표 사진`}
+                draggable={false}
+                className="mx-auto max-h-[60dvh] w-auto rounded-2xl"
+              />
+            ) : null}
+            <div className="flex items-center gap-2.5">
+              <Avatar src={openedAuthor?.photoURL ?? undefined} name={openedName} size={32} />
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold text-ink">{openedName}</p>
+                {opened.eventDate ? (
+                  <p className="text-[12px] text-ink-faint">{dotDate(new Date(`${opened.eventDate}T00:00:00`))}</p>
+                ) : null}
               </div>
-              <h3 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">{opened.title}</h3>
-              {openedBody ? (
-                <p className="text-[16px] leading-relaxed whitespace-pre-wrap break-words text-ink">{openedBody}</p>
-              ) : null}
             </div>
-            <button type="button" onClick={() => setOpened(null)} className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft">
-              닫기
-            </button>
+            <h3 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">{opened.title}</h3>
+            {openedBody ? (
+              <p className="text-[16px] leading-relaxed whitespace-pre-wrap break-words text-ink">{openedBody}</p>
+            ) : null}
           </div>
-        </div>
+        </Sheet>
       ) : null}
     </>
   );

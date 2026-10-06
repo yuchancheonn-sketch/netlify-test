@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
@@ -9,6 +8,7 @@ import ToggleRow from "@/components/ToggleRow";
 import { ChevronRightIcon } from "@/components/icons";
 import { LoginRequired, useIsGuest } from "@/components/LoginRequired";
 import { Spinner } from "@/components/ui";
+import { ConfirmDialog, Sheet, SheetActions } from "@/components/Sheet";
 import { withdrawMyAccount } from "@/lib/account-link";
 import { useAuth } from "@/lib/auth-context";
 import { disablePush, enablePush, type PushPermission } from "@/lib/push";
@@ -244,14 +244,15 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 /**
  * 탈퇴 확인 시트 (2026-09-25 사용자 요청 — "정말 탈퇴할까요?"와 함께 정보가 사라진다는 경고 문구).
- * 겉모양은 아래 LogoutSheet와 같고, 제목 아래 옅은 주황 경고 상자를 둡니다. 경고 상자·탈퇴 단추는 처음엔
- * 빨강(danger)이었는데 같은 날 사용자 요청으로 앱 주황으로 바꿨습니다. 경고 문구는 서버가 실제로 지우는 것과 맞춰 둡니다(lib/account-withdraw-server.ts).
+ * 2026-10-06 사용자 요청으로 겉틀을 뉴웨이브앱과 같은 공용 Sheet + SheetActions로 바꿨습니다(손잡이·제목·단추 줄 자리는 Sheet가 정함).
+ * 경고 상자·탈퇴 단추는 앱 주황(2026-09-25 사용자 요청). 경고 문구는 서버가 실제로 지우는 것과 맞춰 둡니다(lib/account-withdraw-server.ts).
  */
 function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
   async function withdraw() {
+    if (busy) return;
     setBusy(true);
     setFailed(false);
     try {
@@ -264,74 +265,45 @@ function WithdrawSheet({ onClose, onDone }: { onClose: () => void; onDone: () =>
     }
   }
 
-  return createPortal(
+  return (
+    /* 포털이어도 React 이벤트는 설정 화면까지 올라가 "밀어서 뒤로"가 움직이므로, 시트에서 시작한 손짓은 여기서 막습니다. */
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label="탈퇴 확인"
-      onClick={busy ? undefined : onClose}
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
       onTouchEnd={(event) => event.stopPropagation()}
     >
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[2px] sm:pb-6"
+      <Sheet
+        title="정말 탈퇴할까요?"
+        onClose={busy ? () => {} : onClose}
+        footer={<SheetActions onCancel={busy ? () => {} : onClose} confirmLabel="탈퇴하기" onConfirm={withdraw} disabled={busy} loading={busy} />}
       >
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-
-        <h2 className="mt-5 text-[24px] font-bold tracking-tight text-ink">정말 탈퇴할까요?</h2>
-
-        {/* 경고 상자·탈퇴 단추는 앱 주황 (2026-09-25 사용자 "여기도 주황색 테마로" — 처음엔 빨강 danger). */}
-        <div className="mt-4 rounded-2xl bg-brand-500/10 px-4 py-3.5 text-[14px] leading-relaxed text-brand-500">
-          <p className="font-bold">⚠️ 탈퇴하면 되돌릴 수 없어요</p>
-          <ul className="mt-1.5 list-disc pl-5">
-            <li>로그인 계정이 바로 삭제되고, 합쳐 둔 구글·카카오·휴대폰 로그인도 모두 지워져요.</li>
-            <li>프로필 사진, 생일, 알림 설정 같은 내 계정 정보가 모두 사라져요.</li>
-            <li>다시 쓰려면 처음부터 새로 가입해야 해요.</li>
-          </ul>
-        </div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
-          원우수첩의 이름·회사·연락처와 그동안 쓴 글·사진·채팅은 남아요.
-        </p>
-
-        {failed ? (
-          <p role="alert" className="mt-3 text-[13px] leading-relaxed text-danger">
-            탈퇴하지 못했어요. 다시 로그인한 뒤 한 번 더 시도해 주세요.
+        <div className="flex flex-col gap-5 pb-4">
+          {failed ? (
+            <p role="alert" className="text-[13px] font-medium text-danger">
+              탈퇴하지 못했어요. 다시 로그인한 뒤 한 번 더 시도해 주세요.
+            </p>
+          ) : null}
+          {/* 경고 상자·탈퇴 단추는 앱 주황 (2026-09-25 사용자 "여기도 주황색 테마로" — 처음엔 빨강 danger). */}
+          <div className="rounded-2xl bg-brand-500/10 px-4 py-3.5 text-[14px] leading-relaxed text-brand-500">
+            <p className="font-bold">⚠️ 탈퇴하면 되돌릴 수 없어요</p>
+            <ul className="mt-1.5 list-disc pl-5">
+              <li>로그인 계정이 바로 삭제되고, 합쳐 둔 구글·카카오·휴대폰 로그인도 모두 지워져요.</li>
+              <li>프로필 사진, 생일, 알림 설정 같은 내 계정 정보가 모두 사라져요.</li>
+              <li>다시 쓰려면 처음부터 새로 가입해야 해요.</li>
+            </ul>
+          </div>
+          <p className="-mt-2 text-[13px] leading-relaxed text-ink-muted">
+            원우수첩의 이름·회사·연락처와 그동안 쓴 글·사진·채팅은 남아요.
           </p>
-        ) : null}
-
-        <button
-          type="button"
-          disabled={busy}
-          onClick={withdraw}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
-        >
-          {busy ? <Spinner className="h-5 w-5" /> : null}
-          탈퇴하기
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onClose}
-          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
-        >
-          취소
-        </button>
-      </div>
-    </div>,
-    document.body,
+        </div>
+      </Sheet>
+    </div>
   );
 }
 
 /**
- * 로그아웃 확인 시트 (2026-09-22 사용자 요청 — 사용자가 보낸 캡처처럼).
- * 화면 아래에서 올라오는 흰 시트: 위 가운데 손잡이 막대 · 큰 제목 "로그아웃 하시겠어요?" ·
- * 폭 가득 주황 "로그아웃" · 그 아래 글씨만 있는 "취소". 뒤는 어둡게 덮고, 어두운 곳을 눌러도 닫힙니다.
- * 캡처는 보라색이지만 앱 브랜드색(주황)으로 맞췄습니다. 겉모양 짜임은 AccountMergeSheet와 같습니다.
- * 시트 아래 여백은 홈 인디케이터 자리 + 2px (2026-09-25 사용자 요청: "취소 밑에 흰색 공백 좀 줄여줘" 20px → 4px → 2px).
- * "취소" 단추 자체의 아래 12px(py-3)이 더해집니다. 탈퇴 시트(WithdrawSheet)도 같은 값입니다.
+ * 로그아웃 확인 (2026-09-22 사용자 요청 → 2026-10-06 사용자 요청으로 뉴웨이브앱과 같은 가운데 확인 창(ConfirmDialog) 구조로).
+ * 로그아웃이 끝나면 화면이 로그인으로 넘어가므로 확인 창이 따로 닫힐 필요는 없습니다(ConfirmDialog가 끝난 뒤 onClose도 부름).
  */
 function LogoutSheet({
   onClose,
@@ -340,56 +312,15 @@ function LogoutSheet({
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
-  const [busy, setBusy] = useState(false);
-
-  return createPortal(
+  return (
+    /* 포털이어도 React 이벤트는 설정 화면까지 올라가 "밀어서 뒤로"가 움직이므로, 확인 창에서 시작한 손짓은 여기서 막습니다. */
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label="로그아웃 확인"
-      onClick={busy ? undefined : onClose}
-      /*
-        포털이어도 React 이벤트는 설정 화면 상자까지 올라가, 시트 위를 옆으로 문지르면 "밀어서 뒤로"가
-        움직입니다. 시트에서 시작한 손짓은 여기서 막습니다.
-      */
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
       onTouchEnd={(event) => event.stopPropagation()}
     >
-      <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up w-full max-w-[480px] rounded-[32px] bg-surface px-6 pt-3 pb-[2px] sm:pb-6"
-      >
-        {/* 손잡이 막대 — 시트라는 걸 알려 주는 표시입니다. */}
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-
-        {/* mt-5 — 손잡이 막대와 제목 사이 20px (2026-09-25 사용자 요청: 28px → 16px → 20px). 탈퇴 시트도 같이. */}
-        <h2 className="mt-5 text-[24px] font-bold tracking-tight text-ink">로그아웃 하시겠어요?</h2>
-
-        <button
-          type="button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            await onConfirm();
-          }}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[13px] text-[16px] font-bold text-white transition active:scale-[0.99]"
-        >
-          {busy ? <Spinner className="h-5 w-5" /> : null}
-          로그아웃
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onClose}
-          className="mt-2 w-full py-3 text-[15px]! font-bold text-ink-soft"
-        >
-          취소
-        </button>
-      </div>
-    </div>,
-    document.body,
+      <ConfirmDialog title="로그아웃 하시겠어요?" confirmLabel="로그아웃" danger={false} onConfirm={onConfirm} onClose={onClose} />
+    </div>
   );
 }
 

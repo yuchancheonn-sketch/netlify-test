@@ -11,15 +11,14 @@ import {
 import {
   FieldError,
   FieldLabel,
-  PrimaryButton,
   inputClassName,
 } from "@/components/ui";
+import { Sheet, SheetActions } from "@/components/Sheet";
 import { useAuth } from "@/lib/auth-context";
 import { COHORT } from "@/lib/constants";
 import { COHORTS, canAddMembers, hasYouthMembers } from "@/lib/cohort";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
 import {
   COMPANY_MAX_LENGTH,
   COUNCIL_ROLE_MAX_LENGTH,
@@ -96,8 +95,6 @@ export default function MemberEditSheet({
   const [videoError, setVideoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
-
   /** 붙여넣은 주소를 알아봤는지 바로 보여주는 미리보기 */
   const videoThumb = (() => {
     const link = parseVideoLink(introVideoUrl);
@@ -110,8 +107,7 @@ export default function MemberEditSheet({
     document.getElementById("edit-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleSubmit() {
     if (saving || !profile) return;
 
     if (!name.trim()) {
@@ -217,249 +213,197 @@ export default function MemberEditSheet({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label={entry ? `${entry.name} 정보 수정` : "원우 추가하기"}
-      onClick={onClose}
+    /* 공용 Sheet — 손잡이 → 제목 → 칸들 → 아래 취소|저장 줄 (2026-10-06 사용자 요청, 뉴웨이브앱 시트와 같은 짜임).
+       제목 아래 안내문은 두지 않습니다(2026-09-14 결정 유지). */
+    <Sheet
+      title={entry ? `${entry.name} 님 정보` : "원우 추가하기"}
+      onClose={onClose}
+      footer={
+        <SheetActions
+          onCancel={onClose}
+          confirmLabel={entry ? "저장하기" : duplicatePending ? "동명이인으로 추가하기" : "수첩에 추가하기"}
+          onConfirm={() => void handleSubmit()}
+          loading={saving}
+        />
+      }
     >
-      {/*
-        손잡이와 내용을 감싸는 바깥 상자.
-        손잡이는 여기 바로 아래(스크롤 밖)에 두고, 내용만 안쪽 <form>에서
-        따로 스크롤합니다. 예전에는 손잡이를 스크롤되는 상자 안에 sticky로
-        띄웠는데, iOS에서 스크롤하는 동안 입력칸 글자가 그 위로 잠깐씩
-        겹쳐 보였습니다. 아예 스크롤 영역 바깥에 두면 그럴 일이 없습니다.
-      */}
-      <div
-        onClick={(event) => event.stopPropagation()}
-        // 흰 바탕(2026-09-26, bg-canvas에서) — 칸은 위 fieldClassName의 회색.
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
-        style={sheetStyle}
+      {error ? (
+        <p role="alert" className="mb-5 text-[13px] font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
+
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-name">이름</FieldLabel>
+      <input
+        id="edit-name"
+        value={name}
+        onChange={(event) => {
+          setName(event.target.value.slice(0, 20));
+          setNameError(null);
+        }}
+        placeholder="안창호"
+        className={fieldClassName}
+      />
+      {nameError ? <FieldError>{nameError}</FieldError> : null}
+    </div>
+
+    {/* 기수 — 바꾸면 이 원우가 그 기수의 수첩으로 옮겨 갑니다. */}
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-cohort">기수</FieldLabel>
+      <select
+        id="edit-cohort"
+        value={cohort}
+        onChange={(event) => {
+          setCohort(event.target.value);
+          setNameError(null);
+        }}
+        className={`${fieldClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
+        style={SELECT_ARROW_STYLE}
       >
-        {/* 손잡이 바 — 위아래로 넉넉한 손끝 자리를 두어 작은 바보다 누르기 쉽습니다. */}
-        <div
-          {...handleTouchHandlers}
-          aria-hidden="true"
-          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
-        >
-          <div className="h-1.5 w-10 rounded-full bg-line" />
-        </div>
+        {/* 새로 올릴 때는 10기만, 이미 있는 칸을 고칠 때는 모든 기수(옮기기) */}
+        {(entry ? COHORTS : COHORTS.filter(canAddMembers)).map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        {/*
-          입력칸이 많아 화면보다 길어지므로 이 안에서만 스크롤합니다.
-          바깥 상자까지 스크롤을 걸면 손잡이도 함께 밀려 올라가 손이 안 닿습니다.
-        */}
-        <form
-          onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7"
-        >
-          {/*
-            제목 아래 작은 안내문은 두지 않습니다 (2026-09-14에 걷어냈습니다).
-            세 갈래("수첩에 원우를 추가합니다…" / "내 항목이에요…" /
-            "원우들이 함께 채우는 수첩이에요…")가 있었는데 통째로 뺐습니다.
-            아래 여백(mb-6)은 그 문단이 갖고 있던 값을 제목으로 옮긴 것입니다.
-            다시 넣자고 제안하지 마세요.
-          */}
-          <h2 className="mb-6 text-[19px] font-bold text-ink">
-            {entry ? `${entry.name} 님 정보` : "원우 추가하기"}
-          </h2>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-name">이름</FieldLabel>
-            <input
-              id="edit-name"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value.slice(0, 20));
-                setNameError(null);
-              }}
-              placeholder="안창호"
-              className={fieldClassName}
-            />
-            {nameError ? <FieldError>{nameError}</FieldError> : null}
-          </div>
-
-          {/* 기수 — 바꾸면 이 원우가 그 기수의 수첩으로 옮겨 갑니다. */}
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-cohort">기수</FieldLabel>
-            <select
-              id="edit-cohort"
-              value={cohort}
-              onChange={(event) => {
-                setCohort(event.target.value);
-                setNameError(null);
-              }}
-              className={`${fieldClassName} appearance-none bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-11`}
-              style={SELECT_ARROW_STYLE}
+    {/* 구분 — 1·2기엔 대학생 원우가 없어 숨깁니다. 기수를 다시 바꾸면 고른 값 그대로 돌아옵니다. */}
+    <div className={hasYouthMembers(cohort) ? "mb-5" : "hidden"}>
+      <FieldLabel>구분</FieldLabel>
+      <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
+        {MEMBER_TYPES.map(({ value, label }) => {
+          const selected = memberType === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => setMemberType(value)}
+              /*
+                높이 44px — 위 입력칸들과 같게 (2026-09-26 사용자 요청, 그 전엔 위아래 11.5px로 약 48px).
+                테두리 2px씩 + 글줄 21px + 위 8.5px·아래 10.5px = 44px. 위아래를 1px 다르게 둔 것은 글씨 1px 위로(같은 날 요청).
+              */
+              className={`flex-1 rounded-2xl border-2 pt-[8.5px] pb-[10.5px] text-[14px] font-bold transition ${
+                selected
+                  ? "border-brand-500 bg-brand-50 text-brand-500"
+                  : "border-transparent bg-field text-ink-soft"
+              }`}
             >
-              {/* 새로 올릴 때는 10기만, 이미 있는 칸을 고칠 때는 모든 기수(옮기기) */}
-              {(entry ? COHORTS : COHORTS.filter(canAddMembers)).map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 구분 — 1·2기엔 대학생 원우가 없어 숨깁니다. 기수를 다시 바꾸면 고른 값 그대로 돌아옵니다. */}
-          <div className={hasYouthMembers(cohort) ? "mb-5" : "hidden"}>
-            <FieldLabel>구분</FieldLabel>
-            <div className="flex gap-3" role="radiogroup" aria-label="원우 구분">
-              {MEMBER_TYPES.map(({ value, label }) => {
-                const selected = memberType === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setMemberType(value)}
-                    /*
-                      높이 44px — 위 입력칸들과 같게 (2026-09-26 사용자 요청, 그 전엔 위아래 11.5px로 약 48px).
-                      테두리 2px씩 + 글줄 21px + 위 8.5px·아래 10.5px = 44px. 위아래를 1px 다르게 둔 것은 글씨 1px 위로(같은 날 요청).
-                    */
-                    className={`flex-1 rounded-2xl border-2 pt-[8.5px] pb-[10.5px] text-[14px] font-bold transition ${
-                      selected
-                        ? "border-brand-500 bg-brand-50 text-brand-500"
-                        : "border-transparent bg-field text-ink-soft"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-company" hint="선택">
-              회사·소속
-            </FieldLabel>
-            <input
-              id="edit-company"
-              value={company}
-              onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
-              placeholder="예) (주)착한부자"
-              className={fieldClassName}
-            />
-          </div>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-position" hint="선택">
-              직책
-            </FieldLabel>
-            <input
-              id="edit-position"
-              value={position}
-              onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
-              placeholder="예) 대표 / 본부장"
-              className={fieldClassName}
-            />
-          </div>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-phone" hint="선택">
-              휴대폰
-            </FieldLabel>
-            <input
-              id="edit-phone"
-              value={phone}
-              onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
-              inputMode="tel"
-              placeholder="010-1234-5678"
-              className={fieldClassName}
-            />
-          </div>
-
-          <div className="mb-5">
-            <FieldLabel htmlFor="edit-council" hint="선택">
-              원우회 직위
-            </FieldLabel>
-            {/*
-              기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다 (2026-09-11).
-              목록이던 때는 목록에 없는 예전 직위가 빈칸으로 보이다가 저장하면 조용히
-              지워지는 문제가 있어 따로 한 줄을 얹어 두었는데, 직접 적으니 그럴 일이 없습니다.
-            */}
-            <input
-              id="edit-council"
-              value={councilRole}
-              onChange={(event) =>
-                setCouncilRole(event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
-              }
-              placeholder="예) 회장 / 총무 / 문화위원장"
-              className={fieldClassName}
-            />
-          </div>
-
-          {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}
-          <div className="mb-7">
-            <FieldLabel htmlFor="edit-video" hint="선택">
-              소개 영상 링크
-            </FieldLabel>
-            <input
-              id="edit-video"
-              value={introVideoUrl}
-              onChange={(event) => {
-                setIntroVideoUrl(event.target.value);
-                setVideoError(null);
-              }}
-              inputMode="url"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="https://youtu.be/..."
-              className={fieldClassName}
-            />
-            {videoError ? (
-              <FieldError>{videoError}</FieldError>
-            ) : videoThumb ? (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl bg-field p-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={videoThumb}
-                  alt=""
-                  className="h-14 w-24 shrink-0 rounded-xl object-cover"
-                />
-                <p className="text-[13px] font-bold text-ink-soft">
-                  영상을 찾았어요
-                  <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
-                    원우수첩에서 영상 재생 가능해요
-                  </span>
-                </p>
-              </div>
-            ) : (
-              <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
-                입학식 자기소개 영상 주소를 붙여넣으면 카드 사진이 영상 썸네일로 바뀝니다.
-              </p>
-            )}
-          </div>
-
-          {error ? (
-            <p role="alert" className="mb-4 text-center text-[13px] font-medium text-danger">
-              {error}
-            </p>
-          ) : null}
-
-          {/*
-            className="py-[15.5px]!" — 기본(md) 위아래 16px에서 1px 낮춤 (2026-09-15).
-            PrimaryButton 안의 py-4를 이기려면 !(important)가 필요합니다 — 같은 속성은 적은 순서가 아니라 CSS 순서로 이깁니다.
-          */}
-          <PrimaryButton type="submit" loading={saving} className="py-[15.5px]!">
-            {entry ? "저장하기" : duplicatePending ? "동명이인으로 추가하기" : "수첩에 추가하기"}
-          </PrimaryButton>
-
-          {/* 내 칸의 "사진·자기소개까지 고치기"(내 프로필로 가는 단추)는 2026-09-27 사용자 요청으로 없앴습니다. */}
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-3 w-full rounded-2xl py-3 text-[15px] font-bold text-ink-faint"
-          >
-            닫기
-          </button>
-        </form>
+              {label}
+            </button>
+          );
+        })}
       </div>
     </div>
+
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-company" hint="선택">
+        회사·소속
+      </FieldLabel>
+      <input
+        id="edit-company"
+        value={company}
+        onChange={(event) => setCompany(event.target.value.slice(0, COMPANY_MAX_LENGTH))}
+        placeholder="예) (주)착한부자"
+        className={fieldClassName}
+      />
+    </div>
+
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-position" hint="선택">
+        직책
+      </FieldLabel>
+      <input
+        id="edit-position"
+        value={position}
+        onChange={(event) => setPosition(event.target.value.slice(0, POSITION_MAX_LENGTH))}
+        placeholder="예) 대표 / 본부장"
+        className={fieldClassName}
+      />
+    </div>
+
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-phone" hint="선택">
+        휴대폰
+      </FieldLabel>
+      <input
+        id="edit-phone"
+        value={phone}
+        onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
+        inputMode="tel"
+        placeholder="010-1234-5678"
+        className={fieldClassName}
+      />
+    </div>
+
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-council" hint="선택">
+        원우회 직위
+      </FieldLabel>
+      {/*
+        기수마다 부르는 이름이 달라 목록에서 고르지 않고 직접 적습니다 (2026-09-11).
+        목록이던 때는 목록에 없는 예전 직위가 빈칸으로 보이다가 저장하면 조용히
+        지워지는 문제가 있어 따로 한 줄을 얹어 두었는데, 직접 적으니 그럴 일이 없습니다.
+      */}
+      <input
+        id="edit-council"
+        value={councilRole}
+        onChange={(event) =>
+          setCouncilRole(event.target.value.slice(0, COUNCIL_ROLE_MAX_LENGTH))
+        }
+        placeholder="예) 회장 / 총무 / 문화위원장"
+        className={fieldClassName}
+      />
+    </div>
+
+    {/* 소개 영상 — 카드 왼쪽 썸네일이 이 영상으로 바뀝니다. */}
+    <div className="mb-5">
+      <FieldLabel htmlFor="edit-video" hint="선택">
+        소개 영상 링크
+      </FieldLabel>
+      <input
+        id="edit-video"
+        value={introVideoUrl}
+        onChange={(event) => {
+          setIntroVideoUrl(event.target.value);
+          setVideoError(null);
+        }}
+        inputMode="url"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        placeholder="https://youtu.be/..."
+        className={fieldClassName}
+      />
+      {videoError ? (
+        <FieldError>{videoError}</FieldError>
+      ) : videoThumb ? (
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-field p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={videoThumb}
+            alt=""
+            className="h-14 w-24 shrink-0 rounded-xl object-cover"
+          />
+          <p className="text-[13px] font-bold text-ink-soft">
+            영상을 찾았어요
+            <span className="mt-0.5 block text-[12px] font-medium text-ink-faint">
+              원우수첩에서 영상 재생 가능해요
+            </span>
+          </p>
+        </div>
+      ) : (
+        <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">
+          입학식 자기소개 영상 주소를 붙여넣으면 카드 사진이 영상 썸네일로 바뀝니다.
+        </p>
+      )}
+    </div>
+
+      <div className="h-2" />
+    </Sheet>
   );
 }

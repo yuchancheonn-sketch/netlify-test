@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRequireLogin } from "@/components/LoginRequired";
-import { Badge, FieldError, FieldLabel, PrimaryButton, inputClassName } from "@/components/ui";
+import { Badge, FieldError, FieldLabel, inputClassName } from "@/components/ui";
+import { Sheet, SheetActions } from "@/components/Sheet";
 import { PlusIcon, VoteStampIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { useHasVoted, usePollOpinions, usePolls, usePollTally } from "@/lib/hooks";
@@ -21,8 +22,6 @@ import { useVoteChoice } from "@/lib/use-vote-choice";
 import { cohortOf } from "@/lib/cohort";
 import { saveErrorMessage } from "@/lib/firestore-commit";
 import { requestPush } from "@/lib/push";
-import { useDragDownToClose } from "@/lib/use-drag-down-to-close";
-import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { useViewCohort } from "@/lib/use-view-cohort";
 import {
   OPINION_MAX_LENGTH,
@@ -586,9 +585,6 @@ export function PollCreateSheet({
   const { user, profile } = useAuth();
   /** 새 투표가 올라갈 기수 — 지금 홈에 보이는 기수입니다. */
   const { cohort } = useViewCohort();
-  const { handleTouchHandlers, sheetStyle } = useDragDownToClose(onClose);
-  // 시트가 떠 있는 동안 뒤쪽 홈 화면은 스크롤되지 않습니다.
-  useLockBodyScroll();
   /*
    * 입력칸 — 흰 시트 위 옅은 회색 칸, 그림자 없음, 높이 약 44px. 일정 등록 폼(EventForm의 fieldClassName)과 같은 값
    * (2026-09-25). 공용 inputClassName은 다른 화면도 쓰므로 여기서만 덮어씁니다.
@@ -616,8 +612,7 @@ export function PollCreateSheet({
     setError(null);
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleSubmit() {
     if (!user || saving) return;
 
     const trimmedQuestion = question.trim();
@@ -667,184 +662,134 @@ export function PollCreateSheet({
   }
 
   return (
-    /*
-      어두운 반투명 바탕 — 누르면 닫고 홈으로 돌아갑니다.
-      touch-none: 바탕에서 시작한 손짓이 뒤쪽 화면 스크롤로 새지 않고 탭으로만 읽힙니다
-      (아이폰 대비, lib/use-lock-body-scroll.ts 설명). 시트 안 스크롤 상자는 따로 스크롤됩니다.
-    */
-    <div
-      className="fixed inset-0 z-40 flex touch-none items-end justify-center modal-scrim px-3 pb-[max(12px,calc(-4px+env(safe-area-inset-bottom)))] sm:items-center sm:px-5 sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onClose}
+    /* 뉴웨이브앱 PollCreateSheet와 같은 짜임 (2026-10-06 사용자 요청): 공용 Sheet + 아래 취소|만들기 줄. */
+    <Sheet
+      title={title}
+      onClose={onClose}
+      footer={
+        <SheetActions
+          onCancel={onClose}
+          confirmLabel="만들기"
+          onConfirm={() => void handleSubmit()}
+          loading={saving}
+        />
+      }
     >
-      {/*
-        손잡이와 내용을 감싸는 바깥 상자. 원우 추가하기 시트와 같은 짜임새입니다 —
-        손잡이는 스크롤 바깥에 두고 안쪽 <form>만 따로 스크롤합니다.
-        손잡이까지 스크롤 안에 있으면 내용을 내렸을 때 손이 안 닿습니다.
-      */}
+    {/*
+      누구에게 — 우리 기수만, 또는 모든 기수 (2026-09-11).
+      원우수첩 필터와 같은 알약 고르개입니다(고르개는 알약 모양을 지킵니다).
+    */}
+    <div className="mb-5">
+      <FieldLabel>누구에게 물어볼까요</FieldLabel>
       <div
-        onClick={(event) => event.stopPropagation()}
-        /*
-          흰 바탕(bg-surface)에 옅은 회색 칸 — 일정 등록 시트와 같은 모양 (2026-09-25 사용자 "다른 창들처럼").
-          그 전엔 회색 바탕(bg-canvas)에 흰 칸 + 그림자였습니다. 칸 모양은 아래 grayField.
-        */
-        className="animate-sheet-up flex max-h-[90dvh] w-full max-w-[480px] flex-col overflow-hidden rounded-[32px] bg-surface"
-        style={sheetStyle}
+        className="flex rounded-full bg-canvas p-1"
+        role="radiogroup"
+        aria-label="물어볼 대상"
       >
-        {/* 손잡이 바 — 끌어내려 닫을 수 있습니다. */}
-        <div
-          {...handleTouchHandlers}
-          aria-hidden="true"
-          className="flex shrink-0 touch-none justify-center pt-3 pb-2"
-        >
-          <div className="h-1.5 w-10 rounded-full bg-line" />
-        </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[28px] sm:pb-7"
-        >
-          {/* 무엇을 만들지는 홈 바로가기에서 이미 골랐으므로 제목이 곧 그 이름입니다. */}
-          <h2 className="mb-5 text-[19px] font-bold text-ink">{title}</h2>
-
-          {/*
-            누구에게 — 우리 기수만, 또는 모든 기수 (2026-09-11).
-            원우수첩 필터와 같은 알약 고르개입니다(고르개는 알약 모양을 지킵니다).
-          */}
-          <div className="mb-5">
-            <FieldLabel>누구에게 물어볼까요</FieldLabel>
-            <div
-              className="flex rounded-full bg-canvas p-1"
-              role="radiogroup"
-              aria-label="물어볼 대상"
+        {(
+          [
+            { value: "cohort", label: `${cohortOf(cohort)}만` },
+            { value: "all", label: "전체 기수" },
+          ] as const
+        ).map(({ value, label }) => {
+          const active = audience === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setAudience(value)}
+              className={`flex flex-1 items-center justify-center rounded-full py-2.5 text-[14px]! font-bold transition ${
+                active ? "bg-brand-500 text-white" : "text-ink-muted"
+              }`}
             >
-              {(
-                [
-                  { value: "cohort", label: `${cohortOf(cohort)}만` },
-                  { value: "all", label: "전체 기수" },
-                ] as const
-              ).map(({ value, label }) => {
-                const active = audience === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => setAudience(value)}
-                    className={`flex flex-1 items-center justify-center rounded-full py-2.5 text-[14px]! font-bold transition ${
-                      active ? "bg-brand-500 text-white" : "text-ink-muted"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
 
-          <div className="mb-5">
-            <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>
-            <input
-              id="poll-question"
-              value={question}
-              onChange={(changed) => {
-                setQuestion(changed.target.value.slice(0, POLL_QUESTION_MAX_LENGTH));
-                setError(null);
-              }}
-              placeholder={
-                kind === "vote"
-                  ? "예) 수료식 날짜를 언제로 할까요?"
-                  : "예) 남은 기간에 바라는 점이 있나요?"
-              }
-              className={grayField}
-            />
-          </div>
+    <div className="mb-5">
+      <FieldLabel htmlFor="poll-question">무엇을 물어볼까요</FieldLabel>
+      <input
+        id="poll-question"
+        value={question}
+        onChange={(changed) => {
+          setQuestion(changed.target.value.slice(0, POLL_QUESTION_MAX_LENGTH));
+          setError(null);
+        }}
+        placeholder={
+          kind === "vote"
+            ? "예) 수료식 날짜를 언제로 할까요?"
+            : "예) 남은 기간에 바라는 점이 있나요?"
+        }
+        className={grayField}
+      />
+    </div>
 
-          {kind === "vote" ? (
-            <div className="mb-5">
-              <FieldLabel htmlFor="poll-option-0">고를 것</FieldLabel>
-              <div className="flex flex-col gap-2">
-                {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <input
-                      id={`poll-option-${index}`}
-                      value={option}
-                      onChange={(changed) => setOption(index, changed.target.value)}
-                      placeholder={`${index + 1}번`}
-                      className={grayField}
-                    />
-                    {/* 두 개까지는 지울 수 없습니다 — 하나만 남으면 물어볼 것이 없습니다. */}
-                    {options.length > POLL_MIN_OPTIONS ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setOptions((previous) =>
-                            previous.filter((_, at) => at !== index),
-                          )
-                        }
-                        aria-label={`${index + 1}번 지우기`}
-                        className="shrink-0 rounded-full px-2 py-2 text-[13px]! font-bold text-ink-faint active:text-danger"
-                      >
-                        지우기
-                      </button>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-
-              {options.length < POLL_MAX_OPTIONS ? (
+    {kind === "vote" ? (
+      <div className="mb-5">
+        <FieldLabel htmlFor="poll-option-0">고를 것</FieldLabel>
+        <div className="flex flex-col gap-2">
+          {options.map((option, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                id={`poll-option-${index}`}
+                value={option}
+                onChange={(changed) => setOption(index, changed.target.value)}
+                placeholder={`${index + 1}번`}
+                className={grayField}
+              />
+              {/* 두 개까지는 지울 수 없습니다 — 하나만 남으면 물어볼 것이 없습니다. */}
+              {options.length > POLL_MIN_OPTIONS ? (
                 <button
                   type="button"
-                  onClick={() => setOptions((previous) => [...previous, ""])}
-                  className="mt-2 flex items-center gap-1 text-[13px]! font-bold text-brand-500"
+                  onClick={() =>
+                    setOptions((previous) =>
+                      previous.filter((_, at) => at !== index),
+                    )
+                  }
+                  aria-label={`${index + 1}번 지우기`}
+                  className="shrink-0 rounded-full px-2 py-2 text-[13px]! font-bold text-ink-faint active:text-danger"
                 >
-                  <PlusIcon className="h-4 w-4" />
-                  고를 것 추가
+                  지우기
                 </button>
               ) : null}
             </div>
-          ) : (
-            /*
-              의견 모으기에는 고를 것이 없습니다. 대신 익명이라는 사실을
-              만드는 사람에게 먼저 알려줍니다 — 모아 놓고 "누가 썼는지 보자"가
-              안 되는 것을 나중에 알면 곤란합니다.
-            */
-            <div className="mb-5 rounded-2xl bg-canvas px-4 py-4">
-              <p className="text-[13px] leading-relaxed text-ink-muted">
-                고를 것 없이 원우들이 글로 답합니다.
-                <br />
-                <b className="font-bold text-ink">누가 썼는지는 아무 데도 남지 않습니다.</b>{" "}
-                만든 사람도, 운영진도, 나중에 확인할 수 없어요.
-              </p>
-            </div>
-          )}
+          ))}
+        </div>
 
-          {error ? <FieldError>{error}</FieldError> : null}
-
-          <div className="mt-6 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              /*
-                shrink-0과 whitespace-nowrap이 꼭 필요합니다.
-                옆의 PrimaryButton이 w-full이라 자리를 통째로 요구해서, 이 단추가
-                0에 가깝게 눌리며 "취소"가 세로로 접혔습니다.
-              */
-              // 흰 바탕 + 옅은 회색 테두리 — 원우 소식·일정 등록 창의 "취소"와 같은 모양 (2026-09-26, bg-fill 회색에서).
-              className="shrink-0 rounded-2xl bg-surface px-5 py-2.5 text-[15px] font-bold whitespace-nowrap text-ink-muted shadow-[var(--shadow-card-flat)]"
-            >
-              취소
-            </button>
-            {/* sm — 다른 단추와 한 줄에 서는 크기입니다 (ui.tsx의 size 설명 참고). */}
-            <PrimaryButton type="submit" loading={saving} size="sm">
-              만들기
-            </PrimaryButton>
-          </div>
-        </form>
+        {options.length < POLL_MAX_OPTIONS ? (
+          <button
+            type="button"
+            onClick={() => setOptions((previous) => [...previous, ""])}
+            className="mt-2 flex items-center gap-1 text-[13px]! font-bold text-brand-500"
+          >
+            <PlusIcon className="h-4 w-4" />
+            고를 것 추가
+          </button>
+        ) : null}
       </div>
-    </div>
+    ) : (
+      /*
+        의견 모으기에는 고를 것이 없습니다. 대신 익명이라는 사실을
+        만드는 사람에게 먼저 알려줍니다 — 모아 놓고 "누가 썼는지 보자"가
+        안 되는 것을 나중에 알면 곤란합니다.
+      */
+      <div className="mb-5 rounded-2xl bg-canvas px-4 py-4">
+        <p className="text-[13px] leading-relaxed text-ink-muted">
+          고를 것 없이 원우들이 글로 답합니다.
+          <br />
+          <b className="font-bold text-ink">누가 썼는지는 아무 데도 남지 않습니다.</b>{" "}
+          만든 사람도, 운영진도, 나중에 확인할 수 없어요.
+        </p>
+      </div>
+    )}
+
+      {error ? <FieldError>{error}</FieldError> : null}
+      <div className="h-2" />
+    </Sheet>
   );
 }
