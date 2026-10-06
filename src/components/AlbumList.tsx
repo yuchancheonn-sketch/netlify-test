@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
 import {
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -14,7 +15,9 @@ import {
 } from "firebase/firestore";
 import CommitteeOrgChart from "@/components/CommitteeOrgChart";
 import { committeeSlides } from "@/components/CommitteeRoster";
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@/components/icons";
+import Avatar from "@/components/Avatar";
+import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, PlusIcon, XMarkIcon } from "@/components/icons";
+import PhotoCropSheet from "@/components/PhotoCropSheet";
 import {
   EmptyState,
   ErrorState,
@@ -158,7 +161,8 @@ export default function AlbumList({
   const requireLogin = useRequireLogin();
   // 둘러보는 사람은 창을 연 채로 시작하지 않습니다 — news/page.tsx가 로그인으로 보내고, 로그인 뒤 이 주소로 돌아옵니다.
   const [creating, setCreating] = useState(startComposing && category === "member" && !isGuest);
-  const [viewingPast, setViewingPast] = useState(false);
+  // "기록" 창(주차별 사진 모아 보기) — 예전 "지난 소식" 단추를 뉴웨이브앱 삶나눔처럼 바꿈(2026-10-06 사용자 요청).
+  const [recording, setRecording] = useState(false);
   /*
    * 카드에 올린 원우의 사진·이름을 적으려고 그 기수 원우 명단을 받습니다(2026-09-22 사용자 요청).
    * 원우수첩과 같은 훅이라 한 번 받아 둔 것을 함께 씁니다. 명단에 없으면(탈퇴 등) 앨범에 적힌 이름을 씁니다.
@@ -176,19 +180,18 @@ export default function AlbumList({
   const weekOf = weekOfAlbum;
   const thisWeek = currentWeekId();
   const currentAlbums = canAdd ? albums.filter((album) => weekOf(album) === thisWeek) : albums;
-  /** 지난 주 → 그 주 소식 목록(최근 순은 useAlbums 정렬을 그대로 물려받습니다). */
-  const pastWeeks = new Map<string, PhotoAlbumDoc[]>();
+  /** 주 → 그 주 소식 목록(최근 순은 useAlbums 정렬을 그대로 물려받습니다). 이번 주도 포함 — "기록" 창이 씁니다(2026-10-06). */
+  const albumsByWeek = new Map<string, PhotoAlbumDoc[]>();
   if (canAdd) {
     for (const album of albums) {
       const week = weekOf(album);
-      if (week === thisWeek) continue;
-      const list = pastWeeks.get(week) ?? [];
+      const list = albumsByWeek.get(week) ?? [];
       list.push(album);
-      pastWeeks.set(week, list);
+      albumsByWeek.set(week, list);
     }
   }
   // 최근 주가 먼저 — weekId는 "YYYY-MM-DD"라 문자열 비교로 그대로 최신순이 됩니다.
-  const pastWeekIds = [...pastWeeks.keys()].sort((a, b) => (a < b ? 1 : -1));
+  const recordWeekIds = [...albumsByWeek.keys()].sort((a, b) => (a < b ? 1 : -1));
 
   /*
    * 위원회 칸 (2026-09-23) — 맨 위에 총괄 임원진 조직도 카드가 늘 서고, 그 아래로 올라온 소식 카드가 섭니다.
@@ -235,62 +238,53 @@ export default function AlbumList({
           />
         </div>
       ) : (
-        <AlbumBook slides={slides} authors={authors} fit={!canAdd} />
+        <AlbumBook slides={slides} authors={authors} fit={!canAdd} share={canAdd} />
       )}
 
       {/*
-        지난 소식 — 이번 주 뒤로 접힌 지난 주들을 주차별로 훑어보는 자리 (2026-09-24 사용자 요청).
-        지난 주가 하나도 없으면 단추 자체를 안 둡니다. "소식 올리기"와 같은 줄, 반대쪽(왼쪽)에 옅은 색으로.
-      */}
-      {canAdd && pastWeekIds.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => setViewingPast(true)}
-          /*
-            오른쪽 + 단추와 같은 모양 — 옅은 알약(bg-fill) + 은은한 그림자 + 진회색 글씨, 높이도 같은 52px
-            (2026-09-26 사용자 "왼쪽 단추 디자인을 오른쪽 단추같이", 흰 알약 + 헤어라인에서).
-          */
-          className="fixed bottom-[calc(93px+env(safe-area-inset-bottom))] left-5 z-20 flex h-[52px] items-center gap-1.5 rounded-full bg-fill px-5 text-[15px] font-bold text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
-        >
-          지난 소식
-        </button>
-      ) : null}
-
-      {/*
-        사진 올리기 — 자료 탭 "파일 올리기"와 같은 자리·같은 모양의 떠 있는 주황 알약입니다 (2026-09-14).
-        bottom의 92px는 하단 탭 알약 위로 올리는 높이입니다. 카드는 이 알약 위에서 끝나서(BookFrame)
-        맨 아래의 제목·본문을 가리지 않습니다.
-
-        원우 누구나 봅니다 (2026-09-14, 예전엔 운영진만). 보안 규칙도 원래
-        photoAlbums 쓰기를 원우 누구에게나 열어 두었습니다. 새 앨범은 보고 있는
-        기수로 적히고, 원우는 자기 기수로 고정이라 늘 자기 기수에 만들어집니다.
+        기록·올리기(+)를 아래 가운데에 한 덩어리로 (2026-10-06 사용자 요청 — 뉴웨이브앱 삶나눔 모양. 섞기 단추는 뺌).
+        예전엔 왼쪽 끝 "지난 소식" 알약 + 오른쪽 끝 + 동그라미였습니다. 모양·색(bg-fill, 진회색 글씨, 52px)은 그 단추들 그대로,
+        자리만 가운데로 모았습니다. bottom 93px도 그대로 — BookFrame이 비워 두는 157px 셈이 안 바뀝니다.
+        올리기는 로그인해야 — 둘러보는 사람에게는 안내 창, 로그인 뒤 소식 올리기 창으로 (2026-09-24).
+        기록은 올라온 소식이 없어도(지난 주만 있어도) 늘 보입니다.
       */}
       {canAdd ? (
-        <button
-          type="button"
-          onClick={() => {
-            // 소식 올리기는 로그인해야 — 둘러보는 사람에게는 안내 창, 로그인 뒤 소식 올리기 창으로 (2026-09-24).
-            if (requireLogin({ returnPath: "/news?compose=1" })) return;
-            setCreating(true);
-          }}
-          // bottom 93px — 2026-09-22 사용자 요청 "1px 올려줘"(92px에서). 자료 탭 "파일 올리기"는 92px 그대로입니다.
-          // ★ 글씨 없는 주황 동그라미 + (2026-09-25 사용자 "소식 올리기는 지우고 원 안에 + 만, + 크기·굵기 키워줘").
-          //   예전엔 "+ 소식 올리기" 알약(높이 52px). 동그라미도 52px라 BookFrame이 비워 두는 157px 셈은 그대로입니다.
-          aria-label="소식 올리기"
-          // 옅은 동그라미 + 그림자 + 진회색 + — 홈 캘린더의 + 단추와 같은 모양 (2026-09-26 사용자 요청, 주황 채움에서).
-          className="fixed right-5 bottom-[calc(93px+env(safe-area-inset-bottom))] z-20 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-fill text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
+        <div
+          className="fixed left-1/2 z-20 flex w-max -translate-x-1/2 items-center gap-2"
+          style={{ bottom: "calc(93px + env(safe-area-inset-bottom))" }}
         >
-          {/* + 26px·선 2.8 — 예전 20px·2.1에서 키움. */}
-          <PlusIcon className="h-[26px] w-[26px]" strokeWidth={2.8} />
-        </button>
+          <button
+            type="button"
+            onClick={() => setRecording(true)}
+            aria-label="소식 기록 보기"
+            className="flex h-[52px] items-center justify-center gap-2 rounded-full bg-fill px-5 text-[15px] font-bold whitespace-nowrap text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
+          >
+            <ClockIcon className="h-5 w-5" />
+            <span className="relative -top-px">기록</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (requireLogin({ returnPath: "/news?compose=1" })) return;
+              setCreating(true);
+            }}
+            aria-label="소식 올리기"
+            className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-fill text-ink-soft shadow-[0_2px_10px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] transition active:scale-95"
+          >
+            {/* + 26px·선 2.8 — 예전 오른쪽 동그라미와 같은 크기. */}
+            <PlusIcon className="h-[26px] w-[26px]" strokeWidth={2.8} />
+          </button>
+        </div>
       ) : null}
 
       {creating ? <AlbumSheet onClose={() => setCreating(false)} /> : null}
-      {viewingPast ? (
-        <PastWeeksSheet
-          weekIds={pastWeekIds}
-          albumsByWeek={pastWeeks}
-          onClose={() => setViewingPast(false)}
+      {recording ? (
+        <AlbumHistorySheet
+          weekIds={recordWeekIds}
+          albumsByWeek={albumsByWeek}
+          authors={authors}
+          thisWeek={thisWeek}
+          onClose={() => setRecording(false)}
         />
       ) : null}
     </>
@@ -429,6 +423,7 @@ function AlbumBook({
   fit = false,
   bottomReservePx,
   readOnly = false,
+  share = false,
 }: {
   slides: Slide[];
   /** uid → 원우 문서. 카드의 "올린 사람" 줄에 씁니다. */
@@ -446,8 +441,22 @@ function AlbumBook({
   bottomReservePx?: number;
   /** true면 ⋯ (수정·지우기)를 아무에게도 달지 않습니다 — 로그인 없이 보는 소식지(LetterBook) (2026-09-24). */
   readOnly?: boolean;
+  /**
+   * true면 원우소식 칸의 새 모양 (2026-10-06 사용자 요청 — 뉴웨이브앱 삶나눔 카드와 똑같이, 섞기만 뺌):
+   * 앞면은 흰 테두리 두른 4:5 사진 한 장뿐, 뒷면에 올린 사람·날짜·🙏 공감·⋯·제목·본문. 양옆 화살표는 없고 밀어서만 넘깁니다.
+   */
+  share?: boolean;
 }) {
   const { user, isAdmin } = useAuth();
+  const requireLogin = useRequireLogin();
+  /** 🙏 공감 — 누르면 켜고 다시 누르면 취소(뉴웨이브앱 삶나눔·기도제목과 같음). 알림은 안 보냅니다. */
+  function togglePray(album: PhotoAlbumDoc) {
+    if (requireLogin() || !user) return;
+    const on = !(album.prayedBy ?? []).includes(user.uid);
+    void commitWrite(
+      updateDoc(doc(db, "photoAlbums", album.id), { prayedBy: on ? arrayUnion(user.uid) : arrayRemove(user.uid) }),
+    ).catch(() => undefined);
+  }
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
   /** ⋯ 를 눌러 고르기 시트를 연 소식 / 수정 창을 연 소식 */
@@ -793,10 +802,16 @@ function AlbumBook({
                   style={{
                     transform: `perspective(1600px) rotateY(${flipped ? 180 : 0}deg)`,
                     transition: "transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1)",
+                    // share: 카드 폭 = 틀 높이에 맞춘 4:5 사진 폭(뉴웨이브 cardWidth와 같은 셈) — 앞뒷면이 같은 크기라 가운데에 둡니다.
+                    ...(share
+                      ? { width: "min(100%, calc((var(--card-max) - 2px) * 0.8 + 2px))", marginInline: "auto" }
+                      : null),
                   }}
                 >
                   <div className="[backface-visibility:hidden]">
-                    {album ? (
+                    {album && share ? (
+                      <ShareFront album={album} />
+                    ) : album ? (
                       <AlbumCard
                         album={album}
                         author={authors.get(album.createdBy)}
@@ -826,7 +841,15 @@ function AlbumBook({
                       style={{ transform: "rotateY(180deg)" }}
                       aria-hidden={!flipped}
                     >
-                      {album ? (
+                      {album && share ? (
+                        <ShareBack
+                          album={album}
+                          author={authors.get(album.createdBy)}
+                          viewerUid={user?.uid}
+                          onPray={() => togglePray(album)}
+                          onMore={canManage(album) ? () => setManaging(album) : undefined}
+                        />
+                      ) : album ? (
                         <AlbumCardBack album={album} author={authors.get(album.createdBy)} />
                       ) : (
                         slide.back
@@ -869,7 +892,7 @@ function AlbumBook({
             카드가 폭을 다 쓰게 되어, 화살표는 카드 바깥 화면 끝 16px(소식 탭 px-4) 안에 섭니다.
             단추 폭 16px(w-4, -left-4·-right-4로 그 자리로 내보냄), 아이콘 16px(예전 36px).
         */}
-        {(["prev", "next"] as const).map((mode) => {
+        {(share ? [] : (["prev", "next"] as const)).map((mode) => {
           const enabled = mode === "next" ? hasNext : hasPrev;
           const Icon = mode === "next" ? ChevronRightIcon : ChevronLeftIcon;
           return (
@@ -1113,6 +1136,124 @@ function AlbumCardBack({ album, author }: { album: PhotoAlbumDoc; author: UserDo
   );
 }
 
+/**
+ * 원우소식 카드 앞면 — 흰 테두리 두른 4:5 사진 한 장뿐 (2026-10-06 사용자 요청, 뉴웨이브앱 삶나눔 LifeShareDeck의 앞면을 옮김).
+ * 글(이름·날짜·제목·본문)은 뒷면에 있습니다. 4:5가 아닌 옛 사진은 가운데를 기준으로 잘려 보입니다(object-cover).
+ */
+function ShareFront({ album }: { album: PhotoAlbumDoc }) {
+  return (
+    <div className="rounded-[20px] bg-surface p-[1px] shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
+      {album.coverImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={viewerUrl(album.coverImageUrl, 1200)}
+          alt={`${album.title} 대표 사진`}
+          draggable={false}
+          className="block w-full rounded-[19px] object-cover"
+          style={{ aspectRatio: 0.8 }}
+        />
+      ) : (
+        <span
+          className="flex w-full items-center justify-center rounded-[19px] bg-[linear-gradient(to_bottom,#e7e5e4,#a8a29e)] text-[48px]"
+          style={{ aspectRatio: 0.8 }}
+          aria-hidden="true"
+        >
+          📷
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 원우소식 카드 뒷면 — 올린 사람·날짜·🙏 공감·⋯, 제목·본문 (2026-10-06 사용자 요청, 뉴웨이브앱 삶나눔 뒷면을 옮김).
+ * 앞면(ShareFront)과 같은 크기라 본문이 길면 이 안에서 굴려 읽습니다. 색은 애기애타앱 토큰(주황 brand-*)을 씁니다.
+ * ★ 🙏와 ⋯ 칸은 포인터를 멈춥니다 — 카드 틀이 누르는 순간 포인터를 붙잡아(setPointerCapture) 단추의 click이 안 일어나고,
+ *   카드가 뒤집히거나 넘어가 버리기 때문입니다.
+ * ★ 단추(button) 글씨는 globals.css가 16px로 못 박아, 알약 속 숫자는 안쪽 span에 크기를 줍니다.
+ */
+function ShareBack({
+  album,
+  author,
+  viewerUid,
+  onPray,
+  onMore,
+}: {
+  album: PhotoAlbumDoc;
+  author: UserDoc | undefined;
+  viewerUid?: string;
+  onPray: () => void;
+  /** 올린 원우·운영진에게만 — 없으면 ⋯ 를 그리지 않습니다. */
+  onMore?: () => void;
+}) {
+  const date = album.eventDate ? dotDate(new Date(`${album.eventDate}T00:00:00`)) : "";
+  const body = album.body?.trim();
+  const authorName = author?.name || album.createdByName || "원우";
+  const prayedBy = album.prayedBy ?? [];
+  const prayed = viewerUid ? prayedBy.includes(viewerUid) : false;
+  const mine = !!viewerUid && album.createdBy === viewerUid;
+
+  return (
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-[20px] bg-surface p-6 shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
+      <div className="flex shrink-0 items-center gap-2.5">
+        <Avatar src={author?.photoURL ?? undefined} name={authorName} size={34} />
+        <div className="min-w-0">
+          <p className="truncate text-[16px] font-bold text-ink">{authorName}</p>
+          <p className="mt-0.5 text-[12px] text-ink-faint">
+            {date ? `${date} · ` : ""}
+            {weekRangeLabel(weekOfAlbum(album))}
+          </p>
+        </div>
+        <div
+          className="ml-auto flex shrink-0 items-center gap-2"
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+        >
+          {/* 🙏 공감 — 내 소식에는 단추 없이 공감해 준 사람 수만(0이면 숨김), 남의 소식은 알약 단추(눌러서 켜고 다시 눌러 취소). */}
+          {mine ? (
+            prayedBy.length > 0 ? (
+              <span className="relative flex items-center gap-1 text-[13px] font-medium text-ink-faint tabular-nums" style={{ top: -1 }}>
+                <span aria-hidden="true" className="text-[14px] leading-none">🙏</span>
+                {prayedBy.length}
+              </span>
+            ) : null
+          ) : (
+            <button
+              type="button"
+              aria-label="기도했어요"
+              aria-pressed={prayed}
+              onClick={onPray}
+              className={`flex h-[26px] shrink-0 items-center gap-[3px] rounded-full border px-[7px] text-[13px] font-bold transition active:scale-95 ${
+                prayed ? "border-brand-200 bg-brand-50 text-brand-500" : "border-line bg-surface text-ink-muted"
+              }`}
+            >
+              <span aria-hidden="true" className="text-[13px] leading-none">🙏</span>
+              {prayedBy.length > 0 ? <span className="text-[13px] font-semibold tabular-nums">{prayedBy.length}</span> : null}
+            </button>
+          )}
+          {onMore ? (
+            <button
+              type="button"
+              aria-label={`${album.title} 수정·지우기`}
+              onClick={onMore}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted active:bg-fill"
+            >
+              <span className="relative -top-[2.5px] left-[1.5px] text-[20px] leading-none">⋯</span>
+            </button>
+          ) : null}
+        </div>
+      </div>
+      <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <h2 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">{album.title}</h2>
+        {body ? (
+          <p className="mt-1.5 text-[16px] leading-relaxed whitespace-pre-wrap break-words text-ink">{body}</p>
+        ) : null}
+      </div>
+      <p className="mt-3 shrink-0 text-center text-[12px] text-ink-faint">다시 누르면 사진으로</p>
+    </article>
+  );
+}
+
 /** 고른 사진 한 장 — 미리보기 주소는 고를 때 한 번 만들고, 창을 닫을 때 돌려줍니다. */
 type PickedPhoto = { file: File; preview: string };
 
@@ -1137,6 +1278,8 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
   const [eventDate, setEventDate] = useState(album?.eventDate || todayString());
   const [body, setBody] = useState(album?.body ?? "");
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+  /** 고른 사진을 카드 비율(4:5)로 편집하는 중인 원본 주소 (2026-10-06 사용자 요청 — 뉴웨이브앱 삶나눔처럼) */
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   /** 사진 올리는 중이면 몇 장째인지 */
@@ -1159,10 +1302,19 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
     // 같은 사진을 다시 골라도 change가 일어나게 비웁니다.
     event.target.value = "";
     if (!file) return;
+    // 바로 올리지 않고 4:5 틀 편집 화면(PhotoCropSheet)을 거칩니다 — 끌어 옮기고 벌려서 원하는 부분을 담습니다(2026-10-06).
+    const source = URL.createObjectURL(file);
+    previews.current.push(source);
+    setCropSrc(source);
+    setError(null);
+  }
+
+  function finishCrop(blob: Blob) {
+    const file = new File([blob], "album.jpg", { type: "image/jpeg" });
     const preview = URL.createObjectURL(file);
     previews.current.push(preview);
     setPhotos([{ file, preview }]);
-    setError(null);
+    setCropSrc(null);
   }
 
   function removePhoto(preview: string) {
@@ -1255,6 +1407,7 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
   const heading = editing ? "소식 수정" : "소식 올리기";
 
   return (
+    <>
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
       role="dialog"
@@ -1422,6 +1575,18 @@ function AlbumSheet({ album, onClose }: { album?: PhotoAlbumDoc; onClose: () => 
         </form>
       </div>
     </div>
+    {cropSrc ? (
+      <PhotoCropSheet
+        src={cropSrc}
+        size={1080}
+        aspect={4 / 5}
+        shape="rect"
+        title="사진 편집"
+        onCancel={() => setCropSrc(null)}
+        onDone={finishCrop}
+      />
+    ) : null}
+    </>
   );
 }
 
@@ -1517,60 +1682,159 @@ function AlbumManageSheet({
 }
 
 /**
- * 지난 소식 — 이번 주 뒤로 접힌 지난 주들의 목록 (2026-09-24 사용자 요청).
- *
- * 주 목록(그 주의 날짜 범위 · 게시물 수)이 최근 순으로 서고, 한 주를 누르면 그 주 화면(/news/week/…)으로 갑니다.
- * (같은 날 처음엔 이 창 안에서 카드를 넘겨 보게 했다가, 링크로 보낼 주소가 필요해 화면으로 옮겼습니다.)
+ * 기록 — 원우소식 사진을 주(화~월)별로 모아 보는 창 (2026-10-06 사용자 요청, 뉴웨이브앱 삶나눔 "기록"을 옮김. 예전 "지난 소식" 목록을 대신함).
+ * 최근 주부터 사진 격자(3열, 4:5)가 서고, 사진을 누르면 크게 보며 올린 사람·날짜·제목·본문을 읽습니다.
+ * 큰 사진 창에서는 좌우로 밀면 같은 주의 이전·다음 소식으로 넘어갑니다(왼쪽으로 밀면 다음, 끝에서는 멈춤).
+ * (옛 주소 /news/week/[weekId] 화면은 그대로 남아 있지만 여기서는 더 이어지지 않습니다.)
  */
-function PastWeeksSheet({
+function AlbumHistorySheet({
   weekIds,
   albumsByWeek,
+  authors,
+  thisWeek,
   onClose,
 }: {
   /** 최근 주가 먼저 */
   weekIds: string[];
   albumsByWeek: Map<string, PhotoAlbumDoc[]>;
+  authors: Map<string, UserDoc>;
+  thisWeek: string;
   onClose: () => void;
 }) {
+  const [opened, setOpened] = useState<PhotoAlbumDoc | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  const swipe = (dx: number, dy: number) => {
+    if (!opened || Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const list = albumsByWeek.get(weekOfAlbum(opened)) ?? [];
+    const next = list[list.findIndex((album) => album.id === opened.id) + (dx < 0 ? 1 : -1)];
+    if (next) setOpened(next);
+  };
+
+  const openedAuthor = opened ? authors.get(opened.createdBy) : undefined;
+  const openedName = openedAuthor?.name || opened?.createdByName || "원우";
+  const openedBody = opened?.body?.trim();
+
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
-      role="dialog"
-      aria-modal="true"
-      aria-label="지난 소식"
-      onClick={onClose}
-    >
+    <>
       <div
-        onClick={(event) => event.stopPropagation()}
-        className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+        className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+        role="dialog"
+        aria-modal="true"
+        aria-label="소식 기록"
+        onClick={onClose}
       >
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
-        <h2 className="mt-5 mb-1 text-[18px] font-bold text-ink">지난 소식</h2>
-
-        <div className="mt-3 flex flex-col gap-2">
-          {weekIds.map((weekId) => {
-            const count = albumsByWeek.get(weekId)?.length ?? 0;
-            return (
-              <Link
-                key={weekId}
-                href={`/news/week/${weekId}`}
-                className="flex w-full items-center justify-between rounded-2xl bg-fill px-5 py-4 text-left transition active:opacity-70"
-              >
-                <span className="text-[16px] font-bold text-ink">{weekRangeLabel(weekId)}</span>
-                <span className="text-[14px] text-ink-muted">게시물 {count}개</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft"
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className="animate-sheet-up max-h-[80dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
         >
-          닫기
-        </button>
+          <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+          <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">소식 기록</h2>
+
+          {weekIds.length ? (
+            <div className="flex flex-col gap-7 pb-2">
+              {weekIds.map((weekId) => {
+                const items = albumsByWeek.get(weekId) ?? [];
+                return (
+                  <section key={weekId}>
+                    <h3 className="mb-2.5 flex items-baseline gap-2 text-[16px] font-bold text-ink">
+                      {weekRangeLabel(weekId)}
+                      {weekId === thisWeek ? <span className="text-[14.5px] font-bold text-brand-500">이번 주</span> : null}
+                      <span className="text-[13px] font-medium text-ink-muted">{items.length}장</span>
+                    </h3>
+                    <ul className="grid grid-cols-3 gap-1.5">
+                      {items.map((album) => (
+                        <li key={album.id}>
+                          <button
+                            type="button"
+                            onClick={() => setOpened(album)}
+                            aria-label={`${album.title} 크게 보기`}
+                            className="block w-full overflow-hidden rounded-xl active:opacity-80"
+                          >
+                            {album.coverImageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={viewerUrl(album.coverImageUrl, 400)}
+                                alt={`${album.title} 대표 사진`}
+                                loading="lazy"
+                                draggable={false}
+                                className="aspect-[4/5] w-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex aspect-[4/5] w-full items-center justify-center bg-fill text-[28px]" aria-hidden="true">
+                                📷
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="px-1 py-10 text-center text-[15px] text-ink-muted">아직 올라온 소식이 없어요</p>
+          )}
+
+          <button type="button" onClick={onClose} className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft">
+            닫기
+          </button>
+        </div>
       </div>
-    </div>
+
+      {opened ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:px-5"
+          role="dialog"
+          aria-modal="true"
+          aria-label={opened.title}
+          onClick={() => setOpened(null)}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) => {
+              touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+            }}
+            onTouchEnd={(event) => {
+              const start = touchStart.current;
+              touchStart.current = null;
+              if (start) swipe(event.changedTouches[0].clientX - start.x, event.changedTouches[0].clientY - start.y);
+            }}
+            className="animate-sheet-up max-h-[90dvh] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-t-[24px] bg-surface px-6 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[24px] sm:pb-6"
+          >
+            <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-line" />
+            <h2 className="mt-5 mb-3 text-[18px] font-bold text-ink">{weekRangeLabel(weekOfAlbum(opened))}</h2>
+            <div className="flex flex-col gap-3">
+              {opened.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={viewerUrl(opened.coverImageUrl, 1200)}
+                  alt={`${opened.title} 대표 사진`}
+                  draggable={false}
+                  className="mx-auto max-h-[60dvh] w-auto rounded-2xl"
+                />
+              ) : null}
+              <div className="flex items-center gap-2.5">
+                <Avatar src={openedAuthor?.photoURL ?? undefined} name={openedName} size={32} />
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-bold text-ink">{openedName}</p>
+                  {opened.eventDate ? (
+                    <p className="text-[12px] text-ink-faint">{dotDate(new Date(`${opened.eventDate}T00:00:00`))}</p>
+                  ) : null}
+                </div>
+              </div>
+              <h3 className="text-[18px] leading-snug font-bold break-keep text-ink [overflow-wrap:anywhere]">{opened.title}</h3>
+              {openedBody ? (
+                <p className="text-[16px] leading-relaxed whitespace-pre-wrap break-words text-ink">{openedBody}</p>
+              ) : null}
+            </div>
+            <button type="button" onClick={() => setOpened(null)} className="mt-4 w-full py-3 text-[15px]! font-bold text-ink-soft">
+              닫기
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

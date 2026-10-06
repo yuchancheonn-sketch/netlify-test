@@ -179,6 +179,8 @@ export interface PhotoAlbumDoc {
    * 이 칸이 없는 예전 소식은 모두 원우 소식입니다.
    */
   category?: "member" | "committee" | "club";
+  /** 🙏 공감 — 누른 원우 uid 목록 (2026-10-06, 원우소식 카드 뒷면. 뉴웨이브앱 삶나눔과 같음). */
+  prayedBy?: string[];
   /** 기수 ("10기"). 이 칸이 없는 예전 앨범은 10기로 봅니다 — lib/cohort.ts */
   cohort?: string;
   /**

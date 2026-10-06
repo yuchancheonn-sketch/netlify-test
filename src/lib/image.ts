@@ -80,6 +80,29 @@ export async function cropImageSquare(
 }
 
 /**
+ * 원본 사진의 (sourceX, sourceY)에서 sourceW×sourceH만큼을 outW×outH로 잘라 줄입니다 — 정해진 비율로 자르는 편집용
+ * (2026-10-06, 원우소식 사진 4:5 편집. 뉴웨이브앱 삶나눔에서 옮김).
+ */
+export async function cropImageRect(
+  image: HTMLImageElement,
+  sourceX: number,
+  sourceY: number,
+  sourceW: number,
+  sourceH: number,
+  outW: number,
+  outH: number,
+): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = outW;
+  canvas.height = outH;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("이미지를 편집할 수 없는 브라우저예요.");
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, sourceX, sourceY, sourceW, sourceH, 0, 0, outW, outH);
+  return toBlob(canvas, 0.85);
+}
+
+/**
  * 일반 사진용: 가로세로 비율은 유지하면서 긴 변이 maxSize를 넘지 않도록 줄입니다.
  * (채팅 이미지 첨부·행사 사진 업로드에서 사용)
  */
