@@ -1,7 +1,7 @@
 "use client";
 
 import GuestGate from "@/components/GuestGate";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import DosanAiAvatar from "@/components/DosanAiAvatar";
@@ -51,6 +51,28 @@ const roundButtonClassName =
  * 위에 얇은 제목 줄(뒤로가기 + 상대 이름), 가운데 대화, 아래 입력창.
  * 하단 탭바는 MainShell이 이 주소에서 감춥니다.
  */
+/*
+ * 2026-10-12 사용자 요청(뉴웨이브앱 코드 그대로): 최근 메시지가 늘 자판 바로 위에 있고 자판에 가려지지 않게.
+ * 아이폰 사파리는 자판이 뜨면 화면(보이는 부분)을 위로 밀어 올립니다. 그래서 대화방 전체를 "지금 보이는 부분"(visualViewport)의
+ * 위 끝·높이에 맞춰 못 박고, 입력줄은 그 안 맨 아래(자판 바로 위)에 붙입니다. 큰 글씨(html zoom)만큼 나눕니다.
+ */
+function subscribeViewport(onChange: () => void) {
+  const viewport = window.visualViewport;
+  viewport?.addEventListener("resize", onChange);
+  viewport?.addEventListener("scroll", onChange);
+  return () => {
+    viewport?.removeEventListener("resize", onChange);
+    viewport?.removeEventListener("scroll", onChange);
+  };
+}
+
+function viewportSnapshot(): string {
+  const viewport = window.visualViewport;
+  if (!viewport) return "";
+  const zoom = Number(getComputedStyle(document.documentElement).zoom) || 1;
+  return `${Math.round(viewport.offsetTop / zoom)}:${Math.round(viewport.height / zoom)}`;
+}
+
 function ChatRoomPageContent({ roomId }: { roomId: string }) {
   const router = useRouter();
   const { user, profile } = useAuth();
@@ -81,6 +103,9 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
    */
   const [editingId, setEditingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // 입력줄은 화면 맨 아래에 떠 있어서, 여러 줄로 길어지면 위 대화를 가립니다 — 높이를 재서 대화 상자 아래 여백을 그만큼 비웁니다.
+  const composerRef = useRef<HTMLDivElement>(null);
+  const [composerHeight, setComposerHeight] = useState(0);
 
   /*
    * 입력칸 높이를 글에 맞춥니다 (2026-09-27, 여러 줄 입력). 한 번 auto로 풀었다가 내용 높이(scrollHeight)로 —
@@ -98,6 +123,30 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   const isMuted = chatPrefs.muted.has(roomId);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  /** 대화 상자가 맨 아래(최근 메시지)를 보고 있는지 — 자판이 오르내려 크기가 바뀌어도 맨 아래를 유지하려고 스크롤할 때마다 갱신합니다. */
+  const stickBottom = useRef(true);
+  /** 대화 상자만 맨 아래로 — scrollIntoView는 바깥 칸(제목 줄 포함)까지 밀 수 있어 상자의 scrollTop을 직접 맞춥니다. */
+  const scrollToLatest = () => {
+    const box = bottomRef.current?.parentElement;
+    if (box) box.scrollTop = box.scrollHeight;
+  };
+  useEffect(() => {
+    const node = composerRef.current;
+    const box = bottomRef.current?.parentElement;
+    if (!node) return;
+    const observer = new ResizeObserver(() => {
+      setComposerHeight(Math.ceil(node.getBoundingClientRect().height));
+      // 입력줄이나 대화 상자 크기가 바뀌면(자판이 내려가며 화면이 커지는 등) 맨 아래를 보고 있던 경우 다시 맨 아래로
+      if (stickBottom.current) requestAnimationFrame(() => scrollToLatest());
+    });
+    observer.observe(node);
+    if (box) observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
+  // 입력줄 높이가 바뀌면(여러 줄로 길어지거나 줄어들 때) 가장 최근 메시지가 입력줄 바로 위에 보이도록 맨 아래로
+  useEffect(() => {
+    if (composerHeight) scrollToLatest();
+  }, [composerHeight]);
   const lastMessageId = messages.at(-1)?.id;
   /** "더 보기"로 과거를 불러왔을 때는 맨 아래로 끌어내리지 않습니다. */
   const skipAutoScroll = useRef(false);
@@ -177,8 +226,12 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
       skipAutoScroll.current = false;
       return;
     }
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [lastMessageId, loading]);
+    // 새 메시지(내가 보낸 것·남이 보낸 것·AI 답)가 오면 대화 상자를 맨 아래로. 말풍선이 그려지고 자판·입력 중 말풍선이 바뀌는 사이 어긋나서 몇 번 더 맞춥니다.
+    if (!stickBottom.current) return;
+    scrollToLatest();
+    const timers = [60, 200, 450].map((delay) => window.setTimeout(() => stickBottom.current && scrollToLatest(), delay));
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [lastMessageId, loading, aiPending]);
 
   /*
    * 자판이 올라와 있는 동안 body에 표시를 붙입니다. (실제로 여백을 줄이는 건 globals.css)
@@ -262,7 +315,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
     event.preventDefault();
     const text = draft.trim();
     if (!text || !uid || sending) return;
-
+    stickBottom.current = true; // 보낸 뒤에는 늘 맨 아래(방금 보낸 메시지)를 보여 줍니다
     setSending(true);
     setSendError(null);
     // 실패하면 되돌릴 수 있도록 원본을 들고 있습니다.
@@ -377,6 +430,17 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
    */
   const slide = swipe.slideStyle;
 
+  // 보이는 부분 "위 끝:높이" — 없으면(옛 브라우저·서버 그림) 예전처럼 h-dvh.
+  const viewport = useSyncExternalStore(subscribeViewport, viewportSnapshot, () => "");
+  const [viewportTop, viewportHeight] = viewport ? viewport.split(":").map(Number) : [0, 0];
+  // 자판이 오르내려 보이는 높이가 바뀌면 가장 최근 대화가 입력줄 위에 보이도록 맨 아래로.
+  // 아이폰 자판은 올라오는 데 0.3~0.5초 걸리고 그 사이 보이는 높이가 여러 번 바뀝니다 — 잠깐 동안 몇 번 더 맨 아래로 보냅니다.
+  useEffect(() => {
+    if (!viewportHeight) return;
+    const timers = [0, 120, 300, 500].map((delay) => window.setTimeout(scrollToLatest, delay));
+    return () => timers.forEach(window.clearTimeout);
+  }, [viewportHeight]);
+
   /*
    * 바깥 상자도 안쪽과 같은 흰색입니다.
    *
@@ -399,9 +463,9 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
         이게 없으면 대화가 길어질 때 상자가 늘어나 버리고 스크롤이 안 생깁니다.
     */
     <div
-      className="flex h-dvh flex-col overflow-hidden bg-page-surface"
+      className={`flex flex-col overflow-hidden bg-page-surface ${viewportHeight ? "fixed inset-x-0" : "relative h-dvh"}`}
       {...swipe.handlers}
-      style={swipe.touchAction}
+      style={{ ...swipe.touchAction, ...(viewportHeight ? { top: viewportTop, height: viewportHeight } : {}) }}
     >
       <div
         className="relative z-10 flex min-h-0 flex-1 flex-col bg-page-surface"
@@ -484,7 +548,13 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           overscroll-contain은 맨 위/아래에 닿았을 때 그 힘이 바깥 페이지로
           넘어가 화면이 통째로 딸려 움직이는 것을 막습니다.
         */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[104px]">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
+          onScroll={(event) => {
+            const box = event.currentTarget;
+            stickBottom.current = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+          }}
+          style={{ paddingBottom: composerHeight ? composerHeight + 12 : 104 }}>
           {loading ? (
             <div className="flex flex-col gap-4 px-1 pt-4">
               <Skeleton className="h-12 w-2/3 rounded-2xl" />
@@ -613,7 +683,8 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
         인라인 style로 두면 CSS가 그걸 이기지 못합니다.
       */}
       <div
-        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-page-surface/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+        ref={composerRef}
+        className="chat-composer absolute inset-x-0 bottom-0 z-20 bg-page-surface/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
         style={slide}
       >
         {/*
@@ -715,9 +786,13 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                 건 지우려던 마음을 접었다는 뜻이므로 여기서 닫아줍니다.
               */
               setMenuForId(null);
+              // 입력줄을 누르면 가장 최근 대화가 입력줄 바로 위에 오도록(자판이 오르는 동안 몇 번 맨 아래로)
+              [0, 150, 350, 600].forEach((delay) => window.setTimeout(scrollToLatest, delay));
             }}
             onBlur={() => {
               delete document.body.dataset.keyboard;
+              // 자판이 내려가는 동안(약 0.5초) 화면 높이가 여러 번 바뀝니다 — 맨 아래를 보고 있었다면 끝까지 따라 내려갑니다
+              [0, 150, 350, 600, 900].forEach((delay) => window.setTimeout(() => stickBottom.current && scrollToLatest(), delay));
             }}
             placeholder={editingId ? "메시지 고치기" : "메시지 보내기"}
             aria-label={editingId ? "메시지 수정" : "메시지 입력"}
