@@ -66,6 +66,8 @@
   --color-surface: #ffffff;
   /* 화면(탭) 전체 바탕으로 깔리는 흰색 — 밝은 화면은 카드와 같은 흰색, 어두운 화면은 순수 검정(2026-10-12 사용자 "다크 모드일 때 모든 탭 배경색을 검은색으로"). 카드·칸은 계속 --color-surface(어두운 화면에선 #1d1f22). */
   --color-page-surface: #ffffff;
+  /* 원우수첩 검색 박스 바탕 — 밝은 화면은 앱 바탕 회색(--color-canvas)과 같게(2026-09-25 사용자), 어두운 화면은 바탕이 검정이라 canvas와 같으면 안 보여서 한 단 밝은 회색(--dark-fill)(2026-10-12 사용자 "검색 박스는 회색으로"). */
+  --color-search-box: var(--color-canvas);
 
   /*
    * 바탕 위에 한 겹 더 옅게 까는 자리 — 눌린 상태, 중립 배지, 입력칸 등.
@@ -320,6 +322,7 @@
   :root:not([data-theme="light"]) {
     --color-canvas: var(--dark-canvas);
     --color-page-surface: var(--dark-canvas);
+    --color-search-box: var(--dark-fill);
     --color-surface: var(--dark-surface);
     --color-fill: var(--dark-fill);
     --color-line: var(--dark-line);
@@ -345,6 +348,7 @@
 :root[data-theme="dark"] {
   --color-canvas: var(--dark-canvas);
   --color-page-surface: var(--dark-canvas);
+  --color-search-box: var(--dark-fill);
   --color-surface: var(--dark-surface);
   --color-fill: var(--dark-fill);
   --color-line: var(--dark-line);
