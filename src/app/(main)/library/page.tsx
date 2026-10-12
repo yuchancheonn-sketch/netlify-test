@@ -16,6 +16,7 @@ import CohortPicker from "@/components/CohortPicker";
 import { ConfirmDialog, Sheet, SheetActions } from "@/components/Sheet";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import TextTabs from "@/components/TextTabs";
+import SearchBox, { matchesSearch } from "@/components/SearchBox";
 import VideoList from "@/components/VideoList";
 import { PlusIcon } from "@/components/icons";
 import {
@@ -249,6 +250,9 @@ function FileList() {
   const { cohort } = useViewCohort();
   const blocked = useBlockedUids(); // 사용자 요청 2026-10-06(구글 플레이 출시 준비): 차단한 사람이 올린 파일은 감춥니다.
   const files = allFiles.filter((file) => inCohort(file, cohort) && !blocked.has(file.uploadedBy));
+  /** 파일 이름 검색어(2026-10-12 사용자 "일정·파일에도 복습 영상과 똑같은 검색 박스") */
+  const [query, setQuery] = useState("");
+  const shownFiles = files.filter((file) => matchesSearch(file.name, query));
   const [uploading, setUploading] = useState(false);
   /** 0~1. 여러 개를 올릴 때는 지금 올리는 한 개의 진행률입니다. */
   const [progress, setProgress] = useState(0);
@@ -336,14 +340,21 @@ function FileList() {
           title="아직 올라온 파일이 없어요"
           description="아래 '파일 올리기'로 강의 자료나 문서를 나눠 보세요."
         />
+      ) : shownFiles.length === 0 ? (
+        <>
+          <SearchBox value={query} onChange={setQuery} placeholder="파일 이름으로 찾기" label="파일 검색" />
+          <EmptyState title="찾는 파일이 없어요" description="다른 단어로 찾아보세요." />
+        </>
       ) : (
         /*
           1열 목록 — 채팅 목록처럼 박스 없이 흰 바탕에 줄만 (2026-09-27 사용자 요청).
           -mx-4로 바깥 px-4를 걷고 줄마다 px-4를 두어, 누를 때 옅은 회색이 화면 끝에서 끝까지 깔립니다.
           지나온 모양: 첫 장 썸네일 2열 격자 → 흰 박스 한 줄(2026-09-22, 박스 사이 12px) → 박스 없는 줄.
         */
+        <>
+        <SearchBox value={query} onChange={setQuery} placeholder="파일 이름으로 찾기" label="파일 검색" />
         <ul className="-mx-4 flex flex-col">
-          {files.map((file) => (
+          {shownFiles.map((file) => (
             <FileCard
               key={file.id}
               file={file}
@@ -351,6 +362,7 @@ function FileList() {
             />
           ))}
         </ul>
+        </>
       )}
 
       {/*

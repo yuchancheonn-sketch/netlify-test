@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MegaphoneIcon } from "@/components/icons";
+import SearchBox, { matchesSearch } from "@/components/SearchBox";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
 import type { NewsItem } from "@/lib/rss";
@@ -32,6 +33,8 @@ export default function NewsList() {
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** 제목 검색어(2026-10-12 사용자 "일정·파일에도 복습 영상과 똑같은 검색 박스") */
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -103,10 +106,18 @@ export default function NewsList() {
     );
   }
 
+  const shown = items.filter((item) => matchesSearch(item.title, query));
+
   return (
     <>
+      <SearchBox value={query} onChange={setQuery} placeholder="일정 제목으로 찾기" label="일정 검색" />
+      {shown.length === 0 ? (
+        <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
+          <EmptyState title="찾는 일정이 없어요" description="다른 단어로 찾아보세요." />
+        </div>
+      ) : null}
       <ul className="flex flex-col gap-[14px]">
-        {items.map((item) => (
+        {shown.map((item) => (
           <li key={item.id}>
             <a
               href={item.link}

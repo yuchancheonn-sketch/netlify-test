@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SearchIcon } from "@/components/icons";
+import SearchBox, { matchesSearch } from "@/components/SearchBox";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDotDate } from "@/lib/format";
 import { apiUrl } from "@/lib/api";
@@ -99,29 +99,12 @@ export default function VideoList() {
   }
 
   // 제목 검색 — 띄어쓰기·대소문자는 가리지 않습니다(원우수첩 검색과 같음).
-  const q = query.replace(/s+/g, "").toLowerCase();
-  const shown = q ? videos.filter((video) => video.title.replace(/s+/g, "").toLowerCase().includes(q)) : videos;
+  const shown = videos.filter((video) => matchesSearch(video.title, query));
 
   return (
     <>
-      {/*
-        검색 박스 — 원우수첩 검색 박스(app/(main)/members/page.tsx)와 크기·모서리·돋보기·글씨·바탕 모두 같은 값입니다(2026-10-12 사용자 "원우수첩 검색 박스랑 아예 똑같게").
-        바탕은 --color-search-box(밝은 화면 앱 바탕 회색, 어두운 화면 한 단 밝은 회색). 돋보기는 누를 일 없는 그림이라 pointer-events-none.
-        영상이 있을 때만 나옵니다(위 loading·error·빈 목록은 이 앞에서 끝남).
-      */}
-      <div className="relative mb-4">
-        <SearchIcon
-          strokeWidth={1.75}
-          className="pointer-events-none absolute top-[calc(50%-1px)] right-4 h-[28px] w-[28px] -translate-y-1/2 text-ink-faint"
-        />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="영상 제목으로 찾기"
-          aria-label="영상 검색"
-          className="w-full rounded-[14px] bg-search-box pt-[7.5px] pr-14 pb-[11.5px] pl-5 text-[17px] text-ink outline-none placeholder:text-[17.5px] placeholder:text-ink-muted"
-        />
-      </div>
+      {/* 검색 박스 — 공용 SearchBox(원우수첩과 같은 모양). 영상이 있을 때만 나옵니다(위 loading·error·빈 목록은 이 앞에서 끝남). */}
+      <SearchBox value={query} onChange={setQuery} placeholder="영상 제목으로 찾기" label="영상 검색" />
       {shown.length === 0 ? (
         <div className="rounded-3xl bg-surface shadow-[var(--shadow-card)]">
           <EmptyState title="찾는 영상이 없어요" description="다른 단어로 찾아보세요." />
