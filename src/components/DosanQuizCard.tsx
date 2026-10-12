@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, OMarkIcon, QMarkIcon, XMarkIcon } from "@/components/icons";
+import { PartyEffects } from "@/components/PartyEffects";
 import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 import { PrimaryButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -69,6 +70,8 @@ export default function DosanQuizCard() {
   const [pickedFor, setPickedFor] = useState<{ key: string; value: OxAnswer } | null>(null);
   const picked = pickedFor?.key === quizKey ? pickedFor.value : null;
   const [screen, setScreen] = useState<"none" | "grading" | "explanation">("none");
+  // 방금 채점을 마치고 열린 해설이면 true — 맞혔을 때만 축하 효과(나중에 "해설 보기"로 다시 열 때는 안 나옵니다, 2026-10-12 사용자 "뉴웨이브앱처럼")
+  const [justGraded, setJustGraded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const gradingTimer = useRef<number | null>(null);
@@ -105,7 +108,10 @@ export default function DosanQuizCard() {
       }
       // 서버가 빨리 답해도 "채점 중이에요"를 잠깐은 보여줍니다 — 번쩍하고 지나가지 않게.
       const wait = Math.max(0, GRADING_MS - (Date.now() - startedAt));
-      gradingTimer.current = window.setTimeout(() => setScreen("explanation"), wait);
+      gradingTimer.current = window.setTimeout(() => {
+        setJustGraded(true);
+        setScreen("explanation");
+      }, wait);
     } catch (caught) {
       setScreen("none");
       setSubmitError(
@@ -156,7 +162,10 @@ export default function DosanQuizCard() {
             {today ? (
               <button
                 type="button"
-                onClick={() => setScreen("explanation")}
+                onClick={() => {
+                  setJustGraded(false);
+                  setScreen("explanation");
+                }}
                 className="text-[14px]! font-medium text-ink-muted"
               >
                 해설 보기
@@ -294,6 +303,7 @@ export default function DosanQuizCard() {
         <ExplanationScreen
           question={quiz.question}
           today={today}
+          celebrate={justGraded}
           onClose={() => setScreen("none")}
         />
       ) : null}
@@ -388,10 +398,13 @@ function GradingScreen() {
 function ExplanationScreen({
   question,
   today,
+  celebrate,
   onClose,
 }: {
   question: string;
   today: QuizTodayResult;
+  /** 방금 채점해서 열린 해설인지 — 맞혔을 때만 축하 효과 */
+  celebrate: boolean;
   onClose: () => void;
 }) {
   return (
@@ -401,6 +414,8 @@ function ExplanationScreen({
       aria-label="퀴즈 해설"
       className="fixed inset-0 z-50 flex flex-col bg-surface"
     >
+      {/* pace 0.45 — 해설은 읽어야 하는 화면이라 약 2.3초에 끝납니다(뉴웨이브앱과 같음). 정답을 맞혀 해설이 열렸을 때만 폭죽·풍선·박수. */}
+      {celebrate && today.correct ? <PartyEffects pace={0.45} /> : null}
       <div className="shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="relative flex h-14 items-center justify-center px-14">
           <h2 className="text-[17px] font-bold text-ink">퀴즈 해설</h2>
