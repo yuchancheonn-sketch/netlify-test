@@ -9,7 +9,6 @@ import { MAIN_FILL_MIN_HEIGHT } from "@/components/MainShell";
 import {
   BellIcon,
   CalendarIcon,
-  ChevronRightIcon,
   MegaphoneIcon,
   VoteStampIcon,
 } from "@/components/icons";
@@ -80,7 +79,7 @@ function NotificationsPageContent() {
       (흰 층에 손짓을 거는 방법은 층이 화면 틀 뒤라 손가락이 닿지 않아 걷었습니다.)
     */}
     <div
-      className="bg-surface"
+      className="bg-page-surface"
       {...swipe.handlers}
       style={{ minHeight: MAIN_FILL_MIN_HEIGHT, ...swipe.touchAction, ...swipe.slideStyle }}
     >
@@ -110,29 +109,28 @@ function NotificationsPageContent() {
           </div>
         ) : (
           /*
-            날짜는 줄 오른쪽이 아니라 박스 위에 글씨만 (2026-09-25 사용자 요청). 같은 날 온 알림은 한 묶음으로,
-            날짜는 그날 가장 최근 알림(목록이 최근 순이라 묶음의 첫 줄) 위에 한 번만 적습니다.
-            묶음 안 줄 사이 12px → 4px → 3px → 2px → 1px → 0(2026-09-27 사용자 "목록 간격 좀 줄여줘", 이어서 "3px로", "2px로", "1px로", "1px 줄여줘" — 이제 줄끼리 딱 붙음 — 박스를 뺀 뒤라 줄 안 위아래 여백 14px로도 충분히 갈림). 묶음 사이는 li의 mt-2를 더해 12px.
+            뉴웨이브앱 알림함과 똑같은 디자인(2026-10-12 사용자 "알림창 디자인을 뉴웨이브앱이랑 똑같게" — 뉴웨이브는 인스타그램 알림처럼):
+            구역 제목(오늘·어제·최근 7일·이전 활동) 아래에 줄이 늘어서고, 줄 = 왼쪽 큰 동그라미(54px, 종류 그림) + 글 한 덩어리(굵은 제목 + 끝에 옅은 짧은 시간) + 옅은 본문,
+            이번에 새로 온 줄은 오른쪽에 주황 점(뉴웨이브는 파랑 — 앱 색). 박스·구분선·줄 바탕·꺾쇠 없음.
           */
-          <ul className="flex flex-col">
-            {notices.map((notice, index) => {
-              const day = dayKey(notice);
-              const firstOfDay = index === 0 || dayKey(notices[index - 1]) !== day;
+          <div className="-mx-4 -mt-3">
+            {SECTIONS.map((label) => {
+              const rows = notices.filter((notice) => sectionOf(notice) === label);
+              if (!rows.length) return null;
               return (
-                <li key={notice.id} className={firstOfDay && index > 0 ? "mt-2" : ""}>
-                  {firstOfDay ? (
-                    // 15px — 같은 날 사용자 "2px 키워줘"(13px에서).
-                    // 주황(brand-500) — 2026-09-27 사용자 "오늘·어제·날짜 주황색으로"(회색 ink-muted에서).
-                    <p className="mb-2 px-1 text-[15px] font-bold text-brand-500">{dayLabel(notice)}</p>
-                  ) : null}
-                  <NoticeRow
-                    notice={notice}
-                    isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline}
-                  />
-                </li>
+                <section key={label} className="mt-3">
+                  <h2 className="px-4 pb-1 text-[16px] font-bold text-ink">{label}</h2>
+                  <ul className="flex flex-col">
+                    {rows.map((notice) => (
+                      <li key={notice.id}>
+                        <NoticeRow notice={notice} isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
     </div>
@@ -140,19 +138,29 @@ function NotificationsPageContent() {
   );
 }
 
-/** 같은 날인지 가르는 열쇠 — 폰의 지역 시간 기준 날짜. 시각이 아직 없는(방금 온) 알림은 오늘로 봅니다. */
-function dayKey(notice: NoticeDoc): string {
-  return (notice.createdAt?.toDate() ?? new Date()).toDateString();
+const SECTIONS = ["오늘", "어제", "최근 7일", "이전 활동"];
+
+/** 구역 — 폰의 지역 시간 기준. 시각이 아직 없는(방금 온) 알림은 오늘로 봅니다. */
+function sectionOf(notice: NoticeDoc): string {
+  const now = new Date();
+  const date = notice.createdAt?.toDate() ?? now;
+  const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOf(now) - startOf(date)) / 86_400_000);
+  if (days <= 0) return "오늘";
+  if (days === 1) return "어제";
+  if (days <= 7) return "최근 7일";
+  return "이전 활동";
 }
 
-/** 묶음 위 날짜 글씨 — "오늘", "어제", 그 밖에는 "9월 21일 (월)". */
-function dayLabel(notice: NoticeDoc): string {
-  const date = notice.createdAt?.toDate() ?? new Date();
-  const today = new Date();
-  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return "오늘";
-  if (date.toDateString() === yesterday.toDateString()) return "어제";
-  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${"일월화수목금토"[date.getDay()]})`;
+/** 글 끝에 이어 붙는 짧은 시간 — 방금·20분·10시간·1일·2주 (뉴웨이브앱과 같음) */
+function timeAgo(notice: NoticeDoc): string {
+  const at = notice.createdAt?.toMillis() ?? 0;
+  const min = at ? Math.floor((Date.now() - at) / 60_000) : 0;
+  if (min < 1) return "방금";
+  if (min < 60) return `${min}분`;
+  if (min < 60 * 24) return `${Math.floor(min / 60)}시간`;
+  if (min < 60 * 24 * 7) return `${Math.floor(min / 1440)}일`;
+  return `${Math.floor(min / 10080)}주`;
 }
 
 /** 알림 종류마다의 그림 — 일정은 달력, 투표는 기표 도장, 영상은 재생, 소식은 확성기 */
@@ -170,36 +178,18 @@ function NoticeGlyph({ type, className }: { type: NoticeDoc["type"]; className: 
 
 function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
   return (
-    <Link
-      href={notice.url}
-      // px-4 — 왼쪽 그림 칸을 걷으면서 글이 카드 끝에 붙지 않게 좌우를 16px로(예전 p-3.5 = 14px).
-      // 박스(둥근 모서리 rounded-3xl·테두리 shadow-card)만 뺐습니다 (2026-09-27 사용자 "박스만 없애고 아무것도 건들지마").
-      // pl-[12.5px] — 날짜는 그대로 두고 알림 내용만 3.5px 왼쪽으로(2026-09-27 사용자 "1px", "1px 더", "1.5px" — 16px에서). 오른쪽은 16px 그대로.
-      // py-[13px] — 줄 안 위아래 여백 14px → 12px → 13px씩 (2026-09-27 사용자 "2px씩 줄여줘", 이어서 "1px씩 늘려줘").
-      // 새 알림의 연한 주황 바탕(bg-brand-50)은 뺐습니다 (2026-09-27 사용자 "반투명 주황색 박스는 다 없애줘") — 모든 줄이 흰 바탕.
-      data-new={isNew || undefined}
-      className="flex items-center gap-3 bg-surface py-[13px] pr-4 pl-[12.5px] transition active:scale-[0.99]"
-    >
-      <span className="min-w-0 flex-1">
-        {/*
-          종류 그림은 제목 왼쪽에 작게(17px, 진회색) — 2026-09-25 사용자 "아이콘 박스는 없애고, 아이콘만 줄여서 제목 왼쪽으로".
-          예전엔 줄 맨 왼쪽의 44px 연회색 칸(bg-fill) 안에 22px 그림이었고, 그 전엔 주황 칸에 흰 그림이었습니다.
-        */}
-        <span className="flex items-center gap-1.5">
-          {/* 19px — 같은 날 사용자 "2px 키워줘"(17px에서). */}
-          <NoticeGlyph type={notice.type} className="h-[19px] w-[19px] shrink-0 text-ink-soft" />
-          <span className="min-w-0 truncate text-[15px] leading-snug font-bold text-ink">
-            {notice.title}
-          </span>
-        </span>
-        {notice.body ? (
-          <span className="mt-0.5 block truncate text-[13px] text-ink-muted">{notice.body}</span>
-        ) : null}
+    <Link href={notice.url} data-new={isNew || undefined} className="flex items-center gap-3 px-4 py-3 transition active:opacity-70">
+      <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full bg-fill text-ink">
+        <NoticeGlyph type={notice.type} className="h-7 w-7" />
       </span>
-
-      {/* 날짜는 줄 오른쪽에서 빼 박스 위로 옮겼습니다(2026-09-25) — 오른쪽엔 꺾쇠만. */}
-      <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-
+      <span className="min-w-0 flex-1 break-keep">
+        <span className="line-clamp-3 block text-[14.5px] leading-snug text-ink">
+          <b className="font-semibold">{notice.title}</b>
+          <span className="ml-1.5 text-ink-muted">{timeAgo(notice)}</span>
+        </span>
+        {notice.body ? <span className="mt-0.5 line-clamp-2 block text-[14px] leading-snug text-ink-muted">{notice.body}</span> : null}
+      </span>
+      {isNew ? <span aria-label="새 알림" className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500" /> : null}
     </Link>
   );
 }
