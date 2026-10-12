@@ -913,7 +913,8 @@ function MessageRow({
 
       {isBlockStart && !showDateDivider ? (
         /*
-          내 메시지 위와 1:1 대화에는 이름을 적지 않습니다. 그렇다고 이름 줄을
+          (2026-10-12부터 상대 이름은 개인·전체 모든 방에서 말풍선 위에 나옵니다. 아래 간격은 이름 줄이 없는 내 메시지 묶음 위 자리입니다.)
+          내 메시지 위에는 이름을 적지 않습니다. 그렇다고 이름 줄을
           통째로 빼버리면 바로 앞 원우의 말풍선에 딱 붙어 보입니다.
           그렇다고 이름 줄 높이(18px)를 그대로 비워 두면 이번엔 너무 멀어 보입니다.
           글자가 채워 주는 자리가 없어 빈 곳이 그만큼 더 넓게 읽히기 때문입니다.
@@ -958,6 +959,8 @@ function MessageRow({
           제목 줄 위로 나옵니다.
         */}
         <div className={`relative max-w-[70%] ${menuOpen ? "z-40" : ""}`}>
+          {/* 상대 이름 — 개인·전체 모든 방에서 상대가 연달아 보낸 말풍선 묶음의 첫 말풍선 위에(2026-10-12 사용자, 뉴웨이브앱과 같은 모양: 12.5px 보통 굵기 회색, 왼쪽 4px). */}
+          {showSender ? <p className="mb-1 h-[18px] truncate pl-1 text-[12.5px] leading-[18px] font-medium text-ink-muted">{senderName}</p> : null}
           {menuOpen ? (
             <>
               {/*
