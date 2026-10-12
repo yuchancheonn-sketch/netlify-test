@@ -3,6 +3,7 @@ import "server-only";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import type { Auth } from "firebase-admin/auth";
 import { ACCOUNT_LINKS } from "@/lib/account-link-server";
+import { dosanRoomId } from "@/lib/dosan-ai";
 import { cohortOf } from "@/lib/cohort";
 
 /**
@@ -45,6 +46,8 @@ export async function withdrawAccount(db: Firestore, auth: Auth, uid: string): P
   await Promise.all([
     ...myReports.docs.map((doc) => doc.ref.delete()),
     db.collection("userBlocks").doc(uid).delete(),
+    // 도산 AI와 나눈 대화(2026-10-12) — 본인만 보는 개인 대화라 탈퇴하면 방과 메시지를 통째로 지웁니다(사람과의 1:1 채팅 메시지는 상대 기록 때문에 남기는 것과 다름).
+    db.recursiveDelete(db.collection("chatRooms").doc(dosanRoomId(uid))),
   ]);
   await Promise.all([
     ...aliases.docs.map((doc) => doc.ref.delete()),

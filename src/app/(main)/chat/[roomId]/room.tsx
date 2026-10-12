@@ -4,6 +4,9 @@ import GuestGate from "@/components/GuestGate";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
+import DosanAiAvatar from "@/components/DosanAiAvatar";
+import { DOSAN_AI_NAME, DOSAN_AI_SUGGESTIONS, DOSAN_AI_UID } from "@/lib/dosan-ai";
+import { askDosanAi } from "@/lib/dosan-ai-client";
 import MidEllipsis from "@/components/MidEllipsis";
 import {
   ArrowUpIcon,
@@ -64,6 +67,8 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   const blocked = useBlockedUids();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  /** 도산 AI가 답을 만드는 중(2026-10-12) — "입력 중…" 말풍선 */
+  const [aiPending, setAiPending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   /** 지금 수정·삭제 박스가 떠 있는 메시지. 한 번에 하나만 뜹니다. */
@@ -145,13 +150,17 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   /** 1:1 방의 상대를 내가 차단했는지 */
   const peerBlocked = !!otherId && blocked.has(otherId);
   const visibleMessages = messages.filter((message) => !blocked.has(message.senderId));
+  /** 도산 AI 방인지(2026-10-12) */
+  const isAiRoom = otherId === DOSAN_AI_UID;
   const title = roomCohort
     ? cohortRoomTitle(roomCohort)
-    : withdrawn
+    : isAiRoom
+      ? DOSAN_AI_NAME
+      : withdrawn
       ? WITHDRAWN_PEER_TITLE
       : (otherId && nameByUid.get(otherId)) || "원우";
   /** 방 이름 옆에 굵게 붙는 인원수 (2026-09-27) — 원우 목록을 받기 전엔, 그리고 탈퇴한 원우 방에서는 숨깁니다. */
-  const memberCount = members.length > 0 && !withdrawn ? roomMemberCount(roomId, members) : null;
+  const memberCount = members.length > 0 && !withdrawn && !isAiRoom ? roomMemberCount(roomId, members) : null;
 
   /*
    * 아는 방 모양이 아닌 주소로 들어오면 채팅 목록으로 돌려보냅니다.
@@ -276,6 +285,14 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
         setEditingId(null);
       } else {
         await sendChatMessage({ roomId, sender: { uid, profile }, text });
+        if (isAiRoom) {
+          // 도산 AI(2026-10-12): 답은 서버가 방에 씁니다. 기다리는 동안 "입력 중…" 말풍선, 못 하면 안내.
+          setAiPending(true);
+          void askDosanAi().then((ok) => {
+            setAiPending(false);
+            if (!ok) setSendError("지금은 도산 AI가 답을 못 하고 있어요. 잠시 뒤에 다시 물어봐 주세요.");
+          });
+        }
       }
     } catch {
       setDraft(text);
@@ -428,6 +445,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             {memberCount ? (
               <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
             ) : null}
+            {isAiRoom ? <span className="shrink-0 self-center rounded-md bg-brand-50 px-1.5 py-px text-[11px] font-bold text-brand-500">AI</span> : null}
           </p>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -455,6 +473,10 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           </div>
         </header>
 
+        {isAiRoom ? (
+          <p className="shrink-0 bg-fill px-4 py-1.5 text-center text-[12.5px] text-ink-muted">AI가 답하는 대화예요 · 틀릴 수 있어요. 중요한 건 책이나 흥사단 자료로 확인해 주세요</p>
+        ) : null}
+
         {/*
           대화 — 이 상자만 스스로 스크롤합니다.
           pb-[104px]는 화면 아래에 붙어 있는 입력줄에 마지막 말풍선이 가리지
@@ -471,6 +493,31 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             </div>
           ) : error ? (
             <ErrorState message={error} />
+          ) : messages.length === 0 && isAiRoom ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-5 text-center">
+              <DosanAiAvatar size={64} />
+              <p className="text-[17px] font-bold text-ink">{DOSAN_AI_NAME}</p>
+              <p className="text-[14px] leading-relaxed break-keep text-ink-soft">
+                도산 안창호 선생의 삶과 말씀, 흥사단과 독립운동, 오늘의 리더십까지 편하게 물어보세요. 저는 선생 본인이 아니라 AI라서 틀릴 수 있어요. 중요한 건 책이나 흥사단 자료로 꼭 확인해 주세요.
+              </p>
+              <p className="text-[12px] leading-relaxed break-keep text-ink-faint">대화 내용은 답변을 만들기 위해 Google Gemini로 전송돼요. 자세한 내용은 개인정보 처리방침에 있어요.</p>
+              <ul className="mt-1 flex flex-wrap justify-center gap-2">
+                {DOSAN_AI_SUGGESTIONS.map((suggestion) => (
+                  <li key={suggestion}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDraft(suggestion);
+                        inputRef.current?.focus();
+                      }}
+                      className="rounded-full bg-brand-50 px-3.5 py-2 text-[13.5px]! font-semibold text-brand-500 active:bg-brand-100"
+                    >
+                      {suggestion}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : messages.length === 0 ? (
             /*
               빈 방 안내 — 대화 칸(입력줄 자리 104px을 뺀 곳)의 한가운데 (2026-09-27 사용자 요청).
@@ -514,6 +561,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                     senderPhoto={
                       photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
                     }
+                    isAi={message.senderId === DOSAN_AI_UID}
                     /* 고치기·지우기는 내 메시지에만. 남의 말은 보안 규칙도 막습니다. */
                     menuOpen={menuForId === message.id}
                     onOpenMenu={() => setMenuForId(message.id)}
@@ -538,6 +586,19 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                   />
                 ))}
               </ol>
+              {aiPending ? (
+                <div className="mt-2.5 flex items-end gap-2" aria-live="polite">
+                  <DosanAiAvatar size={32} />
+                  <p className="rounded-3xl rounded-bl-lg bg-fill px-4 py-2.5 text-[15px] text-ink-faint shadow-[var(--shadow-card)]">
+                    <span className="sr-only">도산 AI가 입력 중</span>
+                    <span aria-hidden="true" className="inline-flex gap-1">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:150ms]" />
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:300ms]" />
+                    </span>
+                  </p>
+                </div>
+              ) : null}
             </>
           )}
           <div ref={bottomRef} />
@@ -799,6 +860,7 @@ function MessageRow({
   isMine,
   senderName,
   senderPhoto,
+  isAi,
   menuOpen,
   onOpenMenu,
   onCloseMenu,
@@ -812,6 +874,8 @@ function MessageRow({
   isMine: boolean;
   senderName: string;
   senderPhoto: string | null;
+  /** 도산 AI가 보낸 말(2026-10-12) — "島" 프로필, 차단 없음 */
+  isAi: boolean;
   /** 이 말풍선 위에 수정·삭제 박스가 떠 있는지 */
   menuOpen: boolean;
   /** 꾸욱 눌렀을 때 할 일. 내 말이면 수정·삭제, 남의 말이면 신고·차단 박스가 뜹니다(2026-10-06). */
@@ -861,12 +925,16 @@ function MessageRow({
       <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
         {!isMine ? (
           showSender ? (
+            isAi ? (
+              <DosanAiAvatar size={32} />
+            ) : (
             <Avatar
               src={senderPhoto}
               name={senderName}
               seed={message.senderId}
               size={32}
             />
+            )
           ) : (
             // 같은 사람이 이어 보낼 때, 사진 자리만큼 비워 말풍선을 나란히 세웁니다.
             <div className="w-8 shrink-0" aria-hidden="true" />
@@ -959,14 +1027,18 @@ function MessageRow({
                     >
                       신고하기
                     </button>
-                    <span className="h-px bg-white/15" aria-hidden="true" />
-                    <button
-                      type="button"
-                      onClick={onBlock}
-                      className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D]"
-                    >
-                      차단하기
-                    </button>
+                    {isAi ? null : (
+                      <>
+                        <span className="h-px bg-white/15" aria-hidden="true" />
+                        <button
+                          type="button"
+                          onClick={onBlock}
+                          className="px-3.5 py-2 text-[13px]! font-bold whitespace-nowrap text-red-400 transition active:bg-[#40464D]"
+                        >
+                          차단하기
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </div>

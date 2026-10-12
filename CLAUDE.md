@@ -103,3 +103,14 @@ Claude Code와 이 저장소만 있으면 어느 컴퓨터에서든 바로 이�
   `android/keystore.properties` → `bundleRelease` → Play Console 입력·비공개 테스트 12명 14일 → **첫 업로드 뒤 앱 서명 SHA-1/256을 Firebase에 추가**(안 하면 스토어 앱에서 구글 로그인·휴대폰 인증 실패).
 - **보안 주의**: ① 카카오 앱 복귀는 커스텀 스킴이라 다른 앱이 가로챌 수 있음 → 나중에 App Links(assetlinks.json)로. ② **심사용 시험 계정은 심사가 끝나면 반드시 `delete`** (번호+코드를 아는 누구나 로그인 가능, 이 앱은 가입자 누구나 원우수첩을 읽어 원우 정보가 노출됨).
   ③ 키스토어·비밀번호·서비스 계정은 저장소에 넣지 않음(`android/.gitignore`·루트 `.gitignore`가 `keystore.properties`·`*.jks` 차단). `allowBackup=false`. ④ 규칙·서버 배포는 웹 먼저, 규칙 나중(위 "보안 점검 후 수정").
+
+## 도산 AI (2026-10-12 사용자 "뉴웨이브앱의 신앙 AI처럼 도산 안창호 선생에 대해 대화할 수 있는 AI를 채팅창에 추가")
+
+채팅 탭 목록 맨 위에 모든 원우에게 늘 있는 "도산 AI [AI]"(주황 바탕 흰 "島" 프로필) — 뉴웨이브앱 신앙 AI와 같은 방식.
+- **방**: 평범한 1:1 방 `uid__dosan-ai`(`lib/dosan-ai.ts` DOSAN_AI_UID·dosanRoomId). 한 마디도 없어도 목록에 빈 껍데기로 서 있음. 보안 규칙은 **바꾸지 않음**(원우가 자기 방에 쓰고, AI 답은 서버 Admin SDK가 씀).
+- **답**: 원우가 보낸 뒤 브라우저가 `askDosanAi()`(`lib/dosan-ai-client.ts`, apiUrl 사용)로 `/api/dosan-ai`를 부름 → 서버가 최근 24개 대화 + 지시문을 **Gemini 무료 키**(`GEMINI_API_KEY`)로 보내 카톡체 짧은 답 1~3개를 받아 방에 AI 이름(senderId dosan-ai)으로 씀(1.5~5초 뒤 하나씩, 방 위에 "입력 중…" 말풍선).
+- **지어내지 않기**: 지시문 끝 "참고 자료"로 이 앱이 확인해 둔 사실(`dosan-quiz-answers.ts`의 해설 전부 = `DOSAN_QUIZ_FACTS`)과 흥사단 "도산의 말씀"(`quotes.ts`)을 깔고, 자료에 없는 말씀은 도산이 한 것처럼 인용하지 말고 출처 불분명하다고 말하게 함. 선생 본인인 척(1인칭) 금지, 정치 편들기·코딩·숙제 사양, 평가가 갈리는 주제는 공정하게. 해설을 고치면 AI 자료도 같이 바뀜.
+- **시험 결과**(2026-10-12, 로컬 + 실제 DB 시험 후 방·한도 문서 삭제): 임시정부 초대 대통령 함정 질문 바로잡음(이승만, 도산은 내무총장), 출처 없는 "청년이여 꿈을 꾸어라" 인용 거절, "사람이야?"에 AI라고 답, 자살 신호에 공감 + 109 안내, 선거·코딩 사양, 광복 못 보심·점진학교(1899, 강서) 정확. ★ 그래도 틀릴 수 있어 방 위에 안내가 있음. 지시문(`SYSTEM`)은 운영진이 한 번 읽어 보면 좋음.
+- **위기·한도**: 자해·자살 말이 걸리면(CRISIS) 109 안내를 서버가 덧붙임. 한 사람 하루 30번·전체 하루 600번(`dosanAiUsage`, 서버만), 방 25초 잠금. 탈퇴하면 방·메시지 통째로 삭제(`account-withdraw-server.ts`). 개인정보 처리방침에 Gemini 전송·대화 삭제 안내(2026-10-12). ★ 무료 Gemini는 Google이 서비스 개선에 쓸 수 있음 — 민감한 대화가 늘면 유료 등급으로.
+- **사람 채팅과 다른 점**: 푸시 알림 없음(AI 방엔 `requestPush` 안 함), 상대 탈퇴·차단·인원수·신고 차단 없음(AI 말풍선 메뉴엔 차단 빠짐).
+- ★★ **켜는 일(배포 때, 사용자가 "배포해줘" 하면)**: ① Secret Manager에 `GEMINI_API_KEY` 만들기(`firebase.cmd apphosting:secrets:set GEMINI_API_KEY --project aegiaeta10` — 뉴웨이브와 같은 결제 없는 무료 키, 값은 로컬 .env.local에 있음) — **이 명령이 apphosting.yaml에 secret 줄을 자동으로 넣으니 직접 또 적지 말 것(중복이면 빌드 실패)**, 백엔드 접근 허용 `apphosting:secrets:grantaccess GEMINI_API_KEY --backend agikaeta` ② `npm run deploy`. 키가 없으면 AI가 "지금은 답을 못 하고 있어요"만 보임.

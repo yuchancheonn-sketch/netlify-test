@@ -4,6 +4,8 @@ import GuestGate from "@/components/GuestGate";
 import { useMemo } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import DosanAiAvatar from "@/components/DosanAiAvatar";
+import { DOSAN_AI_NAME, dosanRoomId } from "@/lib/dosan-ai";
 import MidEllipsis from "@/components/MidEllipsis";
 import CohortPicker from "@/components/CohortPicker";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
@@ -67,14 +69,18 @@ function ChatListPageContent() {
    * 목록에서 사라지지는 않습니다 — 한 마디도 없던 단체방은 시각이 없어 맨 아래에 섭니다.
    */
   const chatPrefs = useChatPrefs(uid);
+  // 도산 AI 방(2026-10-12): 모든 원우 목록 맨 위에 늘 있음 — 아직 한 마디도 없어도(문서가 없어도) 빈 껍데기를 세워 둠
+  const aiRoomId = uid ? dosanRoomId(uid) : "";
   const rooms = useMemo(() => {
-    const all = cohortRoom ? [cohortRoom, ...directRooms] : [...directRooms];
+    const aiRoom: ChatRoomDoc = directRooms.find((room) => room.id === aiRoomId) ?? { id: aiRoomId, kind: "direct", title: "", cohort: "", memberUids: [], lastMessageText: "", lastMessageSenderId: "", lastMessageAt: null };
+    const others = directRooms.filter((room) => room.id !== aiRoomId);
+    const all = cohortRoom ? [cohortRoom, ...others] : [...others];
     const recentFirst = (a: ChatRoomDoc, b: ChatRoomDoc) =>
       (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0);
     const favorite = all.filter((room) => chatPrefs.favorites.has(room.id)).sort(recentFirst);
     const rest = all.filter((room) => !chatPrefs.favorites.has(room.id)).sort(recentFirst);
-    return [...favorite, ...rest];
-  }, [cohortRoom, directRooms, chatPrefs.favorites]);
+    return [...(aiRoomId ? [aiRoom] : []), ...favorite, ...rest];
+  }, [cohortRoom, directRooms, chatPrefs.favorites, aiRoomId]);
 
   const roomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
   const { readMillis, loaded } = useChatReadTimes(uid, roomIds);
@@ -162,6 +168,9 @@ function ChatListPageContent() {
             <ul className="flex flex-col">
               {rooms.map((room) => (
                 <li key={room.id}>
+                  {room.id === aiRoomId ? (
+                    <AiRoomRow room={room} unread={unreadRooms[room.id] ?? false} />
+                  ) : (
                   <ChatRoomRow
                     room={room}
                     withdrawn={isWithdrawnPeer(room.id, uid ?? "", members, !membersLoading)}
@@ -172,6 +181,7 @@ function ChatListPageContent() {
                     favorite={chatPrefs.favorites.has(room.id)}
                     muted={chatPrefs.muted.has(room.id)}
                   />
+                  )}
                 </li>
               ))}
             </ul>
@@ -184,6 +194,32 @@ function ChatListPageContent() {
         )}
       </div>
     </>
+  );
+}
+
+/** 도산 AI 한 줄(2026-10-12) — 사람 대화 줄과 같은 모양, 사진 자리는 "島" 프로필, 이름 옆 "AI" 표시. 한 마디도 없으면 안내 문구. */
+function AiRoomRow({ room, unread }: { room: ChatRoomDoc; unread: boolean }) {
+  const preview = previewText(room);
+  return (
+    <Link href={chatHref(room.id)} className="flex items-center gap-3.5 px-4 py-[9px] transition-colors active:bg-fill">
+      <DosanAiAvatar size={56} squircle className="translate-y-[2px]" />
+      <div className="min-w-0 flex-1">
+        <p className="flex min-w-0 items-center gap-1.5 text-[16px] font-bold text-ink">
+          <span className="truncate">{DOSAN_AI_NAME}</span>
+          <span className="shrink-0 rounded-md bg-brand-50 px-1.5 py-px text-[11px] font-bold text-brand-500">AI</span>
+        </p>
+        <p className="mt-px line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">{preview || "도산 안창호 선생에 대해 궁금한 걸 편하게 물어보세요."}</p>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1.5 self-start pt-1">
+        {room.lastMessageAt ? <time className="text-[12px] text-ink-faint">{formatChatListTime(room.lastMessageAt.toDate())}</time> : null}
+        {unread ? (
+          <span className="flex h-[22px] items-center">
+            <span aria-hidden="true" className="h-[10px] w-[10px] rounded-full bg-red-500" />
+            <span className="sr-only">새 메시지 있음</span>
+          </span>
+        ) : null}
+      </div>
+    </Link>
   );
 }
 

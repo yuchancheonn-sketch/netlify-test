@@ -164,3 +164,9 @@ const DOSAN_QUIZ_ANSWERS: Record<string, DosanQuizAnswer> = {
 export function answerFor(quizId: string): DosanQuizAnswer | null {
   return DOSAN_QUIZ_ANSWERS[quizId] ?? null;
 }
+
+/**
+ * 해설 문장 전부 — 도산 AI(app/api/dosan-ai)가 "확인된 사실 자료"로 씁니다(2026-10-12). 모델이 기억에만 기대 지어내지 않도록 이 앱이 이미 확인해 둔 내용을 바탕에 깔기 위해서입니다.
+ * 해설을 더하거나 고치면 AI의 자료도 함께 바뀝니다.
+ */
+export const DOSAN_QUIZ_FACTS: string[] = Object.values(DOSAN_QUIZ_ANSWERS).flatMap((entry) => entry.explanation);

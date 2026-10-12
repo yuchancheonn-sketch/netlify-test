@@ -30,6 +30,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { DOSAN_AI_NAME, DOSAN_AI_UID } from "@/lib/dosan-ai";
 import { requestPush } from "@/lib/push";
 import { cohortOf } from "@/lib/cohort";
 import {
@@ -93,6 +94,7 @@ export function roomTitle(
 ): string {
   if (room.cohort) return cohortRoomTitle(room.cohort);
   const other = otherUidOf(room.id, myUid);
+  if (other === DOSAN_AI_UID) return DOSAN_AI_NAME;
   return (other && nameByUid.get(other)) || "원우";
 }
 
@@ -116,6 +118,7 @@ export function isWithdrawnPeer(
 ): boolean {
   if (!loaded || cohortOfRoomId(roomId)) return false;
   const other = otherUidOf(roomId, myUid);
+  if (other === DOSAN_AI_UID) return false; // 도산 AI는 명단에 없지만 탈퇴한 사람이 아님(2026-10-12)
   return Boolean(other) && !members.some((member) => member.uid === other);
 }
 
@@ -250,7 +253,8 @@ export async function sendChatMessage({
 
   // 상대 원우 폰에 알림이 뜨게 합니다. 곁들이는 일이라 기다리지 않습니다.
   // 2026-10-06 사용자 요청 (보안 점검 후 수정): 서버가 문구를 클라이언트 말이 아니라 저장된 메시지(messageId)에서 읽습니다.
-  void requestPush("chat", { roomId, messageId: sentMessage.id });
+  // 도산 AI 방은 받는 사람이 사람이 아니라 알림이 없습니다(답은 서버가 방에 씀, 2026-10-12).
+  if (otherUidOf(roomId, sender.uid) !== DOSAN_AI_UID) void requestPush("chat", { roomId, messageId: sentMessage.id });
 }
 
 /**
