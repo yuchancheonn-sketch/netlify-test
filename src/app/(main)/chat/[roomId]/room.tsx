@@ -587,7 +587,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                 ))}
               </ol>
               {aiPending ? (
-                <div className="mt-2.5 flex items-end gap-2" aria-live="polite">
+                <div className="mt-2.5 -ml-[8.5px] flex items-end gap-2" aria-live="polite">
                   <DosanAiAvatar size={32} />
                   <p className="rounded-3xl rounded-bl-lg bg-fill px-4 py-2.5 text-[15px] text-ink-faint shadow-[var(--shadow-card)]">
                     <span className="sr-only">도산 AI가 입력 중</span>
@@ -922,7 +922,8 @@ function MessageRow({
         <div className="mt-2 mb-1 h-1" aria-hidden="true" />
       ) : null}
 
-      <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+      {/* 좌우 위치를 뉴웨이브앱과 똑같이(2026-10-12 사용자): 상대 말(사진·이름·말풍선)은 오른쪽으로 거리를 8.5px 줄여 왼쪽 끝에 더 붙이고, 내 말풍선은 오른쪽 끝에 6px 더 붙입니다(뉴웨이브 -ml-[8.5px]·-mr-1.5). */}
+      <div className={`flex items-end gap-2 ${isMine ? "-mr-1.5 justify-end" : "-ml-[8.5px] justify-start"}`}>
         {!isMine ? (
           showSender ? (
             isAi ? (
