@@ -114,7 +114,7 @@ function ChatListPageContent() {
      *   화면 전체를 덮고, body 바탕(회색)보다는 위, 목록보다는 아래에 깔립니다.
      */
     <>
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
       {/*
         제목은 "채팅"입니다 — 기수 단체방이 생겨 1:1만 있는 화면이 아니게 됐습니다
         (2026-09-22. 그 전에는 "1:1 채팅"이었습니다).

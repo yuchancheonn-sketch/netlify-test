@@ -73,7 +73,7 @@ function NotificationsPageContent() {
         밀 때 같이 밀려 나갑니다. 밖에 두면 민 자리로도 흰 바탕이 드러납니다.
     */
     <>
-    <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+    <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
     {/*
       빈 여백을 끌어도 전 화면으로 (2026-09-27 사용자 "설정창처럼") — 밀리는 상자를 "화면 높이 − 탭 알약 자리"로
       늘려(MainShell의 MAIN_FILL_MIN_HEIGHT) 알림이 적어도 화면 끝까지 손짓을 받습니다.

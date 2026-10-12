@@ -51,7 +51,7 @@ function ProfilePageContent() {
       부모의 안쪽 높이에 맞추면 그 여백을 빼고 딱 맞습니다.
     */
     <div
-      className="-mb-[calc(78px+env(safe-area-inset-bottom))] min-h-full bg-surface pb-[calc(78px+env(safe-area-inset-bottom))]"
+      className="-mb-[calc(78px+env(safe-area-inset-bottom))] min-h-full bg-page-surface pb-[calc(78px+env(safe-area-inset-bottom))]"
       {...swipe.handlers}
       style={{ ...swipe.touchAction, ...swipe.slideStyle }}
     >

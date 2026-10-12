@@ -399,12 +399,12 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
         이게 없으면 대화가 길어질 때 상자가 늘어나 버리고 스크롤이 안 생깁니다.
     */
     <div
-      className="flex h-dvh flex-col overflow-hidden bg-surface"
+      className="flex h-dvh flex-col overflow-hidden bg-page-surface"
       {...swipe.handlers}
       style={swipe.touchAction}
     >
       <div
-        className="relative z-10 flex min-h-0 flex-1 flex-col bg-surface"
+        className="relative z-10 flex min-h-0 flex-1 flex-col bg-page-surface"
         style={slide}
         onTransitionEnd={swipe.onSlideSettled}
       >
@@ -427,7 +427,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             아래 줄 사이 선(border-b)은 단추 그림자와 겹쳐 지저분해 뺐습니다.
         */}
         <header
-          className="sticky top-0 z-20 flex items-center justify-between bg-surface px-3 pb-2.5"
+          className="sticky top-0 z-20 flex items-center justify-between bg-page-surface px-3 pb-2.5"
           style={{ paddingTop: "calc(8px + env(safe-area-inset-top))" }}
         >
           <button
@@ -613,7 +613,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
         인라인 style로 두면 CSS가 그걸 이기지 못합니다.
       */}
       <div
-        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-surface/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+        className="chat-composer fixed inset-x-0 bottom-0 z-20 bg-page-surface/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
         style={slide}
       >
         {/*

@@ -19,7 +19,7 @@ function NewEventPageContent({ date }: { date: string }) {
         흰 바탕 (2026-09-25 사용자 "배경색은 흰색으로, 박스는 회색으로"). 화면 전체에 붙박이 흰 판을 맨 뒤(-z-10)에 깝니다 —
         내용이 짧아도 아래 탭바 둘레까지 흰색이 되게. 제목 줄도 흰색(tone="surface")이어야 스크롤할 때 띠가 안 생깁니다.
       */}
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
       <PageHeader title="일정 등록" back tone="surface" />
       {/* 저장하면 늘 홈으로 — 모임 목록(/events)은 2026-09-26에 없앴습니다. */}
       <EventForm initialDate={date} doneHref="/home" />

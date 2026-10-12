@@ -113,7 +113,7 @@ export default function PageHeader({
      */
     <header
       className={`page-header sticky top-0 z-30 flex gap-3 px-4 pb-1.5 ${
-        tone === "surface" ? "bg-surface" : "bg-canvas"
+        tone === "surface" ? "bg-page-surface" : "bg-canvas"
       } ${eyebrow ? "items-start" : "items-center"}`}
     >
       {showBack ? (

@@ -74,7 +74,7 @@ export default function LibraryPage() {
       fallback={
         <>
           {/* 기다리는 동안도 흰 바탕 — 아래 LibraryTabs와 같게. */}
-          <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+          <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
           <PageHeader
             tone="surface"
             title={<Skeleton className="h-[28px] w-[200px] rounded-lg" />}
@@ -168,7 +168,7 @@ function LibraryTabs() {
         높이를 정해 두지 않아 목록이 짧을 때 아래로 회색이 드러납니다(chat/page.tsx 주석).
         제목 줄도 tone="surface"로 맞춥니다.
       */}
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
       <PageHeader
         tone="surface"
         title={

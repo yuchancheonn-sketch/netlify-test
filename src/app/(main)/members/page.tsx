@@ -286,14 +286,14 @@ export default function MembersPage() {
         나누면서(흰 바탕 한 장) 그 아래로 회색이 남던 것을 없앱니다. 일정 등록 화면과 같은 방식으로 맨 뒤(-z-10)에
         붙박이 흰 판을 깝니다. 원우 추가하기 단추는 흰 바탕 위에서 헤어라인 테두리로 구별됩니다.
       */}
-      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-surface" />
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-page-surface" />
       {/*
         ★ 위쪽 흰 구역 전체(제목 줄 · 검색 · 구분 고르개)가 붙박이입니다 (2026-09-25 사용자 요청 —
           예전엔 제목 줄만 붙고 검색·고르개는 목록과 함께 굴러갔습니다).
           PageHeader 자체도 sticky지만 이 상자 안에서는 제자리라, 상자째로 붙는 것과 같습니다.
           z-30은 PageHeader와 같은 층입니다(그 주석 참고).
       */}
-      <div className="sticky top-0 z-30 bg-surface">
+      <div className="sticky top-0 z-30 bg-page-surface">
       <PageHeader
         title={
           <span className="flex items-center gap-2">
@@ -333,7 +333,7 @@ export default function MembersPage() {
             제목 줄은 붙박이라 본문이 그 뒤로 지나가므로, 한쪽만 흰색이면 스크롤할 때
             제목 줄이 다른 색 띠로 떠 보입니다.
         */}
-        <div className="bg-surface px-4 pt-[8.5px]">
+        <div className="bg-page-surface px-4 pt-[8.5px]">
           {/* 검색 */}
           <div className="relative">
             {/*
@@ -540,7 +540,7 @@ export default function MembersPage() {
           {busy ? (
             /* 자리 표시도 아래 진짜 목록과 같은 짜임입니다 — 13.5px씩 띄운 박스, 높이 87px(사진 63px + 안쪽 위아래 12px씩). */
             // 자리 표시도 선 목록 모양으로(2026-09-26) — 흰 바탕 한 장, 줄마다 사진 자리만 회색.
-            <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
+            <ul className="-mx-4 -mt-[18px] bg-page-surface px-4 pt-2">
               {[0, 1, 2, 3].map((key) => (
                 <li key={key} className="border-t border-line py-3 first:border-t-0">
                   <Skeleton className="h-[76.5px] w-[136px] rounded-[10px]" />
@@ -604,7 +604,7 @@ export default function MembersPage() {
                 줄 사이 선은 li의 border-t(첫 줄 빼고). 박스로 되돌리려면 git 기록의 gap-[13.5px] 목록과 MemberRow의 흰 박스.
             */
             // pt-2 — 첫 원우 위 흰 여백을 8px 더 (2026-09-26 사용자 "첫 번째 사람 위 여백 더"; 줄 안 12px과 합쳐 20px).
-            <ul className="-mx-4 -mt-[18px] bg-surface px-4 pt-2">
+            <ul className="-mx-4 -mt-[18px] bg-page-surface px-4 pt-2">
               {visible.map((entry) => (
                 <li key={entry.key} className="border-t border-line first:border-t-0">
                   <MemberRow
