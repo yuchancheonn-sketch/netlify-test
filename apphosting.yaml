@@ -58,3 +58,7 @@ env:
   - variable: NEWS_CRON_TOKEN
     secret: NEWS_CRON_TOKEN
     availability: [ RUNTIME ]
+  # 도산 AI(채팅 탭, 2026-10-12) — Gemini 무료 키(결제 없는 별도 프로젝트의 키). 값은 Secret Manager에만 있습니다.
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [ RUNTIME ]
