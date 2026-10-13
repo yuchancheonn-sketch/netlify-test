@@ -178,7 +178,7 @@ function committeeGoal(info: CommitteeInfoDoc | undefined): string {
  */
 function CommitteeCardBack({ committee, kind = "committee" }: { committee: { name: string }; kind?: "committee" | "club" }) {
   const { data } = useCommitteeInfo();
-  const info = data.get(committee.name);
+  const info = data.get(infoDocId(committee.name));
   const [editing, setEditing] = useState(false);
   const requireLogin = useRequireLogin();
 
@@ -269,7 +269,7 @@ function CommitteeEditSheet({
       // 응답을 잠깐만 기다리고 닫습니다 — 이유는 lib/firestore-commit.ts에.
       await commitWrite(
         setDoc(
-          doc(db, "committeeInfo", committee.name),
+          doc(db, "committeeInfo", infoDocId(committee.name)),
           // 옛 두 칸은 지웁니다 — 남겨 두면 목표를 비웠을 때 옛 글이 되살아나 보입니다.
           { goal: goal.trim(), about: deleteField(), projects: deleteField(), updatedAt: serverTimestamp() },
           { merge: true },
@@ -328,7 +328,7 @@ export function committeeSlides(): {
 }
 
 /**
- * 동호회 카드 — 소식 탭 "동호회" 칸 (2026-10-06 사용자 요청: 목록 7개 그대로).
+ * 동호회 카드 — 소식 탭 "동호회" 칸 (2026-10-06 사용자 요청: 목록 7개 그대로 → 2026-10-13 사용자 요청으로 6개 동호회·장 이름으로 편성 변경).
  * 위원회 카드와 같은 모양(앞면 + 눌러서 뒤집는 뒷면의 목표 글)인데, 사람은 담당 한 명뿐이라 칸이 하나입니다.
  * 직함(부회장·위원장)은 사용자가 준 목록에 적힌 경우만 달고, 정해지지 않은 자리는 "미정"으로 둡니다.
  * 뒷면 글은 위원회와 같은 committeeInfo/{동호회 이름}에 저장됩니다(원우 누구나 고침 — 규칙이 문서 이름을 가리지 않음).
@@ -343,14 +343,16 @@ interface Club {
   role?: string;
 }
 
+/** 문서 id에는 "/"를 못 씀 — "등산/트레킹 동호회" 같은 이름은 "/"를 "-"로 바꿔 저장·조회(2026-10-13 사용자 요청 동호회 편성) */
+const infoDocId = (name: string) => name.replace(/\//g, "-");
+
 const CLUBS: Club[] = [
-  { name: "등산동호회", leader: "김정헌", role: "부회장" },
-  { name: "골프동호회", leader: "채승수", role: "위원장" },
-  { name: "예술/와인동호회", leader: "손은우" },
-  { name: "풋살동호회", leader: "류종범", role: "위원장" },
-  { name: "인문학동호회", leader: null },
-  { name: "미식동호회", leader: "박준영" },
-  { name: "투자동호회", leader: null },
+  { name: "골프동호회", leader: "채승수" },
+  { name: "등산/트레킹 동호회", leader: "김정헌" },
+  { name: "런닝 동호회", leader: "이우선" },
+  { name: "와인 동호회", leader: "손은우" },
+  { name: "(투자)연구회 동호회", leader: "채승수" },
+  { name: "독서 동호회", leader: null },
 ];
 
 function ClubCard({ club }: { club: Club }) {
@@ -360,7 +362,7 @@ function ClubCard({ club }: { club: Club }) {
 
       {/* 담당 — 위원회 카드의 위원장 칸과 같은 옅은 주황 바탕. */}
       <div className="mt-3 rounded-2xl bg-brand-50 px-3.5 py-3">
-        <p className="mb-2 text-[13px] font-bold text-brand-500">담당</p>
+        <p className="mb-2 text-[13px] font-bold text-brand-500">장</p>
         {club.leader ? (
           <p className="flex items-baseline gap-1.5 text-[17px] leading-tight font-bold text-ink">
             {club.leader}
@@ -377,7 +379,7 @@ function ClubCard({ club }: { club: Club }) {
   );
 }
 
-/** 동호회 7개 카드 — 소식 탭 동호회 칸에서 올라온 소식 카드 앞에 한 장씩 넘겨 봅니다(committeeSlides와 같은 모양). */
+/** 동호회 6개 카드 — 소식 탭 동호회 칸에서 올라온 소식 카드 앞에 한 장씩 넘겨 봅니다(committeeSlides와 같은 모양). */
 export function clubSlides(): {
   id: string;
   title: string;
