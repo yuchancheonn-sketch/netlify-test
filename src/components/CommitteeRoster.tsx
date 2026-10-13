@@ -184,7 +184,11 @@ function CommitteeCardBack({ committee, kind = "committee" }: { committee: { nam
   const [editing, setEditing] = useState(false);
   const requireLogin = useRequireLogin();
 
-  const sections = [{ label: "목표", value: committeeGoal(info) }];
+  // 동호회는 "동호회 설명"을 목표 위에 하나 더 보임 (2026-10-13 사용자 요청)
+  const sections = [
+    ...(kind === "club" ? [{ label: "동호회 설명", value: info?.description?.trim() ?? "" }] : []),
+    { label: "목표", value: committeeGoal(info) },
+  ];
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
@@ -237,6 +241,7 @@ function CommitteeCardBack({ committee, kind = "committee" }: { committee: { nam
           kind={kind}
           initial={committeeGoal(info)}
           initialMembers={info?.members ?? []}
+          initialDescription={info?.description ?? ""}
           onClose={() => setEditing(false)}
         />
       ) : null}
@@ -254,16 +259,19 @@ function CommitteeEditSheet({
   kind = "committee",
   initial,
   initialMembers = [],
+  initialDescription = "",
   onClose,
 }: {
   committee: { name: string };
   kind?: "committee" | "club";
   initial: string;
   initialMembers?: string[];
+  initialDescription?: string;
   onClose: () => void;
 }) {
   const [goal, setGoal] = useState(initial);
   const [members, setMembers] = useState<string[]>(initialMembers);
+  const [description, setDescription] = useState(initialDescription);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -280,7 +288,7 @@ function CommitteeEditSheet({
           {
             goal: goal.trim(),
             // 동호회만 위원 명단도 저장(2026-10-13 사용자 요청) — 위원회 문서에는 칸을 안 만듦
-            ...(kind === "club" ? { members } : {}),
+            ...(kind === "club" ? { members, description: description.trim() } : {}),
             about: deleteField(),
             projects: deleteField(),
             updatedAt: serverTimestamp(),
@@ -302,6 +310,19 @@ function CommitteeEditSheet({
       onClose={onClose}
       footer={<SheetActions onCancel={onClose} confirmLabel="저장" onConfirm={() => void save()} disabled={saving} loading={saving} />}
     >
+      {kind === "club" ? (
+        <div className="mb-6">
+          <FieldLabel htmlFor="club-description">동호회 설명</FieldLabel>
+          <textarea
+            id="club-description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value.slice(0, 1000))}
+            rows={4}
+            placeholder="이 동호회가 어떤 모임인지 적어 주세요."
+            className={`${flatInputClassName} resize-none leading-relaxed`}
+          />
+        </div>
+      ) : null}
       {kind === "club" ? <ClubMemberPicker picked={members} onChange={setMembers} /> : null}
       <div className="mb-6">
         <FieldLabel htmlFor="committee-goal">목표</FieldLabel>
@@ -417,7 +438,9 @@ const CLUBS: Club[] = [
 
 function ClubCard({ club }: { club: Club }) {
   const { data } = useCommitteeInfo();
-  const members = (data.get(infoDocId(club.name))?.members ?? []).map(memberName);
+  const clubInfo = data.get(infoDocId(club.name));
+  const members = (clubInfo?.members ?? []).map(memberName);
+  const description = clubInfo?.description?.trim() ?? "";
   return (
     // 기본 높이를 위원회 카드만큼 키움(2026-10-13 사용자 "기본적인 카드 높이 높여주고") — 위원이 많아지면 그만큼 더 늘어남.
     <article className="min-h-[400px] rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
@@ -428,6 +451,9 @@ function ClubCard({ club }: { club: Club }) {
           {(club.leader ? 1 : 0) + members.length}명
         </span>
       </div>
+
+      {/* 동호회 설명 (2026-10-13 사용자 요청) — 앞면에선 최대 3줄, 전체는 뒷면에. 없으면 칸을 안 그림. */}
+      {description ? <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed break-keep whitespace-pre-line text-ink-soft">{description}</p> : null}
 
       {/* 장 — 위원회 카드의 위원장 칸과 같은 옅은 주황 바탕. */}
       <div className="mt-3 rounded-2xl bg-brand-50 px-3.5 py-3">

@@ -350,7 +350,7 @@ service cloud.firestore {
     match /committeeInfo/{committeeId} {
       allow read: if true;
       allow create, update: if isMember()
-                            && request.resource.data.keys().hasOnly(['goal', 'about', 'projects', 'members', 'updatedAt'])
+                            && request.resource.data.keys().hasOnly(['goal', 'about', 'projects', 'members', 'description', 'updatedAt'])
                             && request.resource.data.get('goal', '') is string
                             && request.resource.data.get('goal', '').size() <= 2000
                             && request.resource.data.get('about', '') is string
@@ -358,7 +358,9 @@ service cloud.firestore {
                             && request.resource.data.get('projects', '') is string
                             && request.resource.data.get('projects', '').size() <= 2000
                             && request.resource.data.get('members', []) is list
-                            && request.resource.data.get('members', []).size() <= 60;
+                            && request.resource.data.get('members', []).size() <= 60
+                            && request.resource.data.get('description', '') is string
+                            && request.resource.data.get('description', '').size() <= 1000;
       allow delete: if isAdmin();
     }
 

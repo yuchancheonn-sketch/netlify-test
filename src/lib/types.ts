@@ -159,6 +159,8 @@ export interface CommitteeInfoDoc {
   projects?: string;
   /** 동호회 위원 명단 — "u:<uid>|이름"(가입한 원우) 또는 "r:<명단 id>|이름"(아직 가입 전). 동호회 카드만 씀 (2026-10-13 사용자 요청) */
   members?: string[];
+  /** 동호회 설명 — 어떤 모임인지 소개 글 (2026-10-13 사용자 요청, 동호회 카드만 씀) */
+  description?: string;
   updatedAt?: Timestamp | null;
 }
 
