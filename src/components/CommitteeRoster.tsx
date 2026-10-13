@@ -272,6 +272,10 @@ function CommitteeEditSheet({
   const [goal, setGoal] = useState(initial);
   const [members, setMembers] = useState<string[]>(initialMembers);
   const [description, setDescription] = useState(initialDescription);
+  // 고친 게 있을 때만 저장 단추가 원래 색(뉴웨이브 시트와 같음, 2026-10-13 사용자 요청) — 그 전엔 옅은 색으로 눌리지 않음
+  const changed =
+    goal.trim() !== initial.trim() ||
+    (kind === "club" && (description.trim() !== initialDescription.trim() || members.length !== initialMembers.length || members.some((entry) => !initialMembers.includes(entry))));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -308,7 +312,7 @@ function CommitteeEditSheet({
     <Sheet
       title={`${committee.name} 소개`}
       onClose={onClose}
-      footer={<SheetActions onCancel={onClose} confirmLabel="저장" onConfirm={() => void save()} disabled={saving} loading={saving} />}
+      footer={<SheetActions onCancel={onClose} confirmLabel="저장" onConfirm={() => void save()} disabled={saving || !changed} loading={saving} />}
     >
       {kind === "club" ? (
         <div className="mb-6">
