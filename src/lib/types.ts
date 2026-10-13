@@ -157,6 +157,8 @@ export interface CommitteeInfoDoc {
   about?: string;
   /** 옛 칸 — 준비 중인 일·프로젝트. 위와 같음 */
   projects?: string;
+  /** 동호회 위원 명단 — "u:<uid>|이름"(가입한 원우) 또는 "r:<명단 id>|이름"(아직 가입 전). 동호회 카드만 씀 (2026-10-13 사용자 요청) */
+  members?: string[];
   updatedAt?: Timestamp | null;
 }
 

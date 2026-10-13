@@ -7,7 +7,9 @@ import { FieldError, FieldLabel, flatInputClassName } from "@/components/ui";
 import { Sheet, SheetActions } from "@/components/Sheet";
 import { db } from "@/lib/firebase";
 import { commitWrite, saveErrorMessage } from "@/lib/firestore-commit";
-import { useCommitteeInfo } from "@/lib/hooks";
+import Avatar from "@/components/Avatar";
+import { CheckIcon } from "@/components/icons";
+import { useApprovedMembers, useCommitteeInfo, useRoster } from "@/lib/hooks";
 import type { CommitteeInfoDoc } from "@/lib/types";
 
 /**
@@ -234,6 +236,7 @@ function CommitteeCardBack({ committee, kind = "committee" }: { committee: { nam
           committee={committee}
           kind={kind}
           initial={committeeGoal(info)}
+          initialMembers={info?.members ?? []}
           onClose={() => setEditing(false)}
         />
       ) : null}
@@ -250,14 +253,17 @@ function CommitteeEditSheet({
   committee,
   kind = "committee",
   initial,
+  initialMembers = [],
   onClose,
 }: {
   committee: { name: string };
   kind?: "committee" | "club";
   initial: string;
+  initialMembers?: string[];
   onClose: () => void;
 }) {
   const [goal, setGoal] = useState(initial);
+  const [members, setMembers] = useState<string[]>(initialMembers);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -271,7 +277,14 @@ function CommitteeEditSheet({
         setDoc(
           doc(db, "committeeInfo", infoDocId(committee.name)),
           // 옛 두 칸은 지웁니다 — 남겨 두면 목표를 비웠을 때 옛 글이 되살아나 보입니다.
-          { goal: goal.trim(), about: deleteField(), projects: deleteField(), updatedAt: serverTimestamp() },
+          {
+            goal: goal.trim(),
+            // 동호회만 위원 명단도 저장(2026-10-13 사용자 요청) — 위원회 문서에는 칸을 안 만듦
+            ...(kind === "club" ? { members } : {}),
+            about: deleteField(),
+            projects: deleteField(),
+            updatedAt: serverTimestamp(),
+          },
           { merge: true },
         ),
       );
@@ -289,6 +302,7 @@ function CommitteeEditSheet({
       onClose={onClose}
       footer={<SheetActions onCancel={onClose} confirmLabel="저장" onConfirm={() => void save()} disabled={saving} loading={saving} />}
     >
+      {kind === "club" ? <ClubMemberPicker picked={members} onChange={setMembers} /> : null}
       <div className="mb-6">
         <FieldLabel htmlFor="committee-goal">목표</FieldLabel>
         <textarea
@@ -303,6 +317,48 @@ function CommitteeEditSheet({
 
       {error ? <FieldError>{error}</FieldError> : null}
     </Sheet>
+  );
+}
+
+/**
+ * 위원 고르기 — 원우 목록에서 동그라미를 눌러 고름(뉴웨이브 "채팅방에 공유" 창과 같은 모양, 2026-10-13 사용자 요청).
+ * 후보 = 가입한 원우(승인·프로필 완료) + 아직 가입 전인 명단 칸. 고른 사람은 "키|이름"으로 저장.
+ */
+function ClubMemberPicker({ picked, onChange }: { picked: string[]; onChange: (next: string[]) => void }) {
+  const users = useApprovedMembers();
+  const roster = useRoster();
+  const people = [
+    ...users.data.map((u) => ({ key: `u:${u.uid}`, name: u.name, photoURL: u.photoURL, seed: u.uid })),
+    ...roster.data.filter((r) => !r.linkedUid).map((r) => ({ key: `r:${r.id}`, name: r.name, photoURL: null, seed: r.id })),
+  ].sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  const pickedKeys = new Set(picked.map(memberKey));
+
+  function toggle(person: { key: string; name: string }) {
+    onChange(pickedKeys.has(person.key) ? picked.filter((entry) => memberKey(entry) !== person.key) : [...picked, `${person.key}|${person.name}`].slice(0, 60));
+  }
+
+  return (
+    <div className="mb-6">
+      <FieldLabel>위원{picked.length ? ` (${picked.length}명)` : ""}</FieldLabel>
+      <ul className="flex flex-col">
+        {people.map((person) => {
+          const on = pickedKeys.has(person.key);
+          return (
+            <li key={person.key}>
+              <button type="button" onClick={() => toggle(person)} aria-pressed={on} className="flex w-full items-center gap-3 rounded-2xl px-1 py-2 text-left active:bg-fill">
+                <Avatar src={person.photoURL ?? undefined} name={person.name} seed={person.seed} size={40} />
+                <span className="min-w-0 flex-1 truncate text-[16px] font-medium text-ink">{person.name}</span>
+                <span aria-hidden="true" className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] ${on ? "border-brand-500 bg-brand-500 text-white" : "border-line text-transparent"}`}>
+                  <CheckIcon className="h-4 w-4" strokeWidth={3} />
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {users.loading || roster.loading ? <p role="status" className="mt-2 text-[13px] text-ink-muted">원우 목록을 불러오는 중이에요…</p> : null}
+      {users.error || roster.error ? <p role="alert" className="mt-2 text-[13px] text-ink-muted">원우 목록을 다 불러오지 못했어요. 창을 닫고 다시 열어 보세요.</p> : null}
+    </div>
   );
 }
 
@@ -346,6 +402,10 @@ interface Club {
 /** 문서 id에는 "/"를 못 씀 — "등산/트레킹 동호회" 같은 이름은 "/"를 "-"로 바꿔 저장·조회(2026-10-13 사용자 요청 동호회 편성) */
 const infoDocId = (name: string) => name.replace(/\//g, "-");
 
+/** 위원 한 줄 "키|이름"에서 이름·키만 (2026-10-13) — 이름은 고를 때의 이름이라 그 뒤 이름을 고쳐도 카드엔 옛 이름이 보임(다시 저장하면 갱신) */
+const memberName = (entry: string) => entry.slice(entry.indexOf("|") + 1);
+const memberKey = (entry: string) => entry.slice(0, entry.indexOf("|"));
+
 const CLUBS: Club[] = [
   { name: "골프동호회", leader: "채승수" },
   { name: "등산/트레킹 동호회", leader: "김정헌" },
@@ -356,11 +416,20 @@ const CLUBS: Club[] = [
 ];
 
 function ClubCard({ club }: { club: Club }) {
+  const { data } = useCommitteeInfo();
+  const members = (data.get(infoDocId(club.name))?.members ?? []).map(memberName);
   return (
-    <article className="rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
-      <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{club.name}</h3>
+    // 기본 높이를 위원회 카드만큼 키움(2026-10-13 사용자 "기본적인 카드 높이 높여주고") — 위원이 많아지면 그만큼 더 늘어남.
+    <article className="min-h-[400px] rounded-card bg-surface px-4 pt-4 pb-4 shadow-[var(--shadow-card-flat)]">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="min-w-0 truncate text-[20px] font-bold text-ink">{club.name}</h3>
+        {/* 인원 수(장 + 위원) — 위원회 카드와 같은 알약 */}
+        <span className="shrink-0 rounded-full bg-fill px-3 py-1 text-[13px] font-bold text-ink-muted tabular-nums">
+          {(club.leader ? 1 : 0) + members.length}명
+        </span>
+      </div>
 
-      {/* 담당 — 위원회 카드의 위원장 칸과 같은 옅은 주황 바탕. */}
+      {/* 장 — 위원회 카드의 위원장 칸과 같은 옅은 주황 바탕. */}
       <div className="mt-3 rounded-2xl bg-brand-50 px-3.5 py-3">
         <p className="mb-2 text-[13px] font-bold text-brand-500">장</p>
         {club.leader ? (
@@ -370,6 +439,22 @@ function ClubCard({ club }: { club: Club }) {
           </p>
         ) : (
           <p className="text-[17px] leading-tight font-bold text-ink-faint">미정</p>
+        )}
+      </div>
+
+      {/* 위원 — 부위원장 칸과 같은 옅은 회색 칸. 명단은 뒷면 "수정"에서 추가(원우 누구나). */}
+      <div className="mt-2 rounded-2xl bg-fill px-3.5 py-3">
+        <p className="mb-2 text-[13px] font-bold text-ink-soft">위원</p>
+        {members.length > 0 ? (
+          <div className="flex flex-col">
+            {members.map((name, index) => (
+              <p key={index} className="border-t border-line py-2 text-[17px] leading-tight font-bold text-ink first:border-t-0 first:pt-0 last:pb-0">
+                {name}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[15px] text-ink-faint">아직 없어요. 뒷면 &lsquo;수정&rsquo;에서 추가해 주세요.</p>
         )}
       </div>
 
