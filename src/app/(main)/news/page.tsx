@@ -29,8 +29,9 @@ import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
  */
 const SUBTABS = [
   { value: "committee", label: "위원회" },
-  { value: "member", label: "원우소식" },
+  // 2026-10-13 사용자 요청: 동호회와 원우소식 순서를 바꿈(위원회·동호회·원우소식)
   { value: "club", label: "동호회" },
+  { value: "member", label: "원우소식" },
 ] as const;
 
 export default function NewsPage() {
