@@ -30,6 +30,7 @@ import {
   deleteChatMessage,
   editChatMessage,
   otherUidOf,
+  PROFANITY_ERROR,
   sendChatMessage,
 } from "@/lib/chat-rooms";
 import { formatClockTime, formatDateDivider, isSameDay } from "@/lib/format";
@@ -347,8 +348,12 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           });
         }
       }
-    } catch {
+    } catch (caught) {
       setDraft(text);
+      if (caught instanceof Error && caught.message === PROFANITY_ERROR) {
+        setSendError("부적절한 표현이 들어 있어 보낼 수 없어요. 표현을 바꿔서 다시 보내 주세요.");
+        return;
+      }
       setSendError(
         editingId
           ? "메시지를 고치지 못했어요. 다시 시도해 주세요."

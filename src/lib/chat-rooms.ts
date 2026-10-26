@@ -31,6 +31,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DOSAN_AI_NAME, DOSAN_AI_UID } from "@/lib/dosan-ai";
+import { containsProfanity } from "@/lib/profanity";
 import { requestPush } from "@/lib/push";
 import { cohortOf } from "@/lib/cohort";
 import {
@@ -182,6 +183,8 @@ export function ensureDirectRoom(myUid: string, otherId: string): string {
  * 방 문서는 merge로 쓰기 때문에, 아직 문서가 없던 방도 첫 메시지를
  * 보내는 순간 저절로 만들어집니다.
  */
+export const PROFANITY_ERROR = "profanity";
+
 export async function sendChatMessage({
   roomId,
   sender,
@@ -200,6 +203,8 @@ export async function sendChatMessage({
   if (!roomCohort && !otherUidOf(roomId, sender.uid)) {
     throw new Error("대화방을 찾지 못했어요.");
   }
+  // 부적절한 표현은 보내지 않습니다(사용자 요청 2026-10-26 구글 플레이 출시 준비; 도산 AI 방은 제외).
+  if (otherUidOf(roomId, sender.uid) !== DOSAN_AI_UID && containsProfanity(text)) throw new Error(PROFANITY_ERROR);
 
   const senderName = sender.profile?.name || "원우";
 
@@ -283,6 +288,7 @@ export async function editChatMessage({
   /** 이게 방의 마지막 메시지인지 (맞으면 목록 미리보기도 고칩니다) */
   isLast: boolean;
 }): Promise<void> {
+  if (!roomId.endsWith(`__${DOSAN_AI_UID}`) && containsProfanity(text)) throw new Error(PROFANITY_ERROR);
   await updateDoc(doc(db, "chatRooms", roomId, "messages", messageId), {
     text,
     editedAt: serverTimestamp(),
