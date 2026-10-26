@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "152610870355",
+    "project_id": "aegiaeta10",
+    "storage_bucket": "aegiaeta10.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152610870355:android:2e8cf4a592476da746a2a6",
+        "android_client_info": {
+          "package_name": "app.web.aegiaeta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "152610870355-o34k8qscjlg0e7lkj37q8md8akmp4mbq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.web.aegiaeta",
+            "certificate_hash": "5c940514de467ff40957f9ed169592bd26e66475"
+          }
+        },
+        {
+          "client_id": "152610870355-0reprum4en5fniv12dagdat6brvjspoq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwqhe4wwcfD8cr2tUw-D_lxI7UEIQDfPk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "152610870355-0reprum4en5fniv12dagdat6brvjspoq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
