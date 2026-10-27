@@ -27,6 +27,9 @@ export function periodOf(hour: number): Period {
   return found;
 }
 
+/** 안내를 보이는 높이보다 이만큼 더 키워 위로 밀어냅니다 — 지난 대화의 맨 아래(말풍선 밑동·아바타 윗부분)가 제목 줄 아래에 살짝 비쳐 보이던 것을 막음(2026-10-27). 부르는 쪽의 "지난 대화 보기" 스크롤도 이 값을 뺍니다. */
+export const GREETING_BLEED = 32;
+
 export default function AiGreeting({ hour, onSized, children }: { hour?: number; onSized?: () => void; children?: ReactNode }) {
   // 방에 들어올 때의 시각으로 한 번 정함(보는 동안 문구가 바뀌지 않게). hour는 미리보기용
   const [now] = useState(() => hour ?? new Date().getHours());
@@ -60,7 +63,7 @@ export default function AiGreeting({ hour, onSized, children }: { hour?: number;
   }, []);
 
   return (
-    <section ref={ref} className="relative flex flex-col items-center justify-center text-center" style={{ minHeight }} aria-label="도산 AI 안내">
+    <section ref={ref} className="relative flex flex-col items-center justify-center text-center" style={{ minHeight: minHeight + GREETING_BLEED, paddingTop: GREETING_BLEED }} aria-label="도산 AI 안내">
       {/* 글씨 색은 슈퍼쏠 "은행 AI" 첫 화면 사진에서 잼(2026-10-16): 왼쪽 밝은 주황 #ff8a3d → 오른쪽 진한 주황 #e04a00(뉴웨이브는 파랑 #4c7dff→#254ddb) 가로 그라데이션(글씨 폭만큼) */}
       <p className="-translate-y-[10px] text-[24px] leading-[1.4] font-medium break-keep">
         <span className="inline-block bg-[linear-gradient(to_right,#ff8a3d,#e04a00)] bg-clip-text text-transparent">{period.text}</span>

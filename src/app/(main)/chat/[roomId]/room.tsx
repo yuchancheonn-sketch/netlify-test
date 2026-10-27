@@ -4,7 +4,7 @@ import GuestGate from "@/components/GuestGate";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
-import AiGreeting from "@/components/AiGreeting";
+import AiGreeting, { GREETING_BLEED } from "@/components/AiGreeting";
 import AiOrb from "@/components/AiOrb";
 import AiThinkingText from "@/components/AiThinkingText";
 import DosanAiAvatar from "@/components/DosanAiAvatar";
@@ -605,7 +605,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
               // 안내 멘트 블록 높이만큼 위로 → 안내는 아래로 밀려 사라지고 지난 대화의 맨 끝이 입력줄 바로 위에 옵니다
               const box = document.querySelector<HTMLElement>("[data-chat-scroll]");
               const greeting = box?.querySelector<HTMLElement>("section[aria-label='도산 AI 안내']");
-              if (box && greeting) box.scrollBy({ top: -greeting.offsetHeight, behavior: "smooth" });
+              if (box && greeting) box.scrollBy({ top: -(greeting.offsetHeight - GREETING_BLEED), behavior: "smooth" });
             }}
             className="absolute top-1 left-1/2 z-10 flex h-9 w-12 -translate-x-1/2 items-center justify-center text-[#e04a00]"
           >
