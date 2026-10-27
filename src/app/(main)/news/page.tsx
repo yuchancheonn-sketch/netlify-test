@@ -46,7 +46,14 @@ export default function NewsPage() {
   const [composing] = useState(
     () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("compose") === "1",
   );
-  const [subtab, setSubtab] = useState<AlbumCategory>(composing ? "member" : "committee");
+  // 홈 바로가기의 "동호회"가 /news?tab=club으로 들어오면 동호회 칸부터 보입니다(2026-10-27 사용자 요청).
+  const [subtab, setSubtab] = useState<AlbumCategory>(() =>
+    composing
+      ? "member"
+      : typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "club"
+        ? "club"
+        : "committee",
+  );
   /*
    * 예전 알림(알림 목록에 남은 "도산아카데미 새 소식")은 /news?tab=news를 엽니다. 그 칸이 자료 탭으로 옮겨 갔으니
    * 그리로 넘깁니다. useSearchParams 대신 location을 읽어 Suspense 없이 끝냅니다(상태는 건드리지 않음).

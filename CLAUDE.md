@@ -199,3 +199,5 @@ Claude Code와 이 저장소만 있으면 어느 컴퓨터에서든 바로 이�
 - 2026-10-27 사용자 "설정 화면 박스·알약 테두리 선 없애기": 설정 화면의 박스·알약·토글 줄에서 shadow-card(1px 테두리+번짐)를 뺌. 어두운 화면에서는 색 차이(#1d1f22 vs 검정)로만 구분됨.
 
 - 2026-10-27 사용자 "홈 화면 추가 앱 아이콘 배경을 주황 단색(애기애타 테마색)으로": scripts/generate-icons.mjs의 바탕 그라데이션을 테마 주황 #FD5702(= --color-brand-500) 한 색으로 바꿔 `npm run icons`로 PNG·SVG 다시 만듦(기러기 무늬·글자는 그대로). 안드로이드 앱 아이콘(icons:android)은 건드리지 않음. 배포해야 반영(이미 홈 화면에 추가한 폰은 아이콘을 지웠다 다시 추가해야 바뀔 수 있음).
+
+- 2026-10-27 사용자 "바로가기 박스에 위원회 탭 동호회 창으로 가는 동호회 버튼, 아이콘은 캔바로": HomeShortcuts에 4번째 칸 "동호회"(/news?tab=club) 추가, 소식 탭(news/page.tsx)이 ?tab=club이면 동호회 칸부터 열림. 아이콘 public/icons3d/club.png(캔바 3D 주황 깃발 96px, 원본 MEDIA MAHZLS8nT4k → 배경 제거 MAHZLeQXN6w).

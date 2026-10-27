@@ -80,6 +80,13 @@ export default function HomeShortcuts() {
           <img src="/icons3d/history.png" alt="" aria-hidden="true" width={23.5} height={23.5} draggable={false} className={`${ICON_CLASS_NAME} mx-[2.25px] h-[23.5px]! w-[23.5px]! -translate-y-px`} />
           <span className="-translate-y-px text-[15px] font-medium text-ink">역대 투표</span>
         </Link>
+
+        {/* 동호회 — 위원회 탭의 동호회 칸으로 바로 갑니다(2026-10-27 사용자 요청, /news?tab=club). 그림은 캔바 3D(주황 깃발, MEDIA MAHZLS8nT4k → 배경 제거 MAHZLeQXN6w) */}
+        <Link href="/news?tab=club" className={ITEM_CLASS_NAME}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons3d/club.png" alt="" aria-hidden="true" width={23.5} height={23.5} draggable={false} className={`${ICON_CLASS_NAME} mx-[2.25px] h-[23.5px]! w-[23.5px]! -translate-y-px`} />
+          <span className="-translate-y-px text-[15px] font-medium text-ink">동호회</span>
+        </Link>
       </div>
 
       {creating ? <PollCreateSheet kind={creating} onClose={() => setCreating(null)} /> : null}
