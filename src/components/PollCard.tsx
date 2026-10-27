@@ -214,7 +214,7 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   }
 
   return (
-    <div className="rounded-[32px] bg-surface px-5 pt-5 pb-[22px]">
+    <div className="rounded-card bg-surface px-5 pt-5 pb-[22px]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <h2 className="flex min-w-0 items-center gap-1.5 text-[19.5px] font-[600] text-ink">
           투표
@@ -424,7 +424,7 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   }
 
   return (
-    <div className="rounded-[32px] bg-surface px-5 pt-5 pb-[22px]">
+    <div className="rounded-card bg-surface px-5 pt-5 pb-[22px]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <h2 className="flex min-w-0 items-center gap-1.5 text-[19.5px] font-[600] text-ink">
           의견 모으기
