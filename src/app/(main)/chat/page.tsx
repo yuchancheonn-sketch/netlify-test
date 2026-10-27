@@ -197,7 +197,7 @@ function ChatListPageContent() {
   );
 }
 
-/** 도산 AI 한 줄(2026-10-12) — 사람 대화 줄과 같은 모양, 사진 자리는 "島" 프로필, 이름 옆 "AI" 표시. 한 마디도 없으면 안내 문구. */
+/** 도산 AI 한 줄(2026-10-12) — 사람 대화 줄과 같은 모양, 사진 자리는 "島" 프로필. 이름 옆 주황 "AI" 표시는 2026-10-27 사용자 요청으로 없앴습니다(뉴웨이브와 같게). 한 마디도 없으면 안내 문구. */
 function AiRoomRow({ room, unread }: { room: ChatRoomDoc; unread: boolean }) {
   const preview = previewText(room);
   return (
@@ -206,7 +206,6 @@ function AiRoomRow({ room, unread }: { room: ChatRoomDoc; unread: boolean }) {
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 items-center gap-1.5 text-[16px] font-bold text-ink">
           <span className="truncate">{DOSAN_AI_NAME}</span>
-          <span className="shrink-0 rounded-md bg-brand-50 px-1.5 py-px text-[11px] font-bold text-brand-500">AI</span>
         </p>
         <p className="mt-px line-clamp-2 text-[14px] leading-snug break-all text-ink-muted">{preview || "도산 안창호 선생에 대해 궁금한 걸 편하게 물어보세요."}</p>
       </div>
