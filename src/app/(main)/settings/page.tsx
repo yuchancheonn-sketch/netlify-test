@@ -162,7 +162,7 @@ export default function SettingsPage() {
             권한·로그인 계정 상자 — 2026-09-15 사용자 요청으로 내 프로필 화면에서 옮겨 왔습니다(모양 그대로).
             로그아웃 단추가 그 아래 12px(mt-3), 탈퇴 안내가 맨 아래에 옵니다 — 내 프로필에 있던 순서와 같습니다.
           */}
-          <div className="mb-3 rounded-2xl bg-surface p-5 shadow-[var(--shadow-card)]">
+          <div className="mb-3 rounded-2xl bg-surface p-5">
             <dl className="flex items-center justify-between text-[14px]">
               <dt className="text-ink-faint">권한</dt>
               <dd className="font-bold text-ink">{isAdmin ? "운영진" : "원우"}</dd>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
               // rounded-full — 알약 모양 (2026-09-25 사용자 요청, 위 스위치 줄들과 같이).
               // min-h-[52px] — 높이를 스위치 줄(ToggleRow)과 같게 (같은 날 사용자 요청). 그 줄은 스위치 28px + 위아래 12px씩이라
               //   52px인데, 이 줄은 글씨(약 25.5px)가 가장 높아 약 49.5px였습니다. 스위치 크기를 바꾸면 이 값도 같이.
-              className="mb-3 flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+              className="mb-3 flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 transition active:scale-[0.99]"
             >
               {/* 글씨만 2px 위로 (2026-09-15, 설정의 다른 박스 글씨와 같이). 꺾쇠는 그대로. */}
               <span className="-translate-y-[2px] text-[17px] font-bold text-ink">관리자 화면</span>
@@ -197,7 +197,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setConfirmingLogout(true)}
-            className="w-full rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white shadow-[var(--shadow-card)] transition active:scale-[0.99]"
+            className="w-full rounded-2xl bg-brand-500 py-3 text-[15px] font-bold text-white transition active:scale-[0.99]"
           >
             {/*
               글씨만 2px 위로 (2026-09-15, 위 고르개들과 같이). 이 단추는 flex가 아니라서 그냥 span에는
@@ -256,7 +256,7 @@ export default function SettingsPage() {
 
 /** "이용 안내" 칸의 알약 줄 — 관리자 화면 줄과 같은 모양(높이 52px). */
 const guideRowClassName =
-  "flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] transition active:scale-[0.99]";
+  "flex min-h-[52px] items-center justify-between rounded-full bg-surface px-5 py-3 transition active:scale-[0.99]";
 
 /**
  * 내가 차단한 사람 목록 — 여기서 차단을 풉니다 (사용자 요청 2026-10-06, 구글 플레이 출시 준비).

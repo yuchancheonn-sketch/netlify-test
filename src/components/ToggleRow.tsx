@@ -38,7 +38,7 @@ export default function ToggleRow({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       // rounded-full — 한 줄짜리 상자를 알약 모양으로 (2026-09-25 사용자 요청, 아이폰 설정 캡처처럼. 16px 둥근 사각형에서).
-      className={`flex w-full items-center justify-between rounded-full bg-surface px-5 py-3 shadow-[var(--shadow-card)] ${
+      className={`flex w-full items-center justify-between rounded-full bg-surface px-5 py-3 ${
         disabled ? "opacity-50" : ""
       }`}
     >
