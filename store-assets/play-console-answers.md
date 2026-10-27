@@ -9,7 +9,7 @@
 - 앱 아이콘: play-icon-512.png / 대표 이미지: play-feature-1024x500.png
 - 휴대전화 스크린샷(최소 2장): ★ 폰에서 앱을 돌려 직접 캡처(원우 개인정보가 보이지 않게)
 - 앱 카테고리: 소셜 (또는 라이프스타일) / 태그는 커뮤니티 계열
-- 연락처 이메일: ★ 운영진 이메일(스토어에 공개됨. src/lib/constants.ts CONTACT_EMAIL에도 같은 주소) / 웹사이트: https://aegiaeta.web.app / 전화번호: 비워도 됨
+- 연락처 이메일: yuchancheonn@gmail.com (스토어에 공개됨, src/lib/constants.ts CONTACT_EMAIL과 같음 — 사용자 지정 2026-10-27) / 웹사이트: https://aegiaeta.web.app / 전화번호: 비워도 됨
 
 ## 2. 앱 콘텐츠 (정책 → 앱 콘텐츠)
 - 개인정보처리방침 URL: https://aegiaeta.web.app/privacy
