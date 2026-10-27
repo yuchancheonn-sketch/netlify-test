@@ -141,11 +141,7 @@ export function SinglePersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
 }
 
 export function LibraryIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
-  /*
-   * 채울 때는 폴더와 재생 삼각형을 한 path로 합치고 evenodd 규칙을 씁니다.
-   * 따로 두면 삼각형까지 같은 색으로 칠해져 보이지 않게 됩니다.
-   * 한 path 안에 넣으면 삼각형이 구멍으로 뚫립니다.
-   */
+  // 2026-10-27 사용자 "탭 알약 자료 아이콘을 뉴웨이브와 똑같이": 뉴웨이브처럼 폴더 안의 재생 삼각형을 없앴습니다(채운 것·선 모두). 이 아이콘은 하단 탭에서만 씁니다.
   if (filled) {
     return (
       <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
@@ -153,7 +149,7 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled, animate }: I
           className={animate ? "tab-anim tab-pop" : undefined}
           fillRule="evenodd"
           clipRule="evenodd"
-          d="M3.5 6.2A1.7 1.7 0 0 1 5.2 4.5h3.3l1.7 2h8.6a1.7 1.7 0 0 1 1.7 1.7v9.6a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V6.2Zm7.1 5.1 3.6 2-3.6 2v-4Z"
+          d="M3.5 6.2A1.7 1.7 0 0 1 5.2 4.5h3.3l1.7 2h8.6a1.7 1.7 0 0 1 1.7 1.7v9.6a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V6.2Z"
           fill="currentColor"
         />
       </svg>
@@ -164,12 +160,6 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled, animate }: I
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       <path
         d="M3.5 6.2A1.7 1.7 0 0 1 5.2 4.5h3.3l1.7 2h8.6a1.7 1.7 0 0 1 1.7 1.7v9.6a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V6.2Z"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeLinejoin="round"
-      />
-      <path
-        d="m10.6 11.3 3.6 2-3.6 2v-4Z"
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
