@@ -4,8 +4,11 @@ import GuestGate from "@/components/GuestGate";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
+import AiGreeting from "@/components/AiGreeting";
+import AiOrb from "@/components/AiOrb";
+import AiThinkingText from "@/components/AiThinkingText";
 import DosanAiAvatar from "@/components/DosanAiAvatar";
-import { DOSAN_AI_NAME, DOSAN_AI_SUGGESTIONS, DOSAN_AI_UID } from "@/lib/dosan-ai";
+import { DOSAN_AI_NAME, DOSAN_AI_QUICK_QUESTIONS, DOSAN_AI_SUGGESTIONS, DOSAN_AI_UID } from "@/lib/dosan-ai";
 import { askDosanAi } from "@/lib/dosan-ai-client";
 import MidEllipsis from "@/components/MidEllipsis";
 import {
@@ -92,6 +95,12 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   const [sending, setSending] = useState(false);
   /** 도산 AI가 답을 만드는 중(2026-10-12) — "입력 중…" 말풍선 */
   const [aiPending, setAiPending] = useState(false);
+  /** 도산 AI 방 안내 멘트를 지웠는지 — 방에 들어올 때마다 false에서 시작하고, 내가 질문을 보내면 true(2026-10-27, 뉴웨이브 신앙 AI 방과 같음) */
+  const [greetingDismissed, setGreetingDismissed] = useState(false);
+  /** 대화가 맨 아래에서 벗어났는지 — 안내 멘트가 떠 있을 때 지난 대화 보기 화살표를 가리는 데 씀 */
+  const [scrolledAwayFromBottom, setScrolledAwayFromBottom] = useState(false);
+  /** 입력칸에 커서가 있는지(자판이 올라와 있는지) — 올라와 있으면 자주 묻는 질문 박스를 숨김 */
+  const [keyboardUp, setKeyboardUp] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   /** 지금 수정·삭제 박스가 떠 있는 메시지. 한 번에 하나만 뜹니다. */
@@ -126,6 +135,10 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   /** 대화 상자가 맨 아래(최근 메시지)를 보고 있는지 — 자판이 오르내려 크기가 바뀌어도 맨 아래를 유지하려고 스크롤할 때마다 갱신합니다. */
   const stickBottom = useRef(true);
+  /** 손가락이 화면에 닿아 있는 동안은 자동으로 붙이지 않습니다 — 끌다가 잠깐 멈추면 도로 당겨져 "더 안 내려간다"처럼 느껴지던 것 */
+  const touching = useRef(false);
+  /** 사용자가 대화를 맨 아래에서 4px 넘게 끌어올려 둔 상태 — 이때는 크기가 바뀌어도 자동으로 맨 아래로 끌어내리지 않습니다 */
+  const userPulled = useRef(false);
   /** 대화 상자만 맨 아래로 — scrollIntoView는 바깥 칸(제목 줄 포함)까지 밀 수 있어 상자의 scrollTop을 직접 맞춥니다. */
   const scrollToLatest = () => {
     const box = bottomRef.current?.parentElement;
@@ -138,7 +151,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
     const observer = new ResizeObserver(() => {
       setComposerHeight(Math.ceil(node.getBoundingClientRect().height));
       // 입력줄이나 대화 상자 크기가 바뀌면(자판이 내려가며 화면이 커지는 등) 맨 아래를 보고 있던 경우 다시 맨 아래로
-      if (stickBottom.current) requestAnimationFrame(() => scrollToLatest());
+      if (stickBottom.current && !userPulled.current && !touching.current) requestAnimationFrame(() => scrollToLatest());
     });
     observer.observe(node);
     if (box) observer.observe(box);
@@ -149,6 +162,34 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
     if (composerHeight) scrollToLatest();
   }, [composerHeight]);
   const lastMessageId = messages.at(-1)?.id;
+  // 방에 들어올 때 대화가 맨 위에서 먼저 그려졌다가 맨 아래로 내려가며 깜빡이던 것을 막습니다 — 처음 맨 아래로 맞출 때까지 대화 상자를 투명하게(뉴웨이브와 같음, 2026-10-27)
+  const [settled, setSettled] = useState(false);
+  const snapTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(snapTimer.current), []);
+  /** 안내 멘트를 절반 넘게 끌어올렸다 놓으면 한 번에 지난 대화까지(절반 못 미치면 도로 맨 아래로) — 손을 뗀 뒤 스크롤이 멈추면 자동 */
+  const snapSoon = (box: HTMLElement) => {
+    window.clearTimeout(snapTimer.current);
+    if (touching.current) return;
+    const greeting = box.querySelector<HTMLElement>("section[aria-label='도산 AI 안내']");
+    if (!greeting) return;
+    snapTimer.current = window.setTimeout(() => {
+      if (touching.current) return;
+      const max = box.scrollHeight - box.clientHeight;
+      const pulled = max - box.scrollTop;
+      const height = greeting.offsetHeight;
+      if (pulled > 2 && pulled < height - 2) box.scrollTo({ top: pulled > height / 2 ? max - height : max, behavior: "smooth" });
+    }, 120);
+  };
+  useLayoutEffect(() => {
+    if (loading || settled) return;
+    scrollToLatest();
+    const timer = window.setTimeout(() => {
+      scrollToLatest();
+      setSettled(true);
+    }, 80);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scrollToLatest는 ref만 읽습니다
+  }, [loading, settled]);
   /** "더 보기"로 과거를 불러왔을 때는 맨 아래로 끌어내리지 않습니다. */
   const skipAutoScroll = useRef(false);
 
@@ -200,6 +241,9 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
   /** 1:1 방의 상대를 내가 차단했는지 */
   const peerBlocked = !!otherId && blocked.has(otherId);
   const visibleMessages = messages.filter((message) => !blocked.has(message.senderId));
+  // 맨 끝에 AI 메시지가 이어져 있으면 그 묶음의 첫 메시지 자리(없으면 -1). AI가 말을 이어 쓰는 동안 끈 모양은 이 첫 메시지 옆 하나만 계속 움직입니다(뉴웨이브와 같음, 2026-10-27).
+  let aiBlockStart = -1;
+  for (let i = visibleMessages.length - 1; i >= 0 && visibleMessages[i].senderId === DOSAN_AI_UID; i--) aiBlockStart = i;
   /** 도산 AI 방인지(2026-10-12) */
   const isAiRoom = otherId === DOSAN_AI_UID;
   const title = roomCohort
@@ -312,13 +356,14 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
    * 보내기 단추 하나가 두 가지 일을 합니다 — 고치는 중이면 고침을 확정하고,
    * 아니면 새 메시지를 보냅니다.
    */
-  async function handleSend(event: React.FormEvent) {
-    event.preventDefault();
-    const text = draft.trim();
+  async function handleSend(event: React.FormEvent | null, override?: string) {
+    event?.preventDefault();
+    const text = (override ?? draft).trim();
     if (!text || !uid || sending) return;
     stickBottom.current = true; // 보낸 뒤에는 늘 맨 아래(방금 보낸 메시지)를 보여 줍니다
     setSending(true);
     setSendError(null);
+    if (isAiRoom && !editingId) setGreetingDismissed(true); // 질문을 시작하면 안내 멘트가 사라집니다(2026-10-27)
     // 실패하면 되돌릴 수 있도록 원본을 들고 있습니다.
     setDraft("");
 
@@ -514,7 +559,6 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             {memberCount ? (
               <span className="shrink-0 text-ink-faint tabular-nums">{memberCount}</span>
             ) : null}
-            {isAiRoom ? <span className="shrink-0 self-center rounded-md bg-brand-50 px-1.5 py-px text-[11px] font-bold text-brand-500">AI</span> : null}
           </p>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -542,9 +586,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           </div>
         </header>
 
-        {isAiRoom ? (
-          <p className="shrink-0 bg-fill px-4 py-1.5 text-center text-[12.5px] text-ink-muted">AI가 답하는 대화예요 · 틀릴 수 있어요. 중요한 건 책이나 흥사단 자료로 확인해 주세요</p>
-        ) : null}
+        {/* 뉴웨이브처럼 방 위 회색 안내 띠는 없앰(2026-10-27) — "AI라서 틀릴 수 있어요" 고지는 첫 대화 소개 화면(아래)에 그대로 있음 */}
 
         {/*
           대화 — 이 상자만 스스로 스크롤합니다.
@@ -553,13 +595,49 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           overscroll-contain은 맨 위/아래에 닿았을 때 그 힘이 바깥 페이지로
           넘어가 화면이 통째로 딸려 움직이는 것을 막습니다.
         */}
+        <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* 제목 바로 아래 가운데 — 얇은 아래 화살표(끌어 내려 지난 대화를 보라는 뜻). 안내 멘트가 떠 있고 지난 대화가 있을 때만(뉴웨이브와 같음, 2026-10-27) */}
+        {isAiRoom && !greetingDismissed && !loading && !error && messages.length > 0 && !scrolledAwayFromBottom ? (
+          <button
+            type="button"
+            aria-label="지난 대화 보기(안내를 아래로 내리기)"
+            onClick={() => {
+              // 안내 멘트 블록 높이만큼 위로 → 안내는 아래로 밀려 사라지고 지난 대화의 맨 끝이 입력줄 바로 위에 옵니다
+              const box = document.querySelector<HTMLElement>("[data-chat-scroll]");
+              const greeting = box?.querySelector<HTMLElement>("section[aria-label='도산 AI 안내']");
+              if (box && greeting) box.scrollBy({ top: -greeting.offsetHeight, behavior: "smooth" });
+            }}
+            className="absolute top-1 left-1/2 z-10 flex h-9 w-12 -translate-x-1/2 items-center justify-center text-[#e04a00]"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
+              <path d="m6 9.5 6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        ) : null}
         <div
+          data-chat-scroll
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
           onScroll={(event) => {
             const box = event.currentTarget;
             stickBottom.current = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+            userPulled.current = box.scrollHeight - box.scrollTop - box.clientHeight > 4;
+            const away = box.scrollHeight - box.scrollTop - box.clientHeight > 40;
+            setScrolledAwayFromBottom((previous) => (previous === away ? previous : away));
+            snapSoon(box);
           }}
-          style={{ paddingBottom: composerHeight ? composerHeight + 12 : 104 }}>
+          onTouchStart={() => {
+            touching.current = true;
+            window.clearTimeout(snapTimer.current);
+          }}
+          onTouchEnd={(event) => {
+            touching.current = false;
+            snapSoon(event.currentTarget);
+          }}
+          onTouchCancel={(event) => {
+            touching.current = false;
+            snapSoon(event.currentTarget);
+          }}
+          style={{ paddingBottom: composerHeight ? composerHeight + 12 : 104, opacity: loading || settled ? 1 : 0 }}>
           {loading ? (
             <div className="flex flex-col gap-4 px-1 pt-4">
               <Skeleton className="h-12 w-2/3 rounded-2xl" />
@@ -637,6 +715,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                       photoByUid.get(message.senderId) ?? message.senderPhotoURL ?? null
                     }
                     isAi={message.senderId === DOSAN_AI_UID}
+                    orbThinking={aiPending && index === aiBlockStart}
                     /* 고치기·지우기는 내 메시지에만. 남의 말은 보안 규칙도 막습니다. */
                     menuOpen={menuForId === message.id}
                     onOpenMenu={() => setMenuForId(message.id)}
@@ -662,21 +741,41 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
                 ))}
               </ol>
               {aiPending ? (
-                <div className="mt-2.5 -ml-[8.5px] flex items-end gap-2" aria-live="polite">
-                  <DosanAiAvatar size={32} />
-                  <p className="rounded-3xl rounded-bl-lg bg-fill px-4 py-2.5 text-[15px] text-ink-faint shadow-[var(--shadow-card)]">
-                    <span className="sr-only">도산 AI가 입력 중</span>
-                    <span aria-hidden="true" className="inline-flex gap-1">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:150ms]" />
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:300ms]" />
-                    </span>
+                <div className="mt-2.5 flex items-center gap-2 -ml-[8.5px]" aria-live="polite">
+                  {/* 답을 만드는 동안 끈이 움직이고, 답이 오면 말풍선 옆 끈이 이어서 원으로 풀림(뉴웨이브와 같음, 2026-10-27) */}
+                  {/* AI 말이 이미 와 있으면 끈은 그 첫 메시지 옆 하나만 움직이고, 여기는 같은 폭 빈칸(끈이 둘 이상 보이지 않게) */}
+                  {aiBlockStart >= 0 ? <span className="w-8 shrink-0" aria-hidden="true" /> : <AiOrb size={32} thinking />}
+                  {/* 말풍선 없이 글씨만(Claude "Cogitating…" 모양) — 색은 앱 테마 주황(brand-500) */}
+                  <p className="-ml-[2.5px] text-[14.5px] font-medium text-brand-500">
+                    <span className="sr-only">도산 AI가 생각하는 중</span>
+                    <AiThinkingText />
                   </p>
                 </div>
+              ) : null}
+              {/* 안내 멘트 — 대화 기록은 그대로 두고 맨 아래에. 질문을 시작하면 사라짐(뉴웨이브와 같음, 2026-10-27) */}
+              {isAiRoom && !greetingDismissed ? (
+                <AiGreeting onSized={() => { if (!userPulled.current && !touching.current) scrollToLatest(); }}>
+                  {/* 자주 묻는 질문 박스 — 안내 멘트와 한 덩어리라 같이 스크롤됩니다. 옆으로 밀어 보고, 누르면 바로 질문. 자판이 올라오면 숨김 */}
+                  {!keyboardUp ? (
+                    <div className="no-scrollbar absolute -bottom-[2px] -inset-x-4 flex gap-2 overflow-x-auto px-5">
+                      {DOSAN_AI_QUICK_QUESTIONS.map((question) => (
+                        <button
+                          key={question}
+                          type="button"
+                          onClick={() => void handleSend(null, question)}
+                          className="w-[158px] shrink-0 rounded-[20px] bg-sheet-field px-4 pt-[7px] pb-[9px] text-left active:brightness-95 dark:bg-surface dark:shadow-[var(--shadow-card)] dark:active:bg-fill"
+                        >
+                          <span className="block text-[15px] leading-[1.45] font-normal break-keep text-ink-muted">{question}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </AiGreeting>
               ) : null}
             </>
           )}
           <div ref={bottomRef} />
+        </div>
         </div>
       </div>
 
@@ -784,6 +883,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             }}
             /* 커서가 들어오면 자판이 올라온 것으로 봅니다 (위 useEffect 설명 참고). */
             onFocus={() => {
+              setKeyboardUp(true);
               document.body.dataset.keyboard = "open";
               /*
                 입력칸은 대화 영역 밖(화면에 붙은 별개 층)이라 삭제 박스를
@@ -795,6 +895,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
               [0, 150, 350, 600].forEach((delay) => window.setTimeout(scrollToLatest, delay));
             }}
             onBlur={() => {
+              setKeyboardUp(false);
               delete document.body.dataset.keyboard;
               // 자판이 내려가는 동안(약 0.5초) 화면 높이가 여러 번 바뀝니다 — 맨 아래를 보고 있었다면 끝까지 따라 내려갑니다
               [0, 150, 350, 600, 900].forEach((delay) => window.setTimeout(() => stickBottom.current && scrollToLatest(), delay));
@@ -941,6 +1042,7 @@ function MessageRow({
   senderName,
   senderPhoto,
   isAi,
+  orbThinking,
   menuOpen,
   onOpenMenu,
   onCloseMenu,
@@ -956,6 +1058,8 @@ function MessageRow({
   senderPhoto: string | null;
   /** 도산 AI가 보낸 말(2026-10-12) — "島" 프로필, 차단 없음 */
   isAi: boolean;
+  /** AI가 아직 말을 이어 쓰는 중이면 이 묶음 첫 메시지 옆 끈이 계속 움직임(2026-10-27) */
+  orbThinking?: boolean;
   /** 이 말풍선 위에 수정·삭제 박스가 떠 있는지 */
   menuOpen: boolean;
   /** 꾸욱 눌렀을 때 할 일. 내 말이면 수정·삭제, 남의 말이면 신고·차단 박스가 뜹니다(2026-10-06). */
@@ -1008,7 +1112,7 @@ function MessageRow({
         {!isMine ? (
           showSender ? (
             isAi ? (
-              <DosanAiAvatar size={32} />
+              <AiOrb size={32} thinking={orbThinking} createdAtMs={sentAt.getTime()} />
             ) : (
             <Avatar
               src={senderPhoto}
