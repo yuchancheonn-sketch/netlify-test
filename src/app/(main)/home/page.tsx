@@ -20,7 +20,25 @@ import { useViewCohort } from "@/lib/use-view-cohort";
 export default function HomePage() {
   const { user, profile } = useAuth();
   // 로그아웃 상태에선 앱 이름, 로그인하면 "천유찬님"처럼 "이름님"(2026-10-27 뉴웨이브와 같게)
-  const headerTitle = user && profile?.name ? <span className="block max-w-[9em] truncate text-[17px] font-[520]">{profile.name}님</span> : APP_DEFINITION_TITLE;
+  // 이름 왼쪽의 도산아카데미 로고(2026-10-27 사용자 "뉴웨이브앱에서처럼"): public/brand/logo-white.png(기러기 실루엣, 흰색+투명)를 가면(mask)으로 쓰고 bg-current로 칠해
+  // 제목 글씨와 늘 같은 색입니다(밝은 화면에선 먹색, 어두운 화면에선 흰색). 폭은 그림 비율(256×167)대로.
+  const headerTitle = (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span
+        aria-hidden="true"
+        className="inline-block h-[24px] w-[36.8px] shrink-0 bg-current"
+        style={{
+          WebkitMask: "url(/brand/logo-white.png) center / contain no-repeat",
+          mask: "url(/brand/logo-white.png) center / contain no-repeat",
+        }}
+      />
+      {user && profile?.name ? (
+        <span className="max-w-[9em] shrink-0 truncate text-[17px] font-[520]">{profile.name}님</span>
+      ) : (
+        APP_DEFINITION_TITLE
+      )}
+    </span>
+  );
   const upcoming = useUpcomingEvents();
   /*
    * 홈은 기수마다 따로입니다 — 일정·투표·수업 기록 모두 보고 있는 기수의 것만.
