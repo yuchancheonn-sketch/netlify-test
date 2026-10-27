@@ -80,6 +80,8 @@
   --color-ink-soft: #57534e;
   --color-ink-muted: #78716c;
   --color-ink-faint: #a8a29e;
+  /* 그렇다/아니다 안 고른 칸 바탕(2026-10-27 뉴웨이브와 같게): 밝은 화면 흰색, 어두운 화면은 박스보다 한 단 밝은 fill */
+  --color-choice-box: #ffffff;
   /* 하단 탭 안 고른 글씨·아이콘 색(2026-10-27 뉴웨이브 탭 알약을 옮김 — 뉴웨이브는 푸른 회색 #686f83·#838ca0, 여기는 애기애타 중성 회색) */
   --color-tab-off: #6d6a67;
   --color-tab-icon-off: #8a8682;
@@ -349,6 +351,7 @@
     --color-tabbar: var(--dark-tabbar-bg);
     --color-tab-off: var(--dark-tab-off);
     --color-tab-icon-off: var(--dark-tab-off);
+    --color-choice-box: var(--dark-fill);
     --glass-edge: var(--dark-glass-edge);
     --color-sheet-field: var(--dark-fill);
   }
@@ -378,6 +381,7 @@
   --color-tabbar: var(--dark-tabbar-bg);
   --color-tab-off: var(--dark-tab-off);
   --color-tab-icon-off: var(--dark-tab-off);
+  --color-choice-box: var(--dark-fill);
   --glass-edge: var(--dark-glass-edge);
   --color-sheet-field: var(--dark-fill);
 }

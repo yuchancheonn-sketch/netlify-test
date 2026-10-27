@@ -204,21 +204,22 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
    * (4px 겹침·9px 간격이던 것을 알림 종이 더해져 셋이 된 뒤 2026-09-11에 2px 더 좁혔습니다.)
    * 겹치는 6px은 아이콘이 아니라 빈 여백이라 누르는 데는 지장이 없습니다.
    */
+  // 2026-10-27 사용자 "홈탭 오른쪽 위 아이콘 3개·그렇다/아니다 버튼을 뉴웨이브앱과 똑같이": 뉴웨이브(2026-10-16 슈퍼쏠 헤더 맞춤)와 같게 아이콘 27 → 25px, 선 굵기 1.55, 색은 제목과 같은 먹색, 아이콘 사이 간격 -space-x-px, 맨 오른쪽 -mr-[5.4px]
   return (
-    <div className="flex items-center -space-x-1.5">
+    <div className="flex items-center -space-x-px">
       {/* tone은 빨간 점이 두르는 테 색에만 쓰입니다 — 제목 줄 바탕과 같아야 합니다(PageHeader의 tone 주석). */}
       {isGuest ? (
         <HeaderIconLink href="/notifications" label="알림 열기">
-          <BellIcon className={HEADER_ICON_SIZE} />
+          <BellIcon className={`${HEADER_ICON_SIZE} -translate-y-[1.5px]`} strokeWidth={1.55} />
         </HeaderIconLink>
       ) : (
         <HeaderBellLink tone={tone} />
       )}
       <HeaderIconLink href="/profile" label="내 프로필 열기">
-        <PersonIcon className={HEADER_ICON_SIZE} />
+        <PersonIcon className={HEADER_ICON_SIZE} strokeWidth={1.55} />
       </HeaderIconLink>
       <HeaderIconLink href="/settings" label="설정 열기">
-        <SettingsIcon className={HEADER_ICON_SIZE} />
+        <SettingsIcon className={HEADER_ICON_SIZE} strokeWidth={1.55} />
       </HeaderIconLink>
     </div>
   );
@@ -233,7 +234,7 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
  * (아이콘 자체가 24 상자를 얼마나 채우는지도 크기에 영향을 줍니다.
  *  icons.tsx의 PersonIcon·SettingsIcon은 채우는 정도를 서로 맞춰 두었습니다.)
  */
-const HEADER_ICON_SIZE = "h-[27px] w-[27px]";
+const HEADER_ICON_SIZE = "h-[25px] w-[25px]";
 
 /**
  * 헤더 아이콘 단추 한 개.
@@ -259,7 +260,7 @@ function HeaderIconLink({
     <Link
       href={href}
       aria-label={label}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition last:-mr-1 active:bg-fill active:scale-95"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink transition last:-mr-[5.4px] active:bg-fill active:scale-95"
     >
       {children}
     </Link>
@@ -284,7 +285,7 @@ function HeaderBellLink({ tone: _tone }: { tone: "canvas" | "surface" }) {
 
   return (
     <HeaderIconLink href="/notifications" label={hasNew ? "알림 열기 (새 알림 있음)" : "알림 열기"}>
-      <BellIcon className={HEADER_ICON_SIZE} />
+      <BellIcon className={`${HEADER_ICON_SIZE} -translate-y-[1.5px]`} strokeWidth={1.55} />
       {hasNew ? (
         /*
           테두리 없이 빨간색으로만 채운 점 (2026-09-26 사용자 요청). 예전엔 제목 줄 바탕색 2px 테(ring)를 둘러

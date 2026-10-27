@@ -135,7 +135,7 @@ export default function DosanQuizCard() {
   function choiceClassName(value: OxAnswer): string {
     return picked === value
       ? "border-brand-500 bg-brand-50 text-brand-500"
-      : "border-[color-mix(in_srgb,var(--color-line)_86%,var(--color-ink))] bg-surface text-ink";
+      : "border-[color-mix(in_srgb,var(--color-line)_86%,var(--color-ink))] bg-[var(--color-choice-box)] text-ink";
   }
 
   // 푼 뒤(해설을 닫으면) 이 박스는 통째로 사라지고, 다음 주(일요일 0시) 새 문제가 오면 다시 생깁니다(2026-10-27, 뉴웨이브와 같음). 로그인 안 한 사람은 기록이 없어 "나의 등수 보러가기" 안내를 위해 그대로 둡니다.
@@ -256,7 +256,7 @@ export default function DosanQuizCard() {
               테두리는 2026-09-15 사용자 요청으로 2px → 1.5px로 얇게 했고, 줄어든 0.5px씩을 위아래 여백에
               더해 높이는 그대로 40px입니다(아래 "정답 제출하기"(PrimaryButton compact)와 같은 높이를 지키려고).
             */}
-            <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="답 고르기">
+            <div className="-mx-[3.5px] mt-4 grid grid-cols-2 gap-[9px]" role="radiogroup" aria-label="답 고르기">
               {CHOICES.map(({ value, label }) => (
                 <button
                   key={value}
@@ -265,7 +265,7 @@ export default function DosanQuizCard() {
                   aria-checked={picked === value}
                   disabled={submitting}
                   onClick={() => setPickedFor(picked === value ? null : { key: quizKey, value })}
-                  className={`flex items-center justify-center gap-2 rounded-2xl border-[1.5px] py-[6.5px] text-[16px]! font-bold transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
+                  className={`flex h-[38px] items-center justify-center gap-2 rounded-2xl border-[1.5px] text-[15.5px]! font-[550] transition active:scale-[0.98] disabled:active:scale-100 ${choiceClassName(
                     value,
                   )}`}
                 >
@@ -285,7 +285,7 @@ export default function DosanQuizCard() {
             </div>
 
             {picked ? (
-              <div className="mt-3">
+              <div className="-mx-[3px] mt-3">
                 <PrimaryButton onClick={submit} size="compact" loading={submitting}>
                   {/* 글씨만 1.75px 위로 (2026-09-27 사용자 요청 — 1px, 0.5px 더, 0.25px 더) — PrimaryButton이 flex라 span의 transform이 먹습니다. */}
                   <span className="-translate-y-[1.75px]">정답 제출하기</span>

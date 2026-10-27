@@ -1,5 +1,6 @@
 /** 도산 퀴즈 주 단위 계산 점검 — `node scripts/check-quiz.mts` (실패하면 던짐) */
 import assert from "node:assert/strict";
+// @ts-expect-error node가 직접 실행하려면 .ts 확장자가 필요하지만 tsc 설정은 이를 허용하지 않음
 import { DOSAN_QUIZZES, kstDayNumber, pastQuizzes, QUIZ_START_DATE, quizForDay, quizWeekStartDay } from "../src/lib/dosan-quiz.ts";
 
 const DAY_MS = 86_400_000;
