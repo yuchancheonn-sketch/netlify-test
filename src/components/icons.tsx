@@ -227,8 +227,9 @@ export function CommitteeIcon({ className, strokeWidth = 1.8, filled, animate }:
       <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
         <g className={animate ? "tab-anim tab-pop" : undefined}>
         <path d="M12 3.1 21.2 8a.9.9 0 0 1-.4 1.7H3.2A.9.9 0 0 1 2.8 8L12 3.1Z" />
-        <rect x="6.1" y="11.2" width="4.6" height="6.2" rx="1" />
-        <rect x="13.3" y="11.2" width="4.6" height="6.2" rx="1" />
+        <rect x="5.5" y="11.2" width="2.3" height="6" rx="0.7" />
+        <rect x="10.85" y="11.2" width="2.3" height="6" rx="0.7" />
+        <rect x="16.2" y="11.2" width="2.3" height="6" rx="0.7" />
         <rect x="3.1" y="18.6" width="17.8" height="2.3" rx="1.1" />
         </g>
       </svg>
@@ -243,14 +244,12 @@ export function CommitteeIcon({ className, strokeWidth = 1.8, filled, animate }:
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
       />
-      {/* 기둥을 선 하나가 아니라 속이 빈 기둥 모양(둥근 네모)으로 — 집·폴더·말풍선처럼 면이 있는 다른 탭 아이콘과 결을 맞춤(2026-10-27 사용자). 지붕·바닥 위치는 그대로라 크기 보정값(fit)은 같음 */}
       <path
-        d="M6.4 11.4h4v5.8h-4zM13.6 11.4h4v5.8h-4z"
+        d="M6.6 11.4v5.8M12 11.4v5.8M17.4 11.4v5.8M3.8 20h16.4"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        strokeLinejoin="round"
+        strokeLinecap="round"
       />
-      <path d="M3.8 20h16.4" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
     </svg>
   );
 }
