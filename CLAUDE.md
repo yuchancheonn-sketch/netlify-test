@@ -151,3 +151,7 @@ Claude Code와 이 저장소만 있으면 어느 컴퓨터에서든 바로 이�
 - **서버**: `account-link-server samePhoneMembers`가 `collectionGroup("private").where("phone","in",…)`(+ 옮기기 전 옛 users.phone)로 후보를 찾음 — **`firestore.indexes.json` fieldOverrides(private.phone, 컬렉션 그룹 범위)가 게시돼야 함**(`npm run deploy`가 규칙과 함께 올림). 탈퇴(`account-withdraw-server`)는 번호를 **공개였던 사람만** 명단으로 옮기고 private까지 `recursiveDelete`.
 - **옮기기**: `node scripts/migrate-phones.mjs`(점검) → `--copy`(복사, 옛 칸 유지) → 화면 확인 → `--delete`(옛 users.phone 삭제, 되돌릴 수 없음). ★ 새 코드를 **먼저 배포**하고 그다음 `--copy`(배포 전에 옮기면 옛 화면은 번호가 비어 보임). 시험 계정 스크립트·탈퇴·합치기는 private 기준으로 고침. `scripts/make-admin.mjs`가 번호로 사람을 찾는 부분은 users.phone 기준이라 `--delete` 뒤엔 번호 검색이 안 됨.
 - 못 막는 것: 가입 전(roster) 명단의 번호는 roster 문서에 있어 원우가 읽음(스위치와 무관). ★ 배포·옮기기는 아직 안 함, 화면·서버는 폰·실데이터로 확인하지 못함(타입·린트·빌드·규칙 컴파일만).
+
+## 알림함 읽음 처리를 뉴웨이브앱과 똑같이 (2026-10-27 사용자 요청)
+
+`src/app/(main)/notifications/page.tsx` — 뉴웨이브 알림함과 같은 운영 방식: ① 안 읽은(마지막으로 알림함을 본 시각 `chatReads.noticesSeenAt` 이후에 온) 알림은 오른쪽 점이 아니라 **줄 전체에 옅은 주황 바탕**(`color-mix(brand-500 14%)`, 뉴웨이브는 파랑) ② **알림함을 나갈 때** 모두 읽음으로 적음(`markNoticesSeen`, 엄격 모드의 껐다 켬은 setTimeout 0 + mountedRef로 무시) → 다시 들어오면 바탕이 없고, 종의 빨간 점도 알림함을 **나간 뒤**에 꺼짐(예전엔 여는 순간 꺼졌음) ③ 줄을 누르면 그 순간 읽음. 이 앱의 알림은 모든 원우에게 같은 글이라 받는 사람별 `read` 칸이 없어 읽음을 "마지막으로 본 시각" 하나로 적음(뉴웨이브는 알림마다 read). ★ 배포해야 반영, 화면은 직접 못 봄(타입·린트만).

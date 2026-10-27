@@ -1,7 +1,7 @@
 "use client";
 
 import GuestGate from "@/components/GuestGate";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
@@ -29,8 +29,11 @@ import type { NoticeDoc } from "@/lib/types";
  *  - 채팅은 여기 없습니다 — 채팅 탭에 빨간 점이 따로 있습니다.
  * 한 줄을 누르면 그 화면으로 갑니다. 푸시를 꺼 둔 원우도 여기서는 모두 봅니다.
  *
- * 화면을 여는 순간 "다 봤다"고 적어 종의 빨간 점을 끕니다. 다만 이번에 새로 온 줄은
- * 열기 직전의 기준 시각으로 옅은 주황 바탕을 남겨, 무엇이 새로 왔는지 보이게 합니다.
+ * 읽음 처리는 뉴웨이브앱과 똑같이 **화면을 나갈 때** 합니다(2026-10-27 사용자 "알림창 운영 방식을 뉴웨이브앱이랑 똑같게"):
+ *  - 안 읽은(마지막으로 알림함을 본 뒤에 온) 알림은 그 줄에 **옅은 주황 바탕**(오른쪽 점은 없앰). 화면을 보는 동안에는 그대로 있습니다.
+ *  - 알림함을 **나갈 때** 안 읽은 알림을 모두 읽음으로 적습니다 — 그래서 다시 들어오면 옅은 바탕이 없고, 종의 빨간 점도 알림함을 나간 뒤에 꺼집니다(예전엔 여는 순간 꺼졌음).
+ *  - 줄을 누르면 그 순간 읽음으로 적습니다(누르면 다른 화면으로 가므로 바탕이 사라지는 게 보이지 않음).
+ * 읽음은 알림마다가 아니라 "마지막으로 본 시각"(chatReads.noticesSeenAt) 하나로 적습니다 — 이 앱의 알림은 모든 원우에게 같은 글이라 받는 사람별 기록이 없습니다.
  */
 function NotificationsPageContent() {
   const { user, profile } = useAuth();
@@ -54,10 +57,23 @@ function NotificationsPageContent() {
     setBaseline(seenAt || (profile?.createdAt?.toMillis() ?? 0));
   }
 
+  // 화면을 **나갈 때** 안 읽은 알림을 모두 읽음으로 적습니다(뉴웨이브 notifications/page.tsx와 같은 방식).
+  // 개발 서버(React 엄격 모드)는 화면을 켰다 바로 껐다 다시 켜는 시험을 하므로, 껐다 켠 것은 나간 걸로 치지 않게 한 틱 기다려 다시 켜졌는지 봅니다.
   const uid = user?.uid;
+  const uidRef = useRef(uid);
   useEffect(() => {
-    if (uid) void markNoticesSeen(uid);
+    uidRef.current = uid;
   }, [uid]);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      setTimeout(() => {
+        if (!mountedRef.current && uidRef.current) void markNoticesSeen(uidRef.current);
+      }, 0);
+    };
+  }, []);
 
   return (
     /*
@@ -111,7 +127,7 @@ function NotificationsPageContent() {
           /*
             뉴웨이브앱 알림함과 똑같은 디자인(2026-10-12 사용자 "알림창 디자인을 뉴웨이브앱이랑 똑같게" — 뉴웨이브는 인스타그램 알림처럼):
             구역 제목(오늘·어제·최근 7일·이전 활동) 아래에 줄이 늘어서고, 줄 = 왼쪽 큰 동그라미(54px, 종류 그림) + 글 한 덩어리(굵은 제목 + 끝에 옅은 짧은 시간) + 옅은 본문,
-            이번에 새로 온 줄은 오른쪽에 주황 점(뉴웨이브는 파랑 — 앱 색). 박스·구분선·줄 바탕·꺾쇠 없음.
+            이번에 새로 온(안 읽은) 줄은 줄 전체에 옅은 주황 바탕(2026-10-27 사용자 — 예전엔 오른쪽 주황 점, 뉴웨이브는 옅은 파랑 바탕). 박스·구분선·꺾쇠 없음.
           */
           <div className="-mx-4 -mt-3">
             {SECTIONS.map((label) => {
@@ -123,7 +139,7 @@ function NotificationsPageContent() {
                   <ul className="flex flex-col">
                     {rows.map((notice) => (
                       <li key={notice.id}>
-                        <NoticeRow notice={notice} isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline} />
+                        <NoticeRow notice={notice} isNew={baseline !== null && (notice.createdAt?.toMillis() ?? 0) > baseline} onOpen={() => uid && void markNoticesSeen(uid)} />
                       </li>
                     ))}
                   </ul>
@@ -176,9 +192,14 @@ function NoticeGlyph({ type, className }: { type: NoticeDoc["type"]; className: 
   );
 }
 
-function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
+function NoticeRow({ notice, isNew, onOpen }: { notice: NoticeDoc; isNew: boolean; onOpen: () => void }) {
   return (
-    <Link href={notice.url} data-new={isNew || undefined} className="flex items-center gap-3 px-4 py-3 transition active:opacity-70">
+    <Link
+      href={notice.url}
+      onClick={onOpen}
+      data-new={isNew || undefined}
+      className={`flex items-center gap-3 px-4 py-3 transition active:opacity-70 ${isNew ? "bg-[color-mix(in_srgb,var(--color-brand-500)_14%,transparent)]" : ""}`}
+    >
       <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full bg-fill text-ink">
         <NoticeGlyph type={notice.type} className="h-7 w-7" />
       </span>
@@ -189,7 +210,6 @@ function NoticeRow({ notice, isNew }: { notice: NoticeDoc; isNew: boolean }) {
         </span>
         {notice.body ? <span className="mt-0.5 line-clamp-2 block text-[14px] leading-snug text-ink-muted">{notice.body}</span> : null}
       </span>
-      {isNew ? <span aria-label="새 알림" className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500" /> : null}
     </Link>
   );
 }
