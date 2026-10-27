@@ -244,6 +244,20 @@ service cloud.firestore {
        * 정말 지워야 하면 Firebase 콘솔에서 합니다.
        */
       allow delete: if false;
+
+      /*
+       * 전화번호 분리 보관 (2026-10-27 사용자 요청 "번호를 따로 분리해서 보관, 유닝앱처럼"): 번호는 users 문서가 아니라 여기(users/{uid}/private/main.phone)에 둡니다.
+       * 읽기·쓰기는 **본인과 운영진만**. 다른 원우의 번호는 서버 창구(/api/members/phones)가 번호 공개를 켠 사람 것만 내려줍니다.
+       * 칸은 phone(문자열 30자 이하)·updatedAt뿐.
+       */
+      match /private/{docId} {
+        allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+        allow create, update: if isSignedIn() && (request.auth.uid == uid || isAdmin())
+                              && request.resource.data.keys().hasOnly(['phone', 'updatedAt'])
+                              && request.resource.data.get('phone', '') is string
+                              && request.resource.data.get('phone', '').size() <= 30;
+        allow delete: if false;
+      }
     }
 
     /*

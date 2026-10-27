@@ -12,6 +12,7 @@ import TextTabs from "@/components/TextTabs";
 import { ChatIcon, PencilIcon, PlusIcon, SearchIcon, UsersIcon } from "@/components/icons";
 import { Badge, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { useMemberPhones } from "@/lib/member-phones";
 import { useModeration } from "@/components/ModerationDialogs";
 import { ensureDirectRoom } from "@/lib/chat-rooms";
 import { ALL_COHORTS, canAddMembers, cohortOf, hasYouthMembers } from "@/lib/cohort";
@@ -47,6 +48,8 @@ type Editing = { entry: DirectoryEntry | null } | null;
 
 export default function MembersPage() {
   const { profile } = useAuth();
+  /** 다른 원우의 번호는 서버가 번호 공개를 켠 사람 것만 내려줍니다(2026-10-27 번호 분리) */
+  const phones = useMemberPhones();
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   /**
@@ -79,8 +82,8 @@ export default function MembersPage() {
 
   /** 가입한 원우 + 아직 가입 전인 이름을 한 권으로 (이름 가나다순) */
   const entries = useMemo(
-    () => buildDirectory(members, roster.data, profile ? { uid: profile.uid, admin: profile.role === "admin" } : undefined),
-    [members, roster.data, profile],
+    () => buildDirectory(members, roster.data, profile ? { uid: profile.uid, admin: profile.role === "admin" } : undefined, phones),
+    [members, roster.data, profile, phones],
   );
 
   /**

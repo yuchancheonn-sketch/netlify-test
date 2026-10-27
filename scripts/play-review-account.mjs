@@ -77,7 +77,6 @@ if (mode === "create") {
     memberType: "general",
     company: "",
     position: "",
-    phone: "010-0000-0000",
     councilRole: "",
     introduction: "구글 플레이 심사용 계정입니다.",
     introVideoUrl: "",
@@ -88,9 +87,11 @@ if (mode === "create") {
     profileCompleted: true,
     createdAt: FieldValue.serverTimestamp(),
   });
+  // 전화번호는 users 문서가 아니라 private 문서에(2026-10-27 번호 분리)
+  await db.doc(`users/${UID}/private/main`).set({ phone: "010-0000-0000" });
   console.log("시험 회원 만듦 (uid play-review, 10기). 심사가 끝나면 delete 하세요.");
 } else {
-  await db.doc(`users/${UID}`).delete();
+  await db.recursiveDelete(db.doc(`users/${UID}`)); // private 하위 문서까지
   await auth.deleteUser(UID).catch(() => {});
   // 시험 계정이 쓴 알림 기기·차단 목록이 있으면 함께 지웁니다.
   const devices = await db.collection("pushTokens").where("uid", "==", UID).get();

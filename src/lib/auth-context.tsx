@@ -100,7 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 로그인한 계정의 프로필이 도착했는지. 별도 상태 없이 값에서 바로 끌어냅니다.
   const profileResolved = !user || profileEntry?.uid === user.uid;
-  const profile = user && profileEntry?.uid === user.uid ? profileEntry.doc : null;
+  const baseProfile = user && profileEntry?.uid === user.uid ? profileEntry.doc : null;
+  // 전화번호는 users 문서가 아니라 내 private 문서에 있습니다(2026-10-27, 번호 분리). 화면 코드가 늘 profile.phone으로 읽도록 여기서 합칩니다 — 옮기기 전 옛 users.phone은 대신 씁니다.
+  const [privatePhone, setPrivatePhone] = useState<{ uid: string; phone: string } | null>(null);
+  const profile = useMemo(
+    () => (baseProfile ? { ...baseProfile, phone: privatePhone && user && privatePhone.uid === user.uid ? privatePhone.phone : (baseProfile.phone ?? "") } : null),
+    [baseProfile, privatePhone, user],
+  );
 
   // 리디렉트 방식으로 로그인했을 때 돌아온 결과를 처리합니다.
   useEffect(() => {
@@ -141,6 +147,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 보안 규칙에 막히는 경우(예: 규칙 배포 전)에도 화면이 멈추지 않도록 합니다.
         setProfileEntry({ uid, doc: null });
       },
+    );
+  }, [user]);
+
+  // 내 전화번호(private 문서) 구독 — 없으면(옮기기 전) 비워 두고 옛 users.phone을 씁니다.
+  useEffect(() => {
+    if (!user) return;
+    const uid = user.uid;
+    return onSnapshot(
+      doc(db, "users", uid, "private", "main"),
+      (snapshot) => {
+        const phone = snapshot.exists() ? snapshot.get("phone") : undefined;
+        setPrivatePhone(typeof phone === "string" ? { uid, phone } : null);
+      },
+      () => setPrivatePhone(null),
     );
   }, [user]);
 

@@ -4,8 +4,10 @@ import { useState } from "react";
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import {
@@ -28,6 +30,7 @@ import type { DirectoryEntry } from "@/lib/directory";
 import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
+import { refreshMemberPhones } from "@/lib/member-phones";
 
 const MEMBER_TYPES: { value: MemberType; label: string }[] = [
   { value: "general", label: "일반 원우" },
@@ -73,7 +76,7 @@ export default function MemberEditSheet({
   defaultCohort: string;
   onClose: () => void;
 }) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
 
   /*
    * 2026-10-06 사용자 요청 (보안 점검 후 수정): 이미 가입한 **다른 원우**의 이름·기수·휴대폰은 본인(또는 운영진)만 고칩니다.
@@ -206,14 +209,22 @@ export default function MemberEditSheet({
           }),
         );
       } else if (entry.member) {
+        // 가입 계정의 번호는 users 문서가 아니라 private 문서에 둡니다(2026-10-27, 번호 분리). 잠긴 칸(남의 계정)은 fields에 번호가 없습니다.
+        const { phone: nextPhone, ...rest } = fields as typeof fields & { phone?: string };
+        if (nextPhone !== undefined) {
+          await commitWrite(
+            setDoc(doc(db, "users", entry.member.uid, "private", "main"), { phone: nextPhone, updatedAt: serverTimestamp() }, { merge: true }),
+          );
+        }
         await commitWrite(
-          updateDoc(doc(db, "users", entry.member.uid), { ...fields, ...stamp }),
+          updateDoc(doc(db, "users", entry.member.uid), { ...rest, ...(nextPhone !== undefined ? { phone: deleteField() } : {}), ...stamp }),
         );
       } else if (entry.roster) {
         await commitWrite(
           updateDoc(doc(db, "roster", entry.roster.id), { ...fields, ...stamp }),
         );
       }
+      if (user) refreshMemberPhones(user.uid, () => user.getIdToken()); // 번호를 고쳤으면 수첩에 바로(2026-10-27)
       onClose();
     } catch (caught) {
       setError(saveErrorMessage(caught));

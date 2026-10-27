@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import Avatar from "@/components/Avatar";
 import { CameraIcon } from "@/components/icons";
 import {
@@ -31,6 +31,7 @@ import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
 import PhoneVisibilitySwitch from "@/components/PhoneVisibilitySwitch";
+import { refreshMemberPhones } from "@/lib/member-phones";
 
 /* 구분 단추 — 이름만. 위에 얹던 풀 그림(🌿·🌱)은 2026-09-15 사용자 요청으로 없앴습니다. */
 const MEMBER_TYPES: { value: MemberType; label: string }[] = [
@@ -349,6 +350,14 @@ export default function ProfileForm({
       }
 
       // 응답을 잠깐만 기다리고 넘어갑니다 — 이유는 lib/firestore-commit.ts에.
+      // 번호 먼저(private) — 실패하면 아래 프로필 저장도 하지 않고 오류를 보입니다.
+      await commitWrite(
+        setDoc(
+          doc(db, "users", user.uid, "private", "main"),
+          { phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""), updatedAt: serverTimestamp() },
+          { merge: true },
+        ),
+      );
       await commitWrite(
         updateDoc(doc(db, "users", user.uid), {
           name,
@@ -365,7 +374,8 @@ export default function ProfileForm({
           memberType: hasYouthMembers(form.cohort) ? form.memberType || "general" : "general",
           company: form.company.trim() || carried?.company || "",
           position: form.position.trim() || carried?.position || "",
-          phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
+          // 번호는 users 문서가 아니라 private 문서에 저장합니다(2026-10-27) — 옛 users.phone은 지움
+          phone: deleteField(),
           phonePublic: form.phonePublic,
           councilRole: form.councilRole.trim() || carried?.councilRole || "",
           // 예전 한 줄 소개는 위에서 자기소개로 옮겨 담았으니 지웁니다.
@@ -379,6 +389,7 @@ export default function ProfileForm({
           updatedAt: serverTimestamp(),
         }),
       );
+      refreshMemberPhones(user.uid, () => user.getIdToken()); // 수첩의 번호·공개 설정 새로 받기(2026-10-27)
       onSaved?.();
     } catch (caught) {
       // permission-denied면 보안 규칙을 아직 콘솔에 올리지 않은 것입니다.

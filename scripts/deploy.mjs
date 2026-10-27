@@ -50,7 +50,7 @@ try {
   run(`${tar} -xf "${tarball}" -C "${dir}"`);
   rmSync(tarball);
   const opts = { cwd: dir };
-  run(`${firebase} deploy --only firestore:rules --project ${PROJECT} --non-interactive`, opts);
+  run(`${firebase} deploy --only firestore:rules,firestore:indexes --project ${PROJECT} --non-interactive`, opts);
   run(`${firebase} deploy --only apphosting --project ${PROJECT} --non-interactive`, opts);
   run(`${firebase} deploy --only hosting --project ${PROJECT} --non-interactive -m "캐시 비우기"`, opts);
 } finally {

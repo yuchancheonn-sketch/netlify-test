@@ -35,8 +35,12 @@ export async function withdrawAccount(db: Firestore, auth: Auth, uid: string): P
    */
   if (user.exists) {
     const listed = user.get("profileCompleted") === true && user.get("status") === "approved";
-    await keepInRoster(db, uid, user.data() ?? {}, listed);
-    await userRef.delete();
+    // 번호는 private 문서에 있습니다(2026-10-27). 본인이 번호 공개를 켠 경우에만 명단(원우 누구나 읽음)으로 옮기고, 비공개였으면 옮기지 않습니다.
+    const data = user.data() ?? {};
+    const priv = await userRef.collection("private").doc("main").get();
+    const phone = user.get("phonePublic") === true ? (priv.get("phone") ?? user.get("phone")) : undefined;
+    await keepInRoster(db, uid, { ...data, phone }, listed);
+    await db.recursiveDelete(userRef); // private 하위 문서까지
   }
 
   const aliases = await db.collection(ACCOUNT_LINKS).where("primaryUid", "==", uid).get();

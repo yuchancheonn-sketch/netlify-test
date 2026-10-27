@@ -145,12 +145,18 @@ async function provedPhone(db: Firestore, auth: Auth, candidateUid: string, phon
  */
 async function samePhoneMembers(db: Firestore, auth: Auth, uid: string, phoneDigits: string) {
   if (!/^01\d{8,9}$/.test(phoneDigits)) return [];
-  const snapshot = await db
-    .collection("users")
-    .where("phone", "in", [...new Set([formatPhone(phoneDigits), phoneDigits])])
-    .limit(20)
-    .get();
-  const docs = [...snapshot.docs];
+  const variants = [...new Set([formatPhone(phoneDigits), phoneDigits])];
+  // 번호는 users/{uid}/private/main에 있습니다(2026-10-27 — 번호 분리). 그 문서들에서 후보 uid를 찾고, 아직 옮기기 전인 옛 users.phone도 함께 봅니다(옮김이 끝나면 뒤쪽은 비게 됨).
+  const [privateHits, legacy] = await Promise.all([
+    db.collectionGroup("private").where("phone", "in", variants).limit(20).get(),
+    db.collection("users").where("phone", "in", variants).limit(20).get(),
+  ]);
+  const candidateUids = new Set<string>([
+    ...privateHits.docs.map((doc) => doc.ref.parent.parent?.id ?? ""),
+    ...legacy.docs.map((doc) => doc.id),
+  ]);
+  candidateUids.delete("");
+  const docs = (await Promise.all([...candidateUids].slice(0, 20).map((id) => db.collection("users").doc(id).get()))).filter((doc) => doc.exists) as unknown as typeof legacy.docs;
   // 번호를 증명한 계정은 users.phone이 달라도(예: 별칭으로 증명) 후보에 넣습니다.
   const proofOwner = (await db.collection(VERIFIED_PHONES).doc(phoneDigits).get()).get("uid");
   if (typeof proofOwner === "string" && !docs.some((doc) => doc.id === proofOwner)) {

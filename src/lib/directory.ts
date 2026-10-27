@@ -58,7 +58,7 @@ export interface DirectoryViewer {
 }
 
 /** 가입한 원우 문서를 수첩 항목으로 */
-function fromMember(member: UserDoc, matched: RosterDoc | null, viewer?: DirectoryViewer): DirectoryEntry {
+function fromMember(member: UserDoc, matched: RosterDoc | null, viewer?: DirectoryViewer, phones: Record<string, string> = {}): DirectoryEntry {
   // 번호는 본인이 공개로 해 둔 사람만 남에게 보입니다(본인·운영진은 늘 봄). 명단(roster)에 적혀 있던 번호도 같은 기준으로 가립니다(2026-10-27, 뉴웨이브와 같음).
   const phoneHidden = !member.phonePublic && member.uid !== viewer?.uid && !viewer?.admin;
   /*
@@ -75,7 +75,7 @@ function fromMember(member: UserDoc, matched: RosterDoc | null, viewer?: Directo
     memberType: member.memberType,
     company: member.company || matched?.company || "",
     position: member.position || matched?.position || "",
-    phone: phoneHidden ? "" : member.phone || matched?.phone || "",
+    phone: phoneHidden ? "" : phones[member.uid] || member.phone || matched?.phone || "",
     phoneHidden,
     councilRole: member.councilRole || matched?.councilRole || "",
     photoURL: member.photoURL ?? null,
@@ -125,6 +125,8 @@ export function buildDirectory(
   members: UserDoc[],
   roster: RosterDoc[],
   viewer?: DirectoryViewer,
+  /** 서버(/api/members/phones)가 내려준 { uid → 번호 } — 번호는 users 문서에 없습니다(2026-10-27) */
+  phones: Record<string, string> = {},
 ): DirectoryEntry[] {
   const rosterByUid = new Map<string, RosterDoc>();
   const openRosterByPerson = new Map<string, RosterDoc[]>();
@@ -151,7 +153,7 @@ export function buildDirectory(
       rosterByUid.get(member.uid) ??
       (open.length === 1 && memberCountByPerson.get(key) === 1 ? open[0] : null);
     if (matched) usedRosterIds.add(matched.id);
-    return fromMember(member, matched, viewer);
+    return fromMember(member, matched, viewer, phones);
   });
 
   for (const entry of roster) {
