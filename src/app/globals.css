@@ -80,6 +80,9 @@
   --color-ink-soft: #57534e;
   --color-ink-muted: #78716c;
   --color-ink-faint: #a8a29e;
+  /* 하단 탭 안 고른 글씨·아이콘 색(2026-10-27 뉴웨이브 탭 알약을 옮김 — 뉴웨이브는 푸른 회색 #686f83·#838ca0, 여기는 애기애타 중성 회색) */
+  --color-tab-off: #6d6a67;
+  --color-tab-icon-off: #8a8682;
 
   /* 오류 문구. 어두운 화면에서는 더 밝은 빨강으로 바뀝니다. */
   --color-danger: #dc2626;
@@ -314,7 +317,10 @@
   --dark-shadow-card-soft: 0 0 0 1px var(--dark-line), var(--dark-shadow-card-glow-soft);
   --dark-shadow-float: 0 0 0 1px var(--dark-line);
   /* 2026-10-06 뉴웨이브앱에서 옮김 — 어두운 화면의 유리 질감: 얇은 흰 테두리 + 윗변 밝은 선(탭바·창 공용 모양). */
-  --dark-tabbar-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  /* 탭 알약 둘레선·바탕(2026-10-27 사용자 "뉴웨이브 탭 알약 그대로, 색감은 애기애타") — 뉴웨이브는 슈퍼쏠 사진에서 잰 푸른 기 도는 값(#363f52·#2e3646·#242832, 바탕 남청 그라데이션)이고 여기는 같은 구조의 중성 회색. 두께 0.67px */
+  --dark-tabbar-edge: inset 0 0.67px 0 #3a3b3d, inset -0.67px 0 0 #313233, inset 0 0 0 0.67px #26272a;
+  --dark-tabbar-bg: linear-gradient(to right, #010101 8%, #010101 16%, #050506 29%, #0a0a0b 43%, #0d0d0f 50%, #0f0f11 64%, #101012 71%, #111113 85%, #121214 100%);
+  --dark-tab-off: var(--dark-ink-muted);
   --dark-glass-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 36px rgba(0, 0, 0, 0.55);
 }
 
@@ -340,6 +346,9 @@
     --shadow-card-glow-soft: var(--dark-shadow-card-glow-soft);
     --shadow-float: var(--dark-shadow-float);
     --tabbar-edge: var(--dark-tabbar-edge);
+    --color-tabbar: var(--dark-tabbar-bg);
+    --color-tab-off: var(--dark-tab-off);
+    --color-tab-icon-off: var(--dark-tab-off);
     --glass-edge: var(--dark-glass-edge);
     --color-sheet-field: var(--dark-fill);
   }
@@ -366,6 +375,9 @@
   --shadow-card-glow-soft: var(--dark-shadow-card-glow-soft);
   --shadow-float: var(--dark-shadow-float);
   --tabbar-edge: var(--dark-tabbar-edge);
+  --color-tabbar: var(--dark-tabbar-bg);
+  --color-tab-off: var(--dark-tab-off);
+  --color-tab-icon-off: var(--dark-tab-off);
   --glass-edge: var(--dark-glass-edge);
   --color-sheet-field: var(--dark-fill);
 }
@@ -377,6 +389,8 @@
  *   --color-sheet-field  창 속 입력칸·회색 칸 색 — 막 때문에 창 바탕과 구분이 안 되어 한 단 진하게.
  */
 :root {
+  /* 밝은 화면 탭 알약 바탕: 양끝 살짝 회색 → 가운데 흰색 가로 그라데이션(뉴웨이브 슈퍼쏠 라이트 탭바 값의 중성 버전, 2026-10-27) */
+  --color-tabbar: linear-gradient(to right, #f3f3f2, #f6f6f5 20%, #fbfbfb 33%, #fefefe 46%, #fefefe 59%, #fcfcfc 72%, #fafafa 85%, #f9f9f8);
   --tabbar-edge: 0 0 #0000;
   --glass-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 10px 36px rgba(0, 0, 0, 0.16);
   --color-sheet-field: #ececeb;
@@ -787,5 +801,77 @@ input[type="time"]::-webkit-date-and-time-value {
    */
   .login-screen {
     padding-top: 24px;
+  }
+}
+
+/*
+ * 하단 탭 아이콘 "고른 순간" 짧은 움직임(2026-10-27 뉴웨이브 globals.css에서 그대로 옮김 — 원래는 2026-10-17 사용자가 준 슈퍼쏠 탭바 사진처럼: 집 문이 사라졌다 다시 열림, 말풍선 톡, 사람 머리 톡, 폴더 톡).
+ * icons.tsx의 animate가 켜진(= 막 고른) 아이콘 조각에만 붙는 .tab-anim 클래스가 재생합니다. 움직임 줄이기 설정이면 재생하지 않습니다.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .tab-anim {
+    transform-box: fill-box;
+    animation-fill-mode: both;
+  }
+  .tab-door {
+    transform-origin: 50% 100%;
+    animation: tab-door 0.62s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  .tab-wiggle {
+    transform-origin: 50% 70%;
+    animation: tab-wiggle 0.6s ease-out both;
+  }
+  .tab-head {
+    transform-origin: 50% 100%;
+    animation: tab-head 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  }
+  .tab-pop {
+    transform-origin: 50% 90%;
+    animation: tab-pop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  }
+}
+@keyframes tab-door {
+  0%,
+  25% {
+    transform: scaleY(0);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+@keyframes tab-wiggle {
+  0% {
+    transform: rotate(0deg) scale(0.85);
+  }
+  30% {
+    transform: rotate(-12deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(8deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+@keyframes tab-head {
+  0% {
+    transform: translateY(4px) scale(0.6);
+  }
+  60% {
+    transform: translateY(-1.6px) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes tab-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  50% {
+    transform: scale(1.12, 1.08);
+  }
+  100% {
+    transform: scale(1);
   }
 }

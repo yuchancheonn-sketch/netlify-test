@@ -38,8 +38,13 @@ const TABS = [
    * 여기에 적어두지 않으면 모임 화면에서 다섯 탭이 모두 꺼진 채로 보여,
    * 원우가 앱의 어디에 서 있는지 알 수 없게 됩니다.
    */
-  { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events", "/sessions", "/polls", "/notifications", "/quizzes"] },
-  { href: "/members", label: "원우", Icon: UsersIcon, owns: [] },
+  /*
+   * 2026-10-27 사용자 "탭 알약 디자인을 뉴웨이브앱 코드 그대로" — 뉴웨이브(2026-10-16)처럼 탭 아이콘들의 실제 그려진 위·아래 높이를 홈 아이콘(27px 상자 안에서 위 3.63px ~ 아래 23.88px, 높이 20.25px)에 맞춥니다.
+   * fit = 홈 기준으로 맞추려고 아이콘을 상자 가운데 기준으로 키우거나(scale) 위아래로 옮기는(y, px) 값. 선 굵기는 확대·축소에 따라 변하지 않게 1.5/scale로 되돌려 모두 1.5px로 보입니다.
+   * 값은 크롬에서 안 고른(선만) 모양을 8배 확대 렌더링해 잉크가 닿는 첫·끝 줄을 잰 것(애기애타 아이콘 기준: 홈 3.63~23.88 / 원우 4.5~22.38 / 위원회 3.5~23.38 / 채팅 4.25~23.13 / 자료 4.25~22.75) — 아이콘 모양(icons.tsx)을 바꾸면 다시 재야 합니다.
+   */
+  { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events", "/sessions", "/polls", "/notifications", "/quizzes"], fit: null },
+  { href: "/members", label: "원우", Icon: UsersIcon, owns: [], fit: { scale: 1.133, y: 0.32 } },
   /*
    * 2026-09-09에 소식과 자료의 자리를 맞바꿨습니다.
    *
@@ -56,9 +61,9 @@ const TABS = [
    * 그 탭을 열면 위원회 칸이 먼저 보이고, 제목 아래 글자 탭으로 "원우소식"·"동호회" 칸이 있습니다(2026-10-06)(app/(main)/news/page.tsx).
    * 주소(/news)와 알림이 여는 자리는 그대로입니다.
    */
-  { href: "/news", label: "위원회", Icon: CommitteeIcon, owns: ["/albums"] },
-  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [] },
-  { href: "/library", label: "자료", Icon: LibraryIcon, owns: [] },
+  { href: "/news", label: "위원회", Icon: CommitteeIcon, owns: ["/albums"], fit: { scale: 1.019, y: 0.31 } },
+  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [], fit: { scale: 1.073, y: 0.05 } },
+  { href: "/library", label: "자료", Icon: LibraryIcon, owns: [], fit: { scale: 1.095, y: 0.25 } },
 ] as const;
 
 /** 다섯 탭의 첫 화면 주소. 그 화면에서 아이폰 끝 밀기(뒤로 가기)를 막는 MainShell이 씁니다. */
@@ -121,6 +126,8 @@ function passedSlots(dx: number, slot: number): number {
 
 /** 회색 알약과 탭바 테두리 사이에 두는 간격(px). 사방 모두 이 값입니다. */
 const BAR_PADDING = 4;
+/** 알약 바탕의 위아래 안쪽 여백(2026-10-27 뉴웨이브와 같게 4 → 5px, 슈퍼쏠 사진 맞춤). 좌우는 BAR_PADDING·TRACK_INSET 그대로 */
+const BAR_PADDING_Y = 5;
 
 /**
  * 회색 알약이 한 칸보다 좌우로 더 나오는 길이(px).
@@ -406,7 +413,7 @@ export default function BottomTabBar() {
           두 상수를 고치면 이 값도 같이 고쳐야 합니다.
           그림자(글로우) 대신 회색 1px 테두리만 둡니다 (2026-09-23 사용자 "모든 글로우 없애고 회색 테두리로").
         */
-        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full bg-surface py-1 px-[7px] shadow-[0_6px_14px_rgba(0,0,0,0.1),0_-3px_10px_rgba(0,0,0,0.05),var(--tabbar-edge)]"
+        className="relative mx-auto flex w-full max-w-[520px] items-stretch rounded-full [background:var(--color-tabbar)] py-[5px] px-[7px] shadow-[0_6px_14px_rgba(0,0,0,0.1),0_-3px_10px_rgba(0,0,0,0.05),var(--tabbar-edge)]"
       >
         {/*
           고른 탭 뒤에 깔리는 회색 알약. 짚어서 좌우로 끌 수 있습니다.
@@ -435,8 +442,8 @@ export default function BottomTabBar() {
           aria-hidden="true"
           className="pointer-events-none absolute rounded-full bg-ink/[0.07]"
           style={{
-            top: BAR_PADDING + PILL_DROP,
-            bottom: BAR_PADDING - PILL_DROP,
+            top: BAR_PADDING_Y + PILL_DROP,
+            bottom: BAR_PADDING_Y - PILL_DROP,
             left: `calc(${BAR_PADDING}px + ${pillIndex} * ${slotCss})`,
             width: `calc(${slotCss} + ${PILL_BLEED * 2}px)`,
             translate: drag?.dx ? `${drag.dx}px` : undefined,
@@ -457,7 +464,7 @@ export default function BottomTabBar() {
           }}
         />
 
-        {TABS.map(({ href, label, Icon }, index) => {
+        {TABS.map(({ href, label, Icon, fit }, index) => {
           const active = index === activeIndex;
           /* 알약이 덮고 있는 탭 — 끌지 않을 때는 지금 탭과 같습니다. */
           const covered = index === coveredIndex;
@@ -479,7 +486,7 @@ export default function BottomTabBar() {
            * 흰 판·판판한 회색 알약·굵은 선·글씨 크기 등 나머지 그림식 모양은 그대로입니다.
            * (당근식 이전에는 안 고른 탭이 ink-soft였는데, 그건 되돌리지 않았습니다.)
            */
-          const itemClassName = covered ? "text-brand-500" : "text-ink";
+          const itemClassName = covered ? "text-brand-500" : "text-tab-off";
           /*
            * 탭 한 칸의 위아래 여백은 알약 높이와 덩어리의 위치를 함께 정합니다.
            * 위 6px(pt-1.5) + 아래 10px(pb-2.5).
@@ -518,8 +525,8 @@ export default function BottomTabBar() {
                 }}
                 className={`flex h-full flex-col items-center justify-center rounded-full pt-1.5 pb-2.5 transition ${itemClassName}`}
               >
-                {/* 아이콘 칸을 0.75px 위로 (2026-10-06, 뉴웨이브앱 탭 알약과 같게) */}
-                <span className="relative flex -translate-y-[0.75px] items-center justify-center">
+                {/* 아이콘 칸을 1.75px 위로(2026-10-27 뉴웨이브와 같게, 예전 0.75px) */}
+                <span className="relative flex -translate-y-[1.75px] items-center justify-center">
                   {/*
                     선 굵기는 모든 탭이 1.9입니다. 그림(당근 하단 바)의 안 고른 아이콘이 가는 선이
                     아니라 굵은 검은 선이라 예전 1.7(안 고른 탭)에서 2로 올렸고,
@@ -532,11 +539,15 @@ export default function BottomTabBar() {
                       0.1은 약 0.34 화소라, 이보다 잘게 내리면 같은 화소에 떨어져
                       화면에서는 달라지지 않습니다. 더 얇게 가려면 1.8(icons.tsx 기본값)입니다.
                   */}
-                  <Icon
-                    className="h-[27px] w-[27px]"
-                    strokeWidth={1.5}
-                    filled={covered}
-                  />
+                  {/* 아이콘 크기·선 굵기·고른 순간 움직임은 뉴웨이브와 같음(2026-10-27): 27px, 선 1.5px(fit이 있으면 확대·축소를 되돌려 늘 1.5px), 속 채움 + animate */}
+                  <span className={`flex ${covered ? "" : "text-[var(--color-tab-icon-off)]"}`} style={fit ? { transform: `translateY(${fit.y}px) scale(${fit.scale})` } : undefined}>
+                    <Icon
+                      className="h-[27px] w-[27px]"
+                      strokeWidth={fit ? 1.5 / fit.scale : 1.5}
+                      filled={covered}
+                      animate={covered}
+                    />
+                  </span>
 
                   {/*
                     아이콘 오른쪽 위에 얹는 빨간 점.

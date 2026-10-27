@@ -4,6 +4,7 @@
  * 번들 크기를 아끼고 굵기·색을 한 곳에서 관리합니다.
  * 모두 currentColor를 따르므로 부모의 text-* 색상이 그대로 적용됩니다.
  */
+import { useId } from "react";
 
 interface IconProps {
   className?: string;
@@ -15,6 +16,8 @@ interface IconProps {
    * 선으로 그린 모양을 그대로 칠하면 어색해지는 아이콘은 채운 모양을 따로 그렸습니다.
    */
   filled?: boolean;
+  /** 하단 탭에서 막 고른 순간 재생하는 짧은 움직임(2026-10-27, 뉴웨이브와 같음) — 속 채운 모양(filled)에서만 쓰며 globals.css의 .tab-anim 키프레임을 따름 */
+  animate?: boolean;
 }
 
 function base(className?: string) {
@@ -49,13 +52,35 @@ export function VoteStampIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function HomeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+export function HomeIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
+  const maskId = useId();
+  if (filled) {
+    // 채운 집(2026-10-27 뉴웨이브 HomeIcon을 옮김): 문은 마스크 구멍 — 고른 순간 문이 사라졌다가(집이 통째로 칠해짐) 아래에서부터 다시 열리는 움직임(.tab-door). 구멍 크기는 선 모양의 문과 같게(선 굵기만큼 안쪽으로)
+    return (
+      <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+        <defs>
+          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <rect width="24" height="24" fill="white" />
+            <rect x="9.3" y="14" width="5.4" height="8" rx="0.8" fill="black" className={animate ? "tab-anim tab-door" : undefined} />
+          </mask>
+        </defs>
+        <path
+          d="M3.5 10.4 12 4l8.5 6.4V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19v-8.6Z"
+          fill="currentColor"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinejoin="round"
+          mask={`url(#${maskId})`}
+        />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
       {/* 문이 바깥선의 홈으로 이어져 있어, 그대로 칠하면 문만 파인 집이 됩니다. */}
       <path
-        d="M3.5 10.4 12 4l8.5 6.4V19a1.5 1.5 0 0 1-1.5 1.5h-3.5V15h-7v5.5H5A1.5 1.5 0 0 1 3.5 19v-8.6Z"
-        fill={filled ? "currentColor" : "none"}
+        d="M3.5 10.4 12 4l8.5 6.4V19a1.5 1.5 0 0 1-1.5 1.5h-4.25V15h-5.5v5.5H5A1.5 1.5 0 0 1 3.5 19v-8.6Z"
+        fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
@@ -64,12 +89,12 @@ export function HomeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
   );
 }
 
-export function UsersIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+export function UsersIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
   // 몸통이 열린 곡선이라 그대로 칠하면 뭉개집니다. 채운 모양은 따로 그립니다.
   if (filled) {
     return (
       <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
-        <circle cx="9.4" cy="7.9" r="3.7" />
+        <circle cx="9.4" cy="7.9" r="3.7" className={animate ? "tab-anim tab-head" : undefined} />
         <path d="M2.8 19.7c0-3.5 3-5.6 6.6-5.6s6.6 2.1 6.6 5.6a.8.8 0 0 1-.8.8H3.6a.8.8 0 0 1-.8-.8Z" />
         <circle cx="17.7" cy="8.3" r="2.7" />
         <path d="M17.9 13.8c2.6.1 4.6 1.8 4.6 4.4a.8.8 0 0 1-.8.8h-3.5c.1-.4.2-.9.2-1.4 0-1.5-.2-2.8-.5-3.8Z" />
@@ -115,7 +140,7 @@ export function SinglePersonIcon({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+export function LibraryIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
   /*
    * 채울 때는 폴더와 재생 삼각형을 한 path로 합치고 evenodd 규칙을 씁니다.
    * 따로 두면 삼각형까지 같은 색으로 칠해져 보이지 않게 됩니다.
@@ -125,6 +150,7 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps)
     return (
       <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
         <path
+          className={animate ? "tab-anim tab-pop" : undefined}
           fillRule="evenodd"
           clipRule="evenodd"
           d="M3.5 6.2A1.7 1.7 0 0 1 5.2 4.5h3.3l1.7 2h8.6a1.7 1.7 0 0 1 1.7 1.7v9.6a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V6.2Zm7.1 5.1 3.6 2-3.6 2v-4Z"
@@ -152,11 +178,13 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled }: IconProps)
   );
 }
 
-export function ChatIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+export function ChatIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+    // 흔들릴 때 말풍선이 24칸 밖으로 삐져나가 잘리지 않게 움직이는 동안은 칸 밖도 그림(뉴웨이브 MessageIcon과 같음)
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} style={animate ? { overflow: "visible" } : undefined} aria-hidden="true">
       {/* 말풍선은 닫힌 모양 하나라 그대로 칠하면 됩니다. */}
       <path
+        className={animate ? "tab-anim tab-wiggle" : undefined}
         d="M4 6.4A1.9 1.9 0 0 1 5.9 4.5h12.2A1.9 1.9 0 0 1 20 6.4v7.9a1.9 1.9 0 0 1-1.9 1.9H9.3L5 19.8v-3.6h-.1A.9.9 0 0 1 4 15.3V6.4Z"
         fill={filled ? "currentColor" : "none"}
         stroke="currentColor"
@@ -185,15 +213,17 @@ export function ReflectionIcon({ className, strokeWidth = 1.8 }: IconProps) {
  * 위원회 탭 — 기둥이 선 건물(의사당 모양). 2026-09-23 사용자 요청으로 확성기(MegaphoneIcon) 자리를 대신합니다.
  * 다른 탭 아이콘과 같은 결로 그렸습니다 — 24 격자, 선 굵기는 넘겨받은 값, 고른 탭은 채운 모양.
  */
-export function CommitteeIcon({ className, strokeWidth = 1.8, filled }: IconProps) {
+export function CommitteeIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
   if (filled) {
     return (
       <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+        <g className={animate ? "tab-anim tab-pop" : undefined}>
         <path d="M12 3.1 21.2 8a.9.9 0 0 1-.4 1.7H3.2A.9.9 0 0 1 2.8 8L12 3.1Z" />
         <rect x="5.5" y="11.2" width="2.3" height="6" rx="0.7" />
         <rect x="10.85" y="11.2" width="2.3" height="6" rx="0.7" />
         <rect x="16.2" y="11.2" width="2.3" height="6" rx="0.7" />
         <rect x="3.1" y="18.6" width="17.8" height="2.3" rx="1.1" />
+        </g>
       </svg>
     );
   }
