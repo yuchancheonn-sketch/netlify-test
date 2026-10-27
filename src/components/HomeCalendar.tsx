@@ -196,7 +196,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     <section
       onClick={centerSelf}
       // pt-[11.5px] — "2026년 9월" 위 흰 여백 (2026-09-25 사용자 요청 여러 번: 16 → 15.5 → 12.5 → 10.5 → "1px 늘려줘" 11.5px). OX 퀴즈와 함께.
-      className="rounded-card bg-surface px-4 pt-[11.5px] pb-3 shadow-[var(--shadow-card-flat)]"
+      className="rounded-[32px] bg-surface px-4 pt-[11.5px] pb-3 shadow-[var(--shadow-card-flat)]"
     >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">
@@ -206,7 +206,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
           ★ 19px — 같은 날 사용자 "OX 퀴즈 제목보다 작아 보인다". 18px로 같아도 "2026년 9월"은 대부분 숫자라,
             한글보다 키가 낮은 숫자 탓에 작아 보였습니다. 눈으로 같게 보이도록 이 제목만 1px 키웠습니다.
         */}
-        <h2 className="text-[19px] font-bold text-ink">
+        <h2 className="text-[19.5px] font-[600] text-ink">
           {view.year}년 {view.month + 1}월
         </h2>
         <div className="-mr-2 flex items-center">

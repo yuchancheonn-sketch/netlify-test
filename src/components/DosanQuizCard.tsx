@@ -142,13 +142,13 @@ export default function DosanQuizCard() {
     <>
       {/* 위 여백 17px — 20px(pt-5) → 19px → 17px로 두 번 줄였습니다(2026-09-11). */}
       {/* pt-[12.5px] — 카드 위 흰 여백 (2026-09-25 사용자 요청 여러 번: 17 → 16.5 → 13.5 → 11.5 → "1px 늘려줘" 12.5px). 캘린더·다가오는 일정 박스와 함께. */}
-      <section className="rounded-card bg-surface px-5 pt-[12.5px] pb-5 shadow-[var(--shadow-card-flat)]">
+      <section className="rounded-[32px] bg-surface px-5 pt-[12.5px] pb-5 shadow-[var(--shadow-card-flat)]">
         <div className="flex items-center justify-between gap-2">
           {/*
             제목은 "오늘의 도산" 카드의 제목과 같은 크기·굵기·색입니다(18px, 굵게, 검정).
             처음엔 나만의닥터처럼 주황 바탕의 작은 이름표였는데 2026-09-11에 맞췄습니다.
           */}
-          <h2 className="text-[18px] font-bold text-ink">오늘의 OX 퀴즈</h2>
+          <h2 className="text-[18.5px] font-[600] text-ink">오늘의 OX 퀴즈</h2>
           {/*
             오른쪽 위 — (푼 뒤에만) 해설 보기, 그리고 늘 ">" 역대 퀴즈(/quizzes).
             -mr-[7.5px]: ">"의 손끝 자리(32px)는 넉넉히 두고, 꺾쇠 끝을 카드 끝에서 16.5px에 세웁니다 — 다가오는 일정

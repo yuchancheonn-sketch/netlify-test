@@ -214,9 +214,9 @@ function VoteBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   }
 
   return (
-    <div className="rounded-card bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card-flat)]">
+    <div className="rounded-[32px] bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card-flat)]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="flex min-w-0 items-center gap-1.5 text-[18px] font-bold text-ink">
+        <h2 className="flex min-w-0 items-center gap-1.5 text-[19.5px] font-[600] text-ink">
           투표
           <PollTags poll={poll} />
         </h2>
@@ -424,9 +424,9 @@ function OpinionBoard({ poll, myUid }: { poll: PollDoc; myUid?: string }) {
   }
 
   return (
-    <div className="rounded-card bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card-flat)]">
+    <div className="rounded-[32px] bg-surface px-5 pt-5 pb-5 shadow-[var(--shadow-card-flat)]">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="flex min-w-0 items-center gap-1.5 text-[18px] font-bold text-ink">
+        <h2 className="flex min-w-0 items-center gap-1.5 text-[19.5px] font-[600] text-ink">
           의견 모으기
           <PollTags poll={poll} />
         </h2>
