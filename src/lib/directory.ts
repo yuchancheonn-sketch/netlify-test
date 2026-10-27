@@ -27,6 +27,8 @@ export interface DirectoryEntry {
   company: string;
   position: string;
   phone: string;
+  /** 가입한 원우가 번호를 비공개로 해 둬서 비워 둔 칸 — 이 칸을 고칠 때 번호를 건드리면 안 됩니다(2026-10-27). */
+  phoneHidden?: boolean;
   councilRole: string;
   photoURL: string | null;
   introduction: string;
@@ -49,8 +51,16 @@ function personKey(cohort: string | null | undefined, name: string): string {
   return `${cohortOf(cohort)}:${normalizeName(name)}`;
 }
 
+/** 보는 사람 — 번호가 비공개인 원우의 번호는 본인·운영진만 봅니다 */
+export interface DirectoryViewer {
+  uid: string;
+  admin: boolean;
+}
+
 /** 가입한 원우 문서를 수첩 항목으로 */
-function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry {
+function fromMember(member: UserDoc, matched: RosterDoc | null, viewer?: DirectoryViewer): DirectoryEntry {
+  // 번호는 본인이 공개로 해 둔 사람만 남에게 보입니다(본인·운영진은 늘 봄). 명단(roster)에 적혀 있던 번호도 같은 기준으로 가립니다(2026-10-27, 뉴웨이브와 같음).
+  const phoneHidden = !member.phonePublic && member.uid !== viewer?.uid && !viewer?.admin;
   /*
    * 본인이 채운 값이 언제나 우선입니다.
    * 가입 전에 다른 원우가 명단에 적어둔 회사·직책은 본인 칸이 비어 있을 때만 씁니다.
@@ -65,7 +75,8 @@ function fromMember(member: UserDoc, matched: RosterDoc | null): DirectoryEntry 
     memberType: member.memberType,
     company: member.company || matched?.company || "",
     position: member.position || matched?.position || "",
-    phone: member.phone || matched?.phone || "",
+    phone: phoneHidden ? "" : member.phone || matched?.phone || "",
+    phoneHidden,
     councilRole: member.councilRole || matched?.councilRole || "",
     photoURL: member.photoURL ?? null,
     // 한 줄 소개는 없앴습니다. 예전에 써 둔 것은 자기소개가 비어 있을 때 대신 보여줍니다.
@@ -113,6 +124,7 @@ function fromRoster(entry: RosterDoc): DirectoryEntry {
 export function buildDirectory(
   members: UserDoc[],
   roster: RosterDoc[],
+  viewer?: DirectoryViewer,
 ): DirectoryEntry[] {
   const rosterByUid = new Map<string, RosterDoc>();
   const openRosterByPerson = new Map<string, RosterDoc[]>();
@@ -139,7 +151,7 @@ export function buildDirectory(
       rosterByUid.get(member.uid) ??
       (open.length === 1 && memberCountByPerson.get(key) === 1 ? open[0] : null);
     if (matched) usedRosterIds.add(matched.id);
-    return fromMember(member, matched);
+    return fromMember(member, matched, viewer);
   });
 
   for (const entry of roster) {

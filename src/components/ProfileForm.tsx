@@ -30,6 +30,7 @@ import {
 import { formatPhone, formatPhoneInput, isKoreanName } from "@/lib/format";
 import { isSupportedVideoUrl, parseVideoLink, videoThumbnail } from "@/lib/video";
 import type { MemberType } from "@/lib/types";
+import PhoneVisibilitySwitch from "@/components/PhoneVisibilitySwitch";
 
 /* 구분 단추 — 이름만. 위에 얹던 풀 그림(🌿·🌱)은 2026-09-15 사용자 요청으로 없앴습니다. */
 const MEMBER_TYPES: { value: MemberType; label: string }[] = [
@@ -57,6 +58,8 @@ interface FormState {
   company: string;
   position: string;
   phone: string;
+  /** 전화번호를 다른 원우에게 보일지 — 기본 비공개(2026-10-27 사용자 요청, 뉴웨이브와 같음) */
+  phonePublic: boolean;
   councilRole: string;
   introduction: string;
   introVideoUrl: string;
@@ -141,6 +144,7 @@ export default function ProfileForm({
       company: profile?.company ?? "",
       position: profile?.position ?? "",
       phone: profile?.phone ?? "",
+      phonePublic: profile?.phonePublic ?? false,
       councilRole: profile?.councilRole ?? "",
       // 한 줄 소개는 없앴습니다. 예전에 써 둔 한 줄 소개는 자기소개 칸으로 옮겨 보여줍니다.
       introduction: profile?.introduction || profile?.bio || "",
@@ -362,6 +366,7 @@ export default function ProfileForm({
           company: form.company.trim() || carried?.company || "",
           position: form.position.trim() || carried?.position || "",
           phone: form.phone.trim() ? formatPhone(form.phone) : (carried?.phone ?? ""),
+          phonePublic: form.phonePublic,
           councilRole: form.councilRole.trim() || carried?.councilRole || "",
           // 예전 한 줄 소개는 위에서 자기소개로 옮겨 담았으니 지웁니다.
           bio: deleteField(),
@@ -479,6 +484,14 @@ export default function ProfileForm({
         />
         {/* 아래 안내 문구("원우들에게만 보이고, 눌러서 바로 전화·문자할 수 있어요.")는 2026-09-27 사용자 요청으로 지웠습니다. */}
         {errors.phone ? <FieldError>{errors.phone}</FieldError> : null}
+        {/* 번호 공개 여부(2026-10-27 사용자 요청, 뉴웨이브 ProfileForm과 같은 모양) — 기본은 비공개 */}
+        <div className="mt-3 flex items-center justify-between gap-3 px-1">
+          <div className="min-w-0">
+            <p className="text-[15px] font-bold text-ink">전화번호 공개</p>
+            <p className="mt-0.5 text-[13px] text-ink-muted">{form.phonePublic ? "원우들에게 보여요" : "나만 볼 수 있어요"}</p>
+          </div>
+          <PhoneVisibilitySwitch checked={form.phonePublic} onChange={(next) => update("phonePublic", next)} />
+        </div>
       </div>
 
       {/* 기수 — 원우수첩이 기수마다 따로라, 이름과 함께 꼭 골라야 합니다. */}

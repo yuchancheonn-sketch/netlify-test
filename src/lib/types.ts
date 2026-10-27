@@ -35,6 +35,8 @@ export interface UserDoc {
   position: string;
   /** 휴대폰 번호. 상세에서만 보이고 눌러서 바로 걸 수 있습니다. */
   phone: string;
+  /** 전화번호를 다른 원우에게 보일지(2026-10-27 사용자 요청, 뉴웨이브와 같음) — 기본 비공개. 본인·운영진은 늘 봅니다. ★ 앱 화면에서 가리는 것이라 문서 자체는 로그인한 원우에게 내려옴 */
+  phonePublic?: boolean;
   /** 원우회 직위. 고르지 않았으면 빈 문자열 */
   councilRole: string;
   /**

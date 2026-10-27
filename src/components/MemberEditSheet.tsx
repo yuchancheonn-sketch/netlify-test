@@ -353,7 +353,7 @@ export default function MemberEditSheet({
         disabled={lockIdentity}
         onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
         inputMode="tel"
-        placeholder="010-1234-5678"
+        placeholder={entry?.phoneHidden ? "비공개" : "010-1234-5678"}
         className={fieldClassName}
       />
     </div>

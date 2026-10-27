@@ -79,8 +79,8 @@ export default function MembersPage() {
 
   /** 가입한 원우 + 아직 가입 전인 이름을 한 권으로 (이름 가나다순) */
   const entries = useMemo(
-    () => buildDirectory(members, roster.data),
-    [members, roster.data],
+    () => buildDirectory(members, roster.data, profile ? { uid: profile.uid, admin: profile.role === "admin" } : undefined),
+    [members, roster.data, profile],
   );
 
   /**
