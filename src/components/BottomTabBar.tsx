@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ChatIcon,
+  ChatTabIcon,
   CommitteeIcon,
   HomeIcon,
   LibraryIcon,
@@ -62,7 +62,7 @@ const TABS = [
    * 주소(/news)와 알림이 여는 자리는 그대로입니다.
    */
   { href: "/news", label: "위원회", Icon: CommitteeIcon, owns: ["/albums"], fit: { scale: 1.019, y: 0.31 } },
-  { href: "/chat", label: "채팅", Icon: ChatIcon, owns: [], fit: { scale: 1.073, y: 0.05 } },
+  { href: "/chat", label: "채팅", Icon: ChatTabIcon, owns: [], fit: { scale: 0.886, y: 0.82 } },
   { href: "/library", label: "자료", Icon: LibraryIcon, owns: [], fit: { scale: 1.095, y: 0.25 } },
 ] as const;
 

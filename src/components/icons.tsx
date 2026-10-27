@@ -178,6 +178,24 @@ export function LibraryIcon({ className, strokeWidth = 1.8, filled, animate }: I
   );
 }
 
+/** 하단 탭의 둥근 말풍선 (2026-10-27 사용자 "탭 알약 채팅 아이콘을 뉴웨이브와 똑같이" — 뉴웨이브 MessageIcon을 그대로 옮김). 화면 안의 다른 채팅 그림은 아래 ChatIcon을 그대로 씁니다. */
+export function ChatTabIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
+  return (
+    // 흔들릴 때 말풍선이 24칸 위로 삐져나가 잘리지 않게 움직이는 동안은 칸 밖도 그림
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} style={animate ? { overflow: "visible" } : undefined} aria-hidden="true">
+      <path
+        className={animate ? "tab-anim tab-wiggle" : undefined}
+        d="M4.8 16.6A9.4 9.4 0 1 1 9.1 19.5L4.2 21.3Z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="miter"
+      />
+    </svg>
+  );
+}
+
 export function ChatIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
   return (
     // 흔들릴 때 말풍선이 24칸 밖으로 삐져나가 잘리지 않게 움직이는 동안은 칸 밖도 그림(뉴웨이브 MessageIcon과 같음)
