@@ -14,6 +14,7 @@ import DosanQuizCard from "@/components/DosanQuizCard";
 import HomeShortcuts from "@/components/HomeShortcuts";
 import HomeCalendar from "@/components/HomeCalendar";
 import { inCohort } from "@/lib/cohort";
+import { useAuth } from "@/lib/auth-context";
 import { APP_DEFINITION_TITLE } from "@/lib/constants";
 import { todayString } from "@/lib/format";
 import { useAcademyEvents, useUpcomingEvents } from "@/lib/hooks";
@@ -21,6 +22,9 @@ import { quoteOfTheDay } from "@/lib/quotes";
 import { useViewCohort } from "@/lib/use-view-cohort";
 
 export default function HomePage() {
+  const { user, profile } = useAuth();
+  // 로그아웃 상태에선 앱 이름, 로그인하면 "천유찬님"처럼 "이름님"(2026-10-27 뉴웨이브와 같게)
+  const headerTitle = user && profile?.name ? `${profile.name}님` : APP_DEFINITION_TITLE;
   const upcoming = useUpcomingEvents();
   /** "다가오는 모임이 아직 없어요" 상자의 "+ 등록"이 띄우는 일정 등록 시트 */
   const [adding, setAdding] = useState(false);
@@ -67,11 +71,11 @@ export default function HomePage() {
         title={
           canSwitch ? (
             <span className="flex items-center gap-2">
-              {APP_DEFINITION_TITLE}
+              {headerTitle}
               <CohortPicker value={cohort} onChange={setCohort} />
             </span>
           ) : (
-            APP_DEFINITION_TITLE
+            headerTitle
           )
         }
         right={<HeaderActions />}
