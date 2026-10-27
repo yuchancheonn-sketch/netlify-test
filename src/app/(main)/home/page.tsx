@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import CohortPicker from "@/components/CohortPicker";
 import { EventDdayCard } from "@/components/EventCard";
-import EventSheet from "@/components/EventSheet";
-import { useRequireLogin } from "@/components/LoginRequired";
 import PageHeader, { HeaderActions } from "@/components/PageHeader";
 import PollCard from "@/components/PollCard";
-import { CalendarIcon, PlusIcon } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
 import DosanAcademyFooter from "@/components/DosanAcademyFooter";
 import DosanQuizCard from "@/components/DosanQuizCard";
@@ -26,9 +22,6 @@ export default function HomePage() {
   // 로그아웃 상태에선 앱 이름, 로그인하면 "천유찬님"처럼 "이름님"(2026-10-27 뉴웨이브와 같게)
   const headerTitle = user && profile?.name ? <span className="block max-w-[9em] truncate text-[17px] font-[520]">{profile.name}님</span> : APP_DEFINITION_TITLE;
   const upcoming = useUpcomingEvents();
-  /** "다가오는 모임이 아직 없어요" 상자의 "+ 등록"이 띄우는 일정 등록 시트 */
-  const [adding, setAdding] = useState(false);
-  const requireLogin = useRequireLogin();
   /*
    * 홈은 기수마다 따로입니다 — 일정·투표·수업 기록 모두 보고 있는 기수의 것만.
    * 원우는 자기 기수로 고정이고, 운영진만 제목 옆에서 바꿔 볼 수 있습니다.
@@ -105,55 +98,17 @@ export default function HomePage() {
           다가오는 모임 — D-day 한 줄. 누르면 모임 일정 전체 보기로 갑니다
           (예전의 따로 선 "모임 일정 전체 보기" 상자를 이 카드에 합쳤습니다).
         */}
-        <section>
-          {upcoming.loading || academy.loading ? (
-            /* 큰 D-day 카드(2026-09-25 C안)와 같은 높이 — 위아래 16px + 왼쪽 칸(D-day 28 · 6 · 날짜 12) 약 50px ≈ 82px.
-               (같은 날 잠깐 쓴 머리띠 카드는 109px, 2026-09-23~25의 두 줄 카드는 81px이었습니다.) */
-            <Skeleton className="h-[82px] rounded-card" />
-          ) : nextEvent ? (
-            <EventDdayCard event={nextEvent} href={nextEvent.href} external={nextEvent.external} />
-          ) : (
-            /*
-              모임이 없을 때 — 한 줄짜리 낮은 상자 (2026-09-15 사용자 요청: "박스 높이 훨씬 줄이고,
-              일정 추가 단추는 최대한 눈에 안 띄게·간소하게").
-              왼쪽 달력 그림 · 가운데 "다가오는 모임이 아직 없어요" · 오른쪽 끝에 옅은 회색 "+ 등록" 글자 링크(/events/new).
-              단추 모양(주황 알약)을 걷고 글자만 두어 홈에서 눈길을 끌지 않으면서, 필요한 원우는 바로 찾게 했습니다.
-              높이는 위아래 12px + 한 줄 (2026-09-22 사용자 "박스 높이 줄여줘"로 16px에서 4px씩 내렸습니다.
-              2026-09-15에 가운데 정렬 빈 화면 약 170px에서 이 한 줄짜리로 바꾼 뒤 두 번째 감량입니다).
-              "+ 등록"은 손끝 자리를 넉넉히 두려고 글자보다 큰 상자(px-2 py-1.5)에 둡니다.
-              ★ 더 줄이려면 그 py-1.5부터 봐야 합니다 — 상자 높이를 정하는 것은 이제 위아래 여백이
-                아니라 이 링크의 높이입니다. 다만 줄이면 손끝이 닿는 자리도 같이 좁아집니다.
-              위치: 상자 오른쪽 여백 pr-[11px] + 단추 안쪽 8px → 글자가 카드 끝에서 19px 안쪽 (2026-09-15 사용자 지정).
-              같은 날 12px(pr-3 + -mr-2) → 44px(pr-9, "왼쪽으로 많이") → 20px → 19px로 맞췄습니다.
-              지나온 모양(같은 날): 카드 전체가 모임 목록 링크 → 주황 "모임 등록하기" 단추 → 설명 문구 삭제 → 지금.
-            */
-            <div className="flex items-center gap-3 rounded-card bg-surface py-3 pr-[11px] pl-5">
-              {/* 달력 그림은 앱의 기본 주황(brand-500) — 처음엔 옅은 brand-300이라 흐린 주황으로 보인다고 해서 바꿨습니다(2026-09-15). */}
-              <CalendarIcon className="h-[22px] w-[22px] shrink-0 text-brand-500" />
-              {/*
-                색은 먹색(ink), 굵기는 medium(500) — 둘 다 2026-09-22 사용자 요청
-                ("검은색으로 바꿔주고 글씨 굵기를 좀 줄여줘"). 그 전에는 ink-soft + bold였습니다.
-                ★ 500 아래는 400(normal)뿐입니다. layout.tsx가 Noto Sans KR을 400·500·700·900
-                  네 벌만 받아서, 600을 적어도 브라우저가 700으로 그립니다. 더 얇게 하려면 font-normal.
-              */}
-              <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">
-                다가오는 모임이 아직 없어요
-              </p>
-              {/* 누르면 일정 등록 시트(EventSheet)가 아래에서 올라옵니다 (2026-09-25, 그 전엔 /events/new 화면으로). */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (requireLogin()) return;
-                  setAdding(true);
-                }}
-                className="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1.5 text-[14px]! font-medium text-ink-faint transition active:bg-fill"
-              >
-                <PlusIcon className="h-4 w-4" />
-                등록
-              </button>
-            </div>
-          )}
-        </section>
+        {/*
+          다가오는 모임 — D-day 한 줄. 누르면 모임 일정 전체 보기로 갑니다.
+          2026-10-27 사용자 "다가오는 모임이 아직 없어요 박스는 뉴웨이브때처럼 없애줘": 모임이 없으면 이 칸을 통째로 그리지 않습니다
+          (예전엔 달력 그림 + 안내 문구 + "+ 등록" 단추가 든 낮은 상자였고, 홈에서 일정 등록 시트를 여는 입구였습니다 — 일정은 자료·일정 화면에서 올립니다).
+        */}
+        {upcoming.loading || academy.loading ? (
+          /* 큰 D-day 카드와 같은 높이(약 82px) */
+          <Skeleton className="h-[82px] rounded-card" />
+        ) : nextEvent ? (
+          <EventDdayCard event={nextEvent} href={nextEvent.href} external={nextEvent.external} />
+        ) : null}
 
         {/*
           한 달 캘린더 — 다가오는 모임 바로 밑 (2026-09-23 사용자 요청).
@@ -205,8 +160,6 @@ export default function HomePage() {
         {/* 맨 아래 — 과정을 여는 도산아카데미의 기관 정보. 다른 앱의 사업자 정보 자리입니다. */}
         <DosanAcademyFooter />
       </div>
-
-      {adding ? <EventSheet onClose={() => setAdding(false)} /> : null}
     </>
   );
 }
