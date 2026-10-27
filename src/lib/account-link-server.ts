@@ -148,11 +148,12 @@ async function samePhoneMembers(db: Firestore, auth: Auth, uid: string, phoneDig
   const variants = [...new Set([formatPhone(phoneDigits), phoneDigits])];
   // 번호는 users/{uid}/private/main에 있습니다(2026-10-27 — 번호 분리). 그 문서들에서 후보 uid를 찾고, 아직 옮기기 전인 옛 users.phone도 함께 봅니다(옮김이 끝나면 뒤쪽은 비게 됨).
   const [privateHits, legacy] = await Promise.all([
-    db.collectionGroup("private").where("phone", "in", variants).limit(20).get(),
+    // 색인(firestore.indexes.json)이 막 게시돼 아직 만들어지는 중이면 이 질의가 실패합니다 — 그동안은 옛 users.phone 질의만으로 계속 동작하게 비웁니다.
+    db.collectionGroup("private").where("phone", "in", variants).limit(20).get().catch(() => null),
     db.collection("users").where("phone", "in", variants).limit(20).get(),
   ]);
   const candidateUids = new Set<string>([
-    ...privateHits.docs.map((doc) => doc.ref.parent.parent?.id ?? ""),
+    ...(privateHits?.docs ?? []).map((doc) => doc.ref.parent.parent?.id ?? ""),
     ...legacy.docs.map((doc) => doc.id),
   ]);
   candidateUids.delete("");
