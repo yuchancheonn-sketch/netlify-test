@@ -1109,8 +1109,10 @@ function MessageRow({
 
       {/* 좌우 위치를 뉴웨이브앱과 똑같이(2026-10-12 사용자): 상대 말(사진·이름·말풍선)은 오른쪽으로 거리를 8.5px 줄여 왼쪽 끝에 더 붙이고, 내 말풍선은 오른쪽 끝에 6px 더 붙입니다(뉴웨이브 -ml-[8.5px]·-mr-1.5). */}
       <div className={`flex items-end gap-2 ${isMine ? "-mr-1.5 justify-end" : "-ml-[8.5px] justify-start"}`}>
+        {/* 프로필 사진·끈(AI) 윗변을 보낸 사람 이름 윗변에 맞춤(2026-10-27 뉴웨이브와 같게 — 예전엔 말풍선 아랫변에 맞췄음). 이름 줄이 없는 말풍선(이어 보낸 것)은 말풍선 윗변과 같음. left-[1.5px]도 뉴웨이브와 같음 */}
         {!isMine ? (
-          showSender ? (
+          <div className="relative left-[1.5px] flex shrink-0 self-start">
+          {showSender ? (
             isAi ? (
               <AiOrb size={32} thinking={orbThinking} createdAtMs={sentAt.getTime()} />
             ) : (
@@ -1124,7 +1126,8 @@ function MessageRow({
           ) : (
             // 같은 사람이 이어 보낼 때, 사진 자리만큼 비워 말풍선을 나란히 세웁니다.
             <div className="w-8 shrink-0" aria-hidden="true" />
-          )
+          )}
+          </div>
         ) : null}
 
         {isMine ? (
