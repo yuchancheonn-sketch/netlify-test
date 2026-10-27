@@ -7,7 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import { OMarkIcon, XMarkIcon } from "@/components/icons";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { kstDateString } from "@/lib/dosan-quiz";
+import { kstDateString, quizWeekStartDay } from "@/lib/dosan-quiz";
 import { formatMonthDay } from "@/lib/format";
 import type { QuizHistoryItem } from "@/lib/quiz-types";
 import { useKstDay } from "@/lib/use-kst-day";
@@ -15,7 +15,7 @@ import { useQuizHistory } from "@/lib/use-quiz";
 import { useSwipeBack } from "@/lib/use-swipe-back";
 
 /**
- * 역대 퀴즈 — 홈 "오늘의 OX 퀴즈" 카드 오른쪽 위 ">"로 들어오는 화면 (2026-09-11).
+ * 역대 퀴즈 — 홈 "도산 퀴즈"(2026-10-27 이름 변경, 일주일에 한 문제) 카드 오른쪽 위 ">"로 들어오는 화면 (2026-09-11).
  *
  * 지금까지 나왔던 문제를 최근 날부터 모아, 문제·정답·해설을 보여줍니다.
  *  - 앞으로 나올 문제는 없습니다. 오늘 문제는 이 계정이 오늘 풀었을 때만 올라옵니다 — 정답이 새지 않게.
@@ -26,7 +26,7 @@ function QuizzesPageContent() {
   const router = useRouter();
   const swipe = useSwipeBack({ onCommit: () => router.push("/home") });
   const day = useKstDay();
-  const todayDate = kstDateString(day);
+  const todayDate = kstDateString(quizWeekStartDay(day));
   const { user } = useAuth();
   const { items, loading, error } = useQuizHistory(user?.uid, day);
 
@@ -74,7 +74,7 @@ function QuizzesPageContent() {
                 <li key={key}>
                   <PastQuizCard
                     item={item}
-                    dateLabel={`${formatMonthDay(item.date)}${item.date === todayDate ? " · 오늘" : ""}`}
+                    dateLabel={`${formatMonthDay(item.date)}${item.date === todayDate ? " · 이번 주" : ""}`}
                     open={openKeys.has(key)}
                     onToggle={() => toggle(key)}
                   />

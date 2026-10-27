@@ -6,6 +6,7 @@ import {
   kstDateString,
   kstDayNumber,
   pastQuizzes,
+  QUIZ_START_DATE,
   quizForDay,
   type OxAnswer,
 } from "@/lib/dosan-quiz";
@@ -14,7 +15,9 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import type { QuizHistoryItem, QuizStats, QuizStatus } from "@/lib/quiz-types";
 
 /**
- * 오늘의 OX 퀴즈 채점·성적·등수 — 서버 전용 (2026-09-15).
+ * 도산 퀴즈(일주일에 한 문제, 2026-10-27부터 매주 일요일 갱신 — 뉴웨이브 성경 퀴즈와 같은 방식; 예전 이름 "오늘의 OX 퀴즈") 채점·성적·등수 — 서버 전용 (2026-09-15).
+ * ★ 2026-10-27: 답 문서 이름의 날짜는 **그 주의 일요일**이라 한 계정 한 주에 한 번입니다. 성적은 **계속 누적**하고(week = 마지막으로 푼 주의 일요일),
+ *   QUIZ_START_DATE(주 단위가 된 첫 일요일)보다 앞이면 하루 한 문제 시절 성적이라 "안 푼 사람"으로 보고 첫 답을 적을 때 1부터 새로 시작합니다.
  *
  * ★ 왜 서버에서 하나
  *   맞힌 개수로 기수 안 등수를 매기므로, 앱이 스스로 "맞았다"고 적게 두면 누구든 점수를 꾸밀 수 있습니다.
@@ -43,6 +46,16 @@ function answerDocId(uid: string, date: string): string {
 }
 
 type Authorized = { uid: string; db: Firestore } | { response: Response };
+
+/** 이번 주(한국 시간, 일요일 0시 시작)의 일요일 날짜 "YYYY-MM-DD". 1970-01-01은 목요일이라 (일수+4) % 7이 요일(0=일)입니다. */
+function currentWeek(day: number = kstDayNumber()): string {
+  return kstDateString(day - ((day + 4) % 7));
+}
+
+/** 새 방식(주 단위) 시작 뒤의 성적인가 — 그 전(하루 한 문제 시절)·week가 없던 문서는 새로 시작합니다. */
+function countsSinceStart(week: unknown): boolean {
+  return typeof week === "string" && week >= QUIZ_START_DATE;
+}
 
 /** 요청을 보낸 원우가 누구인지 로그인 토큰으로 확인합니다. 실패하면 그대로 돌려줄 응답을 줍니다. */
 export async function authorizeQuizRequest(request: Request): Promise<Authorized> {
@@ -81,7 +94,8 @@ async function readStats(
   cohort: string,
   scoreSnap: DocumentSnapshot,
 ): Promise<QuizStats | null> {
-  if (!scoreSnap.exists) return null;
+  // 하루 한 문제 시절(또는 week가 없던 예전) 성적은 없는 것으로 봅니다. 그 뒤로는 계속 누적합니다.
+  if (!scoreSnap.exists || !countsSinceStart(scoreSnap.get("week"))) return null;
 
   const correct = Number(scoreSnap.get("correct") ?? 0);
   const answered = Number(scoreSnap.get("answered") ?? 0);
@@ -96,16 +110,18 @@ async function readStats(
 
   // select("correct") — 같은 기수 원우들의 맞힌 수만 받습니다(기수당 수십 건).
   const [peers] = await Promise.all([
-    db.collection(SCORES).where("cohort", "==", cohort).select("correct").get(),
+    db.collection(SCORES).where("cohort", "==", cohort).select("correct", "week").get(),
     syncCohort,
   ]);
+  // 새 방식 시작 뒤에 한 번이라도 푼 원우만 등수·참여 인원에 셉니다.
+  const activePeers = peers.docs.filter((peer) => peer.id === uid || countsSinceStart(peer.get("week")));
   let higher = 0;
-  for (const peer of peers.docs) {
+  for (const peer of activePeers) {
     const peerCorrect = peer.id === uid ? correct : Number(peer.get("correct") ?? 0);
     if (peerCorrect > correct) higher += 1;
   }
   // 방금 기수를 맞춘 경우 질의 결과에 내가 아직 안 들어 있을 수 있어, 참여 수에 나를 꼭 넣습니다.
-  const includesMe = peers.docs.some((peer) => peer.id === uid);
+  const includesMe = activePeers.some((peer) => peer.id === uid);
 
   // 10등 안일 때만 등수를 알려 줍니다(2026-09-15 사용자 요청). 11등부터는 앱에 등수 숫자 자체를 보내지 않습니다.
   const rank = higher + 1;
@@ -115,7 +131,7 @@ async function readStats(
     answered,
     cohort,
     rank: shown ? rank : null,
-    participants: peers.size + (includesMe ? 0 : 1),
+    participants: activePeers.length + (includesMe ? 0 : 1),
   };
 }
 
@@ -125,7 +141,7 @@ const RANK_SHOWN_UP_TO = 10;
 /** 오늘 문제를 풀었는지(풀었으면 정답·해설까지)와 내 성적. 승인된 원우가 아니면 null. */
 export async function readQuizStatus(db: Firestore, uid: string): Promise<QuizStatus | null> {
   const day = kstDayNumber();
-  const date = kstDateString(day);
+  const date = currentWeek(day);
   const quiz = quizForDay(day);
 
   /*
@@ -143,8 +159,9 @@ export async function readQuizStatus(db: Firestore, uid: string): Promise<QuizSt
   if (!cohort) return null;
 
   let today: QuizStatus["today"] = null;
-  if (answerSnap.exists) {
-    const key = answerFor(String(answerSnap.get("quizId") ?? quiz.id));
+  // 하루 한 문제 시절에 일요일에 푼 답 문서는 주 단위 문서 이름과 같을 수 있어, 적힌 문제 id가 이번 주 문제와 같을 때만 "푼 것"으로 봅니다.
+  if (answerSnap.exists && answerSnap.get("quizId") === quiz.id) {
+    const key = answerFor(quiz.id);
     const myAnswer = answerSnap.get("answer") as OxAnswer;
     if (key) {
       today = {
@@ -180,7 +197,7 @@ export async function submitQuizAnswer(
   if (!cohort) return { ok: false, reason: "not-member" };
 
   const day = kstDayNumber();
-  const date = kstDateString(day);
+  const date = currentWeek(day);
   const quiz = quizForDay(day);
   if (quizId !== quiz.id) return { ok: false, reason: "stale-quiz" };
 
@@ -191,9 +208,11 @@ export async function submitQuizAnswer(
   const answerRef = db.collection(ANSWERS).doc(answerDocId(uid, date));
   const scoreRef = db.collection(SCORES).doc(uid);
   await db.runTransaction(async (transaction) => {
-    const existing = await transaction.get(answerRef);
-    if (existing.exists) return;
-    transaction.create(answerRef, {
+    const [existing, scoreSnap] = await Promise.all([transaction.get(answerRef), transaction.get(scoreRef)]);
+    if (existing.exists && existing.get("quizId") === quiz.id) return; // 옛 방식(하루 한 문제) 시절 같은 이름 문서는 덮어씀
+    // 성적은 계속 누적합니다. 하루 한 문제 시절 기록은 새 시작일 전이라 이어 올리지 않고 1부터 새로 시작합니다.
+    const sameWeek = scoreSnap.exists && countsSinceStart(scoreSnap.get("week"));
+    transaction.set(answerRef, {
       uid,
       date,
       quizId: quiz.id,
@@ -207,8 +226,9 @@ export async function submitQuizAnswer(
       {
         uid,
         cohort,
-        correct: FieldValue.increment(correct ? 1 : 0),
-        answered: FieldValue.increment(1),
+        week: date,
+        correct: sameWeek ? FieldValue.increment(correct ? 1 : 0) : correct ? 1 : 0,
+        answered: sameWeek ? FieldValue.increment(1) : 1,
         lastDate: date,
         updatedAt: FieldValue.serverTimestamp(),
       },
@@ -232,10 +252,10 @@ export async function readQuizHistory(
   // 여기도 두 조회가 서로 기대지 않아 한 번에 보냅니다 (2026-09-22).
   const [memberSnap, todaySnap] = await Promise.all([
     db.collection("users").doc(uid).get(),
-    db.collection(ANSWERS).doc(answerDocId(uid, kstDateString(day))).get(),
+    db.collection(ANSWERS).doc(answerDocId(uid, currentWeek(day))).get(),
   ]);
   if (!cohortIn(memberSnap)) return null;
-  const answeredToday = todaySnap.exists;
+  const answeredToday = todaySnap.exists && todaySnap.get("quizId") === quizForDay(day).id;
 
   return pastQuizzes(day, answeredToday).flatMap(({ day: quizDay, quiz }) => {
     const key = answerFor(quiz.id);

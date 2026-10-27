@@ -7,7 +7,7 @@ import { PartyEffects } from "@/components/PartyEffects";
 import { useGoToLogin, useIsGuest } from "@/components/LoginRequired";
 import { PrimaryButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
-import { kstDateString, quizForDay, type OxAnswer } from "@/lib/dosan-quiz";
+import { kstDateString, quizForDay, quizWeekStartDay, type OxAnswer } from "@/lib/dosan-quiz";
 import type { QuizStats, QuizTodayResult } from "@/lib/quiz-types";
 import { useKstDay } from "@/lib/use-kst-day";
 import { QuizRequestError, sendQuizAnswer, useQuizStatus } from "@/lib/use-quiz";
@@ -26,7 +26,7 @@ function choiceLabel(value: OxAnswer): string {
 }
 
 /**
- * 홈 "오늘의 OX 퀴즈" 카드.
+ * 홈 "도산 퀴즈" 카드(2026-10-27 사용자 "오늘의 OX퀴즈를 도산 퀴즈로 이름 바꾸고 운영방식도 뉴웨이브앱(성경 퀴즈)과 동일하게"): 일주일에 한 문제(매주 일요일 0시 한국 시간에 다음 문제), 푼 뒤 해설을 닫으면 이 박스는 **통째로 사라지고** 다음 주 새 문제가 오면 다시 생깁니다(뉴웨이브와 같음 — 푼 뒤의 성적 칸·"해설 보기"는 로그인한 사람에겐 안 보임).
  *
  * 나만의닥터의 매일 퀴즈 흐름을 따랐습니다.
  *   1. 그렇다/아니다 중 하나를 누르면 "정답 제출하기"가 나타납니다.
@@ -45,7 +45,7 @@ export default function DosanQuizCard() {
   // 한국 시간 새벽 12시에 다음 문제로 — 홈을 켜 둔 채여도 그 순간 바뀝니다(use-kst-day.ts).
   const day = useKstDay();
   const quiz = quizForDay(day);
-  const quizKey = `${kstDateString(day)}:${quiz.id}`;
+  const quizKey = `${kstDateString(quizWeekStartDay(day))}:${quiz.id}`;
   const { user } = useAuth();
   const quizStatus = useQuizStatus(user?.uid, day);
   // 자정 경계에서 서버가 본 오늘 문제와 화면의 문제가 다르면, 서버 값을 아직 쓰지 않습니다.
@@ -116,7 +116,7 @@ export default function DosanQuizCard() {
       setScreen("none");
       setSubmitError(
         caught instanceof QuizRequestError && caught.reason === "stale-quiz"
-          ? "자정이 지나 새 문제로 바뀌었어요. 새 문제를 풀어 주세요."
+          ? "새 주가 되어 문제가 바뀌었어요. 새 문제를 풀어 주세요."
           : "제출하지 못했어요. 잠시 후 다시 눌러 주세요.",
       );
       quizStatus.refresh();
@@ -138,6 +138,9 @@ export default function DosanQuizCard() {
       : "border-[color-mix(in_srgb,var(--color-line)_86%,var(--color-ink))] bg-surface text-ink";
   }
 
+  // 푼 뒤(해설을 닫으면) 이 박스는 통째로 사라지고, 다음 주(일요일 0시) 새 문제가 오면 다시 생깁니다(2026-10-27, 뉴웨이브와 같음). 로그인 안 한 사람은 기록이 없어 "나의 등수 보러가기" 안내를 위해 그대로 둡니다.
+  if (!isGuest && !!today && screen === "none") return null;
+
   return (
     <>
       {/* 위 여백 17px — 20px(pt-5) → 19px → 17px로 두 번 줄였습니다(2026-09-11). */}
@@ -148,7 +151,7 @@ export default function DosanQuizCard() {
             제목은 "오늘의 도산" 카드의 제목과 같은 크기·굵기·색입니다(18px, 굵게, 검정).
             처음엔 나만의닥터처럼 주황 바탕의 작은 이름표였는데 2026-09-11에 맞췄습니다.
           */}
-          <h2 className="text-[18.5px] font-[600] text-ink">오늘의 OX 퀴즈</h2>
+          <h2 className="text-[18.5px] font-[600] text-ink">도산 퀴즈</h2>
           {/*
             오른쪽 위 — (푼 뒤에만) 해설 보기, 그리고 늘 ">" 역대 퀴즈(/quizzes).
             -mr-[7.5px]: ">"의 손끝 자리(32px)는 넉넉히 두고, 꺾쇠 끝을 카드 끝에서 16.5px에 세웁니다 — 다가오는 일정

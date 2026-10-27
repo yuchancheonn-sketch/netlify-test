@@ -10,7 +10,7 @@ import { getVideoList } from "@/lib/video-list";
  *
  * 카카오 i 오픈빌더의 블록이 이 주소를 부르면(POST), 원우가 보낸 말을 보고 앱의 정보를 답합니다.
  *   "일정"  → 다가오는 모임 3개(제목·날짜·시간)
- *   "퀴즈"  → 오늘의 OX 퀴즈 문제 + 앱에서 풀기 단추
+ *   "퀴즈"  → 이번 주 도산 퀴즈 문제 + 앱에서 풀기 단추
  *   "영상"  → 최신 복습 영상 3편
  *   "앱"    → 앱 주소 · 홈 화면에 추가하는 법
  *   그 밖   → 무엇을 물을 수 있는지 안내 + 바로가기 단추
@@ -112,7 +112,7 @@ async function upcomingEvents(): Promise<Output[]> {
 function todayQuiz(): Output[] {
   const quiz = quizForDay(kstDayNumber());
   return [
-    card(`Q. ${quiz.question}\n\n그렇다(O)일까요, 아니다(X)일까요?\n정답과 해설은 앱에서 풀면 바로 보여요.`, "앱에서 풀기", `${APP_URL}/home`, "오늘의 OX 퀴즈"),
+    card(`Q. ${quiz.question}\n\n그렇다(O)일까요, 아니다(X)일까요?\n정답과 해설은 앱에서 풀면 바로 보여요.`, "앱에서 풀기", `${APP_URL}/home`, "이번 주 도산 퀴즈"),
   ];
 }
 

@@ -1,5 +1,5 @@
 /**
- * 홈 "오늘의 OX 퀴즈" — 도산 안창호 선생에 관한 문제(문제 글과 날짜 계산만).
+ * 홈 "도산 퀴즈"(2026-10-27 "오늘의 OX 퀴즈"에서 이름 변경, 하루 한 문제 → 일주일에 한 문제) — 도산 안창호 선생에 관한 문제(문제 글과 날짜 계산만).
  *
  * 오늘의 도산(quotes.ts)처럼 날짜만으로 오늘 문제를 고릅니다. 같은 날에는 모든
  * 원우가 같은 문제를 보고, **한국 시간 새벽 12시**에 다음 문제로 넘어갑니다
@@ -99,37 +99,37 @@ export function kstDateString(day: number): string {
 }
 
 /**
- * 그 날(kstDayNumber)의 문제. 같은 날 접속한 원우들은 모두 같은 문제를 봅니다.
- *
- * ★ day - 1인 이유: 처음에는 폰 시간대의 자정을 UTC 기준 일수로 세었는데, 한국 폰에서
- *   그 값은 한국 날짜보다 하루 작았습니다. 한국 시간으로 바꾸면서(2026-09-11) 순서를
- *   그대로 이어 가려고 1을 뺍니다 — 이미 오늘 문제를 푼 원우가 새 문제를 받지 않도록.
+ * 도산 퀴즈를 주 단위로 처음 낸 주의 일요일(한국 날짜) — 2026-10-27 사용자 "오늘의 OX퀴즈를 도산 퀴즈로 이름 바꾸고 운영방식도 뉴웨이브앱(성경 퀴즈)과 동일하게". ★ 반드시 일요일이어야 합니다.
+ * 이 주 문제가 목록의 첫 문제이고, 역대 퀴즈·누적 성적도 이 날부터 셉니다(하루 한 문제 시절의 성적·답은 이 날보다 앞이라 새로 시작합니다).
  */
+export const QUIZ_START_DATE = "2026-10-25";
+const QUIZ_START_DAY = Math.floor(Date.parse(`${QUIZ_START_DATE}T00:00:00Z`) / DAY_MS);
+if ((QUIZ_START_DAY + 4) % 7 !== 0) throw new Error("QUIZ_START_DATE는 일요일이어야 합니다");
+
+/** 그 날이 속한 주(일요일 0시 시작)의 일요일 날짜 번호. 1970-01-01은 목요일이라 (day+4) % 7이 요일(0=일)입니다. */
+export function quizWeekStartDay(day: number): number {
+  return day - ((day + 4) % 7);
+}
+
+/** 그 날(kstDayNumber)이 속한 주의 문제. 같은 주에 접속한 원우들은 모두 같은 문제를 봅니다. 시작일 이전 날짜도 순환으로 셉니다. */
 export function quizForDay(day: number): DosanQuiz {
   const count = DOSAN_QUIZZES.length;
-  const index = day - 1;
+  const index = (quizWeekStartDay(day) - QUIZ_START_DAY) / 7;
   return DOSAN_QUIZZES[((index % count) + count) % count];
 }
 
-/** 오늘의 OX 퀴즈를 처음 낸 날(한국 날짜). 역대 퀴즈는 이 날부터 셉니다. */
-export const QUIZ_START_DATE = "2026-09-11";
-
 /**
- * 역대 퀴즈 — 처음 낸 날부터 지금까지 실제로 나왔던 문제를 최근 날부터 (2026-09-11).
- *
- *  - 앞으로 나올 문제는 넣지 않습니다. 넣으면 내일 문제의 정답을 미리 보게 됩니다.
- *  - 오늘 문제는 includeToday일 때만(이 계정이 오늘 문제를 푼 뒤) 넣습니다 — 안 푼 원우에게 정답이 새지 않게.
- *  - 문제는 20개가 돌아가며 나오므로, 같은 문제는 가장 최근에 나온 날 하나만 남깁니다(최대 20개).
+ * 역대 퀴즈 — 처음 낸 주부터 지금까지 실제로 나왔던 문제를 최근 주부터(day는 그 주의 일요일 날짜 번호).
+ *  - 앞으로 나올 문제는 넣지 않습니다. 넣으면 다음 주 문제의 정답을 미리 보게 됩니다.
+ *  - 이번 주 문제는 includeToday일 때만(이 계정이 이번 주 문제를 푼 뒤) 넣습니다 — 안 푼 원우에게 정답이 새지 않게.
+ *  - 같은 문제는 가장 최근에 나온 주 하나만 남깁니다.
  * 정답·해설을 붙이는 일은 서버(lib/quiz-server.ts의 readQuizHistory)가 합니다.
  */
-export function pastQuizzes(
-  today: number,
-  includeToday: boolean,
-): { day: number; quiz: DosanQuiz }[] {
-  const startDay = Math.floor(Date.parse(`${QUIZ_START_DATE}T00:00:00Z`) / DAY_MS);
+export function pastQuizzes(today: number, includeToday: boolean): { day: number; quiz: DosanQuiz }[] {
   const seen = new Set<string>();
   const items: { day: number; quiz: DosanQuiz }[] = [];
-  for (let day = includeToday ? today : today - 1; day >= startDay; day--) {
+  const thisWeek = quizWeekStartDay(today);
+  for (let day = includeToday ? thisWeek : thisWeek - 7; day >= QUIZ_START_DAY; day -= 7) {
     const quiz = quizForDay(day);
     if (seen.has(quiz.id)) continue;
     seen.add(quiz.id);

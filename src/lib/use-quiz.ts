@@ -62,7 +62,10 @@ export function useQuizStatus(uid: string | undefined, day: number) {
   useEffect(() => {
     if (!key) return;
     let cancelled = false;
-    quizFetch<{ status: QuizStatus }>("/api/quiz")
+    // 서버가 막 다시 시작했거나 네트워크가 잠깐 끊긴 일시 오류는 1.5초 뒤 한 번 더 시도합니다(2026-10-27, 뉴웨이브 use-quiz와 같게).
+    const load = () => quizFetch<{ status: QuizStatus }>("/api/quiz");
+    load()
+      .catch(() => new Promise<{ status: QuizStatus }>((resolve, reject) => setTimeout(() => load().then(resolve, reject), 1500)))
       .then((body) => {
         if (!cancelled) setEntry({ key, status: body.status, error: null });
       })
