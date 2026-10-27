@@ -850,7 +850,9 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
           </div>
         ) : null}
 
+        {/* 입력칸·보내기 단추 모양을 뉴웨이브와 같게(2026-10-27): 보내기 단추(30px 동그라미, 화살표 16px)가 입력칸 안쪽 오른쪽 아래(7px)에 들어가고, 입력칸은 오른쪽 여백 46px */}
         <form onSubmit={handleSend} className="mx-auto flex w-full max-w-[560px] items-end gap-2">
+          <div className="relative min-w-0 flex-1">
           {/*
             ★ 여러 줄 입력 (2026-09-27 사용자 "엔터 치면 무조건 보내져, 엔터로 줄 바꾸고 보내기 단추로만 보내게").
               한 줄짜리 <input>은 엔터가 곧 폼 제출이라 <textarea>로 바꿨습니다. 엔터는 줄바꿈이고, 보내기는 오른쪽 단추만.
@@ -911,7 +913,7 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
               (예전에는 canvas를 썼는데, 페이지 배경이 흰색이 되면서
                흰색 위 흰색이 되어 fill로 옮겼습니다.)
             */
-            className="block max-h-[140px] min-w-0 flex-1 resize-none overflow-y-auto rounded-[22px] bg-fill px-4.5 py-2.5 text-[16px] leading-6 text-ink shadow-[var(--shadow-card)] outline-none placeholder:text-ink-faint"
+            className="block max-h-[140px] w-full resize-none overflow-y-auto rounded-[22px] bg-fill pl-4.5 pt-[9px] pb-[11px] pr-[46px] text-[16px] leading-6 text-ink outline-none placeholder:text-ink-faint"
           />
           {/*
             동그라미의 지름은 입력칸의 높이와 같은 44px입니다.
@@ -922,14 +924,13 @@ function ChatRoomPageContent({ roomId }: { roomId: string }) {
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label={editingId ? "고친 내용 저장" : "메시지 보내기"}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
+            // 누르는 순간 입력칸에서 포커스가 빠지면 자판이 내려가며 단추가 움직여 눌림이 취소됩니다 — 포커스를 그대로 둡니다(뉴웨이브와 같음)
+            onMouseDown={(event) => event.preventDefault()}
+            className="absolute right-[7px] bottom-[7px] flex h-[30px] w-[30px] items-center justify-center rounded-full bg-brand-500 text-white transition active:scale-95 disabled:bg-brand-200"
           >
-            {sending ? (
-              <Spinner className="h-[17px] w-[17px]" />
-            ) : (
-              <ArrowUpIcon className="h-[17px] w-[17px]" />
-            )}
+            {sending ? <Spinner className="h-[14px] w-[14px]" /> : <ArrowUpIcon className="h-[16px] w-[16px]" />}
           </button>
+          </div>
         </form>
         {/* 보내기·지우기 실패는 같은 자리에 알립니다. 둘이 겹칠 일은 없습니다. */}
         {sendError ?? deleteError ? (
