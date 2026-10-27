@@ -8,7 +8,7 @@ import {
   CommitteeIcon,
   HomeIcon,
   LibraryIcon,
-  UsersIcon,
+  SoloPersonIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
@@ -44,7 +44,7 @@ const TABS = [
    * 값은 크롬에서 안 고른(선만) 모양을 8배 확대 렌더링해 잉크가 닿는 첫·끝 줄을 잰 것(애기애타 아이콘 기준: 홈 3.63~23.88 / 원우 4.5~22.38 / 위원회 3.5~23.38 / 채팅 4.25~23.13 / 자료 4.25~22.75) — 아이콘 모양(icons.tsx)을 바꾸면 다시 재야 합니다.
    */
   { href: "/home", label: "홈", Icon: HomeIcon, owns: ["/events", "/sessions", "/polls", "/notifications", "/quizzes"], fit: null },
-  { href: "/members", label: "원우", Icon: UsersIcon, owns: [], fit: { scale: 1.133, y: 0.32 } },
+  { href: "/members", label: "원우", Icon: SoloPersonIcon, owns: [], fit: { scale: 1.1, y: 0.3 } },
   /*
    * 2026-09-09에 소식과 자료의 자리를 맞바꿨습니다.
    *

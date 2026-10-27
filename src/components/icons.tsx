@@ -121,6 +121,24 @@ export function UsersIcon({ className, strokeWidth = 1.8, filled, animate }: Ico
   );
 }
 
+/** 사람 한 명 — 하단 "원우" 탭 아이콘(2026-10-27 사용자 "원우 탭 아이콘을 뉴웨이브 사랑방 탭 아이콘으로" — 뉴웨이브 SoloPersonIcon을 그대로 옮김). 선 모양과 속 채운 모양. 다른 화면의 UsersIcon(두 사람)은 그대로 */
+export function SoloPersonIcon({ className, strokeWidth = 1.8, filled, animate }: IconProps) {
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={base(className)} aria-hidden="true">
+        <circle cx="12" cy="7.6" r="4.1" className={animate ? "tab-anim tab-head" : undefined} />
+        <path d="M4.4 19.6c0-3.8 3.4-6.1 7.6-6.1s7.6 2.3 7.6 6.1a.9.9 0 0 1-.9.9H5.3a.9.9 0 0 1-.9-.9Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <circle cx="12" cy="7.6" r="3.7" stroke="currentColor" strokeWidth={strokeWidth} />
+      <path d="M5 19.6c0-3.3 3.1-5.3 7-5.3s7 2 7 5.3" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /**
  * 사람 한 명 — 위 UsersIcon의 앞사람(머리 반지름 3.3, 어깨 폭 12)을 그대로 떼어 가운데에 세운 것 (2026-09-27).
  * 채팅 목록의 "탈퇴한 원우" 칸이 옆 단체방 칸(UsersIcon)과 같은 그림체로 보이도록 만들었습니다
