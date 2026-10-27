@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  BallotBoxIllustration,
-  OpinionIllustration,
-  PollHistoryIllustration,
-} from "@/components/illustrations";
 import { PollCreateSheet } from "@/components/PollCard";
 import { useRequireLogin } from "@/components/LoginRequired";
+
+/**
+ * 2026-10-27 사용자 "투표 만들기·의견 모으기·역대 투표 아이콘을 뉴웨이브앱처럼 캔바로 만든 3D 그림으로": 그림은 public/icons3d/{vote,opinion,history}.png(96×96 투명, 캔바 generate-image + remove-background —
+ * 뉴웨이브와 같은 "단순·사실적 3D, 장식 없음" 스타일, 색만 애기애타 주황/살구). 캔바 원본 MEDIA: vote MAHZLDX4Mqc → 배경 제거 MAHZLJShJZg, opinion MAHZLBU6aNQ → MAHZLGSGmrg, history MAHZLGCxUfw → MAHZLOG8mUw.
+ * 표시 크기는 뉴웨이브(23.5·22.5px)처럼 24px 안팎으로 하고 좌우 여백으로 예전 28px 자리를 지켜 글씨 위치는 그대로.
+ */
+const ICON_CLASS_NAME = "shrink-0 select-none";
 
 /**
  * 바로가기 한 칸의 생김새 — 버튼이든 링크든 같게 보이도록 한 곳에 둡니다.
@@ -50,12 +52,14 @@ export default function HomeShortcuts() {
       <div className="grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => startCreating("vote")} className={ITEM_CLASS_NAME}>
-          <BallotBoxIllustration className="h-7 w-7 shrink-0" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons3d/vote.png" alt="" aria-hidden="true" width={23.5} height={23.5} draggable={false} className={`${ICON_CLASS_NAME} mx-[2.25px] h-[23.5px]! w-[23.5px]!`} />
           <span className="text-[15px]! font-medium text-ink">투표 만들기</span>
         </button>
 
         <button type="button" onClick={() => startCreating("opinion")} className={ITEM_CLASS_NAME}>
-          <OpinionIllustration className="h-7 w-7 shrink-0" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons3d/opinion.png" alt="" aria-hidden="true" width={22.5} height={22.5} draggable={false} className={`${ICON_CLASS_NAME} mx-[2.75px] h-[22.5px]! w-[22.5px]!`} />
           <span className="text-[15px]! font-medium text-ink">의견 모으기</span>
         </button>
 
@@ -68,7 +72,8 @@ export default function HomeShortcuts() {
 
         {/* 역대 투표 — 열린·닫힌 투표를 모두 모아 보는 /polls 화면 (2026-09-11). */}
         <Link href="/polls" className={ITEM_CLASS_NAME}>
-          <PollHistoryIllustration className="h-7 w-7 shrink-0 -translate-y-px" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons3d/history.png" alt="" aria-hidden="true" width={23.5} height={23.5} draggable={false} className={`${ICON_CLASS_NAME} mx-[2.25px] h-[23.5px]! w-[23.5px]! -translate-y-px`} />
           <span className="-translate-y-px text-[15px] font-medium text-ink">역대 투표</span>
         </Link>
       </div>
