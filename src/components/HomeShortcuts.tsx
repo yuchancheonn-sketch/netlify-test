@@ -49,7 +49,11 @@ export default function HomeShortcuts() {
        옮겨 18px을 지켰습니다. 두 열 사이 간격을 좁혀 보기도 했지만 되돌렸습니다.)
     */
     <section className="rounded-card bg-surface px-2 pt-[16px] pb-[18.5px]">
-      <div className="grid grid-cols-2 gap-x-1">
+      {/* 박스 제목 "바로가기"(2026-10-27 사용자 "뉴웨이브처럼"): 뉴웨이브와 같은 18.5px/600, 높이 32px, 제목과 칸 사이 8px. 칸 안쪽 좌우 여백(px-3)만큼 들여 글씨 왼쪽 끝을 아이콘 줄과 맞춤 */}
+      <div className="flex min-h-8 items-center px-3">
+        <h2 className="text-[18.5px] font-[600] text-ink">바로가기</h2>
+      </div>
+      <div className="mt-[8px] grid grid-cols-2 gap-x-1">
         {/* 크기 뒤의 !는 globals.css의 `button { font-size: 16px }`를 이기려고 붙입니다. */}
         <button type="button" onClick={() => startCreating("vote")} className={ITEM_CLASS_NAME}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
