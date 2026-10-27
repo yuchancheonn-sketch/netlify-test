@@ -92,7 +92,8 @@ export default function HomePage() {
           제목 줄은 붙박이라 그 pb만큼의 본문이 스크롤할 때 제목 아래에 숨습니다.
           여기에 주면 본문과 함께 굴러가므로 아무것도 가리지 않습니다.
       */}
-      <div className="flex flex-col gap-[14px] px-4 pt-2">
+      {/* 2026-10-27 사용자 "홈탭 박스들의 좌우 여백·박스 사이 여백을 뉴웨이브앱과 똑같이": 좌우 16 → 12px, 박스 사이 14 → 8px(뉴웨이브 px-[12px]·mt-[8px]) */}
+      <div className="flex flex-col gap-[8px] px-[12px] pt-2">
         {/* 오늘의 OX 퀴즈 — 도산 안창호 선생에 관한 문제가 하루 하나씩. 맨 위에 둡니다. */}
         <DosanQuizCard />
 
@@ -184,7 +185,7 @@ export default function HomePage() {
             같은 값으로 맞추면 눈에는 아래가 더 좁아 보입니다.
             ★ 위 여백은 수업 기록 화면(/sessions)의 카드와 같은 값입니다 — 둘이 같은 결로 보이게.
           */}
-          <div className="rounded-[32px] bg-surface px-6 pt-5 pb-6">
+          <div className="rounded-[32px] bg-surface px-6 pt-[16px] pb-[24px]">
             <h2 className="mb-2 text-[18.5px] font-[600] text-ink">오늘의 도산</h2>
 
             <p className="font-serif text-[18px] leading-[1.8] text-ink">

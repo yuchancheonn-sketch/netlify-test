@@ -196,7 +196,7 @@ export default function HomeCalendar({ cohort }: { cohort: string }) {
     <section
       onClick={centerSelf}
       // pt-[11.5px] — "2026년 9월" 위 흰 여백 (2026-09-25 사용자 요청 여러 번: 16 → 15.5 → 12.5 → 10.5 → "1px 늘려줘" 11.5px). OX 퀴즈와 함께.
-      className="rounded-[32px] bg-surface px-4 pt-[11.5px] pb-3"
+      className="rounded-[32px] bg-surface px-4 pt-[14.5px] pb-[14px]"
     >
       {/* 달 이름과 ‹ › */}
       <div className="flex items-center justify-between px-1">
