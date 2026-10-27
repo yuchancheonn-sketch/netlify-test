@@ -580,6 +580,20 @@ export function PersonIcon({ className, strokeWidth = 1.9 }: IconProps) {
 /**
  * 알림 종 — 헤더 알림함(2026-09-11). 사람·톱니 아이콘과 같은 굵기(1.9)와 채움 정도로 맞췄습니다.
  */
+/** 네 갈래 반짝이(다이아몬드 모양) — 헤더의 도산 AI 단추 (2026-10-27 뉴웨이브 SparkleIcon을 그대로 옮김) */
+export function SparkleIcon({ className, strokeWidth = 1.9 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">
+      <path
+        d="M12 2.8c.9 5.6 3.6 8.3 9.2 9.2-5.6.9-8.3 3.6-9.2 9.2-.9-5.6-3.6-8.3-9.2-9.2 5.6-.9 8.3-3.6 9.2-9.2z"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function BellIcon({ className, strokeWidth = 1.9 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={base(className)} aria-hidden="true">

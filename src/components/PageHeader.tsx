@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { BellIcon, ChevronLeftIcon, PersonIcon, SettingsIcon } from "@/components/icons";
+import { BellIcon, ChevronLeftIcon, PersonIcon, SettingsIcon, SparkleIcon } from "@/components/icons";
 import { useIsGuest } from "@/components/LoginRequired";
 import { useAuth } from "@/lib/auth-context";
 import { cohortOf } from "@/lib/cohort";
+import { dosanRoomId } from "@/lib/dosan-ai";
 import { useNotices, useNoticesSeenAt } from "@/lib/hooks";
+import { chatHref } from "@/lib/routes";
 
 /**
  * 화면 상단 제목 줄.
@@ -194,6 +196,7 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
    * 다만 종의 빨간 점은 원우의 알림 기록을 읽어야 해서, 둘러보는 사람에게는 점 없는 종만 둡니다.
    */
   const isGuest = useIsGuest();
+  const { user } = useAuth();
 
   /*
    * -space-x-1.5로 단추끼리 6px 겹칩니다.
@@ -207,6 +210,10 @@ export function HeaderActions({ tone = "canvas" }: { tone?: "canvas" | "surface"
   // 2026-10-27 사용자 "홈탭 오른쪽 위 아이콘 3개·그렇다/아니다 버튼을 뉴웨이브앱과 똑같이": 뉴웨이브(2026-10-16 슈퍼쏠 헤더 맞춤)와 같게 아이콘 27 → 25px, 선 굵기 1.55, 색은 제목과 같은 먹색, 아이콘 사이 간격 -space-x-px, 맨 오른쪽 -mr-[5.4px]
   return (
     <div className="flex items-center -space-x-px">
+      {/* 맨 왼쪽 반짝이 — 누르면 도산 AI 대화방(2026-10-27 뉴웨이브 헤더와 같게). 로그인 전에는 채팅 탭(로그인 안내)으로. 25 → 23px는 뉴웨이브와 같은 보정(다른 아이콘과 위아래 높이를 맞춤) */}
+      <HeaderIconLink href={user ? chatHref(dosanRoomId(user.uid)) : "/chat"} label="도산 AI와 대화하기">
+        <SparkleIcon className="h-[23px] w-[23px]" strokeWidth={1.55} />
+      </HeaderIconLink>
       {/* tone은 빨간 점이 두르는 테 색에만 쓰입니다 — 제목 줄 바탕과 같아야 합니다(PageHeader의 tone 주석). */}
       {isGuest ? (
         <HeaderIconLink href="/notifications" label="알림 열기">
